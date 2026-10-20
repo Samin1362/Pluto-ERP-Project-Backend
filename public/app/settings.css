@@ -1,0 +1,11 @@
+/* Settings layout, copied unchanged from the design (Settings.dc.html, K1-K15). */
+.se-wrap{display:grid;grid-template-columns:232px minmax(0,1fr);gap:24px;align-items:start}
+@media (max-width:1099px){.se-wrap{grid-template-columns:1fr}.se-rail{position:static!important;flex-direction:row!important;flex-wrap:wrap}}
+.se-rail{position:sticky;top:16px;display:flex;flex-direction:column;gap:2px}
+.se-rail-h{font:650 11px/16px var(--font-sans);letter-spacing:.07em;text-transform:uppercase;color:var(--ink-muted);padding:14px 12px 4px}
+.se-link{all:unset;box-sizing:border-box;cursor:pointer;display:flex;align-items:center;gap:10px;min-height:36px;padding:6px 12px;border-radius:var(--radius-sm);font-size:14px;color:var(--ink)}
+.se-link:hover{background:var(--surface-hover)}
+.se-link:focus-visible{outline:2px solid var(--focus);outline-offset:1px}
+.se-link[aria-current="page"]{background:var(--brand-soft);color:var(--brand-ink);font-weight:600}
+.se-row{display:flex;flex-wrap:wrap;gap:12px 24px;align-items:center;justify-content:space-between;padding:14px 0;border-top:1px solid var(--line)}
+.se-row:first-child{border-top:0;padding-top:0}

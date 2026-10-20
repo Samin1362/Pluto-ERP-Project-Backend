@@ -1,0 +1,16 @@
+<?php
+
+namespace App\Models;
+
+use App\Models\Concerns\BelongsToCompany;
+use App\Models\Concerns\TracksActor;
+use Illuminate\Database\Eloquent\Model;
+
+class PaymentTerm extends Model
+{
+    use BelongsToCompany, TracksActor;
+
+    protected $guarded = ['id', 'company_id'];
+
+    protected $casts = ['days' => 'integer', 'is_default' => 'boolean'];
+}
