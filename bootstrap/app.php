@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\HealthController;
+use App\Http\Middleware\AcceptXIfMatch;
 use App\Http\Middleware\AuthenticateJwt;
 use App\Http\Middleware\ForceJsonApi;
 use App\Http\Middleware\Idempotency;
@@ -32,7 +33,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // Our own proxy (Vercel -> tunnel) is identified by a shared secret, never by IP (backlog P0.3-BE-02).
         $middleware->prepend(TrustLedgerflowProxy::class);
         // 07 §4 order: request id and JSON handling first, then authentication, company, permission.
-        $middleware->api(prepend: [RequestId::class, ForceJsonApi::class]);
+        $middleware->api(prepend: [RequestId::class, ForceJsonApi::class, AcceptXIfMatch::class]);
         $middleware->alias([
             'jwt' => AuthenticateJwt::class,
             'company' => ResolveCompany::class,

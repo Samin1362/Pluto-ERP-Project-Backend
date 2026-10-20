@@ -44,7 +44,7 @@ Pattern files: `PartyController.php`, `PartyRequest.php`, `PartyListRequest.php`
 ### 4.2 Contract rules (05 §1)
 - JSON `snake_case`; envelope `{data}` / `{data, meta}`; money/qty/rates as **decimal strings**; dates `YYYY-MM-DD`.
 - Lists paginate (`page`, `per_page` ≤ 100); unknown query params → 422.
-- Editable resources return `ETag: W/"<lock_version>"`; PUT/PATCH need `If-Match` (428 / 409 `version_conflict`).
+- Editable resources return `ETag: W/"<lock_version>"`; PUT/PATCH need `If-Match` (428 / 409 `version_conflict`); the SPA sends it as `X-If-Match` (Vercel's edge answers 412 to a standard `If-Match` after a successful edit) and `AcceptXIfMatch` maps it back — keep reading `If-Match` in controllers.
 - Create and post endpoints use the `idempotent` middleware.
 - Errors: throw `App\Support\Problem\ApiProblem('<code>', …)`; codes must exist in `ErrorCatalogue` (generated from `docs/source/errors.py`).
 - Every mutation writes `audit_logs` through `App\Domain\Shared\AuditLogger`.
