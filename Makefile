@@ -1,5 +1,5 @@
 # Daily commands for the local Docker stack (backlog P0.2-BE-05). First time: ./scripts/setup.sh
-.PHONY: help up down logs sh migrate fresh test tinker docs lint integrity
+.PHONY: help up down logs sh migrate fresh test tinker docs lint fix integrity
 
 help: ## List the commands
 	@grep -E '^[a-z]+:.*## ' $(MAKEFILE_LIST) | awk -F ':.*## ' '{ printf "  make %-10s %s\n", $$1, $$2 }'
@@ -28,11 +28,14 @@ test: ## Run the PHPUnit suite against the ledgerflow_test database
 tinker: ## Laravel REPL
 	docker compose exec app php artisan tinker
 
-docs: ## Regenerate docs, contract and generated code (added in P0.7-BE-01)
-	@echo "make docs arrives with P0.7-BE-01"; exit 1
+docs: ## Regenerate docs, contract and generated code from docs/source, then check them
+	./scripts/docs.sh
 
-lint: ## Code style checks (added in P0.8-BE-01)
-	@echo "make lint arrives with P0.8-BE-01"; exit 1
+lint: ## Code style check (Laravel Pint; `make fix` applies it)
+	docker compose exec -T app vendor/bin/pint --test
+
+fix: ## Apply the code style (Laravel Pint)
+	docker compose exec -T app vendor/bin/pint
 
 integrity: ## Books consistency check (added in P4.1)
 	@echo "make integrity arrives with P4.1"; exit 1

@@ -100,6 +100,49 @@ services:
     <<: *app
     command: ["php", "artisan", "schedule:work"]
 
+  # Disposable API for the frontend's end-to-end tests (backlog P0.5-BE-01): `--profile e2e`, port 8081, own
+  # database, Redis databases and config cache, so E2E runs never touch dev data. Prepared by scripts/e2e-prepare.sh.
+  app-e2e:
+    <<: *app
+    environment:
+      DB_DATABASE: ledgerflow_e2e
+      REDIS_DB: "2"
+      REDIS_CACHE_DB: "3"
+      CACHE_PREFIX: ledgerflow-e2e-
+      QUEUE_CONNECTION: sync
+      APP_URL: http://localhost:8081
+      APP_CONFIG_CACHE: /tmp/e2e-config.php
+      APP_ROUTES_CACHE: /tmp/e2e-routes.php
+      AUTH_RATE_LIMIT_PER_IP: "600"
+      API_RATE_LIMIT_PER_USER: "6000"
+      LEDGERFLOW_ALLOWED_ORIGINS: http://localhost:4173
+    healthcheck:
+      test: ["CMD-SHELL", "php -r 'exit(@fsockopen(\"127.0.0.1\", 9000) ? 0 : 1);'"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    profiles: ["e2e"]
+
+  nginx-e2e:
+    image: nginx:1.28.0-alpine
+    # Same config as nginx, pointed at app-e2e.
+    command: ["sh", "-c", "sed 's/fastcgi_pass app:9000/fastcgi_pass app-e2e:9000/' /etc/nginx/app.conf > /etc/nginx/conf.d/default.conf && exec nginx -g 'daemon off;'"]
+    ports:
+      - "${E2E_HTTP_PORT:-8081}:80"
+    volumes:
+      - ./docker/nginx/default.conf:/etc/nginx/app.conf:ro
+      - ./public:/var/www/html/public:ro
+    depends_on:
+      app-e2e:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1/up || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    profiles: ["e2e"]
+
   # Public https://<random>.trycloudflare.com URL for nginx (backlog P0.4-BE-01). Only with `--profile live`;
   # read the URL with ./scripts/tunnel-url.sh. The URL changes only when this container restarts.
   cloudflared:

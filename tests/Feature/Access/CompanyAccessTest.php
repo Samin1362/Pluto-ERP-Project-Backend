@@ -4,7 +4,9 @@ namespace Tests\Feature\Access;
 
 use App\Domain\Access\RoleTemplates;
 use App\Models\Company;
+use App\Models\Permission;
 use App\Models\Role;
+use App\Models\User;
 use App\Support\CurrentCompany;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
@@ -40,7 +42,7 @@ class CompanyAccessTest extends TestCase
     {
         $token = $this->login('viewer@meghna.example');
         $this->api('GET', '/api/v1/parties?type=customer', $token, $this->company->id)->assertOk();
-        \DB::table('company_users')->where('user_id', \App\Models\User::where('email', 'viewer@meghna.example')->value('id'))->update(['status' => 'deactivated']);
+        \DB::table('company_users')->where('user_id', User::where('email', 'viewer@meghna.example')->value('id'))->update(['status' => 'deactivated']);
         $this->assertProblem($this->api('GET', '/api/v1/parties?type=customer', $token, $this->company->id), 403, 'not_a_member');
     }
 
@@ -63,7 +65,7 @@ class CompanyAccessTest extends TestCase
 
         app(CurrentCompany::class)->set($this->company, null);
         $role = Role::where('slug', 'store')->first();
-        $role->permissions()->attach(\App\Models\Permission::where('key', 'parties.view')->value('id'));
+        $role->permissions()->attach(Permission::where('key', 'parties.view')->value('id'));
         $role->update(['description' => 'Can now look up customers']); // a role edit bumps lock_version, invalidating the permission cache
         app(CurrentCompany::class)->clear();
 
