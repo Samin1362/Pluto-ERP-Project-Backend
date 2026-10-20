@@ -136,18 +136,14 @@ curl "$(./scripts/tunnel-url.sh)/api/ready"
 **The tunnel URL changes whenever the `cloudflared` container restarts** (reboot, Docker restart, `live.sh down`). Then follow [the runbook](docs/runbooks/tunnel-url-changed.md): it takes about two minutes.
 
 ### Nightly backup
-Add to the host's crontab (`crontab -e`), with the real path:
-```
-0 2 * * * cd "/path/to/Pluto-ERP-Project-Backend" && ./scripts/backup.sh >> backups/cron.log 2>&1
-```
-macOS: give `cron` Full Disk Access (System Settings → Privacy & Security) if the job cannot read the folder. Windows: Task Scheduler running `wsl -e bash -lc 'cd ~/Pluto-ERP-Project-Backend && ./scripts/backup.sh'`.
+The live stack includes a `backup` service (`docker/backup/nightly.sh`) that dumps the database to `backups/ledgerflow-YYYYmmdd-HHMMSS.sql.gz` every night at **02:00 Dhaka time** and deletes files older than 14 days. No host cron is needed, so it works the same on macOS (where cron cannot read `~/Desktop`), Windows and Linux. Change the time with `BACKUP_AT=HHMM` / `BACKUP_TZ` in `.env.live`; check it with `./scripts/live.sh logs backup`. `./scripts/backup.sh` makes an extra backup at any time (deploys do this automatically).
 **Weekly:** copy the newest file in `backups/` off the machine (Google Drive or an external disk). A backup that only lives on the host does not survive a dead disk.
 
 ### Host machine checklist
 - [ ] Docker Desktop installed and set to **start at login**; the user logs in automatically after a restart.
 - [ ] The machine **never sleeps while on power** (macOS: System Settings → Energy / Battery → Options → "Prevent automatic sleeping when the display is off"); OS updates restart it outside working hours.
 - [ ] Repo cloned at a fixed path; `.env.live` taken from the password manager (never from chat).
-- [ ] Nightly backup cron entry installed; weekly off-machine copy done by: Samin.
+- [ ] `./scripts/live.sh logs backup` shows the nightly backups; weekly off-machine copy done by: Samin.
 - [ ] After any reboot: `./scripts/live.sh up` → `./scripts/tunnel-url.sh` → if the URL changed, follow the runbook.
 - [ ] Live site down? Call Samin (host owner); Masum can check the Vercel side.
 

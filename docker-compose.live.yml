@@ -31,6 +31,24 @@ services:
   mysql:
     ports: !reset []
 
+  # Nightly backup to ./backups at 02:00 Dhaka time, kept 14 days (backlog P0.4-BE-04). No host cron needed.
+  backup:
+    image: mysql:8.0.44
+    entrypoint: ["sh", "/nightly.sh"]
+    env_file:
+      - .env.live
+    environment:
+      TZ: ${BACKUP_TZ:-Asia/Dhaka}
+      BACKUP_AT: ${BACKUP_AT:-0200}
+    volumes:
+      - ./docker/backup/nightly.sh:/nightly.sh:ro
+      - ./backups:/backups
+    depends_on:
+      mysql:
+        condition: service_healthy
+    restart: unless-stopped
+    profiles: ["live"]
+
   mailpit:
     # Not used live (MAIL_MAILER=log until SMTP is chosen, decision C4).
     profiles: ["dev-only"]
