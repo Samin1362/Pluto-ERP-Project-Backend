@@ -100,7 +100,16 @@ services:
     <<: *app
     command: ["php", "artisan", "schedule:work"]
 
-  # cloudflared (live profile) is added in P0.4-BE-01.
+  # Public https://<random>.trycloudflare.com URL for nginx (backlog P0.4-BE-01). Only with `--profile live`;
+  # read the URL with ./scripts/tunnel-url.sh. The URL changes only when this container restarts.
+  cloudflared:
+    image: cloudflare/cloudflared:2025.10.0
+    command: ["tunnel", "--no-autoupdate", "--url", "http://nginx:80"]
+    depends_on:
+      nginx:
+        condition: service_healthy
+    restart: unless-stopped
+    profiles: ["live"]
 
 volumes:
   mysql-data:

@@ -11,19 +11,29 @@ TEST_ROLES=(viewer store accountant sales finance)
 say() { printf '\033[1;34m==>\033[0m %s\n' "$*"; }
 die() { printf '\033[1;31mError:\033[0m %s\n' "$*" >&2; exit 1; }
 
-# Read one value from .env (empty if missing).
-env_get() { [ -f .env ] && awk -F= -v k="$1" '$1==k { sub(/^[^=]*=/, ""); print; exit }' .env || true; }
+# LIVE=1 switches every helper to the live stack (.env.live, project pluto-erp-live; backlog P0.4-BE-02).
+LIVE="${LIVE:-0}"
+if [ "$LIVE" = "1" ]; then ENV_FILE=".env.live"; else ENV_FILE=".env"; fi
 
-# Set KEY=VALUE in .env, replacing an existing line or appending one.
+# Read one value from $ENV_FILE (empty if missing).
+env_get() { [ -f "$ENV_FILE" ] && awk -F= -v k="$1" '$1==k { sub(/^[^=]*=/, ""); print; exit }' "$ENV_FILE" || true; }
+
+# Set KEY=VALUE in $ENV_FILE, replacing an existing line or appending one.
 env_set() {
   local tmp; tmp="$(mktemp)"
-  awk -F= -v k="$1" -v v="$2" 'BEGIN { done = 0 } $1==k { print k "=" v; done = 1; next } { print } END { if (!done) print k "=" v }' .env > "$tmp"
-  cat "$tmp" > .env && rm -f "$tmp"
+  awk -F= -v k="$1" -v v="$2" 'BEGIN { done = 0 } $1==k { print k "=" v; done = 1; next } { print } END { if (!done) print k "=" v }' "$ENV_FILE" > "$tmp"
+  cat "$tmp" > "$ENV_FILE" && rm -f "$tmp"
 }
 
 random_secret() { LC_ALL=C tr -dc 'A-Za-z0-9' < /dev/urandom | head -c "${1:-24}"; }
 
-dc() { docker compose "$@"; }
+dc() {
+  if [ "$LIVE" = "1" ]; then
+    docker compose -p pluto-erp-live --env-file .env.live -f docker-compose.yml -f docker-compose.live.yml --profile live "$@"
+  else
+    docker compose "$@"
+  fi
+}
 artisan() { dc exec -T app php artisan "$@"; }
 
 # Run SQL as MySQL root inside the mysql container; prints rows without headers.

@@ -114,6 +114,43 @@ python3 docs/source/validate_api.py && python3 docs/source/validate_schema.py &&
 ```
 Frontend checks and end-to-end tests live in the frontend repo (`Pluto-ERP-Project-Frontend`).
 
+## Live backend (host machine)
+The live API runs on one always-on machine (decision C1: Samin's Mac) with Docker, and the internet reaches it through a **Cloudflare quick tunnel** (`https://<random>.trycloudflare.com`, no account or domain needed). The Vercel frontend calls it through its `/api` proxy. The live stack is a separate Compose project (`pluto-erp-live`): its own containers, database volume and port **8090**, so it never touches the developer stack on the same machine.
+
+```bash
+cp .env.live.example .env.live     # or take the real .env.live from the password manager
+./scripts/live.sh init             # first time: random secrets, prod image, migrate, keys, tunnel
+./scripts/live.sh artisan ledgerflow:company:create "Company Ltd." --owner-email=owner@example.com --owner-name="Owner"
+./scripts/tunnel-url.sh            # prints the public URL
+curl "$(./scripts/tunnel-url.sh)/api/ready"
+```
+
+| Command | Does |
+|---|---|
+| `./scripts/live.sh up` / `down` / `ps` / `logs [service]` | start (waits until healthy, prints the URL) / stop / status / logs |
+| `./scripts/live.sh artisan …` | artisan in the live app |
+| `./scripts/deploy.sh` | release the latest `main`: clean-checkout check, pull, backup, build, replace app/worker/scheduler/nginx, migrate, cache, smoke test. **cloudflared is not restarted, so the URL stays the same** |
+| `./scripts/backup.sh` | `backups/ledgerflow-YYYYmmdd-HHMMSS.sql.gz` (kept 14 days) |
+| `./scripts/restore.sh <file>` | restore after typing `RESTORE` (safety backup first); `RESTORE_DB=ledgerflow_e2e` for a test restore |
+
+**The tunnel URL changes whenever the `cloudflared` container restarts** (reboot, Docker restart, `live.sh down`). Then follow [the runbook](docs/runbooks/tunnel-url-changed.md): it takes about two minutes.
+
+### Nightly backup
+Add to the host's crontab (`crontab -e`), with the real path:
+```
+0 2 * * * cd "/path/to/Pluto-ERP-Project-Backend" && ./scripts/backup.sh >> backups/cron.log 2>&1
+```
+macOS: give `cron` Full Disk Access (System Settings → Privacy & Security) if the job cannot read the folder. Windows: Task Scheduler running `wsl -e bash -lc 'cd ~/Pluto-ERP-Project-Backend && ./scripts/backup.sh'`.
+**Weekly:** copy the newest file in `backups/` off the machine (Google Drive or an external disk). A backup that only lives on the host does not survive a dead disk.
+
+### Host machine checklist
+- [ ] Docker Desktop installed and set to **start at login**; the user logs in automatically after a restart.
+- [ ] The machine **never sleeps while on power** (macOS: System Settings → Energy / Battery → Options → "Prevent automatic sleeping when the display is off"); OS updates restart it outside working hours.
+- [ ] Repo cloned at a fixed path; `.env.live` taken from the password manager (never from chat).
+- [ ] Nightly backup cron entry installed; weekly off-machine copy done by: Samin.
+- [ ] After any reboot: `./scripts/live.sh up` → `./scripts/tunnel-url.sh` → if the URL changed, follow the runbook.
+- [ ] Live site down? Call Samin (host owner); Masum can check the Vercel side.
+
 ## Documentation index
 | # | Document | What it answers |
 |---|---|---|
