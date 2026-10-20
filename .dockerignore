@@ -1,0 +1,19 @@
+vendor
+node_modules
+.git
+.github
+.env*
+!.env.example
+storage/logs/*
+!storage/logs/.gitignore
+storage/keys
+storage/framework/testing/keys
+backups
+docs/source/__pycache__
+.DS_Store
+.phpunit.cache
+.phpunit.result.cache
+# Not needed in the production image
+docs
+tests
+contract

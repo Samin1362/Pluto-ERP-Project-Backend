@@ -23,3 +23,8 @@ Homestead.json
 Homestead.yaml
 Thumbs.db
 /storage/keys
+
+# Pluto-ERP-Project (backlog P0.1-BE-01)
+.env.live
+/backups
+docs/source/__pycache__/
