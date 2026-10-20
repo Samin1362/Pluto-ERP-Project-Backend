@@ -126,7 +126,7 @@ services:
   nginx-e2e:
     image: nginx:1.28.0-alpine
     # Same config as nginx, pointed at app-e2e.
-    command: ["sh", "-c", "sed 's/fastcgi_pass app:9000/fastcgi_pass app-e2e:9000/' /etc/nginx/app.conf > /etc/nginx/conf.d/default.conf && exec nginx -g 'daemon off;'"]
+    command: ["sh", "-c", "sed 's/set $$php_upstream app:9000/set $$php_upstream app-e2e:9000/' /etc/nginx/app.conf > /etc/nginx/conf.d/default.conf && exec nginx -g 'daemon off;'"]
     ports:
       - "${E2E_HTTP_PORT:-8081}:80"
     volumes:

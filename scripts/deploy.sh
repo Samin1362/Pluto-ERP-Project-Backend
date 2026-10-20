@@ -36,7 +36,8 @@ artisan route:cache
 artisan queue:restart
 
 say "Smoke test"
-curl -fs "http://localhost:$(env_get HTTP_PORT)/api/ready" >/dev/null
+for _ in $(seq 20); do curl -fs -m 10 "http://localhost:$(env_get HTTP_PORT)/api/ready" >/dev/null && break; sleep 3; done
+curl -fs -m 10 "http://localhost:$(env_get HTTP_PORT)/api/ready" >/dev/null
 after="$("$(dirname "$0")/tunnel-url.sh" 2>/dev/null || true)"
 dc exec -T app sh -c 'mkdir -p storage/app && echo "$1 $2" >> storage/app/deploy.log' sh "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$sha"
 
