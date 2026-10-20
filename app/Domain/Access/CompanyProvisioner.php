@@ -138,8 +138,10 @@ final class CompanyProvisioner
                 'parent_id' => $parent ? $groups[$parent]->id : null, 'code' => (string) $code, 'name' => $name, 'nature' => $nature,
                 'normal_balance' => in_array($nature, ['asset', 'expense'], true) ? 'debit' : 'credit',
                 'report_section' => in_array($nature, ['income', 'expense'], true) ? 'profit_and_loss' : 'balance_sheet',
-                'cash_flow_category' => match ((string) $code) { '1100' => 'cash', '12' => 'investing', '22', '3' => 'financing',
-                    '11', '1201', '1301', '21', '2101' => 'operating', default => null },
+                'cash_flow_category' => match ((string) $code) {
+                    '1100' => 'cash', '12' => 'investing', '22', '3' => 'financing',
+                    '11', '1201', '1301', '21', '2101' => 'operating', default => null
+                },
                 'is_system' => true, 'used_in_cash_vouchers' => in_array((string) $code, ['1100'], true), 'sort_order' => $order++,
             ]);
         }

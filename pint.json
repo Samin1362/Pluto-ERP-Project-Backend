@@ -1,0 +1,13 @@
+{
+    "preset": "laravel",
+    "exclude": [
+        "database/migrations",
+        "docs",
+        "storage",
+        "bootstrap/cache"
+    ],
+    "notPath": [
+        "app/Support/Problem/ErrorCatalogue.php",
+        "app/Domain/Access/RoleTemplates.php"
+    ]
+}

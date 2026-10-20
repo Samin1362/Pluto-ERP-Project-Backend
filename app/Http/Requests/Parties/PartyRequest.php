@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Parties;
 
 use App\Http\Requests\StrictRequest;
+use App\Models\Party;
 use App\Support\CurrentCompany;
 use Illuminate\Validation\Rule;
 
@@ -90,7 +91,7 @@ class PartyRequest extends StrictRequest
     {
         $id = $this->route('id');
 
-        return ctype_digit((string) $id) ? \App\Models\Party::whereKey((int) $id)->value('country_code') : null;
+        return ctype_digit((string) $id) ? Party::whereKey((int) $id)->value('country_code') : null;
     }
 
     public function messages(): array

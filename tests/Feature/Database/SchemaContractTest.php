@@ -22,6 +22,7 @@ class SchemaContractTest extends TestCase
     private const FRAMEWORK_TABLES = ['migrations', 'cache', 'cache_locks', 'jobs', 'job_batches', 'failed_jobs'];
 
     private array $contract;
+
     private string $schema;
 
     protected function setUp(): void
@@ -62,6 +63,7 @@ class SchemaContractTest extends TestCase
                 $this->assertSame($col['nullable'], $row->nul === 'YES', "$table.{$col['name']} nullability");
                 if ($col['generated'] !== null) {
                     $this->assertStringContainsString('STORED GENERATED', $row->x, "$table.{$col['name']} generated");
+
                     continue;
                 }
                 if ($col['auto_increment']) {
@@ -172,6 +174,7 @@ class SchemaContractTest extends TestCase
             DB::transaction(fn () => $write());
         } catch (QueryException $e) {
             $this->assertContains((int) ($e->errorInfo[1] ?? 0), [3819, 1062, 1451, 1452, 1048, 1364], $e->getMessage());
+
             return;
         }
         $this->fail('The database accepted a row that violates a constraint.');

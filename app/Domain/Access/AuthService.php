@@ -6,6 +6,7 @@ use App\Domain\Shared\AuditLogger;
 use App\Models\User;
 use App\Models\UserSession;
 use App\Support\Problem\ApiProblem;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
@@ -158,7 +159,7 @@ final class AuthService
     /** A real hash of a random value with the current cost settings, so unknown e-mails cost as much as known ones. */
     private function dummyHash(): string
     {
-        return \Illuminate\Support\Facades\Cache::rememberForever('auth:dummy-hash:'.config('hashing.driver'), fn () => Hash::make(Str::random(40)));
+        return Cache::rememberForever('auth:dummy-hash:'.config('hashing.driver'), fn () => Hash::make(Str::random(40)));
     }
 
     /** @return array{0: UserSession, 1: string} */

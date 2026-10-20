@@ -12,6 +12,7 @@ use BaconQrCode\Renderer\RendererStyle\RendererStyle;
 use BaconQrCode\Writer;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
 
 /**
@@ -44,7 +45,7 @@ final class TwoFactorService
         $secret = Totp::newSecret();
         $user->forceFill(['two_factor_secret' => $secret, 'two_factor_recovery_codes' => null])->save();
         $uri = Totp::uri($secret, $user->email, (string) config('ledgerflow.two_factor.issuer'));
-        $svg = (new Writer(new ImageRenderer(new RendererStyle(192, 1), new SvgImageBackEnd())))->writeString($uri);
+        $svg = (new Writer(new ImageRenderer(new RendererStyle(192, 1), new SvgImageBackEnd)))->writeString($uri);
 
         return ['otpauth_uri' => $uri, 'qr_svg' => trim(preg_replace('/^<\?xml[^>]*>\s*/', '', $svg))];
     }
@@ -73,7 +74,7 @@ final class TwoFactorService
     /** DELETE /me/two-factor: needs the password; refused while any company of the user requires 2-step. */
     public function disable(User $user, string $password): void
     {
-        if (! \Illuminate\Support\Facades\Hash::check($password, (string) $user->password_hash)) {
+        if (! Hash::check($password, (string) $user->password_hash)) {
             throw new ApiProblem('invalid_credentials', 'The password is not correct.');
         }
         if ($this->requiredByAnyCompany($user)) {

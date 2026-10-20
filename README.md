@@ -4,6 +4,8 @@ A multi-company ERP for Bangladeshi businesses that buy and sell physical goods.
 
 > **Status: implementation slice 1 (19 Oct 2026):** project setup, sign-in with 2-step verification, role-based access and the Customers workflow (list, add, edit, details) run end to end on Laravel + MySQL with the React UI (frontend: `Pluto-ERP-Project-Frontend` repo). Everything else is documentation only. Details, deviations and test results: [docs/15](docs/15-Implementation-Slice-1.md). ⚑ Open decisions: [docs/00 §7](docs/00-Discovery-and-Decisions.md#7-other-decisions-requiring-approval).
 
+> **Team docs:** [CONTRIBUTING.md](CONTRIBUTING.md) (Jira, branches, PRs, Definition of Done) · [CLAUDE.md](CLAUDE.md) (rules and recipe for AI sessions) · [runbook: tunnel URL changed](docs/runbooks/tunnel-url-changed.md)
+
 ## Business objectives
 1. Correct books without accounting expertise: every posting balances; posted records are immutable and corrected by reversal.
 2. A daily view of cash, receivables, payables and stock.
@@ -39,7 +41,7 @@ Pluto-ERP-Project-Backend/
   contract/contract.gen.ts    generated TypeScript types, copied into the frontend repo
   docker/                     php (Dockerfile, ini), nginx, mysql init
   docker-compose.yml          local stack (app, nginx, mysql, redis, mailpit, worker, scheduler)
-  scripts/                    setup.sh, seed-test-users.sh, reset-db.sh (legacy/run-e2e.sh until P0.5)
+  scripts/                    setup.sh, seed-test-users.sh, reset-db.sh, e2e-prepare.sh, live.sh, deploy.sh, backup.sh …
   Makefile                    daily commands (make help)
   docs/                       specifications 00–15, openapi.yaml, schema/, source/ (generators)
   .github/                    CI, PR template, CODEOWNERS
@@ -72,6 +74,7 @@ Daily commands (`make help` lists them):
 | `make test` | PHPUnit against the separate `ledgerflow_test` database |
 | `make fresh` | wipe the local database and recreate demo company + test users (asks first) |
 | `make tinker` | Laravel REPL |
+| `make docs` | regenerate docs 01/02/04/05/09, `openapi.yaml`, migrations, generated PHP and `contract/` from `docs/source`, then run the documentation gates; commit the result (a clean `git status` afterwards means everything was in sync) |
 
 Troubleshooting:
 - **Port already in use** (another project on 8080, 8025 or 33060): set `HTTP_PORT`, `MAILPIT_PORT` or `DB_FORWARD_PORT` in `.env`, then `make up`.
@@ -109,10 +112,10 @@ Troubleshooting:
 ## Testing commands
 ```bash
 make test                                    # PHPUnit in Docker (ledgerflow_test; never touches your dev data)
-python3 docs/source/validate_api.py && python3 docs/source/validate_schema.py && python3 docs/source/check_consistency.py   # documentation gates
+make docs                                    # regenerate docs, migrations, generated PHP/TS and contract/, then run the gates (Docker only)
 # CI runs the docs gates and PHPUnit on every push and pull request (.github/workflows/ci.yml)
 ```
-Frontend checks and end-to-end tests live in the frontend repo (`Pluto-ERP-Project-Frontend`).
+Frontend checks and end-to-end tests live in the frontend repo (`Pluto-ERP-Project-Frontend`). Its `scripts/e2e.sh` calls this repo's `scripts/e2e-prepare.sh`, which starts a separate API on **http://localhost:8081** (`--profile e2e`: `app-e2e` + `nginx-e2e`) on the `ledgerflow_e2e` database with its own Redis databases, wipes it and creates `owner@`, `viewer@` and `store@e2e.ledgerflow.test` with the password in `E2E_PASSWORD`. Your dev data is never touched. Stop it with `docker compose --profile e2e stop app-e2e nginx-e2e`.
 
 ## Live backend (host machine)
 The live API runs on one always-on machine (decision C1: Samin's Mac) with Docker, and the internet reaches it through a **Cloudflare quick tunnel** (`https://<random>.trycloudflare.com`, no account or domain needed). The Vercel frontend calls it through its `/api` proxy. The live stack is a separate Compose project (`pluto-erp-live`): its own containers, database volume and port **8090**, so it never touches the developer stack on the same machine.

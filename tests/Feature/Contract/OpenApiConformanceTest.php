@@ -2,9 +2,11 @@
 
 namespace Tests\Feature\Contract;
 
+use App\Domain\Access\Totp;
 use App\Models\Company;
 use Illuminate\Testing\TestResponse;
 use Opis\JsonSchema\Errors\ErrorFormatter;
+use Opis\JsonSchema\ValidationResult;
 use Opis\JsonSchema\Validator;
 use Symfony\Component\Yaml\Yaml;
 use Tests\TestCase;
@@ -82,7 +84,7 @@ class OpenApiConformanceTest extends TestCase
         $start = $this->api('POST', '/api/v1/me/two-factor', $t);
         $this->assertConforms($start, 'POST', '/me/two-factor');
         parse_str((string) parse_url($start->json('data.otpauth_uri'), PHP_URL_QUERY), $q);
-        $code = fn () => \App\Domain\Access\Totp::code($q['secret'], \App\Domain\Access\Totp::step(now()->getTimestamp()));
+        $code = fn () => Totp::code($q['secret'], Totp::step(now()->getTimestamp()));
 
         $this->assertConforms($this->api('POST', '/api/v1/me/two-factor/confirm', $t, null, ['code' => 'abc']), 'POST', '/me/two-factor/confirm');          // 422
         $this->assertConforms($this->api('POST', '/api/v1/me/two-factor/confirm', $t, null, ['code' => $code()]), 'POST', '/me/two-factor/confirm');        // 201
@@ -116,9 +118,9 @@ class OpenApiConformanceTest extends TestCase
         $this->assertFalse($this->validate($missingData, $ptr)->isValid(), 'the data envelope is required');
     }
 
-    private function validate(mixed $data, string $pointer): \Opis\JsonSchema\ValidationResult
+    private function validate(mixed $data, string $pointer): ValidationResult
     {
-        $validator = new Validator();
+        $validator = new Validator;
         $validator->parser()->setOption('defaultDraft', '2020-12');
         $validator->setMaxErrors(5);
         $validator->resolver()->registerRaw(self::doc(), self::DOC_URI);
@@ -146,7 +148,7 @@ class OpenApiConformanceTest extends TestCase
         $data = json_decode($r->getContent());
         $result = $this->validate($data, $pointer);
         $this->assertTrue($result->isValid(), "{$method} {$path} {$status} does not match the contract: "
-            .json_encode($result->hasError() ? (new ErrorFormatter())->format($result->error()) : [], JSON_PRETTY_PRINT).' body: '.$r->getContent());
+            .json_encode($result->hasError() ? (new ErrorFormatter)->format($result->error()) : [], JSON_PRETTY_PRINT).' body: '.$r->getContent());
 
         if ($ctype === 'application/json' && isset($data->data)) {
             $schema = $op->responses->{$status}->content->{$ctype}->schema->properties->data;

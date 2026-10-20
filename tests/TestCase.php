@@ -8,11 +8,13 @@ use App\Models\CompanyUser;
 use App\Models\Role;
 use App\Models\User;
 use App\Support\CurrentCompany;
+use App\Support\Problem\ErrorCatalogue;
 use Database\Seeders\ReferenceDataSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Testing\TestResponse;
+use Symfony\Component\HttpFoundation\Cookie;
 
 abstract class TestCase extends BaseTestCase
 {
@@ -98,7 +100,7 @@ abstract class TestCase extends BaseTestCase
         return $this->json($method, $uri, $data, $h);
     }
 
-    protected function refreshCookie(TestResponse $r): ?\Symfony\Component\HttpFoundation\Cookie
+    protected function refreshCookie(TestResponse $r): ?Cookie
     {
         foreach ($r->headers->getCookies() as $c) {
             if ($c->getName() === 'lf_rt') {
@@ -116,7 +118,7 @@ abstract class TestCase extends BaseTestCase
         $this->assertStringStartsWith('application/problem+json', (string) $r->headers->get('Content-Type'));
         $r->assertJsonPath('code', $code)->assertJsonPath('status', $status);
         $this->assertNotEmpty($r->json('request_id'));
-        $this->assertArrayHasKey($code, \App\Support\Problem\ErrorCatalogue::CODES);
+        $this->assertArrayHasKey($code, ErrorCatalogue::CODES);
 
         return $r;
     }

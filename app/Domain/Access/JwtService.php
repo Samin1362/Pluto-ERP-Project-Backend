@@ -7,7 +7,6 @@ use App\Support\Problem\ApiProblem;
 use DateInterval;
 use DateTimeImmutable;
 use Illuminate\Support\Str;
-use Symfony\Component\Clock\NativeClock;
 use Lcobucci\JWT\Configuration;
 use Lcobucci\JWT\Signer\Ecdsa\Sha256;
 use Lcobucci\JWT\Signer\Key\InMemory;
@@ -18,6 +17,7 @@ use Lcobucci\JWT\Validation\Constraint\PermittedFor;
 use Lcobucci\JWT\Validation\Constraint\SignedWith;
 use Lcobucci\JWT\Validation\RequiredConstraintsViolated;
 use RuntimeException;
+use Symfony\Component\Clock\NativeClock;
 use Throwable;
 
 /**
@@ -107,6 +107,6 @@ final class JwtService
             throw new RuntimeException('JWT keys are missing: run `php artisan ledgerflow:jwt-keys` (07 §3.1).');
         }
 
-        return $this->config = Configuration::forAsymmetricSigner(new Sha256(), InMemory::file($priv), InMemory::file($pub));
+        return $this->config = Configuration::forAsymmetricSigner(new Sha256, InMemory::file($priv), InMemory::file($pub));
     }
 }

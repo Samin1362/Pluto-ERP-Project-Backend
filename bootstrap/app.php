@@ -8,6 +8,7 @@ use App\Http\Middleware\RequestId;
 use App\Http\Middleware\RequirePermission;
 use App\Http\Middleware\ResolveCompany;
 use App\Http\Middleware\TrustLedgerflowProxy;
+use App\Support\Problem\ApiProblem;
 use App\Support\Problem\ProblemRenderer;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -44,5 +45,5 @@ return Application::configure(basePath: dirname(__DIR__))
         // Every API error is RFC 9457 application/problem+json with a stable `code` (05 §3).
         $exceptions->shouldRenderJsonWhen(fn ($request) => $request->is('api/*') || $request->expectsJson());
         $exceptions->render(fn (Throwable $e, $request) => $request->is('api/*') ? ProblemRenderer::render($e, $request) : null);
-        $exceptions->dontReport([App\Support\Problem\ApiProblem::class]);
+        $exceptions->dontReport([ApiProblem::class]);
     })->create();
