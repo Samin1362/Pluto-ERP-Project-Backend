@@ -170,6 +170,6 @@ class OpenApiConformanceTest extends TestCase
 
     private static function doc(): object
     {
-        return self::$doc ??= json_decode(json_encode(Yaml::parseFile(base_path('../docs/openapi.yaml'))));
+        return self::$doc ??= json_decode(json_encode(Yaml::parseFile(base_path('docs/openapi.yaml'))));
     }
 }

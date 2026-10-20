@@ -1,0 +1,222 @@
+{
+ "results": [
+  {
+   "id": "V01",
+   "title": "Every table has a primary key",
+   "checked": 83,
+   "failures": []
+  },
+  {
+   "id": "V02",
+   "title": "Every FK references an existing primary or unique key",
+   "checked": 385,
+   "failures": []
+  },
+  {
+   "id": "V03",
+   "title": "FK column type equals referenced column type exactly (incl. UNSIGNED, CHAR length)",
+   "checked": 385,
+   "failures": []
+  },
+  {
+   "id": "V04",
+   "title": "ON DELETE SET NULL only on nullable columns; self-references nullable",
+   "checked": 385,
+   "failures": []
+  },
+  {
+   "id": "V05",
+   "title": "No CHECK constraint uses a column whose FK has a CASCADE/SET NULL action (MySQL error 3823)",
+   "checked": 148,
+   "failures": []
+  },
+  {
+   "id": "V06",
+   "title": "Stored generated columns: base-column FKs have no cascading action",
+   "checked": 2,
+   "failures": []
+  },
+  {
+   "id": "V07",
+   "title": "CHECK expressions reference only existing, non-AUTO_INCREMENT columns",
+   "checked": 148,
+   "failures": []
+  },
+  {
+   "id": "V08",
+   "title": "Identifiers ≤ 64 chars; FK and CHECK names unique schema-wide; index names unique per table",
+   "checked": 2352,
+   "failures": []
+  },
+  {
+   "id": "V09",
+   "title": "Every FK column is the leftmost column of an index (no implicit InnoDB index)",
+   "checked": 385,
+   "failures": []
+  },
+  {
+   "id": "V10",
+   "title": "No redundant index (left prefix of another key)",
+   "checked": 330,
+   "failures": []
+  },
+  {
+   "id": "V11",
+   "title": "Index key length ≤ 3072 bytes (utf8mb4, DYNAMIC rows); no TEXT/JSON keys",
+   "checked": 497,
+   "failures": []
+  },
+  {
+   "id": "V12",
+   "title": "Maximum row size < 65,535 bytes",
+   "checked": 83,
+   "failures": []
+  },
+  {
+   "id": "V13",
+   "title": "Decimal precision by class: money (18,2), quantity (18,3), unit cost (18,4), FX rate (18,6), percent (7,4); no FLOAT/DOUBLE",
+   "checked": 151,
+   "failures": []
+  },
+  {
+   "id": "V14",
+   "title": "Every BIGINT *_id column has a FK, or is declared polymorphic",
+   "checked": 7,
+   "failures": []
+  },
+  {
+   "id": "V15",
+   "title": "Defaults are valid for their type; enum defaults and values fit",
+   "checked": 229,
+   "failures": []
+  },
+  {
+   "id": "V16",
+   "title": "Reserved-word columns are always back-quoted in generated SQL (credit_notes.usage, debit_notes.usage, permissions.key)",
+   "checked": 3,
+   "failures": []
+  },
+  {
+   "id": "V17",
+   "title": "Document → journal-entry links are one-to-one (UNIQUE), which blocks double posting",
+   "checked": 16,
+   "failures": []
+  },
+  {
+   "id": "V18",
+   "title": "Financial and append-only tables (26) are never changed by a delete elsewhere: no SET NULL; CASCADE only from their own header",
+   "checked": 166,
+   "failures": []
+  },
+  {
+   "id": "V19",
+   "title": "ON UPDATE RESTRICT on every FK (surrogate keys are immutable)",
+   "checked": 385,
+   "failures": []
+  },
+  {
+   "id": "V20",
+   "title": "Dependency graph is acyclic (11 migration levels; self-references created in the same migration)",
+   "checked": 83,
+   "failures": []
+  },
+  {
+   "id": "V21",
+   "title": "Every non-tenant table is global reference data or a dependant (CASCADE) of a tenant or global row",
+   "checked": 20,
+   "failures": []
+  },
+  {
+   "id": "V22",
+   "title": "Every tenant table has an index or unique key led by company_id",
+   "checked": 59,
+   "failures": []
+  },
+  {
+   "id": "V23",
+   "title": "Junction tables have a composite primary or unique key",
+   "checked": 4,
+   "failures": []
+  },
+  {
+   "id": "V24",
+   "title": "Append-only tables have no updated_at",
+   "checked": 2,
+   "failures": []
+  }
+ ],
+ "summary": {
+  "tables": 83,
+  "columns": 1322,
+  "fks": 385,
+  "uniques": 84,
+  "indexes": 330,
+  "checks": 148,
+  "levels": 11,
+  "decimal_inventory": {
+   "DECIMAL(18,2)": 97,
+   "DECIMAL(18,3)": 25,
+   "DECIMAL(18,4)": 11,
+   "DECIMAL(18,6)": 5,
+   "DECIMAL(7,4)": 13
+  },
+  "reserved_cols": [
+   "credit_notes.usage",
+   "debit_notes.usage",
+   "permissions.key"
+  ],
+  "nullable_uniques": [
+   "products (company_id, barcode) — nullable: barcode",
+   "stock_adjustments (journal_entry_id) — nullable: journal_entry_id",
+   "stock_transfers (dispatch_entry_id) — nullable: dispatch_entry_id",
+   "stock_transfers (receive_entry_id) — nullable: receive_entry_id",
+   "journal_entries (reverses_entry_id) — nullable: reverses_entry_id",
+   "cash_counts (adjustment_entry_id) — nullable: adjustment_entry_id",
+   "bank_statement_lines (matched_journal_line_id) — nullable: matched_journal_line_id",
+   "sales_invoices (journal_entry_id) — nullable: journal_entry_id",
+   "sales_invoices (cancellation_entry_id) — nullable: cancellation_entry_id",
+   "sales_returns (journal_entry_id) — nullable: journal_entry_id",
+   "credit_notes (journal_entry_id) — nullable: journal_entry_id",
+   "credit_notes (sales_return_id) — nullable: sales_return_id",
+   "purchase_bills (journal_entry_id) — nullable: journal_entry_id",
+   "purchase_bills (cancellation_entry_id) — nullable: cancellation_entry_id",
+   "purchase_returns (journal_entry_id) — nullable: journal_entry_id",
+   "debit_notes (journal_entry_id) — nullable: journal_entry_id",
+   "debit_notes (purchase_return_id) — nullable: purchase_return_id",
+   "landed_cost_allocations (journal_entry_id) — nullable: journal_entry_id",
+   "lc_charges (journal_entry_id) — nullable: journal_entry_id",
+   "lc_payments (journal_entry_id) — nullable: journal_entry_id"
+  ],
+  "financial_tables": [
+   "audit_logs",
+   "bill_allocations",
+   "cash_count_denominations",
+   "cash_counts",
+   "credit_notes",
+   "debit_notes",
+   "journal_entries",
+   "journal_lines",
+   "landed_cost_allocation_lines",
+   "landed_cost_allocations",
+   "lc_charges",
+   "lc_payments",
+   "payment_details",
+   "purchase_bill_lines",
+   "purchase_bills",
+   "purchase_return_lines",
+   "purchase_returns",
+   "sales_invoice_lines",
+   "sales_invoices",
+   "sales_return_lines",
+   "sales_returns",
+   "stock_adjustment_lines",
+   "stock_adjustments",
+   "stock_movements",
+   "stock_transfer_lines",
+   "stock_transfers"
+  ],
+  "hashed_names": [
+   "stock_movements_company_id_product_id_warehouse_i_5584895c_index"
+  ]
+ }
+}

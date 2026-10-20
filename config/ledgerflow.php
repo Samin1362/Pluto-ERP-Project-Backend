@@ -4,12 +4,17 @@
  * LedgerFlow settings. Secrets never live here: keys are read from files outside the repository or from the
  * server environment (07 §12). Defaults are safe for production; local overrides go in .env.
  */
+// Key paths may be absolute or relative to the project root; empty means storage/keys/<file>.
+$keyPath = fn (string $var, string $file): string => ($p = (string) env($var, '')) === ''
+    ? storage_path("keys/{$file}")
+    : (str_starts_with($p, '/') ? $p : base_path($p));
+
 return [
 
     'jwt' => [
         // ES256 key pair (07 §3.1). Generate with `php artisan ledgerflow:jwt-keys`.
-        'private_key_path' => env('JWT_PRIVATE_KEY_PATH', storage_path('keys/jwt-private.pem')),
-        'public_key_path' => env('JWT_PUBLIC_KEY_PATH', storage_path('keys/jwt-public.pem')),
+        'private_key_path' => $keyPath('JWT_PRIVATE_KEY_PATH', 'jwt-private.pem'),
+        'public_key_path' => $keyPath('JWT_PUBLIC_KEY_PATH', 'jwt-public.pem'),
         'key_id' => env('JWT_KEY_ID', 'k1'),
         'issuer' => env('JWT_ISSUER', env('APP_URL', 'http://localhost')),
         'audience' => env('JWT_AUDIENCE', 'ledgerflow-spa'),
@@ -45,6 +50,16 @@ return [
         'issuer' => env('TWO_FACTOR_ISSUER', 'LedgerFlow'),
     ],
 
+    // Shared with the Vercel /api proxy (backlog P0.3-BE-02): requests that carry it may set the client IP and host.
+    'proxy' => [
+        'shared_secret' => env('PROXY_SHARED_SECRET', ''),
+    ],
+
+    // Frontend address used in e-mails and invitations (backlog P0.3-BE-03).
+    'frontend_url' => rtrim((string) env('APP_FRONTEND_URL', 'http://localhost:5173'), '/'),
+
     // Origins allowed to call the cookie-authenticated auth endpoints (07 §3.2 CSRF defence).
     'allowed_origins' => array_values(array_filter(array_map('trim', explode(',', (string) env('LEDGERFLOW_ALLOWED_ORIGINS', env('APP_URL', '')))))),
+    // Comma-separated patterns where `*` matches part of one DNS label, e.g. Vercel preview URLs (backlog P0.3-BE-01).
+    'allowed_origin_patterns' => array_values(array_filter(array_map('trim', explode(',', (string) env('LEDGERFLOW_ALLOWED_ORIGIN_PATTERNS', ''))))),
 ];

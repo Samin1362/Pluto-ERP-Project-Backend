@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\TwoFactorRequest;
 use App\Http\Resources\MeResource;
+use App\Support\AllowedOrigins;
 use App\Support\Problem\ApiProblem;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -76,7 +77,7 @@ class AuthController extends Controller
             config('ledgerflow.refresh.path'), null, (bool) config('ledgerflow.refresh.secure'), true, false, Cookie::SAMESITE_STRICT);
     }
 
-    /** CSRF defence for the cookie-authenticated endpoints (07 §3.2): custom header + allowed Origin when sent. */
+    /** CSRF defence for the cookie-authenticated endpoints (07 §3.2): custom header + allowed Origin (exact or pattern) when sent. */
     private function trustedCookieRequest(Request $request): bool
     {
         if ($request->headers->get('X-Requested-With') !== 'XMLHttpRequest') {
@@ -84,6 +85,6 @@ class AuthController extends Controller
         }
         $origin = $request->headers->get('Origin');
 
-        return $origin === null || in_array(rtrim($origin, '/'), array_map(fn ($o) => rtrim($o, '/'), config('ledgerflow.allowed_origins')), true);
+        return $origin === null || AllowedOrigins::allows($origin);
     }
 }

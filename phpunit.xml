@@ -19,25 +19,42 @@
         </include>
     </source>
     <php>
-        <env name="APP_ENV" value="testing"/>
-        <env name="APP_URL" value="http://localhost"/>
-        <env name="APP_MAINTENANCE_DRIVER" value="file"/>
-        <!-- A disposable MySQL 8.0 database; CI overrides these (docs/14 §8). Tests never touch other databases. -->
+        <env name="APP_ENV" value="testing" force="true"/>
+        <env name="APP_URL" value="http://localhost" force="true"/>
+        <env name="APP_MAINTENANCE_DRIVER" value="file" force="true"/>
+        <!-- A disposable MySQL 8.0 database: the `mysql` compose service by default (`make test`); CI and other hosts
+             override these through the environment (docs/14 §8). Tests never touch other databases. -->
         <env name="DB_CONNECTION" value="mysql" force="false"/>
-        <env name="DB_HOST" value="127.0.0.1" force="false"/>
+        <env name="DB_HOST" value="mysql" force="false"/>
         <env name="DB_PORT" value="3306" force="false"/>
-        <env name="DB_DATABASE" value="ledgerflow_test" force="false"/>
+        <env name="DB_DATABASE" value="ledgerflow_test" force="true"/>
         <env name="DB_USERNAME" value="root" force="false"/>
         <env name="DB_PASSWORD" value="" force="false"/>
-        <env name="CACHE_STORE" value="array"/>
-        <env name="QUEUE_CONNECTION" value="sync"/>
-        <env name="SESSION_DRIVER" value="array"/>
-        <env name="MAIL_MAILER" value="array"/>
+        <env name="CACHE_STORE" value="array" force="true"/>
+        <env name="QUEUE_CONNECTION" value="sync" force="true"/>
+        <env name="SESSION_DRIVER" value="array" force="true"/>
+        <env name="MAIL_MAILER" value="array" force="true"/>
         <!-- Cheaper Argon2id in tests only; production uses 64 MiB / 4 passes (07 §2). -->
-        <env name="ARGON_MEMORY" value="1024"/>
-        <env name="ARGON_TIME" value="1"/>
-        <env name="JWT_PRIVATE_KEY_PATH" value="storage/framework/testing/keys/jwt-private.pem"/>
-        <env name="JWT_PUBLIC_KEY_PATH" value="storage/framework/testing/keys/jwt-public.pem"/>
-        <env name="LEDGERFLOW_ALLOWED_ORIGINS" value="http://localhost"/>
+        <env name="ARGON_MEMORY" value="1024" force="true"/>
+        <env name="ARGON_TIME" value="1" force="true"/>
+        <env name="JWT_PRIVATE_KEY_PATH" value="storage/framework/testing/keys/jwt-private.pem" force="true"/>
+        <env name="JWT_PUBLIC_KEY_PATH" value="storage/framework/testing/keys/jwt-public.pem" force="true"/>
+        <env name="LEDGERFLOW_ALLOWED_ORIGINS" value="http://localhost" force="true"/>
+
+        <!-- Laravel reads $_SERVER before $_ENV, and inside Docker $_SERVER holds the container's .env values
+             (e.g. CACHE_STORE=redis, DB_DATABASE=ledgerflow). Mirror every forced value there so tests stay isolated. -->
+        <server name="APP_ENV" value="testing" force="true"/>
+        <server name="APP_URL" value="http://localhost" force="true"/>
+        <server name="APP_MAINTENANCE_DRIVER" value="file" force="true"/>
+        <server name="DB_DATABASE" value="ledgerflow_test" force="true"/>
+        <server name="CACHE_STORE" value="array" force="true"/>
+        <server name="QUEUE_CONNECTION" value="sync" force="true"/>
+        <server name="SESSION_DRIVER" value="array" force="true"/>
+        <server name="MAIL_MAILER" value="array" force="true"/>
+        <server name="ARGON_MEMORY" value="1024" force="true"/>
+        <server name="ARGON_TIME" value="1" force="true"/>
+        <server name="JWT_PRIVATE_KEY_PATH" value="storage/framework/testing/keys/jwt-private.pem" force="true"/>
+        <server name="JWT_PUBLIC_KEY_PATH" value="storage/framework/testing/keys/jwt-public.pem" force="true"/>
+        <server name="LEDGERFLOW_ALLOWED_ORIGINS" value="http://localhost" force="true"/>
     </php>
 </phpunit>

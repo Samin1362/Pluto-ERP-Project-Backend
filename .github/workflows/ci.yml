@@ -1,0 +1,69 @@
+# LedgerFlow CI for the backend repo (pluto-erp-backend): documentation gates and backend tests on MySQL 8.0.
+# Frontend checks and E2E moved to the frontend repo; this file is reworked in backlog P0.8-BE-01.
+# Mirrors the commands run locally for slice 1 (docs/15 §5). Secrets: none needed; test keys and passwords are
+# generated per run.
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  docs:
+    name: Documentation and generated code are in sync
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install pyyaml jsonschema
+      - name: Regenerate docs, contract, migrations and typed code from docs/source
+        run: |
+          python3 docs/source/build_docs.py
+          python3 docs/source/build_migrations.py
+          python3 docs/source/build_php_contract.py
+          python3 docs/source/build_ts_types.py
+      - name: Fail if anything generated was edited by hand or not regenerated
+        run: git diff --exit-code
+      - run: python3 docs/source/validate_api.py
+      - run: python3 docs/source/validate_schema.py
+      - run: python3 docs/source/check_consistency.py
+
+  backend:
+    name: Backend (PHPUnit on MySQL 8.0)
+    runs-on: ubuntu-24.04
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
+          MYSQL_DATABASE: ledgerflow_test
+        ports: ['3306:3306']
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1" --health-interval=5s --health-timeout=5s --health-retries=20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: pdo_mysql, openssl, sodium, iconv, mbstring
+          coverage: none
+      - run: composer install --no-interaction --prefer-dist --no-progress
+      - name: Migrate, roll back and migrate again
+        env: { DB_CONNECTION: mysql, DB_HOST: 127.0.0.1, DB_DATABASE: ledgerflow_test, DB_USERNAME: root, DB_PASSWORD: '' }
+        run: |
+          export APP_KEY="base64:$(head -c 32 /dev/urandom | base64)"
+          php artisan migrate --force && php artisan migrate:rollback --force && php artisan migrate --force && php artisan db:seed --force
+          php artisan migrate:fresh --force
+      - run: php vendor/bin/phpunit
+        env: { DB_HOST: 127.0.0.1, DB_USERNAME: root, DB_PASSWORD: '' }
+
