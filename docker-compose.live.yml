@@ -1,0 +1,39 @@
+# Live stack on the host machine (backlog P0.4-BE-02). Never run directly: use ./scripts/live.sh, which adds
+#   -p pluto-erp-live --env-file .env.live -f docker-compose.yml -f docker-compose.live.yml --profile live
+# so the live containers, database volume and ports are separate from the developer stack on the same machine.
+
+x-live-app: &live-app
+  image: pluto-erp-app:prod
+  build:
+    target: prod
+  # Code is baked into the image; only storage (JWT keys, logs, uploads) lives in a volume.
+  volumes: !override
+    - live-storage:/var/www/html/storage
+  env_file: !override
+    - .env.live
+  restart: unless-stopped
+
+services:
+  app:
+    <<: *live-app
+
+  worker:
+    <<: *live-app
+
+  scheduler:
+    <<: *live-app
+
+  nginx:
+    # Reachable only from this machine (the tunnel connects inside the Docker network).
+    ports: !override
+      - "127.0.0.1:${HTTP_PORT:-8090}:80"
+
+  mysql:
+    ports: !reset []
+
+  mailpit:
+    # Not used live (MAIL_MAILER=log until SMTP is chosen, decision C4).
+    profiles: ["dev-only"]
+
+volumes:
+  live-storage:
