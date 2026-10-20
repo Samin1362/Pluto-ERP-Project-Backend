@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # MySQL backup of the live database (backlog P0.4-BE-04): backups/ledgerflow-YYYYmmdd-HHMM.sql.gz, kept 14 days.
-#   ./scripts/backup.sh            live stack (default; run nightly by cron at 02:00)
+#   ./scripts/backup.sh            live stack (default; the nightly 02:00 run is the `backup` service)
 #   LIVE=0 ./scripts/backup.sh     developer stack
 LIVE="${LIVE:-1}"
 source "$(dirname "$0")/lib.sh"
