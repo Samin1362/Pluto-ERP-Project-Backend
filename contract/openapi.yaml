@@ -27878,9 +27878,9 @@ paths:
       tags:
       - Accounting
       description: "Picker for product, party, tax and category forms, and the ledger list. Without `accounting.view` the caller must send `purpose` (income_for_product,\
-        \ expense_for_product, purchase_for_supplier, tax, category) allowed by one of its create/edit permissions; only matching active ledgers are returned with\
-        \ id, code and name, never balances (R-26). Sales staff therefore never browse the chart.\n\n**Permission:** any signed-in user who is an active member of\
-        \ the company  \n**Database:** read: account_groups, journal_lines, ledgers  \n**Rules:** —"
+        \ expense_for_product, purchase_for_supplier, tax, category) allowed by one of its create/edit permissions; only matching active posting ledgers are returned,\
+        \ without the balance fields (R-26). Sales staff therefore never browse the chart.\n\n**Permission:** any signed-in user who is an active member of the company\
+        \  \n**Database:** read: account_groups, journal_lines, ledgers  \n**Rules:** —"
       x-permission: auth.self
       x-business-rules: []
       x-requirements:
@@ -43204,7 +43204,8 @@ components:
       additionalProperties: false
     Ledger:
       type: object
-      description: Ledger.
+      description: Ledger. opening_balance, opening_side, balance and balance_side are present only for callers with accounting.view (pickers never see balances,
+        R-26).
       properties:
         id:
           type: integer
@@ -43283,10 +43284,6 @@ components:
       - is_system
       - is_active
       - has_entries
-      - opening_balance
-      - opening_side
-      - balance
-      - balance_side
       - version
     LedgerInput:
       type: object

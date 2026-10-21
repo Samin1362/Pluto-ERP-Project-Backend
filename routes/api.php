@@ -1,10 +1,12 @@
 <?php
 
+use App\Http\Controllers\Api\V1\Accounting\LedgerController;
 use App\Http\Controllers\Api\V1\Auth\AuthController;
 use App\Http\Controllers\Api\V1\Me\TwoFactorController;
 use App\Http\Controllers\Api\V1\MeController;
 use App\Http\Controllers\Api\V1\Parties\LookupController;
 use App\Http\Controllers\Api\V1\Parties\PartyController;
+use App\Http\Controllers\Api\V1\Platform\PlatformLookupController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -25,6 +27,13 @@ Route::middleware(['jwt', 'throttle:api-user'])->group(function () {
     Route::delete('me/two-factor', [TwoFactorController::class, 'destroy']);
 
     Route::middleware('company')->group(function () {
+        // Platform lookups for every member (P1.1-BE-01).
+        Route::get('fiscal-years', [PlatformLookupController::class, 'fiscalYears']);
+        Route::get('branches', [PlatformLookupController::class, 'branches']);
+        Route::get('company/settings', [PlatformLookupController::class, 'companySettings']);
+        Route::get('audit-logs', [PlatformLookupController::class, 'auditLogs']); // P1.1-BE-02: permission is contextual
+        Route::get('ledgers', [LedgerController::class, 'index']); // P1.1-BE-03: chart for accounting.view, picker by purpose otherwise
+
         Route::get('payment-terms', [LookupController::class, 'paymentTerms']);
         Route::get('party-groups', [LookupController::class, 'partyGroups'])->middleware('perm:parties.view');
 

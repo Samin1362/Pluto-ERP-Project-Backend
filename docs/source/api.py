@@ -453,7 +453,7 @@ E("PATCH", "/account-groups/{id}", "Edit a group (name, parent within nature, or
 E("GET", "/ledgers", "Ledger list (balances only with accounting.view)", "auth.self", ["ledgers", "account_groups", "journal_lines"],
   ["H6", "H9", "H10", "H11", "H12", "K16", "D2", "C2", "K6", "I7"],
   params=LISTQ + ['nature', 'kind', 'cash_vouchers', 'active', 'purpose', 'account_group_id'], resp="Page<Ledger>", tag=T, fr=["FR-071"],
-  desc='Picker for product, party, tax and category forms, and the ledger list. Without `accounting.view` the caller must send `purpose` (income_for_product, expense_for_product, purchase_for_supplier, tax, category) allowed by one of its create/edit permissions; only matching active ledgers are returned with id, code and name, never balances (R-26). Sales staff therefore never browse the chart.',
+  desc='Picker for product, party, tax and category forms, and the ledger list. Without `accounting.view` the caller must send `purpose` (income_for_product, expense_for_product, purchase_for_supplier, tax, category) allowed by one of its create/edit permissions; only matching active posting ledgers are returned, without the balance fields (R-26). Sales staff therefore never browse the chart.',
   errors=['purpose_required'])
 E("POST", "/ledgers", "Create a ledger (optional opening balance)", "accounting.create", ["ledgers", "journal_entries", "journal_lines", "account_groups"], ["H4"], rules=["BR-027", "BR-028"], req="LedgerInput", resp="Ledger", idem=True, tag=T, fr=["FR-071"], codes=[201, 422])
 E("GET", "/ledgers/{id}", "Ledger details with FY summary", "accounting.view", ["ledgers", "journal_lines"], ["H5", "H7"], resp="Ledger", tag=T, fr=["FR-072"])
