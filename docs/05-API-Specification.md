@@ -29,13 +29,13 @@
 | Deprecation | `Deprecation` and `Sunset` headers, announced at least 90 days ahead |
 
 ## 2. Authentication summary
-`POST /auth/login` returns a short-lived **access JWT** (15 minutes) in the body and sets a rotating **refresh token** in the `lf_rt` cookie (HttpOnly, Secure, SameSite=Strict, Path=/api/v1/auth). The SPA sends `Authorization: Bearer <access>` on every call. On a 401 `token_expired` it calls `POST /auth/refresh` once and retries. Full design: [07-Authentication-and-Authorization](07-Authentication-and-Authorization.md).
+`POST /auth/login` returns a short-lived **access JWT** (15 minutes) in the body and sets a rotating **refresh token** in the `pl_rt` cookie (HttpOnly, Secure, SameSite=Strict, Path=/api/v1/auth). The SPA sends `Authorization: Bearer <access>` on every call. On a 401 `token_expired` it calls `POST /auth/refresh` once and retries. Full design: [07-Authentication-and-Authorization](07-Authentication-and-Authorization.md).
 
 ## 3. Error response format (RFC 9457 Problem Details)
 
 ```json
 {
-  "type": "https://docs.ledgerflow.example/errors/validation_failed",
+  "type": "https://docs.pluto.example/errors/validation_failed",
   "title": "Some fields need attention",
   "status": 422,
   "code": "validation_failed",
@@ -147,7 +147,7 @@ Content-Type: application/json
 ```
 ```http
 HTTP/1.1 200 OK
-Set-Cookie: lf_rt=8Qm…; Path=/api/v1/auth; HttpOnly; Secure; SameSite=Strict; Max-Age=1209600
+Set-Cookie: pl_rt=8Qm…; Path=/api/v1/auth; HttpOnly; Secure; SameSite=Strict; Max-Age=1209600
 
 {"data": {"status": "authenticated", "access_token": "eyJhbGciOiJFUzI1NiIs…", "token_type": "Bearer", "expires_in": 900,
   "user": {"id": 2, "name": "Rafiq Hasan", "email": "rafiq@meghnatraders.example", "two_factor_enabled": true,
@@ -190,7 +190,7 @@ Idempotency-Key: 5b6a2d1e-0f38-4b0a-a7c9-2d9e1f40c3aa
 HTTP/1.1 422 Unprocessable Content
 Content-Type: application/problem+json
 
-{"type": "https://docs.ledgerflow.example/errors/insufficient_stock", "title": "Not enough stock", "status": 422, "code": "insufficient_stock",
+{"type": "https://docs.pluto.example/errors/insufficient_stock", "title": "Not enough stock", "status": 422, "code": "insufficient_stock",
  "detail": "Line 1 needs 24 jars; Tejgaon warehouse has 18.", "request_id": "…", "errors": {"lines.0.quantity": ["Only 18 available at Tejgaon warehouse"]}}
 ```
 After the quantity is corrected, posting returns **200**. The `journal` array in the response holds the posted lines (Dr customer, Cr income ledgers, Dr COGS, Cr inventory) and `payment_status` is `"unpaid"`.
@@ -219,7 +219,7 @@ PUT /api/v1/sales-invoices/586
 If-Match: W/"3"
 ```
 ```json
-{"type": "https://docs.ledgerflow.example/errors/version_conflict", "title": "Someone else changed this invoice", "status": 409, "code": "version_conflict",
+{"type": "https://docs.pluto.example/errors/version_conflict", "title": "Someone else changed this invoice", "status": 409, "code": "version_conflict",
  "detail": "Shirin Akter saved INV-2026-0586 at 01:02. Reload to see her version; your edits are kept in a draft.", "request_id": "…", "errors": {"current_version": ["4"]}}
 ```
 
@@ -611,7 +611,7 @@ Last run: 24 rules, **24 passed, 0 failed**; 6 negative tests, 6 detected. Offic
 <a id="postauthlogin"></a>
 #### `POST /api/v1/auth/login`
 
-Sign in with e-mail and password. Returns an access token, or a two-factor challenge when 2FA is on. Sets the refresh cookie `lf_rt` (HttpOnly, Secure, SameSite=Strict, Path=/api/v1/auth). Throttled per (e-mail, source IP): after 5 failures in 15 minutes that source gets 429 with Retry-After; wrong credentials and locked accounts both answer 401 `invalid_credentials` (no account enumeration, R-12).
+Sign in with e-mail and password. Returns an access token, or a two-factor challenge when 2FA is on. Sets the refresh cookie `pl_rt` (HttpOnly, Secure, SameSite=Strict, Path=/api/v1/auth). Throttled per (e-mail, source IP): after 5 failures in 15 minutes that source gets 429 with Retry-After; wrong credentials and locked accounts both answer 401 `invalid_credentials` (no account enumeration, R-12).
 
 | | |
 |---|---|
@@ -659,7 +659,7 @@ Rotate the refresh cookie and issue a new access token.
 
 | | |
 |---|---|
-| **Auth** | Refresh cookie `lf_rt` |
+| **Auth** | Refresh cookie `pl_rt` |
 | **Permission** | public (refresh cookie) |
 | **Path / query params** | — / — |
 | **Request body** | — |
@@ -681,7 +681,7 @@ Sign out this session (revokes refresh token, clears cookie). Authenticated by t
 
 | | |
 |---|---|
-| **Auth** | Refresh cookie `lf_rt` |
+| **Auth** | Refresh cookie `pl_rt` |
 | **Permission** | public (refresh cookie) |
 | **Path / query params** | — / — |
 | **Request body** | — |
@@ -7217,7 +7217,7 @@ Add a charge or import expense (posts accrual or payment).
 | **Permission** | `lc.create` — roles: Owner, Finance manager, Accountant |
 | **Path / query params** | — / — |
 | **Request body** | [`LcChargeInput`](#schema-lcchargeinput) |
-| **Validation** | `letter_of_credit_id`* id of a record in this company; `charge_type`* one of margin_deposit/opening_commission/amendment_fee/swift_postage/stamp_documentation/acceptance_commission/discrepancy_fee/marine_insurance/cf_agent_fee/port_handling/customs_duty_taxes/inland_transport/other; `charge_date`* YYYY-MM-DD; `amount`* decimal string, 2 dp; `paid_to` string ≤ 150 (nullable); `payee_party_id` id of a record in this company (nullable); `status`* one of unpaid/paid; `paid_from_account_id` id of a record in this company (nullable); `include_in_landed_cost` boolean; `reference` string ≤ 60 (nullable); `lc_shipment_id` id of a record in this company (nullable); `lc_amendment_id` id of a record in this company (nullable)<br>Unknown fields are rejected (422).<br>BR-044: An LC margin deposit is a refundable asset, never part of landed cost; it is applied to the payment or released at closure. The margin applied to payments may not exceed the margin deposited for that LC.<br>BR-045: LC charges marked for landed cost are held in goods-in-transit and allocated to import bill lines by value (or quantity); the share for quantity already sold goes to cost of goods sold.<br>BR-047: Customs duties and taxes are entered as assessed; LedgerFlow does not calculate them.<br>BR-001: Every posted journal entry balances: total debit = total credit > 0.<br>BR-004: A document or voucher date must fall inside an open accounting period of an open financial year; posting, editing or reversing into a locked period is rejected.<br>BR-031: A payment, transfer or contra cannot take a cash or wallet account below zero, or a bank or cash-credit account below minus its overdraft_limit (zero when not set). |
+| **Validation** | `letter_of_credit_id`* id of a record in this company; `charge_type`* one of margin_deposit/opening_commission/amendment_fee/swift_postage/stamp_documentation/acceptance_commission/discrepancy_fee/marine_insurance/cf_agent_fee/port_handling/customs_duty_taxes/inland_transport/other; `charge_date`* YYYY-MM-DD; `amount`* decimal string, 2 dp; `paid_to` string ≤ 150 (nullable); `payee_party_id` id of a record in this company (nullable); `status`* one of unpaid/paid; `paid_from_account_id` id of a record in this company (nullable); `include_in_landed_cost` boolean; `reference` string ≤ 60 (nullable); `lc_shipment_id` id of a record in this company (nullable); `lc_amendment_id` id of a record in this company (nullable)<br>Unknown fields are rejected (422).<br>BR-044: An LC margin deposit is a refundable asset, never part of landed cost; it is applied to the payment or released at closure. The margin applied to payments may not exceed the margin deposited for that LC.<br>BR-045: LC charges marked for landed cost are held in goods-in-transit and allocated to import bill lines by value (or quantity); the share for quantity already sold goes to cost of goods sold.<br>BR-047: Customs duties and taxes are entered as assessed; Pluto does not calculate them.<br>BR-001: Every posted journal entry balances: total debit = total credit > 0.<br>BR-004: A document or voucher date must fall inside an open accounting period of an open financial year; posting, editing or reversing into a locked period is rejected.<br>BR-031: A payment, transfer or contra cannot take a cash or wallet account below zero, or a bank or cash-credit account below minus its overdraft_limit (zero when not set). |
 | **Success** | 201 `data`: [`LcCharge`](#schema-lccharge) |
 | **Status codes** | 201, 400, 401, 403, 409, 422, 503 |
 | **Error codes** | **`charge_allocated`, `company_maintenance`, `insufficient_funds`, `margin_exceeds_deposit`, `period_locked`, `unbalanced_entry`**; standard: `company_required`, `idempotency_in_progress`, `idempotency_key_reused`, `malformed_json`, `not_a_member`, `permission_denied`, `server_error`, `token_expired`, `token_invalid`, `unauthenticated`, `validation_failed` |

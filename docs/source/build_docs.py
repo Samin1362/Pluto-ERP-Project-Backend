@@ -239,20 +239,20 @@ def build_openapi():
                 "Accounting": "Chart of accounts, ledgers, vouchers", "Reports": "Financial statements and operational reports", "LC": "Letters of credit and landed cost"}
     doc = {
         "openapi": "3.1.0",
-        "info": {"title": "LedgerFlow ERP API", "version": "1.0.0-rc.1",
-                 "summary": "REST/JSON contract of LedgerFlow ERP v1 (candidate for approval).",
+        "info": {"title": "Pluto ERP API", "version": "1.0.0-rc.1",
+                 "summary": "REST/JSON contract of Pluto ERP v1 (candidate for approval).",
                  "description": "Status: release candidate for approval, 18 Oct 2026. Backend Laravel 11/12 + Eloquent. All amounts are decimal strings. "
                                 "Company-scoped endpoints require X-Company-Id. Errors are application/problem+json with a stable `code` (see 05 section 3). "
                                 "Vendor extensions: x-permission(-mode/-map), x-db-operations, x-error-codes, x-pages, x-page-actions, x-business-rules. "
                                 "Generated from docs/source/api.py; do not edit by hand.",
                  "license": {"name": "Proprietary"}},
-        "servers": [{"url": "https://{host}", "variables": {"host": {"default": "api.ledgerflow.example"}}}],
+        "servers": [{"url": "https://{host}", "variables": {"host": {"default": "api.pluto.example"}}}],
         "security": [{"bearerAuth": []}],
         "tags": [{"name": t, "description": tag_desc.get(t, t)} for t in sorted({e["tag"] or "Misc" for e in A.EP})],
         "paths": dict(paths),
         "components": {
             "securitySchemes": {"bearerAuth": {"type": "http", "scheme": "bearer", "bearerFormat": "JWT", "description": "15-minute ES256 access token held in memory"},
-                                "refreshCookie": {"type": "apiKey", "in": "cookie", "name": "lf_rt", "description": "Rotating refresh token; HttpOnly, Secure, SameSite=Strict, Path=/api/v1/auth"}},
+                                "refreshCookie": {"type": "apiKey", "in": "cookie", "name": "pl_rt", "description": "Rotating refresh token; HttpOnly, Secure, SameSite=Strict, Path=/api/v1/auth"}},
             "parameters": {
                 "CompanyHeader": {"name": "X-Company-Id", "in": "header", "required": True, "schema": {"type": "integer", "format": "int64", "minimum": 1}, "description": "Active company. Membership is verified on every request."},
                 "IdempotencyKey": {"name": "Idempotency-Key", "in": "header", "required": False, "schema": {"type": "string", "format": "uuid"}, "description": "UUID v4 per user action; replays within 24 h return the original response (BR-050)."},
@@ -433,7 +433,7 @@ def render_api():
             biz = [c for c in codes if c not in GENERIC_CODES]
             gen = [c for c in codes if c in GENERIC_CODES]
             acts = C.actions_of(e)
-            auth = ("Refresh cookie `lf_rt`" if e["security"] == "refreshCookie" else "None (public, rate-limited)") if e["perm"] == "public" else \
+            auth = ("Refresh cookie `pl_rt`" if e["security"] == "refreshCookie" else "None (public, rate-limited)") if e["perm"] == "public" else \
                 "Bearer JWT" + (" + `X-Company-Id`" if e["perm"] != "auth" else "")
             roles = "" if e["perm"] in ("public", "auth", "auth.self") or e["perm_map"] else " — roles: " + ", ".join(R.roles_with(e["perm"]))
             resp = "—" if not e["resp"] else (f"`data[]` of [`{re.sub(r'Page<(.*)>', r'\1', e['resp'])}`](#schema-{re.sub(r'Page<(.*)>', r'\1', e['resp']).lower()}) + `meta`"

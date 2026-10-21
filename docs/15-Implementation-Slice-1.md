@@ -11,7 +11,7 @@
 | Authentication | `POST /auth/login`, `/auth/two-factor`, `/auth/refresh`, `/auth/logout`, `GET /me` | 05 §4, 07 §3 |
 | 2-step verification | TOTP set-up with QR (`POST /me/two-factor`, `/confirm`), 10 single-use recovery codes, turn off with password (`DELETE /me/two-factor`), sign-in second step (S1), company-wide requirement enforced (`require_two_factor`) | 07 §5, 02 S1 and K14 |
 | Authorization | Company membership (`X-Company-Id`), six role templates, `perm:` middleware, company global scope | 07 §4–5 |
-| Company setup | `ledgerflow:company:create` provisions settings, payment terms, head-office branch, roles, chart of accounts with mappings, fiscal year and periods, number series | 06, 14 |
+| Company setup | `pluto:company:create` provisions settings, payment terms, head-office branch, roles, chart of accounts with mappings, fiscal year and periods, number series | 06, 14 |
 | Customers | B1 list (search, status, group, sort, pagination), B2 add, B3 edit with optimistic locking, deactivate/reactivate/delete, B4 details (Overview tab) | 02 B1–B4, 05 parties |
 | Lookups | `GET /payment-terms`, `GET /party-groups` | 05 |
 | Settings › Security | K14 with the 2-step row only; the Settings section rail from the design, other sections open "not in this release" | 02 K14 |
@@ -25,7 +25,7 @@ Out of scope: suppliers UI (the `parties` API serves both types, but only the Cu
 |---|---|---|---|
 | D1 | DEC-02: `php-open-source-saver/jwt-auth` | `lcobucci/jwt` 5 (the library jwt-auth wraps) with a small `JwtService`; ES256, same claims and lifetimes as 07 §3 | Direct control over `sid`/`pwv` claims and family revocation; one dependency fewer. Behaviour matches 07. |
 | D2 | Vite, Vitest, @playwright/test | esbuild build, `node:test` unit tests, the Playwright library under `node:test` | The build environment had no npm registry access; these tools were the ones available. Swap back without code changes to `src/`. |
-| D3 | React 18 | React 19.2 | The existing design-system bundle (`ds/ledgerflow`) ships with and expects React 19. |
+| D3 | React 18 | React 19.2 | The existing design-system bundle (`ds/pluto`) ships with and expects React 19. |
 | D4 | Opening balance entered on B2 | Must be `0.00` (422 otherwise); field read-only | Posting an opening balance needs the journal module (06 §OB). Enabled with the accounting slice. |
 | D5 | B1 summary tiles (receivable, overdue, credit-limit) | Only the count tile, from `meta.total` and the status filter | The contract has no summary endpoint. Proposed addition (not in the contract yet): a read-only parties summary endpoint returning receivable, overdue and over-limit totals per type, to review in 05. |
 | D6 | B4 tabs: Overview, Invoices, Receipts, Statement, Notes | Overview only; other tabs show "not in this release" | Those tabs need the sales and banking modules. |
@@ -38,7 +38,7 @@ Out of scope: suppliers UI (the `parties` API serves both types, but only the Cu
 | D13 | Entering a valid code while setting up counts as the second factor | After confirm, the current sign-in is marked verified; the next token refresh carries `otp` | Lets a user who is blocked by the company requirement continue without signing in again. |
 
 ## 3. Security notes
-- No secrets in the repository: JWT keys are generated per environment into `storage/keys/` (ignored); user passwords come from a hidden prompt or `LEDGERFLOW_OWNER_PASSWORD` / `LEDGERFLOW_USER_PASSWORD`.
+- No secrets in the repository: JWT keys are generated per environment into `storage/keys/` (ignored); user passwords come from a hidden prompt or `PLUTO_OWNER_PASSWORD` / `PLUTO_USER_PASSWORD`.
 - The SPA holds the access token in memory only. The refresh token is an HttpOnly, Secure, SameSite=Strict cookie scoped to `/api/v1/auth`, rotated on every use; reuse of a rotated token revokes the session family; logout revokes the family.
 - Cookie endpoints require `X-Requested-With` and an allowed `Origin` (CSRF).
 - Login throttling per (e-mail, IP) and per account (R-12); unknown e-mails cost the same Argon2id verification as known ones.
@@ -54,15 +54,15 @@ cd backend
 composer install
 cp .env.example .env && php artisan key:generate       # set DB_* in .env
 php artisan migrate && php artisan db:seed
-php artisan ledgerflow:jwt-keys
-php artisan ledgerflow:company:create "Meghna Traders Ltd." --owner-email=you@example.com --owner-name="Your Name"   # prompts for a password
-php artisan ledgerflow:user:add 1 viewer@example.com --role=viewer                                                  # optional
+php artisan pluto:jwt-keys
+php artisan pluto:company:create "Meghna Traders Ltd." --owner-email=you@example.com --owner-name="Your Name"   # prompts for a password
+php artisan pluto:user:add 1 viewer@example.com --role=viewer                                                  # optional
 # Frontend
 cd ../frontend && npm install && npm run build:embed
 cd ../backend && php artisan serve       # open http://127.0.0.1:8000
 ```
 
-Tests: `cd backend && php vendor/bin/phpunit` (needs an empty MySQL database `ledgerflow_test`); `cd frontend && npm run typecheck && npm test`; end-to-end: `E2E_PASSWORD=… scripts/run-e2e.sh` (drops and recreates the MySQL database `ledgerflow_e2e`, starts and stops the server). CI: `.github/workflows/ci.yml` runs the same four groups on GitHub Actions.
+Tests: `cd backend && php vendor/bin/phpunit` (needs an empty MySQL database `pluto_test`); `cd frontend && npm run typecheck && npm test`; end-to-end: `E2E_PASSWORD=… scripts/run-e2e.sh` (drops and recreates the MySQL database `pluto_e2e`, starts and stops the server). CI: `.github/workflows/ci.yml` runs the same four groups on GitHub Actions.
 
 ## 5. Test results (actual runs, 19 Oct 2026)
 
@@ -70,7 +70,7 @@ Environment: PHP 8.3.6, Laravel 12.70, MySQL 8.0.46 (strict `sql_mode`, utf8mb4_
 
 | Suite | Command | Result |
 |---|---|---|
-| Migrations | `migrate` → `migrate:rollback` → `migrate` → `db:seed` on an empty MySQL database | 85 up (83 LedgerFlow + 2 framework), 85 down, 85 up; 385 foreign keys and 148 CHECK constraints, matching 14 |
+| Migrations | `migrate` → `migrate:rollback` → `migrate` → `db:seed` on an empty MySQL database | 85 up (83 Pluto + 2 framework), 85 down, 85 up; 385 foreign keys and 148 CHECK constraints, matching 14 |
 | Backend | `php vendor/bin/phpunit` on MySQL | **99 tests, 6950 assertions, 0 failures** |
 | ‣ Authentication | login, generic 401, per-source throttling, account lockout, disabled user, validation and malformed JSON, refresh rotation and reuse detection, CSRF header, logout (incl. expired token), forged/missing tokens and password change, request id, per-IP limit on /auth, per-user limit on authenticated calls | 14 passed |
 | ‣ 2-step verification | set-up (QR, encrypted secret, wrong/malformed code, 10 recovery codes stored as digests, already-on refused), no token or session before the code, code then refresh keeps `otp`, single-use challenge, replay refused, 5 wrong codes kill a challenge, per-user 429, 5-minute expiry, recovery code once, field validation, turn off with password, company requirement (blocked until enrolled, enrolment unblocks after refresh, cannot turn off, other company unaffected) | 9 passed |
@@ -105,7 +105,7 @@ The end-to-end tests cover:
 | E2E | Refusing to turn 2-step off (company requires it) showed "Sign in again with your authenticator code" | Only company-scoped 403s mark the sign-in as lacking 2-step |
 | E2E | After an explicit sign-out, the next sign-in (possibly another person) returned to the previous user's last page | Return-to-page only after an expired session |
 | E2E | On the code step, the field error repeated the instruction text instead of saying what was wrong | "The code has 6 digits" / "Enter the code from your authenticator app" |
-| 2-step tests | Authenticator apps showed the issuer "Laravel" (taken from APP_NAME) | Own setting `TWO_FACTOR_ISSUER`, default LedgerFlow |
+| 2-step tests | Authenticator apps showed the issuer "Laravel" (taken from APP_NAME) | Own setting `TWO_FACTOR_ISSUER`, default Pluto |
 
 ## 6. Open items
 - D5 and D7 contract additions to approve.
@@ -119,7 +119,7 @@ The end-to-end tests cover:
 
 **Created, backend** (`backend/`)
 - Laravel 12 skeleton files (`artisan`, `bootstrap/providers.php`, `public/index.php`, standard `config/*.php`, `routes/console.php`), framework migrations `0001_01_01_000001/2` (cache, jobs)
-- `composer.json`, `phpunit.xml`, `.env.example`, `.gitignore` (adds `/storage/keys`); `config/ledgerflow.php`, `config/hashing.php`, `config/auth.php`; `bootstrap/app.php`; `routes/api.php`, `routes/web.php`
+- `composer.json`, `phpunit.xml`, `.env.example`, `.gitignore` (adds `/storage/keys`); `config/pluto.php`, `config/hashing.php`, `config/auth.php`; `bootstrap/app.php`; `routes/api.php`, `routes/web.php`
 - `app/Support/`: `CurrentCompany`, `Decimal`, `Problem/{ApiProblem, ProblemRenderer, ErrorCatalogue (generated)}`
 - `app/Models/`: `Concerns/{BelongsToCompany, HasLockVersion, TracksActor}`; `User, Company, Currency, Permission, Role, CompanyUser, Branch, UserSession, AuditLog, PaymentTerm, PartyGroup, Party, PartyBankAccount, AccountGroup, Ledger, AccountMapping, NumberSequence, IdempotencyKey, CompanySetting`
 - `app/Domain/Access/{JwtService, AuthService, TwoFactorService, Totp, PermissionResolver, CompanyProvisioner, RoleTemplates (generated)}`, `app/Domain/Shared/{AuditLogger, DocumentNumberService}`, `app/Domain/Parties/{PartyService, PartyBalances}`, `app/Queries/PartyQuery`
@@ -133,7 +133,7 @@ The end-to-end tests cover:
 
 **Created, frontend** (`frontend/`)
 - `package.json`, `tsconfig.json`, `build.mjs`, `index.html`, `.gitignore`, `scripts/offline-node-modules.sh`; `public/settings.css` (the design's settings layout rules, copied unchanged)
-- `public/` design-system assets copied unchanged from the design (`lf-theme.css`, `ds/ledgerflow/components/bundle.{js,css}`, fonts, `tokens.json`)
+- `public/` design-system assets copied unchanged from the design (`lf-theme.css`, `ds/pluto/components/bundle.{js,css}`, fonts, `tokens.json`)
 - `src/`: `main.tsx`, `ds.ts`; `api/{client, contract.gen (generated), parties, me}.ts`; `auth/session.tsx`; `app/{Shell, guards, router, toast}.tsx`; `pages/SignIn.tsx`; `pages/customers/{CustomerList, CustomerForm, CustomerDetails, shared}.tsx`; `pages/settings/{SettingsLayout, Security}.tsx`; `pages/states/{Forbidden, NotFound, NotInRelease}.tsx`; `lib/{format, customerSchema}.ts`
 - `tests/run-unit.mjs`, `tests/unit/{format, customerSchema, client}.test.ts`, `tests/e2e/{helpers.mjs, customers.e2e.test.mjs, two-factor.e2e.test.mjs}`
 

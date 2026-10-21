@@ -1,4 +1,4 @@
-# LedgerFlow ERP
+# Pluto ERP
 
 A multi-company ERP for Bangladeshi businesses that buy and sell physical goods. People record business events on simple forms (invoices, bills, receipts, stock counts, LC charges), and validated posting rules generate the double-entry accounting automatically.
 
@@ -16,7 +16,7 @@ A multi-company ERP for Bangladeshi businesses that buy and sell physical goods.
 ## Technology stack (Option A, approved)
 | Layer | Choice |
 |---|---|
-| Frontend | React 19 + TypeScript (strict), esbuild (Vite planned, 15 D2), React Router, TanStack Query, React Hook Form + zod, the LedgerFlow design system |
+| Frontend | React 19 + TypeScript (strict), esbuild (Vite planned, 15 D2), React Router, TanStack Query, React Hook Form + zod, the Pluto design system |
 | Backend | Laravel 12 on PHP 8.3, layered (controllers → form requests → policies → domain services → Eloquent) |
 | ORM | **Eloquent**, approved 18 Oct 2026 (Prisma was evaluated and rejected; see docs/00 §6) |
 | Database | MySQL 8.0 (InnoDB, utf8mb4, strict, CHECK constraints) |
@@ -32,6 +32,7 @@ Dashboard · Customers · Suppliers · Products and inventory (multi-warehouse, 
 Only **Docker** (Docker Desktop on macOS/Windows, Docker Engine + Compose v2 on Linux) and **git**. PHP, Composer, MySQL and Redis run in containers. Python 3.12 with PyYAML is needed only to rebuild the docs (`docs/source`).
 
 Windows: work inside **WSL2 Ubuntu** with Docker Desktop's WSL integration turned on, and clone the repo inside the WSL filesystem (`~/…`, not `/mnt/c/…`), otherwise file access is very slow.
+Without Ubuntu (Docker Desktop only, repo on a Windows drive, scripts run from **Git Bash**) everything works but the shared drive is slow (artisan ~13 s, one API request ~5 s, first setup ~25 min). Turn on the local speed-ups in `docker-compose.fast-local.yml` (vendor/ in a Docker volume, MySQL without disk syncs; local only, never the live stack): add `COMPOSE_PATH_SEPARATOR=:` and `COMPOSE_FILE=docker-compose.yml:docker-compose.fast-local.yml` to `.env`, then `./scripts/setup.sh`. Measured on a Windows 11 laptop: artisan 13 s → 1 s, API request 5 s → 0.3 s, migrations 11 min → 2.5 min. If it is still slow, exclude Docker's disk from Windows Defender real-time scanning (admin PowerShell: `Add-MpPreference -ExclusionPath "$env:LOCALAPPDATA\Docker\wsl"`).
 
 ## Repository layout
 ```
@@ -52,16 +53,16 @@ Pluto-ERP-Project-Backend/
 git clone https://github.com/Samin1362/Pluto-ERP-Project-Backend.git
 cd Pluto-ERP-Project-Backend
 ./scripts/setup.sh          # first time: .env, images, composer, migrations, keys, demo company (asks for a password)
-./scripts/seed-test-users.sh   # optional: viewer@, store@, accountant@, sales@, finance@ ledgerflow.local
+./scripts/seed-test-users.sh   # optional: viewer@, store@, accountant@, sales@, finance@ pluto.local
 ```
 `setup.sh` is safe to run again. When it finishes:
 
 | What | Where |
 |---|---|
 | API | `http://localhost:8080/api/v1` (health: `/api/health`, readiness: `/api/ready`) |
-| Demo sign-in | `owner@ledgerflow.local` with the password you typed (set `LEDGERFLOW_OWNER_PASSWORD` to skip the prompt) |
+| Demo sign-in | `owner@pluto.local` with the password you typed (set `PLUTO_OWNER_PASSWORD` to skip the prompt) |
 | Mailpit (all outgoing e-mail) | `http://localhost:8025` |
-| MySQL from a GUI client (TablePlus, DBeaver…) | `localhost:33060`, user `ledgerflow`, password = `DB_PASSWORD` in `.env` |
+| MySQL from a GUI client (TablePlus, DBeaver…) | `localhost:33060`, user `pluto`, password = `DB_PASSWORD` in `.env` |
 
 Daily commands (`make help` lists them):
 
@@ -71,7 +72,7 @@ Daily commands (`make help` lists them):
 | `make logs` | follow all logs |
 | `make sh` | shell in the app container (run `php artisan …` there) |
 | `make migrate` | run new migrations |
-| `make test` | PHPUnit against the separate `ledgerflow_test` database |
+| `make test` | PHPUnit against the separate `pluto_test` database |
 | `make fresh` | wipe the local database and recreate demo company + test users (asks first) |
 | `make tinker` | Laravel REPL |
 | `make docs` | regenerate docs 01/02/04/05/09, `openapi.yaml`, migrations, generated PHP and `contract/` from `docs/source`, then run the documentation gates; commit the result (a clean `git status` afterwards means everything was in sync) |
@@ -81,6 +82,16 @@ Troubleshooting:
 - **Apple silicon** is fine: every image is multi-arch.
 - **Slow migrations** on first run: Docker Desktop needs memory; give it at least 4 GB and stop other projects' containers if it is crowded.
 - **Start from zero**: `docker compose down -v` deletes the database volume, then `./scripts/setup.sh`.
+
+### Upgrading after the rename to Pluto (P1.7)
+The databases are now `pluto`, `pluto_test` and `pluto_e2e` with the user `pluto`, the env variables start with `PLUTO_`, the artisan commands with `pluto:` and the demo sign-in is `owner@pluto.local` (the former names are in the history note of docs 00). A checkout from before the rename still has the old names in `.env` and in its MySQL volume:
+
+- **Local data is disposable (normal case):** in `.env` set `DB_DATABASE=pluto` and `DB_USERNAME=pluto` and rename the remaining old-prefix variables to `PLUTO_…` (compare with `.env.example`), then `docker compose down -v && ./scripts/setup.sh`.
+- **Keep your local data:** before editing `.env`, note the old database name (`OLD_DB=$(grep ^DB_DATABASE= .env | cut -d= -f2)`) and dump it:
+  `docker compose exec -T mysql sh -c "MYSQL_PWD=\"\$MYSQL_ROOT_PASSWORD\" mysqldump -uroot --single-transaction $OLD_DB" > old-local.sql`,
+  then do the step above, then load it into `pluto`: `docker compose exec -T mysql sh -c 'MYSQL_PWD="$MYSQL_ROOT_PASSWORD" mysql -uroot pluto' < old-local.sql` (the dump drops and recreates each table, replacing what setup created).
+
+The live host is switched separately (P1.7-BE-04, host owner only).
 
 ## Environment configuration
 `.env` (copied from `.env.example` by `setup.sh`, never committed). Live values are set in `.env.live` on the host (P0.4). Secrets are shared through a password manager, never in git or chat.
@@ -92,30 +103,30 @@ Troubleshooting:
 | `APP_URL` | public URL of the API | `http://localhost:8080` | tunnel URL |
 | `HTTP_PORT`, `DB_FORWARD_PORT`, `MAILPIT_PORT` | ports on your machine | `8080`, `33060`, `8025` | — |
 | `LOCAL_UID`, `LOCAL_GID` | container user = you, so created files are yours | `id -u` / `id -g` (setup.sh) | host user |
-| `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME` | MySQL connection | `mysql`, `3306`, `ledgerflow`, `ledgerflow` | same |
+| `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME` | MySQL connection | `mysql`, `3306`, `pluto`, `pluto` | same |
 | `DB_PASSWORD`, `MYSQL_ROOT_PASSWORD` | MySQL passwords (also create the MySQL user on first start) | random (setup.sh) | strong, unique |
 | `REDIS_CLIENT`, `REDIS_HOST`, `REDIS_PORT`, `REDIS_PASSWORD` | Redis (cache, queues) | `phpredis`, `redis`, `6379`, none | same |
 | `CACHE_STORE`, `QUEUE_CONNECTION`, `SESSION_DRIVER` | drivers | `redis`, `redis`, `array` | same |
 | `MAIL_MAILER`, `MAIL_HOST`, `MAIL_PORT`, `MAIL_FROM_*` | outgoing mail | Mailpit (`smtp`, `mailpit`, `1025`) | `log` until SMTP is chosen (C4) |
 | `HASH_DRIVER`, `ARGON_*` | password hashing (07 §2) | `argon2id`, 64 MiB, 4 passes | same |
-| `JWT_PRIVATE_KEY_PATH`, `JWT_PUBLIC_KEY_PATH` | ES256 access-token keys (relative to the project or absolute) | `storage/keys/…` (`ledgerflow:jwt-keys`) | same, own keys |
+| `JWT_PRIVATE_KEY_PATH`, `JWT_PUBLIC_KEY_PATH` | ES256 access-token keys (relative to the project or absolute) | `storage/keys/…` (`pluto:jwt-keys`) | same, own keys |
 | `JWT_KEY_ID`, `JWT_TTL_SECONDS` | token key id, lifetime | `k1`, `900` | same |
-| `REFRESH_COOKIE_SECURE`, `REFRESH_TTL_DAYS` | refresh cookie `lf_rt` | `true`, `14` | same |
-| `LEDGERFLOW_ALLOWED_ORIGINS` | origins allowed to refresh/log out (CSRF defence) | `http://localhost:5173,http://localhost:8080` | Vercel URL(s) |
-| `LEDGERFLOW_ALLOWED_ORIGIN_PATTERNS` | extra allowed origins by pattern (`*` = part of one DNS label, https only) | empty | `https://pluto-erp-frontend-*-<team>.vercel.app` (previews) |
-| `PROXY_SHARED_SECRET` | secret header `X-LF-Proxy-Secret` from the Vercel proxy; only then are `X-Forwarded-For/-Host/-Proto` trusted | empty (trust no proxy) | long random value, same as on Vercel |
+| `REFRESH_COOKIE_SECURE`, `REFRESH_TTL_DAYS` | refresh cookie `pl_rt` | `true`, `14` | same |
+| `PLUTO_ALLOWED_ORIGINS` | origins allowed to refresh/log out (CSRF defence) | `http://localhost:5173,http://localhost:8080` | Vercel URL(s) |
+| `PLUTO_ALLOWED_ORIGIN_PATTERNS` | extra allowed origins by pattern (`*` = part of one DNS label, https only) | empty | `https://pluto-erp-frontend-*-<team>.vercel.app` (previews) |
+| `PROXY_SHARED_SECRET` | secret header `X-Pluto-Proxy-Secret` from the Vercel proxy; only then are `X-Forwarded-For/-Host/-Proto` trusted | empty (trust no proxy) | long random value, same as on Vercel |
 | `APP_FRONTEND_URL` | frontend address for links in e-mails and invitations | `http://localhost:5173` | `https://pluto-erp-frontend.vercel.app` |
-| `TWO_FACTOR_ISSUER` | name in authenticator apps | `LedgerFlow` | same |
+| `TWO_FACTOR_ISSUER` | name in authenticator apps | `Pluto` | same |
 | `AUTH_RATE_LIMIT_PER_IP`, `API_RATE_LIMIT_PER_USER` | requests per minute | `20`, `120` | same (C12) |
-| `LEDGERFLOW_OWNER_PASSWORD`, `LEDGERFLOW_USER_PASSWORD` | shell variables for `setup.sh` / `seed-test-users.sh` (not in `.env`) | prompted | — |
+| `PLUTO_OWNER_PASSWORD`, `PLUTO_USER_PASSWORD` | shell variables for `setup.sh` / `seed-test-users.sh` (not in `.env`) | prompted | — |
 
 ## Testing commands
 ```bash
-make test                                    # PHPUnit in Docker (ledgerflow_test; never touches your dev data)
+make test                                    # PHPUnit in Docker (pluto_test; never touches your dev data)
 make docs                                    # regenerate docs, migrations, generated PHP/TS and contract/, then run the gates (Docker only)
 # CI runs the docs gates and PHPUnit on every push and pull request (.github/workflows/ci.yml)
 ```
-Frontend checks and end-to-end tests live in the frontend repo (`Pluto-ERP-Project-Frontend`). Its `scripts/e2e.sh` calls this repo's `scripts/e2e-prepare.sh`, which starts a separate API on **http://localhost:8081** (`--profile e2e`: `app-e2e` + `nginx-e2e`) on the `ledgerflow_e2e` database with its own Redis databases, wipes it and creates `owner@`, `viewer@` and `store@e2e.ledgerflow.test` with the password in `E2E_PASSWORD`. Your dev data is never touched. Stop it with `docker compose --profile e2e stop app-e2e nginx-e2e`.
+Frontend checks and end-to-end tests live in the frontend repo (`Pluto-ERP-Project-Frontend`). Its `scripts/e2e.sh` calls this repo's `scripts/e2e-prepare.sh`, which starts a separate API on **http://localhost:8081** (`--profile e2e`: `app-e2e` + `nginx-e2e`) on the `pluto_e2e` database with its own Redis databases, wipes it and creates `owner@`, `viewer@` and `store@e2e.pluto.test` with the password in `E2E_PASSWORD`. Your dev data is never touched. Stop it with `docker compose --profile e2e stop app-e2e nginx-e2e`.
 
 ## Live backend (host machine)
 The live API runs on one always-on machine (decision C1: Samin's Mac) with Docker, and the internet reaches it through a **Cloudflare quick tunnel** (`https://<random>.trycloudflare.com`, no account or domain needed). The Vercel frontend calls it through its `/api` proxy. The live stack is a separate Compose project (`pluto-erp-live`): its own containers, database volume and port **8090**, so it never touches the developer stack on the same machine.
@@ -123,7 +134,7 @@ The live API runs on one always-on machine (decision C1: Samin's Mac) with Docke
 ```bash
 cp .env.live.example .env.live     # or take the real .env.live from the password manager
 ./scripts/live.sh init             # first time: random secrets, prod image, migrate, keys, tunnel
-./scripts/live.sh artisan ledgerflow:company:create "Company Ltd." --owner-email=owner@example.com --owner-name="Owner"
+./scripts/live.sh artisan pluto:company:create "Company Ltd." --owner-email=owner@example.com --owner-name="Owner"
 ./scripts/tunnel-url.sh            # prints the public URL
 curl "$(./scripts/tunnel-url.sh)/api/ready"
 ```
@@ -133,13 +144,13 @@ curl "$(./scripts/tunnel-url.sh)/api/ready"
 | `./scripts/live.sh up` / `down` / `ps` / `logs [service]` | start (waits until healthy, prints the URL) / stop / status / logs |
 | `./scripts/live.sh artisan …` | artisan in the live app |
 | `./scripts/deploy.sh` | release the latest `main`: clean-checkout check, pull, backup, build, replace app/worker/scheduler/nginx, migrate, cache, smoke test. **cloudflared is not restarted, so the URL stays the same** |
-| `./scripts/backup.sh` | `backups/ledgerflow-YYYYmmdd-HHMMSS.sql.gz` (kept 14 days) |
-| `./scripts/restore.sh <file>` | restore after typing `RESTORE` (safety backup first); `RESTORE_DB=ledgerflow_e2e` for a test restore |
+| `./scripts/backup.sh` | `backups/pluto-YYYYmmdd-HHMMSS.sql.gz` (kept 14 days) |
+| `./scripts/restore.sh <file>` | restore after typing `RESTORE` (safety backup first); `RESTORE_DB=pluto_e2e` for a test restore |
 
 **The tunnel URL changes whenever the `cloudflared` container restarts** (reboot, Docker restart, `live.sh down`). Then follow [the runbook](docs/runbooks/tunnel-url-changed.md): it takes about two minutes.
 
 ### Nightly backup
-The live stack includes a `backup` service (`docker/backup/nightly.sh`) that dumps the database to `backups/ledgerflow-YYYYmmdd-HHMMSS.sql.gz` every night at **02:00 Dhaka time** and deletes files older than 14 days. No host cron is needed, so it works the same on macOS (where cron cannot read `~/Desktop`), Windows and Linux. Change the time with `BACKUP_AT=HHMM` / `BACKUP_TZ` in `.env.live`; check it with `./scripts/live.sh logs backup`. `./scripts/backup.sh` makes an extra backup at any time (deploys do this automatically).
+The live stack includes a `backup` service (`docker/backup/nightly.sh`) that dumps the database to `backups/pluto-YYYYmmdd-HHMMSS.sql.gz` every night at **02:00 Dhaka time** and deletes files older than 14 days. No host cron is needed, so it works the same on macOS (where cron cannot read `~/Desktop`), Windows and Linux. Change the time with `BACKUP_AT=HHMM` / `BACKUP_TZ` in `.env.live`; check it with `./scripts/live.sh logs backup`. `./scripts/backup.sh` makes an extra backup at any time (deploys do this automatically).
 **Weekly:** copy the newest file in `backups/` off the machine (Google Drive or an external disk). A backup that only lives on the host does not survive a dead disk.
 
 ### Host machine checklist
@@ -192,7 +203,7 @@ Recorded 20 Oct 2026 (backlog task P0.1-SETUP-01, Jira PEP-3). Change a decision
 | Jira | Project **Pluto-ERP-Project**, key **`PEP`**, at `saminisrak1991.atlassian.net`. Branches and commits carry the issue key: `feat/PEP-123-P4.3-BE-02-…`, commit `PEP-123 P4.3-BE-02: …`. |
 | Live backend host | **Samin's Mac** (Apple silicon, macOS 26) running Docker Desktop, exposed through a Cloudflare quick tunnel (`*.trycloudflare.com`). Samin restarts it and runs `scripts/point-backend.sh` when the tunnel URL changes. The live API is only up while this Mac is awake and online, so turn off sleep on power (P0.4-BE-05 checklist). |
 | Frontend hosting | Vercel project `pluto-erp-frontend`; plan still open (C3). |
-| Naming | Repos, Jira, Vercel and Docker Compose use "Pluto"; code identifiers keep "LedgerFlow" (`ledgerflow:*`, `LEDGERFLOW_*`, `lf_rt`, docs 00–15). |
+| Naming | The product is **Pluto** everywhere (owner decision 21 Oct 2026, Jira PEP-436/440): UI, code (`pluto:*` commands, `PLUTO_*` env, `pluto*` databases, `pl_rt` cookie, `X-Pluto-Proxy-Secret`), docs and repos. |
 
 ### API contract
 

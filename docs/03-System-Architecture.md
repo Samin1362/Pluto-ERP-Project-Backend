@@ -16,7 +16,7 @@ flowchart LR
         SK[Store keeper]
         V[Viewer / auditor]
     end
-    LF((LedgerFlow ERP))
+    LF((Pluto ERP))
     O --> LF
     FM --> LF
     SS --> LF
@@ -30,14 +30,14 @@ flowchart LR
     LF -- "errors, metrics" --> MON[Monitoring / error tracking]
 ```
 
-People use LedgerFlow through the browser. LedgerFlow sends e-mails (and optional SMS) and stores files and backups in object storage. Bank data enters only as statement files uploaded by users; there is **no direct bank integration in v1** (dotted lines are manual steps). Errors and metrics go to monitoring.
+People use Pluto through the browser. Pluto sends e-mails (and optional SMS) and stores files and backups in object storage. Bank data enters only as statement files uploaded by users; there is **no direct bank integration in v1** (dotted lines are manual steps). Errors and metrics go to monitoring.
 
 ### Diagram 2 · High-level architecture
 
 ```mermaid
 flowchart TB
     subgraph Browser
-        SPA["React 18 + TypeScript SPA<br/>Vite build · TanStack Query · React Router<br/>LedgerFlow design-system components"]
+        SPA["React 18 + TypeScript SPA<br/>Vite build · TanStack Query · React Router<br/>Pluto design-system components"]
     end
     subgraph Edge
         CDN["CDN / static hosting<br/>(SPA assets)"]
@@ -69,7 +69,7 @@ The SPA is static files served from a CDN and talks only to the API over HTTPS. 
 
 ## 2. Frontend architecture (summary; details in [08](08-Frontend-Backend-Integration.md))
 - React 18 + TypeScript (strict), Vite, React Router 6 (data routers, lazy route chunks), and TanStack Query for server state (cache, retries, invalidation). There is no global client store for server data; Zustand holds UI-only state (sidebar, theme, active company).
-- The **LedgerFlow design system** is implemented as a typed React component library (`src/design-system/`), matching the 36 components and the tokens in [02 §1](02-UI-Inventory.md#1-design-system-to-preserve). Tokens become CSS variables from `tokens.json`.
+- The **Pluto design system** is implemented as a typed React component library (`src/design-system/`), matching the 36 components and the tokens in [02 §1](02-UI-Inventory.md#1-design-system-to-preserve). Tokens become CSS variables from `tokens.json`.
 - Forms use React Hook Form with zod for *shape* validation only. Business validation always comes from the API (422).
 - Feature folders mirror the backend modules (`features/sales`, `features/lc`, …).
 

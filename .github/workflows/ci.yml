@@ -34,7 +34,7 @@ jobs:
         image: mysql:8.0.44
         env:
           MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
-          MYSQL_DATABASE: ledgerflow_test
+          MYSQL_DATABASE: pluto_test
         ports: ['3306:3306']
         options: >-
           --health-cmd="mysqladmin ping -h 127.0.0.1" --health-interval=5s --health-timeout=5s --health-retries=20
@@ -42,7 +42,7 @@ jobs:
       DB_CONNECTION: mysql
       DB_HOST: 127.0.0.1
       DB_PORT: 3306
-      DB_DATABASE: ledgerflow_test
+      DB_DATABASE: pluto_test
       DB_USERNAME: root
       DB_PASSWORD: ''
       CACHE_STORE: array

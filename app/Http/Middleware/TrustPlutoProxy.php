@@ -10,26 +10,33 @@ use Symfony\Component\HttpFoundation\Response;
 /**
  * Real client IP, scheme and host behind the Vercel proxy and the Cloudflare tunnel (backlog P0.3-BE-02/03).
  *
- * Only a request carrying `X-LF-Proxy-Secret` equal to PROXY_SHARED_SECRET comes from our own proxy. For it, the
+ * Only a request carrying `X-Pluto-Proxy-Secret` equal to PROXY_SHARED_SECRET comes from our own proxy. For it, the
  * first X-Forwarded-For address becomes the client IP (rate limits, login throttling, audit), and
  * X-Forwarded-Proto/-Host become the URL root (Location headers show the Vercel domain, not the tunnel). For any
  * other request the forwarded headers are dropped, so nobody can choose their own IP. The secret header is removed
  * before anything else can read or log it. Runs first in the global stack; Laravel's TrustProxies trusts nobody.
+ *
+ * Rename to Pluto (backlog P1.7-BE-01): the old header `X-LF-Proxy-Secret` is still accepted for one release so the
+ * live switch (P1.7-BE-04) has no gap while Vercel still runs the old proxy; remove LEGACY_HEADER after it.
  */
-class TrustLedgerflowProxy
+class TrustPlutoProxy
 {
-    private const SECRET_HEADER = 'X-LF-Proxy-Secret';
+    private const SECRET_HEADER = 'X-Pluto-Proxy-Secret';
+
+    private const LEGACY_HEADER = 'X-LF-Proxy-Secret';
 
     private const FORWARDED = ['X-Forwarded-For', 'X-Forwarded-Host', 'X-Forwarded-Proto', 'X-Forwarded-Port', 'X-Forwarded-Prefix', 'Forwarded'];
 
     public function handle(Request $request, Closure $next): Response
     {
-        $secret = (string) config('ledgerflow.proxy.shared_secret');
-        $sent = (string) $request->headers->get(self::SECRET_HEADER, '');
+        $secret = (string) config('pluto.proxy.shared_secret');
+        $sent = (string) ($request->headers->get(self::SECRET_HEADER) ?? $request->headers->get(self::LEGACY_HEADER, ''));
         $trusted = $secret !== '' && $sent !== '' && hash_equals($secret, $sent);
 
-        $request->headers->remove(self::SECRET_HEADER);
-        $request->server->remove('HTTP_X_LF_PROXY_SECRET');
+        foreach ([self::SECRET_HEADER, self::LEGACY_HEADER] as $h) {
+            $request->headers->remove($h);
+            $request->server->remove('HTTP_'.strtoupper(str_replace('-', '_', $h)));
+        }
         URL::forceRootUrl(null);
 
         if ($trusted) {

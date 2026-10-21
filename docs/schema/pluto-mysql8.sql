@@ -1,4 +1,4 @@
--- LedgerFlow ERP: reference MySQL 8.0 DDL, generated from docs/source/schema.py.
+-- Pluto ERP: reference MySQL 8.0 DDL, generated from docs/source/schema.py.
 -- Equivalent to running backend/database/migrations in order. For review and CI diffing; deploy with `php artisan migrate`.
 SET NAMES utf8mb4;
 
@@ -1019,7 +1019,7 @@ CREATE TABLE `tax_rules` (
   CONSTRAINT `tax_rules_updated_by_foreign` FOREIGN KEY (`updated_by`) REFERENCES `users` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `tax_rules_applies_to_check` CHECK (`applies_to` IN ('sales', 'purchases', 'both')),
   CONSTRAINT `tax_rules_rule1_check` CHECK (`rate` >= 0 AND `rate` <= 100)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='User-defined tax rule (K6). LedgerFlow never assumes rates.';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='User-defined tax rule (K6). Pluto never assumes rates.';
 
 -- 40. user_invitation_branches (level 4)
 CREATE TABLE `user_invitation_branches` (

@@ -1,6 +1,6 @@
 <?php
 /**
- * Offline migration harness for LedgerFlow ERP.
+ * Offline migration harness for Pluto ERP.
  *
  * Loads strict stand-ins for the parts of Laravel's schema builder the generated migrations use
  * (any other method throws), then:
@@ -30,7 +30,7 @@ namespace Illuminate\Database\Schema {
         public function comment(string $comment): static { $this->a['comment'] = $comment; return $this; }
         public function storedAs(string $expression): static { $this->a['storedAs'] = $expression; return $this; }
         public function primary(bool $value = true): static { $this->a['primary'] = $value; return $this; }
-        public function __call($m, $args) { throw new HarnessError("ColumnDefinition::$m() is not used by LedgerFlow migrations"); }
+        public function __call($m, $args) { throw new HarnessError("ColumnDefinition::$m() is not used by Pluto migrations"); }
     }
 
     final class ForeignKeyDefinition
@@ -43,7 +43,7 @@ namespace Illuminate\Database\Schema {
         public function cascadeOnDelete(): static { $this->a['on_delete'] = 'CASCADE'; return $this; }
         public function nullOnDelete(): static { $this->a['on_delete'] = 'SET NULL'; return $this; }
         public function restrictOnUpdate(): static { $this->a['on_update'] = 'RESTRICT'; return $this; }
-        public function __call($m, $args) { throw new HarnessError("ForeignKeyDefinition::$m() is not used by LedgerFlow migrations"); }
+        public function __call($m, $args) { throw new HarnessError("ForeignKeyDefinition::$m() is not used by Pluto migrations"); }
     }
 
     final class Blueprint
@@ -109,7 +109,7 @@ namespace Illuminate\Database\Schema {
             return $f;
         }
         public function hasColumn(string $c): bool { foreach ($this->columns as $x) { if ($x->a['name'] === $c) return true; } return false; }
-        public function __call($m, $args) { throw new HarnessError("Blueprint::$m() is not used by LedgerFlow migrations"); }
+        public function __call($m, $args) { throw new HarnessError("Blueprint::$m() is not used by Pluto migrations"); }
     }
 
     final class Registry
@@ -194,7 +194,7 @@ namespace Illuminate\Support\Facades {
             R::$log[] = "drop $table";
         }
 
-        public static function __callStatic($m, $a) { throw new HarnessError("Schema::$m() is not used by LedgerFlow migrations"); }
+        public static function __callStatic($m, $a) { throw new HarnessError("Schema::$m() is not used by Pluto migrations"); }
     }
 
     final class DB
@@ -228,7 +228,7 @@ namespace Illuminate\Support\Facades {
             return true;
         }
 
-        public static function __callStatic($m, $a) { throw new HarnessError("DB::$m() is not used by LedgerFlow migrations"); }
+        public static function __callStatic($m, $a) { throw new HarnessError("DB::$m() is not used by Pluto migrations"); }
     }
 }
 
@@ -237,7 +237,8 @@ namespace {
 
     [$dir, $out] = [$argv[1] ?? null, $argv[2] ?? null];
     if (!$dir || !$out) { fwrite(STDERR, "usage: php harness.php <migrations-dir> <out.json>\n"); exit(2); }
-    $files = glob(rtrim($dir, '/') . '/*.php');
+    // Laravel's own cache and jobs migrations (0001_01_01_*) stay as the framework ships them: not part of the contract.
+    $files = array_filter(glob(rtrim($dir, '/') . '/*.php'), fn ($f) => !str_starts_with(basename($f), '0001_01_01_'));
     sort($files, SORT_STRING);
     $migrations = [];
     try {

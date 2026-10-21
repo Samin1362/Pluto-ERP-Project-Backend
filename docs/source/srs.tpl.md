@@ -1,15 +1,15 @@
 # 01 · Software Requirements Specification (SRS)
 
-> LedgerFlow ERP · version 0.9 (draft for approval) · 18 Oct 2026
+> Pluto ERP · version 0.9 (draft for approval) · 18 Oct 2026
 > The requirement tables (§5, §6, §8), role matrix (§4.2) and traceability matrices (§16) are generated from `docs/source/registry.py` and `tests.py`; every ID is checked by the build.
 
 ## 1. Introduction
 
 ### 1.1 Purpose
-This SRS defines what LedgerFlow ERP must do, for the developers, testers and the product owner. It is derived from the approved UI design (see [02-UI-Inventory](02-UI-Inventory.md)) and the discovery findings ([00](00-Discovery-and-Decisions.md)).
+This SRS defines what Pluto ERP must do, for the developers, testers and the product owner. It is derived from the approved UI design (see [02-UI-Inventory](02-UI-Inventory.md)) and the discovery findings ([00](00-Discovery-and-Decisions.md)).
 
 ### 1.2 Product scope
-LedgerFlow is a multi-company, web-based ERP for Bangladeshi businesses that buy and sell physical goods (wholesalers, distributors, retailers) and for service firms. It combines:
+Pluto is a multi-company, web-based ERP for Bangladeshi businesses that buy and sell physical goods (wholesalers, distributors, retailers) and for service firms. It combines:
 - **Operations:** sales (quotations, invoices, returns, credit notes, receipts), purchases (orders, bills, returns, debit notes, payments), customers and suppliers, inventory across warehouses, and import letters of credit (LC) with landed cost.
 - **Money:** cash, bank and mobile-wallet accounts, transfers, bank reconciliation, other income and expenses with budgets.
 - **Books:** double-entry accounting generated automatically from simple business forms, plus manual vouchers, the chart of accounts, financial statements and reports.

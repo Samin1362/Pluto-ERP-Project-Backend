@@ -1,4 +1,4 @@
-# LedgerFlow API image (backlog P0.2-BE-01). Build from the repo root:
+# Pluto API image (backlog P0.2-BE-01). Build from the repo root:
 #   docker build --target dev  -f docker/php/Dockerfile .   (source mounted by compose)
 #   docker build --target prod -f docker/php/Dockerfile .   (source and vendor baked in)
 
@@ -39,6 +39,9 @@ WORKDIR /var/www/html
 # ---------------------------------------------------------------- dev: source is mounted at /var/www/html
 FROM base AS dev
 COPY docker/php/conf.d/opcache-dev.ini /usr/local/etc/php/conf.d/zz-opcache.ini
+# Owned by app so an empty Docker volume mounted here (docker-compose.fast-local.yml) starts writable; hidden when
+# vendor/ comes from the bind mount instead.
+RUN mkdir -p /var/www/html/vendor && chown app:app /var/www/html/vendor
 USER app
 CMD ["php-fpm"]
 

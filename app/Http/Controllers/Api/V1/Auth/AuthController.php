@@ -50,10 +50,10 @@ class AuthController extends Controller
     public function refresh(Request $request): JsonResponse
     {
         if (! $this->trustedCookieRequest($request)) {
-            throw new ApiProblem('refresh_token_invalid', 'Refresh must come from the LedgerFlow app.');
+            throw new ApiProblem('refresh_token_invalid', 'Refresh must come from the Pluto app.');
         }
         try {
-            $r = $this->auth->refresh($request->cookie(config('ledgerflow.refresh.cookie')), (string) $request->ip(), $request->userAgent());
+            $r = $this->auth->refresh($request->cookie(config('pluto.refresh.cookie')), (string) $request->ip(), $request->userAgent());
         } catch (ApiProblem $e) {
             throw new ApiProblem($e->errorCode, $e->detail, headers: ['Set-Cookie' => (string) $this->cookie('', true)]);
         }
@@ -64,7 +64,7 @@ class AuthController extends Controller
     public function logout(Request $request): Response
     {
         if ($this->trustedCookieRequest($request)) {
-            $this->auth->logout($request->cookie(config('ledgerflow.refresh.cookie')));
+            $this->auth->logout($request->cookie(config('pluto.refresh.cookie')));
         }
 
         return response()->noContent()->withCookie($this->cookie('', true));
@@ -72,9 +72,9 @@ class AuthController extends Controller
 
     private function cookie(string $value, bool $forget = false): Cookie
     {
-        return Cookie::create(config('ledgerflow.refresh.cookie'), $forget ? null : $value,
-            $forget ? 1 : now()->addDays((int) config('ledgerflow.refresh.ttl_days')),
-            config('ledgerflow.refresh.path'), null, (bool) config('ledgerflow.refresh.secure'), true, false, Cookie::SAMESITE_STRICT);
+        return Cookie::create(config('pluto.refresh.cookie'), $forget ? null : $value,
+            $forget ? 1 : now()->addDays((int) config('pluto.refresh.ttl_days')),
+            config('pluto.refresh.path'), null, (bool) config('pluto.refresh.secure'), true, false, Cookie::SAMESITE_STRICT);
     }
 
     /** CSRF defence for the cookie-authenticated endpoints (07 §3.2): custom header + allowed Origin (exact or pattern) when sent. */

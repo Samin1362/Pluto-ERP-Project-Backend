@@ -1,6 +1,6 @@
 # 02 · UI inventory
 
-> **Source of truth:** the Claude Design canvas "LedgerFlow ERP" (13 module prototypes, about 180 state artboards, the design system).
+> **Source of truth:** the Claude Design canvas "Pluto ERP" (13 module prototypes, about 180 state artboards, the design system).
 >
 > **Generated file.** The per-page sections come from `docs/source/pages.py`. The APIs, entities and allowed roles for each page are **derived** from the API registry and the role matrix, so they can't drift from 05 and 01. Coverage: <!-- GEN:count -->.
 

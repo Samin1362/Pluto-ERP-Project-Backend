@@ -6,7 +6,7 @@ use App\Models\User;
 return [
     'defaults' => ['guard' => 'api', 'passwords' => 'users'],
     'guards' => [
-        'api' => ['driver' => 'ledgerflow-jwt', 'provider' => 'users'],
+        'api' => ['driver' => 'pluto-jwt', 'provider' => 'users'],
     ],
     'providers' => [
         'users' => ['driver' => 'eloquent', 'model' => User::class],

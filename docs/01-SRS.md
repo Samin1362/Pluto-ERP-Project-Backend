@@ -1,15 +1,15 @@
 # 01 · Software Requirements Specification (SRS)
 
-> LedgerFlow ERP · version 0.9 (draft for approval) · 18 Oct 2026
+> Pluto ERP · version 0.9 (draft for approval) · 18 Oct 2026
 > The requirement tables (§5, §6, §8), role matrix (§4.2) and traceability matrices (§16) are generated from `docs/source/registry.py` and `tests.py`; every ID is checked by the build.
 
 ## 1. Introduction
 
 ### 1.1 Purpose
-This SRS defines what LedgerFlow ERP must do, for the developers, testers and the product owner. It is derived from the approved UI design (see [02-UI-Inventory](02-UI-Inventory.md)) and the discovery findings ([00](00-Discovery-and-Decisions.md)).
+This SRS defines what Pluto ERP must do, for the developers, testers and the product owner. It is derived from the approved UI design (see [02-UI-Inventory](02-UI-Inventory.md)) and the discovery findings ([00](00-Discovery-and-Decisions.md)).
 
 ### 1.2 Product scope
-LedgerFlow is a multi-company, web-based ERP for Bangladeshi businesses that buy and sell physical goods (wholesalers, distributors, retailers) and for service firms. It combines:
+Pluto is a multi-company, web-based ERP for Bangladeshi businesses that buy and sell physical goods (wholesalers, distributors, retailers) and for service firms. It combines:
 - **Operations:** sales (quotations, invoices, returns, credit notes, receipts), purchases (orders, bills, returns, debit notes, payments), customers and suppliers, inventory across warehouses, and import letters of credit (LC) with landed cost.
 - **Money:** cash, bank and mobile-wallet accounts, transfers, bank reconciliation, other income and expenses with budgets.
 - **Books:** double-entry accounting generated automatically from simple business forms, plus manual vouchers, the chart of accounts, financial statements and reports.
@@ -198,7 +198,7 @@ Approval limits (defaults): Finance manager pays up to ৳ 5,00,000 without appr
 | NFR-040 | Reliability | Financial operations are atomic: a document, its stock movements and its journal commit or roll back together. | TC-CON-001, TC-CON-002, TC-CON-004, TC-CON-005 |
 | NFR-041 | Reliability | Monthly availability 99.5% during business hours (08:00–22:00 Asia/Dhaka). | Verified by review / operations runbook |
 | NFR-042 | Reliability | Nightly integrity jobs verify trial balance, stock and settlement caches, and alert on any difference. | TC-ACC-005, TC-INV-001, TC-NFR-007 |
-| NFR-050 | Usability | The UI follows the LedgerFlow design system exactly (tokens, components, layouts), in light and dark themes. | TC-FE-004 |
+| NFR-050 | Usability | The UI follows the Pluto design system exactly (tokens, components, layouts), in light and dark themes. | TC-FE-004 |
 | NFR-051 | Usability | WCAG 2.2 AA: keyboard operable, visible focus, 4.5:1 contrast, labelled inputs, polite live regions for toasts. | TC-FE-001, TC-FE-006 |
 | NFR-052 | Usability | Responsive breakpoints per design: >=1440, >=1200, 900–1199 icon rail, <900 drawer, <640 stacked rows. | TC-FE-007 |
 | NFR-053 | Usability | Amounts are shown in lakh/crore grouping with the ৳ symbol per company settings; negative amounts in parentheses. | TC-FE-004 |
@@ -273,7 +273,7 @@ Approval limits (defaults): Finance manager pays up to ৳ 5,00,000 without appr
 | BR-044 | An LC margin deposit is a refundable asset, never part of landed cost; it is applied to the payment or released at closure. The margin applied to payments may not exceed the margin deposited for that LC. | 3 | TC-LC-004, TC-LC-012, TC-LC-013, TC-LC-007 |
 | BR-045 | LC charges marked for landed cost are held in goods-in-transit and allocated to import bill lines by value (or quantity); the share for quantity already sold goes to cost of goods sold. | 5 | TC-LC-008 |
 | BR-046 | An LC can be closed only when the supplier is fully paid (or the LC expired), no charges are unpaid and no documents are missing or discrepant, or with an explicit override reason. | 1 | TC-LC-009 |
-| BR-047 | Customs duties and taxes are entered as assessed; LedgerFlow does not calculate them. | 1 | TC-LC-010 |
+| BR-047 | Customs duties and taxes are entered as assessed; Pluto does not calculate them. | 1 | TC-LC-010 |
 | BR-048 | Recurring templates create drafts only; nothing posts automatically. | 2 | TC-BNK-008 |
 | BR-049 | Updates must send the current version (If-Match); a mismatch is rejected with 409 and the user's input is preserved. | 10 | TC-AUTH-020, TC-SAL-017 |
 | BR-050 | Create and post requests accept an Idempotency-Key; a replay with the same key returns the original response without side effects. | 0 | TC-SAL-005, TC-CON-003 |

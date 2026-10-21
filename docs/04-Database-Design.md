@@ -2499,7 +2499,7 @@ Standard columns are listed in each table: `id` (PK), `company_id` (tenant), `lo
 
 #### `tax_rules`
 
-**Purpose:** User-defined tax rule (K6). LedgerFlow never assumes rates.  
+**Purpose:** User-defined tax rule (K6). Pluto never assumes rates.  
 **Flags:** tenant-scoped, optimistic lock  
 **Primary key:** (id)
 

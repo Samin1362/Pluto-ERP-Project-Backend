@@ -25,7 +25,7 @@ final class ProblemRenderer
     {
         [$code, $detail, $errors, $extra, $headers, $status] = self::classify($e);
         $body = [
-            'type' => 'https://docs.ledgerflow.example/errors/'.$code,
+            'type' => 'https://docs.pluto.example/errors/'.$code,
             'title' => ErrorCatalogue::title($code),
             'status' => $status,
             'code' => $code,

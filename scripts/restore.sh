@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Restores a backup made by backup.sh (backlog P0.4-BE-04). Takes a safety backup first.
-#   ./scripts/restore.sh backups/ledgerflow-20261020-020000.sql.gz          into the live database
-#   RESTORE_DB=ledgerflow_e2e ./scripts/restore.sh <file>                   into another database (test restore)
+#   ./scripts/restore.sh backups/pluto-20261020-020000.sql.gz          into the live database
+#   RESTORE_DB=pluto_e2e ./scripts/restore.sh <file>                   into another database (test restore)
 #   LIVE=0 ./scripts/restore.sh <file>                                      developer stack
 LIVE="${LIVE:-1}"
 source "$(dirname "$0")/lib.sh"
@@ -9,7 +9,7 @@ source "$(dirname "$0")/lib.sh"
 file="${1:-}"
 [ -f "$file" ] || die "Usage: ./scripts/restore.sh <backup .sql.gz file>"
 gzip -t "$file" || die "$file is not a valid gzip file."
-app_db="$(env_get DB_DATABASE)"; app_db="${app_db:-ledgerflow}"
+app_db="$(env_get DB_DATABASE)"; app_db="${app_db:-pluto}"
 target="${RESTORE_DB:-$app_db}"
 
 echo "This REPLACES every table in the '$target' database with the contents of $file."

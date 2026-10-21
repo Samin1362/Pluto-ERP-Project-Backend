@@ -1,5 +1,5 @@
 """
-LedgerFlow ERP - single source of truth for the relational schema.
+Pluto ERP - single source of truth for the relational schema.
 
 Every table, column, key and index in docs/04-Database-Design.md (data dictionary,
 ER diagrams, FK list, relationship matrix, migration order) is generated from this
@@ -214,7 +214,7 @@ add(
        c("is_system", BOOL, default="0", note="Seeded groups cannot be deleted"), c("used_in_cash_vouchers", BOOL, default="0"),
        c("sort_order", "INT", default="0")],
       uniques=[["company_id", "code"]], version=True),
-    T("tax_rules", "Accounting", "User-defined tax rule (K6). LedgerFlow never assumes rates.",
+    T("tax_rules", "Accounting", "User-defined tax rule (K6). Pluto never assumes rates.",
       [c("name", V(80)), c("rate", PCT, note="Entered by the user, e.g. 7.5000"), enum("applies_to", ["sales", "purchases", "both"]),
        fk("ledger_id", "ledgers", note="Liability or asset ledger where the tax collects"),
        c("is_recoverable", BOOL, default="1", note="Purchases: recoverable input tax posts to the rule's ledger; otherwise it is added to the line cost (R-14)"),

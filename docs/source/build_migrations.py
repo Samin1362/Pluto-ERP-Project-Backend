@@ -4,7 +4,7 @@ Usage: python3 docs/source/build_migrations.py
 Outputs:
   backend/database/migrations/2026_10_18_NNNNNN_create_<table>_table.php  (one per table, dependency order)
   backend/database/schema-contract.json   (expected physical schema; used by the PHP harness and the MySQL contract test)
-  docs/schema/ledgerflow-mysql8.sql       (reference DDL, equivalent to running the migrations)
+  docs/schema/pluto-mysql8.sql       (reference DDL, equivalent to running the migrations)
 
 The migrations are the *baseline*. After the first deployment the files are frozen and schema changes are made
 with new incremental migrations (expand -> migrate -> contract, 04 section 13); this generator is then retired
@@ -20,7 +20,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(os.path.dirname(HERE))
 MIG = os.path.join(ROOT, "database", "migrations")
 CONTRACT = os.path.join(ROOT, "database", "schema-contract.json")
-SQL = os.path.join(ROOT, "docs", "schema", "ledgerflow-mysql8.sql")
+SQL = os.path.join(ROOT, "docs", "schema", "pluto-mysql8.sql")
 DATE_PREFIX = "2026_10_18"
 TB = P.TB
 
@@ -229,7 +229,7 @@ def main():
     for f in glob.glob(os.path.join(MIG, "2026_10_18_*_create_*_table.php")):
         os.remove(f)
     os.makedirs(os.path.dirname(SQL), exist_ok=True)
-    out_contract, sql = {}, ["-- LedgerFlow ERP: reference MySQL 8.0 DDL, generated from docs/source/schema.py.",
+    out_contract, sql = {}, ["-- Pluto ERP: reference MySQL 8.0 DDL, generated from docs/source/schema.py.",
                              "-- Equivalent to running backend/database/migrations in order. For review and CI diffing; deploy with `php artisan migrate`.",
                              "SET NAMES utf8mb4;", ""]
     for seq, name in enumerate(order, 1):

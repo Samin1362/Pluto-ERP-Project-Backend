@@ -10,7 +10,9 @@ source "$(dirname "$0")/lib.sh"
 say "Building the docs toolbox image"
 docker build -q -t pluto-erp-docs:py3.12 docker/docs >/dev/null
 
-run() { docker run --rm --user "$(id -u):$(id -g)" -e HOME=/tmp -v "$ROOT":/work -w /work pluto-erp-docs:py3.12 "$@"; }
+# Git Bash on Windows rewrites /work into C:/Program Files/Git/work: switch that off and give Docker a Windows path.
+host_root="$ROOT"; command -v cygpath >/dev/null && host_root="$(cygpath -m "$ROOT")"
+run() { MSYS_NO_PATHCONV=1 docker run --rm --user "$(id -u):$(id -g)" -e HOME=/tmp -v "$host_root":/work -w /work pluto-erp-docs:py3.12 "$@"; }
 
 say "Generating"
 run sh -c 'set -e

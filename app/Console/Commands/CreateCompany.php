@@ -14,7 +14,7 @@ class CreateCompany extends Command
 {
     use ReadsPassword;
 
-    protected $signature = 'ledgerflow:company:create {legal_name} {--owner-email=} {--owner-name=}';
+    protected $signature = 'pluto:company:create {legal_name} {--owner-email=} {--owner-name=}';
 
     protected $description = 'Create a company (roles, chart of accounts, FY, number series) and its Owner';
 
@@ -29,7 +29,7 @@ class CreateCompany extends Command
         $user = User::where('email', $email)->first();
         if (! $user) {
             $user = User::create(['name' => $this->option('owner-name') ?: $email, 'email' => $email,
-                'password_hash' => Hash::make($this->readPassword('LEDGERFLOW_OWNER_PASSWORD')), 'status' => 'active']);
+                'password_hash' => Hash::make($this->readPassword('PLUTO_OWNER_PASSWORD')), 'status' => 'active']);
             $user->forceFill(['password_changed_at' => now()])->save();
         }
         $company = $provisioner->provision($this->argument('legal_name'), $user);

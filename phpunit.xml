@@ -27,7 +27,7 @@
         <env name="DB_CONNECTION" value="mysql" force="false"/>
         <env name="DB_HOST" value="mysql" force="false"/>
         <env name="DB_PORT" value="3306" force="false"/>
-        <env name="DB_DATABASE" value="ledgerflow_test" force="true"/>
+        <env name="DB_DATABASE" value="pluto_test" force="true"/>
         <env name="DB_USERNAME" value="root" force="false"/>
         <env name="DB_PASSWORD" value="" force="false"/>
         <env name="CACHE_STORE" value="array" force="true"/>
@@ -39,14 +39,14 @@
         <env name="ARGON_TIME" value="1" force="true"/>
         <env name="JWT_PRIVATE_KEY_PATH" value="storage/framework/testing/keys/jwt-private.pem" force="true"/>
         <env name="JWT_PUBLIC_KEY_PATH" value="storage/framework/testing/keys/jwt-public.pem" force="true"/>
-        <env name="LEDGERFLOW_ALLOWED_ORIGINS" value="http://localhost" force="true"/>
+        <env name="PLUTO_ALLOWED_ORIGINS" value="http://localhost" force="true"/>
 
         <!-- Laravel reads $_SERVER before $_ENV, and inside Docker $_SERVER holds the container's .env values
-             (e.g. CACHE_STORE=redis, DB_DATABASE=ledgerflow). Mirror every forced value there so tests stay isolated. -->
+             (e.g. CACHE_STORE=redis, DB_DATABASE=pluto). Mirror every forced value there so tests stay isolated. -->
         <server name="APP_ENV" value="testing" force="true"/>
         <server name="APP_URL" value="http://localhost" force="true"/>
         <server name="APP_MAINTENANCE_DRIVER" value="file" force="true"/>
-        <server name="DB_DATABASE" value="ledgerflow_test" force="true"/>
+        <server name="DB_DATABASE" value="pluto_test" force="true"/>
         <server name="CACHE_STORE" value="array" force="true"/>
         <server name="QUEUE_CONNECTION" value="sync" force="true"/>
         <server name="SESSION_DRIVER" value="array" force="true"/>
@@ -55,6 +55,6 @@
         <server name="ARGON_TIME" value="1" force="true"/>
         <server name="JWT_PRIVATE_KEY_PATH" value="storage/framework/testing/keys/jwt-private.pem" force="true"/>
         <server name="JWT_PUBLIC_KEY_PATH" value="storage/framework/testing/keys/jwt-public.pem" force="true"/>
-        <server name="LEDGERFLOW_ALLOWED_ORIGINS" value="http://localhost" force="true"/>
+        <server name="PLUTO_ALLOWED_ORIGINS" value="http://localhost" force="true"/>
     </php>
 </phpunit>

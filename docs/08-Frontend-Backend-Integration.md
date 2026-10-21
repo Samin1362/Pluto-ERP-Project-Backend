@@ -14,7 +14,7 @@ frontend/
       router.tsx                 route tree (lazy chunks per module)
       providers/                 Auth, Company, Theme, Toast providers
       shell/                     AppShell, Sidebar, Topbar, CommandPalette, QuickCreate (S0, L2, L5)
-    design-system/               LedgerFlow components (1:1 with the design)
+    design-system/               Pluto components (1:1 with the design)
       tokens/tokens.json         copied from the design (single source)
       tokens/tokens.css          generated CSS variables (light + dark)
       components/                Button, IconButton, Field, Input, Select, DateInput, Segmented, Switch, Checkbox,
@@ -53,9 +53,9 @@ frontend/
 ```
 
 ## 2. Reusable components and the design system
-- Each design component becomes a typed React component with the **same props as the design** (e.g. `<Field label hint error required term>`, `<DataTable columns rows totals selectable rowActions emptyState density loading>`, `<Amount value currency decimals size>`, `<BalanceStatus debit credit>`). The prototype already uses these names (`LedgerFlow.Field` …), so the mapping is mechanical.
+- Each design component becomes a typed React component with the **same props as the design** (e.g. `<Field label hint error required term>`, `<DataTable columns rows totals selectable rowActions emptyState density loading>`, `<Amount value currency decimals size>`, `<BalanceStatus debit credit>`). The prototype already uses these names (`Pluto.Field` …), so the mapping is mechanical.
 - Tokens: `tokens.json` → a build script → `tokens.css` with `:root,[data-theme=light]{…}` and `[data-theme=dark]{…}` blocks identical to `lf-theme.css`. Components use only CSS variables; no hard-coded colours (enforced by a stylelint rule).
-- Fonts are self-hosted from the design's `ds/ledgerflow/fonts/*.woff2`; Noto Sans/Serif Bengali come from Google Fonts for Bangla.
+- Fonts are self-hosted from the design's `ds/pluto/fonts/*.woff2`; Noto Sans/Serif Bengali come from Google Fonts for Bangla.
 - Storybook holds one story per component and state, with visual regression (Chromatic or Playwright snapshots) in both themes.
 
 ## 3. Layout and routing
@@ -82,7 +82,7 @@ Breadcrumbs come from route `handle.crumb` and follow the design's three-level r
 
 ## 4. API client configuration
 `src/api/client.ts` (fetch-based, about 150 lines) does the following:
-1. Sets `baseUrl = import.meta.env.VITE_API_BASE_URL` (e.g. `https://api.ledgerflow.example/api/v1`).
+1. Sets `baseUrl = import.meta.env.VITE_API_BASE_URL` (e.g. `https://api.pluto.example/api/v1`).
 2. Adds `Authorization: Bearer <accessToken>` from the in-memory auth store; adds `X-Company-Id` from the company store; `Accept: application/json`; `X-Requested-With: XMLHttpRequest`.
 3. For mutations, attaches an `Idempotency-Key` generated **once per user action** (stored on the form instance), so a retry or double-click reuses it.
 4. For updates, sends `If-Match` from the ETag kept with the cached resource.
@@ -167,7 +167,7 @@ Frontend (public, baked at build): `VITE_API_BASE_URL`, `VITE_APP_ENV` (`local|s
 ```php
 'paths' => ['api/*'],
 'allowed_methods' => ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-'allowed_origins' => explode(',', env('CORS_ALLOWED_ORIGINS')),   // e.g. https://app.ledgerflow.example
+'allowed_origins' => explode(',', env('CORS_ALLOWED_ORIGINS')),   // e.g. https://app.pluto.example
 'allowed_headers' => ['Authorization', 'Content-Type', 'Accept', 'X-Company-Id', 'Idempotency-Key', 'If-Match', 'X-Requested-With', 'X-Request-Id'],
 'exposed_headers' => ['ETag', 'X-Request-Id', 'Retry-After', 'Location'],
 'max_age' => 600,

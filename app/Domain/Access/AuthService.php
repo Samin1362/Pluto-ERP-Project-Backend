@@ -30,7 +30,7 @@ final class AuthService
         $email = Str::lower(trim($email));
         $sourceKey = 'login-src:'.hash('sha256', $email.'|'.$ip);
         $accountKey = 'login-acct:'.hash('sha256', $email);
-        $max = (int) config('ledgerflow.login.max_failures_per_source');
+        $max = (int) config('pluto.login.max_failures_per_source');
         if (RateLimiter::tooManyAttempts($sourceKey, $max)) {
             throw new ApiProblem('rate_limited', headers: ['Retry-After' => (string) RateLimiter::availableIn($sourceKey)]);
         }
@@ -40,12 +40,12 @@ final class AuthService
         $valid = Hash::check($password, $user?->password_hash ?? $this->dummyHash());
         $locked = $user?->locked_until !== null && $user->locked_until->isFuture();
         if (! $user || ! $valid || $locked || $user->status !== 'active') {
-            RateLimiter::hit($sourceKey, (int) config('ledgerflow.login.source_decay_seconds'));
-            RateLimiter::hit($accountKey, (int) config('ledgerflow.login.account_lock_seconds'));
+            RateLimiter::hit($sourceKey, (int) config('pluto.login.source_decay_seconds'));
+            RateLimiter::hit($accountKey, (int) config('pluto.login.account_lock_seconds'));
             if ($user) {
                 $user->failed_login_count = $user->failed_login_count + 1;
-                if (RateLimiter::attempts($accountKey) >= (int) config('ledgerflow.login.max_failures_per_account')) {
-                    $user->locked_until = now()->addSeconds((int) config('ledgerflow.login.account_lock_seconds'));
+                if (RateLimiter::attempts($accountKey) >= (int) config('pluto.login.max_failures_per_account')) {
+                    $user->locked_until = now()->addSeconds((int) config('pluto.login.account_lock_seconds'));
                 }
                 $user->save();
             }
@@ -174,7 +174,7 @@ final class AuthService
             'user_agent' => $userAgent ? substr($userAgent, 0, 255) : null,
             'ip_address' => $ip,
             'last_seen_at' => now(),
-            'expires_at' => now()->addDays((int) config('ledgerflow.refresh.ttl_days')),
+            'expires_at' => now()->addDays((int) config('pluto.refresh.ttl_days')),
         ]);
 
         return [$session, $raw];

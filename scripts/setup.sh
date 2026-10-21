@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # One-command local setup (backlog P0.2-BE-05). Safe to run again: every step skips work that is already done.
 #   ./scripts/setup.sh
-# Optional: LEDGERFLOW_OWNER_PASSWORD=... to skip the demo owner password prompt.
+# Optional: PLUTO_OWNER_PASSWORD=... to skip the demo owner password prompt.
 source "$(dirname "$0")/lib.sh"
 
 command -v docker >/dev/null || die "Docker is not installed (https://docs.docker.com/get-docker/)."
@@ -44,7 +44,7 @@ artisan migrate --force
 artisan db:seed --force
 
 # 6. Access-token signing keys
-artisan ledgerflow:jwt-keys
+artisan pluto:jwt-keys
 
 # 7. Demo company
 ensure_demo_company

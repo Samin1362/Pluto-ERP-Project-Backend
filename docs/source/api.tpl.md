@@ -29,13 +29,13 @@
 | Deprecation | `Deprecation` and `Sunset` headers, announced at least 90 days ahead |
 
 ## 2. Authentication summary
-`POST /auth/login` returns a short-lived **access JWT** (15 minutes) in the body and sets a rotating **refresh token** in the `lf_rt` cookie (HttpOnly, Secure, SameSite=Strict, Path=/api/v1/auth). The SPA sends `Authorization: Bearer <access>` on every call. On a 401 `token_expired` it calls `POST /auth/refresh` once and retries. Full design: [07-Authentication-and-Authorization](07-Authentication-and-Authorization.md).
+`POST /auth/login` returns a short-lived **access JWT** (15 minutes) in the body and sets a rotating **refresh token** in the `pl_rt` cookie (HttpOnly, Secure, SameSite=Strict, Path=/api/v1/auth). The SPA sends `Authorization: Bearer <access>` on every call. On a 401 `token_expired` it calls `POST /auth/refresh` once and retries. Full design: [07-Authentication-and-Authorization](07-Authentication-and-Authorization.md).
 
 ## 3. Error response format (RFC 9457 Problem Details)
 
 ```json
 {
-  "type": "https://docs.ledgerflow.example/errors/validation_failed",
+  "type": "https://docs.pluto.example/errors/validation_failed",
   "title": "Some fields need attention",
   "status": 422,
   "code": "validation_failed",
@@ -76,7 +76,7 @@ Content-Type: application/json
 ```
 ```http
 HTTP/1.1 200 OK
-Set-Cookie: lf_rt=8Qm…; Path=/api/v1/auth; HttpOnly; Secure; SameSite=Strict; Max-Age=1209600
+Set-Cookie: pl_rt=8Qm…; Path=/api/v1/auth; HttpOnly; Secure; SameSite=Strict; Max-Age=1209600
 
 {"data": {"status": "authenticated", "access_token": "eyJhbGciOiJFUzI1NiIs…", "token_type": "Bearer", "expires_in": 900,
   "user": {"id": 2, "name": "Rafiq Hasan", "email": "rafiq@meghnatraders.example", "two_factor_enabled": true,
@@ -119,7 +119,7 @@ Idempotency-Key: 5b6a2d1e-0f38-4b0a-a7c9-2d9e1f40c3aa
 HTTP/1.1 422 Unprocessable Content
 Content-Type: application/problem+json
 
-{"type": "https://docs.ledgerflow.example/errors/insufficient_stock", "title": "Not enough stock", "status": 422, "code": "insufficient_stock",
+{"type": "https://docs.pluto.example/errors/insufficient_stock", "title": "Not enough stock", "status": 422, "code": "insufficient_stock",
  "detail": "Line 1 needs 24 jars; Tejgaon warehouse has 18.", "request_id": "…", "errors": {"lines.0.quantity": ["Only 18 available at Tejgaon warehouse"]}}
 ```
 After the quantity is corrected, posting returns **200**. The `journal` array in the response holds the posted lines (Dr customer, Cr income ledgers, Dr COGS, Cr inventory) and `payment_status` is `"unpaid"`.
@@ -148,7 +148,7 @@ PUT /api/v1/sales-invoices/586
 If-Match: W/"3"
 ```
 ```json
-{"type": "https://docs.ledgerflow.example/errors/version_conflict", "title": "Someone else changed this invoice", "status": 409, "code": "version_conflict",
+{"type": "https://docs.pluto.example/errors/version_conflict", "title": "Someone else changed this invoice", "status": 409, "code": "version_conflict",
  "detail": "Shirin Akter saved INV-2026-0586 at 01:02. Reload to see her version; your edits are kept in a draft.", "request_id": "…", "errors": {"current_version": ["4"]}}
 ```
 

@@ -44,7 +44,7 @@ final class TwoFactorService
         }
         $secret = Totp::newSecret();
         $user->forceFill(['two_factor_secret' => $secret, 'two_factor_recovery_codes' => null])->save();
-        $uri = Totp::uri($secret, $user->email, (string) config('ledgerflow.two_factor.issuer'));
+        $uri = Totp::uri($secret, $user->email, (string) config('pluto.two_factor.issuer'));
         $svg = (new Writer(new ImageRenderer(new RendererStyle(192, 1), new SvgImageBackEnd)))->writeString($uri);
 
         return ['otpauth_uri' => $uri, 'qr_svg' => trim(preg_replace('/^<\?xml[^>]*>\s*/', '', $svg))];
@@ -124,7 +124,7 @@ final class TwoFactorService
 
     public function markVerified(string $familyId): void
     {
-        Cache::put($this->amrKey($familyId), true, now()->addDays((int) config('ledgerflow.refresh.ttl_days') + 1));
+        Cache::put($this->amrKey($familyId), true, now()->addDays((int) config('pluto.refresh.ttl_days') + 1));
     }
 
     /** @return list<string> the `amr` claim for tokens of this session family */

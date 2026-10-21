@@ -9,7 +9,7 @@
 | Purpose | Local work | Pre-release verification, UAT, restore drills | Live |
 | Runtime | docker-compose: `api` (PHP 8.3-FPM + Nginx), `worker`, `scheduler`, `mysql:8.0`, `redis:7`, `mailpit`, `minio`; Vite dev server proxying `/api` | Same images as production, smaller sizes | ≥ 2 API nodes behind a load balancer; ≥ 1 worker; 1 scheduler; managed or replicated MySQL 8.0; Redis; S3-compatible storage; CDN for the SPA |
 | Data | Demo seed (Meghna Traders) | Anonymised production copy or demo seed; **never** real customer PII without approval | Real |
-| Domains | `localhost:5173` / `:8000` | `app.staging.…`, `api.staging.…` | `app.ledgerflow.example`, `api.ledgerflow.example` |
+| Domains | `localhost:5173` / `:8000` | `app.staging.…`, `api.staging.…` | `app.pluto.example`, `api.pluto.example` |
 | Mail | Mailpit | Sandbox SMTP | Production SMTP/API |
 | Debug | `APP_DEBUG=true` | false | false |
 
@@ -17,17 +17,17 @@
 Backend `.env` keys (values come from the secret manager in staging and production; `.env.example` holds placeholders only):
 
 ```
-APP_NAME=LedgerFlow  APP_ENV=production  APP_DEBUG=false  APP_URL=https://api.ledgerflow.example
+APP_NAME=Pluto  APP_ENV=production  APP_DEBUG=false  APP_URL=https://api.pluto.example
 APP_KEY=<secret>     APP_PREVIOUS_KEYS=<secret, during rotation>
-DB_CONNECTION=mysql  DB_HOST=…  DB_PORT=3306  DB_DATABASE=ledgerflow  DB_USERNAME=lf_app  DB_PASSWORD=<secret>
+DB_CONNECTION=mysql  DB_HOST=…  DB_PORT=3306  DB_DATABASE=pluto  DB_USERNAME=lf_app  DB_PASSWORD=<secret>
 DB_MIGRATION_USERNAME=lf_migrate  DB_MIGRATION_PASSWORD=<secret>
 REDIS_HOST=…  REDIS_PASSWORD=<secret>  CACHE_STORE=redis  QUEUE_CONNECTION=redis
 JWT_ALGO=ES256  JWT_PRIVATE_KEY=<path to mounted secret>  JWT_PUBLIC_KEY=<path>  JWT_TTL=15  JWT_REFRESH_TTL_DAYS=14
-JWT_ISSUER=https://api.ledgerflow.example  JWT_AUDIENCE=ledgerflow-spa
-CORS_ALLOWED_ORIGINS=https://app.ledgerflow.example
-SESSION_COOKIE_DOMAIN=api.ledgerflow.example
+JWT_ISSUER=https://api.pluto.example  JWT_AUDIENCE=pluto-spa
+CORS_ALLOWED_ORIGINS=https://app.pluto.example
+SESSION_COOKIE_DOMAIN=api.pluto.example
 FILESYSTEM_DISK=s3  AWS_ACCESS_KEY_ID=<secret>  AWS_SECRET_ACCESS_KEY=<secret>  AWS_BUCKET=…  AWS_ENDPOINT=…
-MAIL_MAILER=smtp  MAIL_HOST=…  MAIL_PASSWORD=<secret>  MAIL_FROM_ADDRESS=no-reply@ledgerflow.example
+MAIL_MAILER=smtp  MAIL_HOST=…  MAIL_PASSWORD=<secret>  MAIL_FROM_ADDRESS=no-reply@pluto.example
 SMS_PROVIDER=…  SMS_API_KEY=<secret>
 SENTRY_LARAVEL_DSN=<secret>  LOG_CHANNEL=stderr  LOG_LEVEL=info
 ```
