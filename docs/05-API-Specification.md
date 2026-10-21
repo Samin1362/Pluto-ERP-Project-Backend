@@ -6370,7 +6370,7 @@ Edit a group (name, parent within nature, order).
 <a id="getledgers"></a>
 #### `GET /api/v1/ledgers`
 
-Ledger list (balances only with accounting.view). Picker for product, party, tax and category forms, and the ledger list. Without `accounting.view` the caller must send `purpose` (income_for_product, expense_for_product, purchase_for_supplier, tax, category) allowed by one of its create/edit permissions; only matching active ledgers are returned with id, code and name, never balances (R-26). Sales staff therefore never browse the chart.
+Ledger list (balances only with accounting.view). Picker for product, party, tax and category forms, and the ledger list. Without `accounting.view` the caller must send `purpose` (income_for_product, expense_for_product, purchase_for_supplier, tax, category) allowed by one of its create/edit permissions; only matching active posting ledgers are returned, without the balance fields (R-26). Sales staff therefore never browse the chart.
 
 | | |
 |---|---|
@@ -10056,7 +10056,7 @@ Create or edit a group. Unknown properties are rejected.
 <a id="schema-ledger"></a>
 #### `Ledger`
 
-Ledger.
+Ledger. opening_balance, opening_side, balance and balance_side are present only for callers with accounting.view (pickers never see balances, R-26).
 
 | Property | Type | Required |
 |---|---|---|
@@ -10074,10 +10074,10 @@ Ledger.
 | `is_system` | `bool` | yes |
 | `is_active` | `bool` | yes |
 | `has_entries` | `bool` | yes |
-| `opening_balance` | `money` | yes |
-| `opening_side` | `enum:dr\|cr` | yes |
-| `balance` | `money` | yes |
-| `balance_side` | `enum:dr\|cr` | yes |
+| `opening_balance` | `money` | no |
+| `opening_side` | `enum:dr\|cr` | no |
+| `balance` | `money` | no |
+| `balance_side` | `enum:dr\|cr` | no |
 | `fy_summary` | `obj \| null` | no |
 | `version` | `int` | yes |
 

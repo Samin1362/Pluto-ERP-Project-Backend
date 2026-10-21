@@ -78,6 +78,29 @@ class OpenApiConformanceTest extends TestCase
         $this->assertConforms($this->api('GET', '/api/v1/parties?type=customer', $store, $c), 'GET', '/parties');                             // 403
     }
 
+    public function test_platform_lookups_match_the_contract(): void
+    {
+        $t = $this->login('owner@meghna.example');
+        $c = $this->company->id;
+        $this->assertConforms($this->api('GET', '/api/v1/fiscal-years', $t, $c), 'GET', '/fiscal-years');
+        $this->assertConforms($this->api('GET', '/api/v1/branches?q=head&sort=-name&per_page=10', $t, $c), 'GET', '/branches');
+        $this->assertConforms($this->api('GET', '/api/v1/company/settings', $t, $c), 'GET', '/company/settings');
+        $this->assertConforms($this->api('GET', '/api/v1/branches?status=all', $t, $c), 'GET', '/branches');          // 422
+        $this->assertConforms($this->api('GET', '/api/v1/fiscal-years', $t), 'GET', '/fiscal-years');                 // 400
+
+        $store = $this->login('store@meghna.example');
+        $this->assertConforms($this->api('GET', '/api/v1/company/settings', $store, $c), 'GET', '/company/settings');  // without admin fields
+
+        $party = $this->api('POST', '/api/v1/parties', $t, $c, ['party_type' => 'customer', 'name' => 'Rahman Stores', 'mobile' => '01711458230'])->json('data.id');
+        $this->assertConforms($this->api('GET', "/api/v1/audit-logs?auditable_type=party&auditable_id={$party}", $t, $c), 'GET', '/audit-logs');
+        $this->assertConforms($this->api('GET', '/api/v1/audit-logs?auditable_type=nope&auditable_id=1', $t, $c), 'GET', '/audit-logs');   // 422
+        $this->assertConforms($this->api('GET', "/api/v1/audit-logs?auditable_type=party&auditable_id={$party}", $store, $c), 'GET', '/audit-logs'); // 403
+
+        $this->assertConforms($this->api('GET', '/api/v1/ledgers?per_page=100', $t, $c), 'GET', '/ledgers');                                   // chart with balances
+        $this->assertConforms($this->api('GET', '/api/v1/ledgers?purpose=tax', $store, $c), 'GET', '/ledgers');                                // picker, no balances
+        $this->assertConforms($this->api('GET', '/api/v1/ledgers', $store, $c), 'GET', '/ledgers');                                            // 422 purpose_required
+    }
+
     public function test_two_factor_endpoints_match_the_contract(): void
     {
         $t = $this->login('owner@meghna.example');

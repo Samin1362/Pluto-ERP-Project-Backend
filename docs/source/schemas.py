@@ -270,9 +270,9 @@ s("AccountNode", "Group or ledger node.", kind="enum:primary|group|ledger!", id=
 s("AccountGroup", "Account group.", id="id!", code="str!", name="str!", parent_id="id?", nature="str!", normal_balance="str!", report_section="str!", cash_flow_category="str?", is_system="bool!",
   balance="money!", children="[obj]", version="int!")
 s("AccountGroupInput", "Create or edit a group.", code="str:20!", name="str:120!", parent_id="id!", cash_flow_category="enum:operating|investing|financing|cash?", sort_order="int", used_in_cash_vouchers="bool")
-s("Ledger", "Ledger.", id="id!", code="str!", name="str!", account_group_id="id!", group_path="[str]!", nature="str!", normal_balance="str!", ledger_kind="str!", description="str?",
-  track_bills="bool!", show_in_cash_vouchers="bool!", is_system="bool!", is_active="bool!", has_entries="bool!", opening_balance="money!", opening_side="enum:dr|cr!", balance="money!",
-  balance_side="enum:dr|cr!", fy_summary="obj?", version="int!")
+s("Ledger", "Ledger. opening_balance, opening_side, balance and balance_side are present only for callers with accounting.view (pickers never see balances, R-26).", id="id!", code="str!", name="str!", account_group_id="id!", group_path="[str]!", nature="str!", normal_balance="str!", ledger_kind="str!", description="str?",
+  track_bills="bool!", show_in_cash_vouchers="bool!", is_system="bool!", is_active="bool!", has_entries="bool!", opening_balance="money", opening_side="enum:dr|cr", balance="money",
+  balance_side="enum:dr|cr", fy_summary="obj?", version="int!")
 s("LedgerInput", "Create or edit a ledger.", name="str:150!", account_group_id="id!", code="str:20?", description="str:255?", track_bills="bool", show_in_cash_vouchers="bool",
   opening_balance="money", opening_side="enum:dr|cr")
 s("TemplateList", "Journal templates.", templates="[obj]!")

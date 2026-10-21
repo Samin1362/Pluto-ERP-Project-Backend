@@ -895,7 +895,7 @@ export interface LcTransition {
   reason?: string | null
 }
 
-/** Ledger. */
+/** Ledger. opening_balance, opening_side, balance and balance_side are present only for callers with accounting.view (pickers never see balances, R-26). */
 export interface Ledger {
   id: number
   code: string
@@ -911,10 +911,10 @@ export interface Ledger {
   is_system: boolean
   is_active: boolean
   has_entries: boolean
-  opening_balance: Decimal
-  opening_side: 'dr' | 'cr'
-  balance: Decimal
-  balance_side: 'dr' | 'cr'
+  opening_balance?: Decimal
+  opening_side?: 'dr' | 'cr'
+  balance?: Decimal
+  balance_side?: 'dr' | 'cr'
   fy_summary?: Record<string, unknown> | null
   version: number
 }
