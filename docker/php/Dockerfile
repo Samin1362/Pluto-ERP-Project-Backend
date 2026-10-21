@@ -7,12 +7,19 @@ FROM composer:2.8.12 AS composer
 # ---------------------------------------------------------------- base: PHP + extensions + non-root user
 FROM php:8.3-fpm-bookworm AS base
 
+# phpredis comes from its pinned GitHub release instead of PECL: pecl.php.net downloads failed (504) on 21 Oct 2026
+# and blocked deploys; a pinned tarball is also reproducible.
+ARG PHPREDIS_VERSION=6.2.0
 RUN apt-get update \
  && apt-get install -y --no-install-recommends git unzip libzip-dev libicu-dev libonig-dev default-mysql-client \
  && docker-php-ext-install -j"$(nproc)" pdo_mysql mbstring intl zip bcmath opcache pcntl \
- && pecl install redis \
- && docker-php-ext-enable redis \
- && rm -rf /var/lib/apt/lists/* /tmp/pear
+ && docker-php-source extract \
+ && mkdir -p /usr/src/php/ext/redis \
+ && curl -fsSL --retry 5 --retry-delay 3 "https://github.com/phpredis/phpredis/archive/refs/tags/${PHPREDIS_VERSION}.tar.gz" \
+    | tar -xz -C /usr/src/php/ext/redis --strip-components=1 \
+ && docker-php-ext-install -j"$(nproc)" redis \
+ && docker-php-source delete \
+ && rm -rf /var/lib/apt/lists/*
 
 # Password hashing is Argon2id (07 §2); fail the build if this PHP lacks it.
 RUN php -r 'exit(defined("PASSWORD_ARGON2ID") ? 0 : 1);'
