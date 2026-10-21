@@ -1,4 +1,4 @@
-"""MySQL 8.0 rule validator for the LedgerFlow schema.
+"""MySQL 8.0 rule validator for the Pluto schema.
 
 Usage: python3 docs/source/validate_schema.py   (non-zero exit on any failure)
 Writes docs/source/_validation.json, which build_db.py renders into 14-Physical-Schema-and-Migrations.md.

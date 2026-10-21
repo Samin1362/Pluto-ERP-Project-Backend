@@ -19,10 +19,10 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         // The `api` guard reads the user that AuthenticateJwt verified; it never accepts a session cookie.
-        Auth::viaRequest('ledgerflow-jwt', fn (Request $request) => $request->attributes->get('auth_user'));
+        Auth::viaRequest('pluto-jwt', fn (Request $request) => $request->attributes->get('auth_user'));
 
         // 05 §1 rate limits: auth endpoints 20/min per IP; authenticated calls 120/min per user.
-        RateLimiter::for('auth-ip', fn (Request $r) => Limit::perMinute((int) config('ledgerflow.rate_limits.auth_per_ip'))->by('auth:'.$r->ip()));
-        RateLimiter::for('api-user', fn (Request $r) => Limit::perMinute((int) config('ledgerflow.rate_limits.api_per_user'))->by('user:'.($r->attributes->get('auth_user')?->id ?? $r->ip())));
+        RateLimiter::for('auth-ip', fn (Request $r) => Limit::perMinute((int) config('pluto.rate_limits.auth_per_ip'))->by('auth:'.$r->ip()));
+        RateLimiter::for('api-user', fn (Request $r) => Limit::perMinute((int) config('pluto.rate_limits.api_per_user'))->by('user:'.($r->attributes->get('auth_user')?->id ?? $r->ip())));
     }
 }

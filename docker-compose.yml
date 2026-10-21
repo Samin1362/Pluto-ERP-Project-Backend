@@ -58,8 +58,8 @@ services:
       - --log-bin-trust-function-creators=1
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?set MYSQL_ROOT_PASSWORD in .env}
-      MYSQL_DATABASE: ${DB_DATABASE:-ledgerflow}
-      MYSQL_USER: ${DB_USERNAME:-ledgerflow}
+      MYSQL_DATABASE: ${DB_DATABASE:-pluto}
+      MYSQL_USER: ${DB_USERNAME:-pluto}
       MYSQL_PASSWORD: ${DB_PASSWORD:?set DB_PASSWORD in .env}
     volumes:
       - mysql-data:/var/lib/mysql
@@ -105,17 +105,17 @@ services:
   app-e2e:
     <<: *app
     environment:
-      DB_DATABASE: ledgerflow_e2e
+      DB_DATABASE: pluto_e2e
       REDIS_DB: "2"
       REDIS_CACHE_DB: "3"
-      CACHE_PREFIX: ledgerflow-e2e-
+      CACHE_PREFIX: pluto-e2e-
       QUEUE_CONNECTION: sync
       APP_URL: http://localhost:8081
       APP_CONFIG_CACHE: /tmp/e2e-config.php
       APP_ROUTES_CACHE: /tmp/e2e-routes.php
       AUTH_RATE_LIMIT_PER_IP: "600"
       API_RATE_LIMIT_PER_USER: "6000"
-      LEDGERFLOW_ALLOWED_ORIGINS: http://localhost:4173
+      PLUTO_ALLOWED_ORIGINS: http://localhost:4173
     healthcheck:
       test: ["CMD-SHELL", "php -r 'exit(@fsockopen(\"127.0.0.1\", 9000) ? 0 : 1);'"]
       interval: 10s

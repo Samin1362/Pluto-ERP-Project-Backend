@@ -47,7 +47,7 @@ class TotpTest extends TestCase
 
     public function test_otpauth_uri(): void
     {
-        $this->assertSame('otpauth://totp/LedgerFlow:rafiq%40meghna.example?secret=ABC&issuer=LedgerFlow&algorithm=SHA1&digits=6&period=30',
-            Totp::uri('ABC', 'rafiq@meghna.example', 'LedgerFlow'));
+        $this->assertSame('otpauth://totp/Pluto:rafiq%40meghna.example?secret=ABC&issuer=Pluto&algorithm=SHA1&digits=6&period=30',
+            Totp::uri('ABC', 'rafiq@meghna.example', 'Pluto'));
     }
 }

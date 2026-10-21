@@ -1,6 +1,6 @@
 # 02 · UI inventory
 
-> **Source of truth:** the Claude Design canvas "LedgerFlow ERP" (13 module prototypes, about 180 state artboards, the design system).
+> **Source of truth:** the Claude Design canvas "Pluto ERP" (13 module prototypes, about 180 state artboards, the design system).
 >
 > **Generated file.** The per-page sections come from `docs/source/pages.py`. The APIs, entities and allowed roles for each page are **derived** from the API registry and the role matrix, so they can't drift from 05 and 01. Coverage: 162 page entries (incl. dialogs, 4 new auth/settings screens and 7 new list screens, GAP-24/25) + 15 reused report entries.
 
@@ -276,7 +276,7 @@ Each entry follows the 13 points of the brief: (1) purpose · (2) components and
 #### S1 · Sign in (NEW: not in design)
 
 1. **Purpose:** Authenticate with e-mail and password; second step asks the TOTP or a recovery code when 2-step is on.
-2. **Components and layout:** Centered card on paper background using the LedgerFlow logo, Field, Input and Button components.
+2. **Components and layout:** Centered card on paper background using the Pluto logo, Field, Input and Button components.
 3. **Inputs** (and 4. required/optional):
 
    | Field | Type | Req. | Rule |
@@ -1468,7 +1468,7 @@ Each entry follows the 13 points of the brief: (1) purpose · (2) components and
 #### Sal-DlgPost · Dialog · Post invoice
 
 1. **Purpose:** Confirms posting with customer, total and due; explains credit-note correction.
-2. **Components and layout:** LedgerFlow Dialog with summary rows and footer Keep / Confirm. _Source: Sal-DlgPost.dc.html._
+2. **Components and layout:** Pluto Dialog with summary rows and footer Keep / Confirm. _Source: Sal-DlgPost.dc.html._
 3–4. **Inputs:** none (read-only page; filters listed below)
 5. **Actions → API** ([full map](05-API-Specification.md#actions-sal-dlgpost)): Keep → ui:close the dialog<br>Confirm → POST /sales-invoices/{id}/post
 6. **Tables:** —
@@ -1484,7 +1484,7 @@ Each entry follows the 13 points of the brief: (1) purpose · (2) components and
 #### Sal-DlgCancel · Dialog · Cancel invoice
 
 1. **Purpose:** Danger dialog with required reason (customer cancelled, entered by mistake, wrong customer, duplicate).
-2. **Components and layout:** LedgerFlow Dialog with summary rows and footer Keep / Confirm. _Source: Sal-DlgCancel.dc.html._
+2. **Components and layout:** Pluto Dialog with summary rows and footer Keep / Confirm. _Source: Sal-DlgCancel.dc.html._
 3–4. **Inputs:** none (read-only page; filters listed below)
 5. **Actions → API** ([full map](05-API-Specification.md#actions-sal-dlgcancel)): Keep → ui:close the dialog<br>Confirm → POST /sales-invoices/{id}/cancel
 6. **Tables:** —
@@ -1500,7 +1500,7 @@ Each entry follows the 13 points of the brief: (1) purpose · (2) components and
 #### Sal-DlgDelete · Dialog · Delete draft
 
 1. **Purpose:** Danger dialog; drafts never reached the books.
-2. **Components and layout:** LedgerFlow Dialog with summary rows and footer Keep / Confirm. _Source: Sal-DlgDelete.dc.html._
+2. **Components and layout:** Pluto Dialog with summary rows and footer Keep / Confirm. _Source: Sal-DlgDelete.dc.html._
 3–4. **Inputs:** none (read-only page; filters listed below)
 5. **Actions → API** ([full map](05-API-Specification.md#actions-sal-dlgdelete)): Keep → ui:close the dialog<br>Confirm → DELETE /sales-invoices/{id}
 6. **Tables:** —
@@ -3568,11 +3568,11 @@ Each entry follows the 13 points of the brief: (1) purpose · (2) components and
 #### M7 · Charges and cost summary
 
 1. **Purpose:** All charges with LC and paid filters; landed cost breakdown for an arrived LC with per-kg cost.
-2. **Components and layout:** KPIs; filters; charges table; landed-cost bar and rows; note 'Duties … LedgerFlow does not calculate them'. _Source: LC-Charges.dc.html._
+2. **Components and layout:** KPIs; filters; charges table; landed-cost bar and rows; note 'Duties … Pluto does not calculate them'. _Source: LC-Charges.dc.html._
 3–4. **Inputs:** none (read-only page; filters listed below)
 5. **Actions → API** ([full map](05-API-Specification.md#actions-m7)): Add charge → dlg:LC-DrawerCharge<br>Choose LC → GET /letters-of-credit → GET /letters-of-credit/{id}/cost-summary<br>Allocate landed cost → POST /letters-of-credit/{id}/landed-cost/preview → POST /letters-of-credit/{id}/landed-cost<br>Pay a charge (NEW, row) → POST /lc-charges/{id}/pay
 6. **Tables:** —
-7. **Validation and rules:** BR-045: LC charges marked for landed cost are held in goods-in-transit and allocated to import bill lines by value (or quantity); the share for quantity already sold goes to cost of goods sold.<br>BR-047: Customs duties and taxes are entered as assessed; LedgerFlow does not calculate them.
+7. **Validation and rules:** BR-045: LC charges marked for landed cost are held in goods-in-transit and allocated to import bill lines by value (or quantity); the share for quantity already sold goes to cost of goods sold.<br>BR-047: Customs duties and taxes are entered as assessed; Pluto does not calculate them.
 8. **Roles allowed:** `lc.view` → Owner, Finance manager, Accountant, Viewer. Actions additionally check their own permission (see endpoints).
 9. **APIs:** [`GET /letters-of-credit`](05-API-Specification.md#getlettersofcredit), [`GET /lc-charges`](05-API-Specification.md#getlccharges), [`POST /lc-charges`](05-API-Specification.md#postlccharges), [`POST /lc-charges/{id}/reverse`](05-API-Specification.md#postlcchargesidreverse), [`POST /lc-charges/{id}/pay`](05-API-Specification.md#postlcchargesidpay), [`POST /letters-of-credit/{id}/landed-cost/preview`](05-API-Specification.md#postlettersofcreditidlandedcostpreview), [`POST /letters-of-credit/{id}/landed-cost`](05-API-Specification.md#postlettersofcreditidlandedcost), [`POST /landed-cost-allocations/{id}/reverse`](05-API-Specification.md#postlandedcostallocationsidreverse), [`GET /letters-of-credit/{id}/cost-summary`](05-API-Specification.md#getlettersofcreditidcostsummary)
 10. **Entities:** `account_mappings`, `audit_logs`, `journal_entries`, `journal_lines`, `landed_cost_allocation_lines`, `landed_cost_allocations`, `lc_charges`, `lc_documents`, `lc_payments`, `letters_of_credit`, `money_accounts`, `number_sequences`, `parties`, `payment_details`, `purchase_bill_lines`, `purchase_bills`, `stock_balances`, `stock_movements`
@@ -3657,7 +3657,7 @@ Each entry follows the 13 points of the brief: (1) purpose · (2) components and
    | Add to landed cost | switch | opt | not for margin |
 5. **Actions → API** ([full map](05-API-Specification.md#actions-lc-drawercharge)): Cancel → ui:close the drawer<br>Add charge → POST /lc-charges
 6. **Tables:** —
-7. **Validation and rules:** BR-044: An LC margin deposit is a refundable asset, never part of landed cost; it is applied to the payment or released at closure. The margin applied to payments may not exceed the margin deposited for that LC.<br>BR-045: LC charges marked for landed cost are held in goods-in-transit and allocated to import bill lines by value (or quantity); the share for quantity already sold goes to cost of goods sold.<br>BR-047: Customs duties and taxes are entered as assessed; LedgerFlow does not calculate them.
+7. **Validation and rules:** BR-044: An LC margin deposit is a refundable asset, never part of landed cost; it is applied to the payment or released at closure. The margin applied to payments may not exceed the margin deposited for that LC.<br>BR-045: LC charges marked for landed cost are held in goods-in-transit and allocated to import bill lines by value (or quantity); the share for quantity already sold goes to cost of goods sold.<br>BR-047: Customs duties and taxes are entered as assessed; Pluto does not calculate them.
 8. **Roles allowed:** `lc.create` → Owner, Finance manager, Accountant. Actions additionally check their own permission (see endpoints).
 9. **APIs:** [`POST /lc-charges`](05-API-Specification.md#postlccharges)
 10. **Entities:** `account_mappings`, `journal_entries`, `journal_lines`, `lc_charges`, `money_accounts`, `number_sequences`, `payment_details`

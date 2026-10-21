@@ -17,7 +17,7 @@ class AddUser extends Command
 {
     use ReadsPassword;
 
-    protected $signature = 'ledgerflow:user:add {company_id} {email} {--name=} {--role=sales : owner|finance|accountant|sales|store|viewer}';
+    protected $signature = 'pluto:user:add {company_id} {email} {--name=} {--role=sales : owner|finance|accountant|sales|store|viewer}';
 
     protected $description = 'Add an active user to a company with a role';
 
@@ -33,7 +33,7 @@ class AddUser extends Command
         }
         $email = Str::lower($this->argument('email'));
         $user = User::where('email', $email)->first() ?? tap(User::create(['name' => $this->option('name') ?: $email, 'email' => $email,
-            'password_hash' => Hash::make($this->readPassword('LEDGERFLOW_USER_PASSWORD')), 'status' => 'active']),
+            'password_hash' => Hash::make($this->readPassword('PLUTO_USER_PASSWORD')), 'status' => 'active']),
             fn ($u) => $u->forceFill(['password_changed_at' => now()])->save());
         CompanyUser::updateOrCreate(['user_id' => $user->id], ['role_id' => $role->id, 'status' => 'active', 'joined_at' => now()]);
         $this->info("{$email} is {$role->name} in \"{$company->legal_name}\"");

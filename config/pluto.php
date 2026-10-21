@@ -1,7 +1,7 @@
 <?php
 
 /*
- * LedgerFlow settings. Secrets never live here: keys are read from files outside the repository or from the
+ * Pluto settings. Secrets never live here: keys are read from files outside the repository or from the
  * server environment (07 §12). Defaults are safe for production; local overrides go in .env.
  */
 // Key paths may be absolute or relative to the project root; empty means storage/keys/<file>.
@@ -12,18 +12,18 @@ $keyPath = fn (string $var, string $file): string => ($p = (string) env($var, ''
 return [
 
     'jwt' => [
-        // ES256 key pair (07 §3.1). Generate with `php artisan ledgerflow:jwt-keys`.
+        // ES256 key pair (07 §3.1). Generate with `php artisan pluto:jwt-keys`.
         'private_key_path' => $keyPath('JWT_PRIVATE_KEY_PATH', 'jwt-private.pem'),
         'public_key_path' => $keyPath('JWT_PUBLIC_KEY_PATH', 'jwt-public.pem'),
         'key_id' => env('JWT_KEY_ID', 'k1'),
         'issuer' => env('JWT_ISSUER', env('APP_URL', 'http://localhost')),
-        'audience' => env('JWT_AUDIENCE', 'ledgerflow-spa'),
+        'audience' => env('JWT_AUDIENCE', 'pluto-spa'),
         'ttl_seconds' => (int) env('JWT_TTL_SECONDS', 900),          // 15 minutes
         'leeway_seconds' => 30,
     ],
 
     'refresh' => [
-        'cookie' => 'lf_rt',
+        'cookie' => 'pl_rt',
         'path' => '/api/v1/auth',
         'ttl_days' => (int) env('REFRESH_TTL_DAYS', 14),
         // Secure is required in production. Browsers also accept Secure cookies on http://localhost and 127.0.0.1.
@@ -47,7 +47,7 @@ return [
 
     // 2-step verification (07 §5): the name shown in authenticator apps
     'two_factor' => [
-        'issuer' => env('TWO_FACTOR_ISSUER', 'LedgerFlow'),
+        'issuer' => env('TWO_FACTOR_ISSUER', 'Pluto'),
     ],
 
     // Shared with the Vercel /api proxy (backlog P0.3-BE-02): requests that carry it may set the client IP and host.
@@ -59,7 +59,7 @@ return [
     'frontend_url' => rtrim((string) env('APP_FRONTEND_URL', 'http://localhost:5173'), '/'),
 
     // Origins allowed to call the cookie-authenticated auth endpoints (07 §3.2 CSRF defence).
-    'allowed_origins' => array_values(array_filter(array_map('trim', explode(',', (string) env('LEDGERFLOW_ALLOWED_ORIGINS', env('APP_URL', '')))))),
+    'allowed_origins' => array_values(array_filter(array_map('trim', explode(',', (string) env('PLUTO_ALLOWED_ORIGINS', env('APP_URL', '')))))),
     // Comma-separated patterns where `*` matches part of one DNS label, e.g. Vercel preview URLs (backlog P0.3-BE-01).
-    'allowed_origin_patterns' => array_values(array_filter(array_map('trim', explode(',', (string) env('LEDGERFLOW_ALLOWED_ORIGIN_PATTERNS', ''))))),
+    'allowed_origin_patterns' => array_values(array_filter(array_map('trim', explode(',', (string) env('PLUTO_ALLOWED_ORIGIN_PATTERNS', ''))))),
 ];

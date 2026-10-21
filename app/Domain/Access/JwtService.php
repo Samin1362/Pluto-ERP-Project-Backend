@@ -32,17 +32,17 @@ final class JwtService
     public function issue(User $user, int $sessionId, array $amr = ['pwd']): array
     {
         $now = new DateTimeImmutable('@'.time());
-        $ttl = (int) config('ledgerflow.jwt.ttl_seconds');
+        $ttl = (int) config('pluto.jwt.ttl_seconds');
         $c = $this->config();
         $token = $c->builder()
-            ->issuedBy((string) config('ledgerflow.jwt.issuer'))
-            ->permittedFor((string) config('ledgerflow.jwt.audience'))
+            ->issuedBy((string) config('pluto.jwt.issuer'))
+            ->permittedFor((string) config('pluto.jwt.audience'))
             ->relatedTo((string) $user->id)
             ->identifiedBy((string) Str::uuid())
             ->issuedAt($now)
             ->canOnlyBeUsedAfter($now)
             ->expiresAt($now->modify(sprintf('%+d seconds', $ttl)))
-            ->withHeader('kid', (string) config('ledgerflow.jwt.key_id'))
+            ->withHeader('kid', (string) config('pluto.jwt.key_id'))
             ->withClaim('sid', $sessionId)
             ->withClaim('amr', array_values($amr))
             ->withClaim('pwv', $user->passwordVersion())
@@ -68,13 +68,13 @@ final class JwtService
         if (! $token instanceof Plain) {
             throw new ApiProblem('token_invalid');
         }
-        $leeway = new DateInterval('PT'.(int) config('ledgerflow.jwt.leeway_seconds').'S');
+        $leeway = new DateInterval('PT'.(int) config('pluto.jwt.leeway_seconds').'S');
         $clock = new NativeClock('UTC');
         try {
             $c->validator()->assert($token,
                 new SignedWith($c->signer(), $c->verificationKey()),
-                new IssuedBy((string) config('ledgerflow.jwt.issuer')),
-                new PermittedFor((string) config('ledgerflow.jwt.audience')),
+                new IssuedBy((string) config('pluto.jwt.issuer')),
+                new PermittedFor((string) config('pluto.jwt.audience')),
             );
         } catch (RequiredConstraintsViolated) {
             throw new ApiProblem('token_invalid');
@@ -101,10 +101,10 @@ final class JwtService
         if ($this->config) {
             return $this->config;
         }
-        $priv = (string) config('ledgerflow.jwt.private_key_path');
-        $pub = (string) config('ledgerflow.jwt.public_key_path');
+        $priv = (string) config('pluto.jwt.private_key_path');
+        $pub = (string) config('pluto.jwt.public_key_path');
         if (! is_readable($priv) || ! is_readable($pub)) {
-            throw new RuntimeException('JWT keys are missing: run `php artisan ledgerflow:jwt-keys` (07 §3.1).');
+            throw new RuntimeException('JWT keys are missing: run `php artisan pluto:jwt-keys` (07 §3.1).');
         }
 
         return $this->config = Configuration::forAsymmetricSigner(new Sha256, InMemory::file($priv), InMemory::file($pub));

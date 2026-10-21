@@ -28,7 +28,7 @@ class TwoFactorTest extends TestCase
         $t = $this->login('owner@meghna.example');
         $start = $this->api('POST', '/api/v1/me/two-factor', $t)->assertOk();
         $uri = $start->json('data.otpauth_uri');
-        $this->assertMatchesRegularExpression('#^otpauth://totp/LedgerFlow:owner%40meghna\.example\?secret=[A-Z2-7]{32}&#', $uri);
+        $this->assertMatchesRegularExpression('#^otpauth://totp/Pluto:owner%40meghna\.example\?secret=[A-Z2-7]{32}&#', $uri);
         $this->assertStringStartsWith('<svg', $start->json('data.qr_svg'));
         $this->assertSame('no-store', explode(',', (string) $start->headers->get('Cache-Control'))[0]);
         $secret = $this->secretFrom($uri);
@@ -84,7 +84,7 @@ class TwoFactorTest extends TestCase
         $this->assertProblem($this->postJson('/api/v1/auth/two-factor', ['challenge_token' => $challenge, 'code' => $this->code($secret)]), 401, 'two_factor_failed');
 
         // Refreshing keeps the second factor in the new token
-        $refreshed = $this->withUnencryptedCookie('lf_rt', $this->refreshCookie($step2)->getValue())
+        $refreshed = $this->withUnencryptedCookie('pl_rt', $this->refreshCookie($step2)->getValue())
             ->withHeaders(['X-Requested-With' => 'XMLHttpRequest'])->postJson('/api/v1/auth/refresh')->assertOk();
         $this->assertSame(['pwd', 'otp'], $this->claims($refreshed->json('data.access_token'))['amr']);
     }
@@ -179,7 +179,7 @@ class TwoFactorTest extends TestCase
         $secret = $this->secretFrom($this->api('POST', '/api/v1/me/two-factor', $t)->json('data.otpauth_uri'));
         $this->api('POST', '/api/v1/me/two-factor/confirm', $t, null, ['code' => $this->code($secret)])->assertCreated();
         $this->assertProblem($this->api('GET', '/api/v1/parties?type=customer', $t, $this->company->id), 403, 'two_factor_required_by_company');
-        $fresh = $this->withUnencryptedCookie('lf_rt', $this->refreshCookie($login)->getValue())
+        $fresh = $this->withUnencryptedCookie('pl_rt', $this->refreshCookie($login)->getValue())
             ->withHeaders(['X-Requested-With' => 'XMLHttpRequest'])->postJson('/api/v1/auth/refresh')->json('data.access_token');
         $this->api('GET', '/api/v1/parties?type=customer', $fresh, $this->company->id)->assertOk();
 

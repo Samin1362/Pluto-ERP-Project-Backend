@@ -12,13 +12,13 @@ use Tests\TestCase;
  * database/schema-contract.json (generated from docs/source/schema.py).
  *
  * Run in CI against a disposable MySQL 8.0 database (see docs/14 §8):
- *   DB_CONNECTION=mysql DB_DATABASE=ledgerflow_test php artisan test --filter=SchemaContractTest
+ *   DB_CONNECTION=mysql DB_DATABASE=pluto_test php artisan test --filter=SchemaContractTest
  */
 class SchemaContractTest extends TestCase
 {
     use RefreshDatabase;
 
-    /** Framework tables from Laravel's own default migrations, not part of the LedgerFlow contract. */
+    /** Framework tables from Laravel's own default migrations, not part of the Pluto contract. */
     private const FRAMEWORK_TABLES = ['migrations', 'cache', 'cache_locks', 'jobs', 'job_batches', 'failed_jobs'];
 
     private array $contract;

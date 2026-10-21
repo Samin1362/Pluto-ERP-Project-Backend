@@ -65,7 +65,7 @@ class AuthenticationTest extends TestCase
     public function test_account_locks_after_50_failures_and_answers_401_not_423(): void
     {
         $u = $this->makeUser('rafiq@meghna.example');
-        config(['ledgerflow.login.max_failures_per_account' => 3]); // same rule, smaller number to keep the test fast
+        config(['pluto.login.max_failures_per_account' => 3]); // same rule, smaller number to keep the test fast
         foreach (['192.0.2.1', '192.0.2.2', '192.0.2.3'] as $ip) {
             $this->withServerVariables(['REMOTE_ADDR' => $ip])->postJson('/api/v1/auth/login', ['email' => $u->email, 'password' => 'wrong password!']);
         }
@@ -96,7 +96,7 @@ class AuthenticationTest extends TestCase
         $login = $this->postJson('/api/v1/auth/login', ['email' => 'rafiq@meghna.example', 'password' => self::PASSWORD]);
         $first = $this->refreshCookie($login)->getValue();
 
-        $r = $this->withUnencryptedCookie('lf_rt', $first)->withHeaders(self::CSRF)->postJson('/api/v1/auth/refresh');
+        $r = $this->withUnencryptedCookie('pl_rt', $first)->withHeaders(self::CSRF)->postJson('/api/v1/auth/refresh');
         $r->assertOk()->assertJsonStructure(['data' => ['access_token', 'token_type', 'expires_in']]);
         $second = $this->refreshCookie($r)->getValue();
         $this->assertNotSame($first, $second);
@@ -104,9 +104,9 @@ class AuthenticationTest extends TestCase
         $this->api('GET', '/api/v1/me', $newAccess)->assertOk();
 
         // The old token is presented again: theft is assumed, every session of this sign-in is revoked.
-        $this->assertProblem($this->withUnencryptedCookie('lf_rt', $first)->withHeaders(self::CSRF)->postJson('/api/v1/auth/refresh'), 401, 'refresh_reuse_detected');
+        $this->assertProblem($this->withUnencryptedCookie('pl_rt', $first)->withHeaders(self::CSRF)->postJson('/api/v1/auth/refresh'), 401, 'refresh_reuse_detected');
         $this->assertSame(0, UserSession::whereNull('revoked_at')->count());
-        $this->assertProblem($this->withUnencryptedCookie('lf_rt', $second)->withHeaders(self::CSRF)->postJson('/api/v1/auth/refresh'), 401, 'refresh_token_invalid');
+        $this->assertProblem($this->withUnencryptedCookie('pl_rt', $second)->withHeaders(self::CSRF)->postJson('/api/v1/auth/refresh'), 401, 'refresh_token_invalid');
         $this->assertProblem($this->api('GET', '/api/v1/me', $newAccess), 401, 'token_invalid');
     }
 
@@ -115,27 +115,27 @@ class AuthenticationTest extends TestCase
         $this->makeUser('rafiq@meghna.example');
         $login = $this->postJson('/api/v1/auth/login', ['email' => 'rafiq@meghna.example', 'password' => self::PASSWORD]);
         $rt = $this->refreshCookie($login)->getValue();
-        $this->assertProblem($this->withUnencryptedCookie('lf_rt', $rt)->postJson('/api/v1/auth/refresh'), 401, 'refresh_token_invalid');
-        $this->assertProblem($this->withUnencryptedCookie('lf_rt', $rt)->withHeaders(['X-Requested-With' => 'XMLHttpRequest', 'Origin' => 'https://evil.example'])
+        $this->assertProblem($this->withUnencryptedCookie('pl_rt', $rt)->postJson('/api/v1/auth/refresh'), 401, 'refresh_token_invalid');
+        $this->assertProblem($this->withUnencryptedCookie('pl_rt', $rt)->withHeaders(['X-Requested-With' => 'XMLHttpRequest', 'Origin' => 'https://evil.example'])
             ->postJson('/api/v1/auth/refresh'), 401, 'refresh_token_invalid');
     }
 
     public function test_logout_works_with_an_expired_access_token_and_kills_the_session(): void
     {
         $this->makeUser('rafiq@meghna.example');
-        config(['ledgerflow.jwt.ttl_seconds' => -120]); // tokens issued already expired
+        config(['pluto.jwt.ttl_seconds' => -120]); // tokens issued already expired
         $login = $this->postJson('/api/v1/auth/login', ['email' => 'rafiq@meghna.example', 'password' => self::PASSWORD]);
         $expired = $login->json('data.access_token');
         $rt = $this->refreshCookie($login)->getValue();
         $this->assertProblem($this->api('GET', '/api/v1/me', $expired), 401, 'token_expired');
 
-        $out = $this->withUnencryptedCookie('lf_rt', $rt)->withHeaders(self::CSRF + ['Authorization' => 'Bearer '.$expired])->postJson('/api/v1/auth/logout');
+        $out = $this->withUnencryptedCookie('pl_rt', $rt)->withHeaders(self::CSRF + ['Authorization' => 'Bearer '.$expired])->postJson('/api/v1/auth/logout');
         $out->assertNoContent();
         $cleared = $this->refreshCookie($out);
         $this->assertTrue($cleared->isCleared());
         $this->assertNotNull(UserSession::first()->revoked_at);
         $this->assertTrue(AuditLog::where('action', 'logout')->exists());
-        $this->assertProblem($this->withUnencryptedCookie('lf_rt', $rt)->withHeaders(self::CSRF)->postJson('/api/v1/auth/refresh'), 401, 'refresh_token_invalid');
+        $this->assertProblem($this->withUnencryptedCookie('pl_rt', $rt)->withHeaders(self::CSRF)->postJson('/api/v1/auth/refresh'), 401, 'refresh_token_invalid');
     }
 
     public function test_logout_revokes_access_tokens_of_the_sign_in(): void
@@ -145,7 +145,7 @@ class AuthenticationTest extends TestCase
         $access = $login->json('data.access_token');
         $rt = $this->refreshCookie($login)->getValue();
         $this->api('GET', '/api/v1/me', $access)->assertOk();
-        $this->withUnencryptedCookie('lf_rt', $rt)->withHeaders(self::CSRF)->postJson('/api/v1/auth/logout')->assertNoContent();
+        $this->withUnencryptedCookie('pl_rt', $rt)->withHeaders(self::CSRF)->postJson('/api/v1/auth/logout')->assertNoContent();
         $this->assertProblem($this->api('GET', '/api/v1/me', $access), 401, 'token_invalid');
     }
 
@@ -175,7 +175,7 @@ class AuthenticationTest extends TestCase
 
     public function test_auth_endpoints_share_a_per_ip_limit(): void
     {
-        config(['ledgerflow.rate_limits.auth_per_ip' => 3]);
+        config(['pluto.rate_limits.auth_per_ip' => 3]);
         $this->withServerVariables(['REMOTE_ADDR' => '10.7.7.7']);
         for ($i = 0; $i < 3; $i++) {
             $this->withHeaders(['X-Requested-With' => 'XMLHttpRequest'])->postJson('/api/v1/auth/refresh')->assertStatus(401);
@@ -193,7 +193,7 @@ class AuthenticationTest extends TestCase
         $this->makeUser('sales@meghna.example');
         $owner = $this->login('owner@meghna.example');
         $sales = $this->login('sales@meghna.example');
-        config(['ledgerflow.rate_limits.api_per_user' => 3]);
+        config(['pluto.rate_limits.api_per_user' => 3]);
         for ($i = 0; $i < 3; $i++) {
             $this->api('GET', '/api/v1/me', $owner)->assertOk();
         }

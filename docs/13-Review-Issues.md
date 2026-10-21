@@ -364,7 +364,7 @@ TC-AUTH-008 generates permission tests from `x-permission`, so it would test the
 ### R-38 · Two-factor challenge storage and cookie same-site requirement
 **Correction:** `docs/07-Authentication-and-Authorization.md`:
 - §5: "The challenge token is a random id stored in Redis (`2fa:{id}` → user, attempts; TTL 5 min)."
-- §3.2: "SameSite=Strict requires the SPA and API on the same registrable domain (e.g. `app.` and `api.ledgerflow.example`)."
+- §3.2: "SameSite=Strict requires the SPA and API on the same registrable domain (e.g. `app.` and `api.pluto.example`)."
 
 ### R-39 · Database documentation polish
 **Correction:**

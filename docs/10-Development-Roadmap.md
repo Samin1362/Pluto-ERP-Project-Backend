@@ -109,7 +109,7 @@ Performance (k6), security (ZAP, dependency audit, pen-test), accessibility audi
 
 ```bash
 # repository
-git init ledgerflow-erp && cd ledgerflow-erp
+git init pluto-erp && cd pluto-erp
 mkdir docs && cp -r <this package>/docs/* docs/ && cp <this package>/README.md .
 
 # backend (Laravel + Eloquent, DEC-01 approved)

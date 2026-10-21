@@ -18,7 +18,7 @@ sequenceDiagram
         A->>A: verify TOTP (±1 step) or a recovery code
     end
     A->>DB: insert user_sessions (refresh hash, family, device, ip)
-    A-->>B: 200 {access_token (JWT, 15 min)} + Set-Cookie lf_rt (HttpOnly, Secure, SameSite=Strict, Path=/api/v1/auth)
+    A-->>B: 200 {access_token (JWT, 15 min)} + Set-Cookie pl_rt (HttpOnly, Secure, SameSite=Strict, Path=/api/v1/auth)
     B->>A: GET /api/v1/... Authorization: Bearer JWT, X-Company-Id: 1
     A->>A: verify JWT signature, exp, iss, aud, sid not revoked
     A->>DB: active membership in company 1? role permissions?
@@ -47,8 +47,8 @@ The SPA signs in once and keeps a short-lived access token in memory. Every API 
 
 | Claim | Value | Validation |
 |---|---|---|
-| `iss` | `https://api.ledgerflow.example` | exact match |
-| `aud` | `ledgerflow-spa` | exact match |
+| `iss` | `https://api.pluto.example` | exact match |
+| `aud` | `pluto-spa` | exact match |
 | `sub` | user id | user exists and `status = active` |
 | `sid` | user_sessions id | session not revoked (checked against a cache, 60 s TTL, invalidated on revoke) |
 | `iat`, `nbf`, `exp` | epoch seconds | `nbf ≤ now < exp` with 30 s leeway |
@@ -60,7 +60,7 @@ The SPA signs in once and keeps a short-lived access token in memory. Every API 
 
 ### 3.2 Refresh token
 - An opaque 256-bit random value, stored hashed (SHA-256) in `user_sessions.refresh_token_hash`. Sliding lifetime of 14 days, capped by the company's idle timeout (K14 "Sign out after inactivity": 30 min / 1 h / 4 h / never).
-- Cookie `lf_rt`: `HttpOnly; Secure; SameSite=Strict; Path=/api/v1/auth`. JavaScript can't read it; it is sent only to the auth endpoints.
+- Cookie `pl_rt`: `HttpOnly; Secure; SameSite=Strict; Path=/api/v1/auth`. JavaScript can't read it; it is sent only to the auth endpoints.
 - **Rotation:** each refresh issues a new token and marks the old row `replaced_by_id`. If an already-rotated token is presented (a sign of theft), the whole `family_id` is revoked, the user is notified ("New sign-in" / "suspicious refresh") and must sign in again.
 - **CSRF:** refresh and logout are cookie-authenticated, so they also require the header `X-Requested-With: XMLHttpRequest` and an `Origin` check against the allow-list. SameSite=Strict already blocks cross-site sends; the header is defence in depth. All other endpoints use the Bearer header, which browsers never send cross-site, so they are not CSRF-exposed.
 

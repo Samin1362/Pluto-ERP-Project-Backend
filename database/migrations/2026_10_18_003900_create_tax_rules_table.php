@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Schema;
 
 /**
  * Table `tax_rules` (Accounting): migration 39 of 83, dependency level 4.
- * User-defined tax rule (K6). LedgerFlow never assumes rates.
+ * User-defined tax rule (K6). Pluto never assumes rates.
  * Depends on: companies, ledgers, users.
  *
  * Generated from docs/source/schema.py by docs/source/build_migrations.py (baseline schema).
@@ -21,7 +21,7 @@ return new class extends Migration
             $table->engine('InnoDB');
             $table->charset('utf8mb4');
             $table->collation('utf8mb4_0900_ai_ci');
-            $table->comment('User-defined tax rule (K6). LedgerFlow never assumes rates.');
+            $table->comment('User-defined tax rule (K6). Pluto never assumes rates.');
 
             $table->id()->comment('Primary key, auto-increment');
             $table->unsignedBigInteger('company_id')->comment('Tenant owner. Every query is scoped by it.');

@@ -22,8 +22,8 @@ migrate: ## Run new migrations
 fresh: ## Wipe the local database and recreate demo data (asks first)
 	./scripts/reset-db.sh
 
-test: ## Run the PHPUnit suite against the ledgerflow_test database
-	docker compose exec -T -e DB_DATABASE=ledgerflow_test app php vendor/bin/phpunit
+test: ## Run the PHPUnit suite against the pluto_test database
+	docker compose exec -T -e DB_DATABASE=pluto_test app php vendor/bin/phpunit
 
 tinker: ## Laravel REPL
 	docker compose exec app php artisan tinker

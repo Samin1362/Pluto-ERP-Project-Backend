@@ -10,8 +10,8 @@ class AllowedOriginsTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        config(['ledgerflow.allowed_origins' => ['https://pluto-erp-frontend.vercel.app', 'http://localhost:5173'],
-            'ledgerflow.allowed_origin_patterns' => ['https://pluto-erp-frontend-*-samin1362s-projects.vercel.app', 'http://*.example.org']]);
+        config(['pluto.allowed_origins' => ['https://pluto-erp-frontend.vercel.app', 'http://localhost:5173'],
+            'pluto.allowed_origin_patterns' => ['https://pluto-erp-frontend-*-samin1362s-projects.vercel.app', 'http://*.example.org']]);
         $this->makeUser('rafiq@meghna.example');
     }
 
@@ -20,7 +20,7 @@ class AllowedOriginsTest extends TestCase
         $login = $this->postJson('/api/v1/auth/login', ['email' => 'rafiq@meghna.example', 'password' => self::PASSWORD]);
         $headers = ['X-Requested-With' => 'XMLHttpRequest'] + ($origin === null ? [] : ['Origin' => $origin]);
 
-        return $this->withUnencryptedCookie('lf_rt', $this->refreshCookie($login)->getValue())->withHeaders($headers)
+        return $this->withUnencryptedCookie('pl_rt', $this->refreshCookie($login)->getValue())->withHeaders($headers)
             ->postJson('/api/v1/auth/refresh');
     }
 

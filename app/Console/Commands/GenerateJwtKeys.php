@@ -7,14 +7,14 @@ use Illuminate\Console\Command;
 /** Creates the ES256 (P-256) key pair for access tokens (07 §3.1). Keys stay outside version control. */
 class GenerateJwtKeys extends Command
 {
-    protected $signature = 'ledgerflow:jwt-keys {--force : Overwrite existing keys (signs everyone out)}';
+    protected $signature = 'pluto:jwt-keys {--force : Overwrite existing keys (signs everyone out)}';
 
     protected $description = 'Generate the ES256 key pair used to sign access tokens';
 
     public function handle(): int
     {
-        $priv = config('ledgerflow.jwt.private_key_path');
-        $pub = config('ledgerflow.jwt.public_key_path');
+        $priv = config('pluto.jwt.private_key_path');
+        $pub = config('pluto.jwt.public_key_path');
         if (is_file($priv) && ! $this->option('force')) {
             $this->info("Keys already exist at {$priv}; use --force to replace them.");
 

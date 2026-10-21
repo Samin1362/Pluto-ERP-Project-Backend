@@ -6,11 +6,11 @@
 
 | Artefact | Path | Contents |
 |---|---|---|
-| Laravel migrations | `backend/database/migrations/` | 83 anonymous-class migrations, one table each, in dependency order (`2026_10_18_000100_create_currencies_table.php` … `2026_10_18_008300_create_purchase_return_lines_table.php`) |
+| Laravel migrations | `backend/database/migrations/` | 85 anonymous-class migrations, one table each, in dependency order (`0001_01_01_000001_create_cache_table.php` … `2026_10_18_008300_create_purchase_return_lines_table.php`) |
 | Schema contract | `backend/database/schema-contract.json` | Expected `information_schema` view of every table: columns, types, nullability, defaults, keys, FKs, CHECK names |
 | MySQL contract test | `backend/tests/Feature/Database/SchemaContractTest.php` | Runs the migrations on MySQL 8.0 and compares the live schema with the contract; probes CHECK, UNIQUE and FK enforcement |
-| Reference DDL | `docs/schema/ledgerflow-mysql8.sql` | Plain `CREATE TABLE` statements equivalent to the migrations, for DBA review and CI diffing (deploy with `php artisan migrate`, not this file) |
-| ER diagram source | `docs/schema/ledgerflow-er.mmd` | Mermaid source of the full diagram in §4 |
+| Reference DDL | `docs/schema/pluto-mysql8.sql` | Plain `CREATE TABLE` statements equivalent to the migrations, for DBA review and CI diffing (deploy with `php artisan migrate`, not this file) |
+| ER diagram source | `docs/schema/pluto-er.mmd` | Mermaid source of the full diagram in §4 |
 | Verification tools | `docs/source/validate_schema.py`, `docs/source/migration_harness/` | MySQL 8.0 rule validator; strict Laravel schema-builder harness and comparer |
 
 ## 1. Summary
@@ -124,11 +124,11 @@ Unique keys that contain a nullable column (MySQL allows many NULLs; each is int
 
 ### 3.2 Migrations
 
-Executed in this workspace with PHP 8.3.6:
+Executed in this workspace with PHP 8.3.35:
 
 | Step | Result |
 |---|---|
-| `php -l` on all 83 migrations | ✅ no syntax errors |
+| `php -l` on all 85 migrations | ✅ no syntax errors |
 | Harness: every `up()` in filename order, then every `down()` in reverse. Each FK target must already exist; each drop must leave no dangling FK; only real Laravel schema-builder methods are accepted | ✅ `harness: migrated=83 rolled_back=83 files=83` |
 | Built model vs contract (from `schema.py`): every column's type, nullability, default and generation, every key, FK action and CHECK | ✅ `compared tables=83, columns=1322, primary=83, unique=84, index=330, foreign=385, check=148 differences=0` |
 | Negative tests: a migration renamed to run before its parent; a non-Laravel method (`->varchar()`); a money column changed to `decimal(15,2)` | ✅ all three detected (order error, API error, 1 difference) |
@@ -137,7 +137,7 @@ Executed in this workspace with PHP 8.3.6:
 
 ## 4. Entity-relationship diagram (all tables)
 
-Every table and every foreign key except the uniform `company_id` (tenant) and `created_by`/`updated_by` (actor) columns, which would draw 171 identical lines to `companies` and `users`. They are listed in §5.2. Notation: `||--o{` mandatory one-to-many, `|o--o{` optional one-to-many, `||--o|` / `|o--o|` one-to-one. Labels are the FK column. Per-module diagrams with attributes are in [04 §5](04-Database-Design.md#5-entity-relationship-diagrams). At this size the overview is best read zoomed: `docs/schema/ledgerflow-er.svg` is the rendered vector file.
+Every table and every foreign key except the uniform `company_id` (tenant) and `created_by`/`updated_by` (actor) columns, which would draw 171 identical lines to `companies` and `users`. They are listed in §5.2. Notation: `||--o{` mandatory one-to-many, `|o--o{` optional one-to-many, `||--o|` / `|o--o|` one-to-one. Labels are the FK column. Per-module diagrams with attributes are in [04 §5](04-Database-Design.md#5-entity-relationship-diagrams). At this size the overview is best read zoomed: `docs/schema/pluto-er.svg` is the rendered vector file.
 
 ```mermaid
 erDiagram
@@ -851,10 +851,10 @@ Topological order of the FK graph. Within a level, alphabetical. Self-references
 ## 8. Running the migrations on MySQL 8.0
 
 1. **Server:** MySQL 8.0.16 or later (CHECK enforcement), InnoDB, `sql_mode` including `STRICT_TRANS_TABLES`, server and session time zone `+00:00`. Character set `utf8mb4`, collation `utf8mb4_0900_ai_ci` (case-insensitive, so e-mails and codes are unique regardless of case).
-2. **Laravel app:** in a fresh Laravel 11/12 app, delete the framework's `0001_01_01_000000_create_users_table.php`. LedgerFlow defines its own `users` and `password_reset_tokens`, and uses no `sessions` table because the API is stateless. Keep the framework's `cache` and `jobs` migrations; their filenames sort first and they reference nothing.
+2. **Laravel app:** in a fresh Laravel 11/12 app, delete the framework's `0001_01_01_000000_create_users_table.php`. Pluto defines its own `users` and `password_reset_tokens`, and uses no `sessions` table because the API is stateless. Keep the framework's `cache` and `jobs` migrations; their filenames sort first and they reference nothing.
 3. Copy `backend/database/migrations/*`, `backend/database/schema-contract.json` and `backend/tests/Feature/Database/SchemaContractTest.php` into the app. Set `config/app.php` `timezone` = `UTC` and `config/database.php` mysql `strict` = `true`, `engine` = `InnoDB`.
 4. `php artisan migrate`. Then `php artisan migrate:rollback --step=83` and `php artisan migrate` again prove the down path.
-5. `DB_CONNECTION=mysql DB_DATABASE=ledgerflow_test php artisan test --filter=SchemaContractTest` must pass. It compares every table, column, key, FK rule and CHECK with the contract, and probes CHECK, UNIQUE and FK enforcement.
+5. `DB_CONNECTION=mysql DB_DATABASE=pluto_test php artisan test --filter=SchemaContractTest` must pass. It compares every table, column, key, FK rule and CHECK with the contract, and probes CHECK, UNIQUE and FK enforcement.
 
 CI job (GitHub Actions), added in roadmap P0:
 
@@ -864,7 +864,7 @@ schema:
   services:
     mysql:
       image: mysql:8.0
-      env: { MYSQL_DATABASE: ledgerflow_test, MYSQL_ROOT_PASSWORD: ci-only }
+      env: { MYSQL_DATABASE: pluto_test, MYSQL_ROOT_PASSWORD: ci-only }
       ports: ["3306:3306"]
       options: --health-cmd="mysqladmin ping" --health-interval=5s --health-retries=20
   steps:
@@ -875,10 +875,10 @@ schema:
       working-directory: backend
     - run: php artisan migrate --force && php artisan migrate:rollback --step=83 --force && php artisan migrate --force
       working-directory: backend
-      env: { DB_CONNECTION: mysql, DB_HOST: 127.0.0.1, DB_DATABASE: ledgerflow_test, DB_USERNAME: root, DB_PASSWORD: ci-only }
+      env: { DB_CONNECTION: mysql, DB_HOST: 127.0.0.1, DB_DATABASE: pluto_test, DB_USERNAME: root, DB_PASSWORD: ci-only }
     - run: php artisan test --filter=SchemaContractTest
       working-directory: backend
-      env: { DB_CONNECTION: mysql, DB_HOST: 127.0.0.1, DB_DATABASE: ledgerflow_test, DB_USERNAME: root, DB_PASSWORD: ci-only }
+      env: { DB_CONNECTION: mysql, DB_HOST: 127.0.0.1, DB_DATABASE: pluto_test, DB_USERNAME: root, DB_PASSWORD: ci-only }
 ```
 (`ci-only` is a throw-away password for the disposable CI container, not a credential.)
 

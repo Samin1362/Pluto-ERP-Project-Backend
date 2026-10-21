@@ -1,6 +1,6 @@
 # 00 · Discovery report and architecture decisions
 
-> Status: **Draft for owner review** · Generated 18 Oct 2026 · Source design: Claude Design canvas "LedgerFlow ERP" (version 1792288896-65b7)
+> Status: **Draft for owner review** · Generated 18 Oct 2026 · Source design: Claude Design canvas "Pluto ERP" (version 1792288896-65b7; the product was formerly LedgerFlow and renamed Pluto on 21 Oct 2026)
 >
 > Items marked **⚑ APPROVAL** need a decision from the product owner before they are treated as final. Nothing in this package is application code.
 
@@ -12,7 +12,7 @@
 |---|---|---|---|
 | `project/canvas.json` | Canvas index: 182 artboard entries, 22 row titles | ✅ Fully | Artboard codes and titles (A1–M8, dialogs) |
 | `Main.dc.html` (01 · Product architecture) | Sitemap, navigation, templates, journeys, delivery plan | ✅ Fully | Declares 13 modules, 157 entries, 142 distinct screens, 15 reused |
-| `DesignSystem.dc.html` (02) + `ds/ledgerflow/tokens.json` + `lf-theme.css` | Design tokens and component gallery | ✅ Fully | "Night Ledger" system: Hanken Grotesk / Newsreader / JetBrains Mono, teal brand, navy shell, light + dark themes |
+| `DesignSystem.dc.html` (02) + `ds/pluto/tokens.json` + `lf-theme.css` | Design tokens and component gallery | ✅ Fully | "Night Ledger" system: Hanken Grotesk / Newsreader / JetBrains Mono, teal brand, navy shell, light + dark themes |
 | `Shell.dc.html` (04) | Sidebar, top bar, menus | ✅ | Company switcher (3 companies), FY selector, quick-create, profile |
 | `Dashboard.dc.html` (A1–A8, 03, 05–07) | Prototype module | ✅ | 8 lenses; dark, tablet, phone variants |
 | `Parties.dc.html` (B1–B8, C1–C8) | Prototype module | ✅ | Customers and suppliers share one layout |
@@ -27,7 +27,7 @@
 | `LC.dc.html` (M1–M8, LC dialogs) | Prototype module | ✅ | Largest module (159 KB) |
 | `App.dc.html` (08) | Clickable router linking every module | ✅ | |
 | ~170 wrapper artboards (e.g. `Pur-Create.dc.html`) | Each one mounts a module with a start view | ✅ Sampled, and listed via the index | Each one only sets `start-view`, `start-tab` or `start-dialog` on a module; they contain no separate content |
-| `ds/ledgerflow/components/bundle.js/.css` | Component library code | ⚠️ Not read line by line | Component **names and props** were taken from how the screens use them (36 components). Their internals don't affect the backend. |
+| `ds/pluto/components/bundle.js/.css` | Component library code | ⚠️ Not read line by line | Component **names and props** were taken from how the screens use them (36 components). Their internals don't affect the backend. |
 | `artifact-type/*` | Files belonging to the design editor | ➖ Not relevant | These belong to the editor, not to your product |
 
 **Limitation:** the screens are interactive prototypes running on sample data ("Prototype with sample data. Nothing is saved"). The business rules below were therefore taken from the screen copy, helper text, banners, posting previews and the logic inside each prototype. That evidence is strong, but it is not a signed-off specification.
@@ -78,7 +78,7 @@ The full per-page analysis is in [02-UI-Inventory.md](02-UI-Inventory.md). Total
 | CF-20 | The tax engine assumes **no** rates; users define tax rules (name, rate, applies to, ledger) | K6, P&L note |
 | CF-21 | LC: an import LC in foreign currency (USD/EUR/CNY), linked to a PO or an intended import, with tolerance, planning exchange rate, margin deposit, tenor (sight/usance), Incoterm, dates, required-document checklist, optional shipment lots, amendments, charges, payments at the bank's rate, landed cost summary and 8 reports | M1–M8 |
 | CF-22 | **Shipment details live inside LC Details, not in a separate module** | Main sitemap note on module M |
-| CF-23 | Customs duties and taxes are entered as assessed; LedgerFlow does not calculate them | M7 note |
+| CF-23 | Customs duties and taxes are entered as assessed; Pluto does not calculate them | M7 note |
 | CF-24 | Attachments (JPG, PNG, PDF up to 10 MB) on expenses, bank entries and documents | I6, G6 |
 | CF-25 | Security: 2-step verification (TOTP), a "require 2-step for everyone" setting, an idle sign-out, and a list of signed-in sessions with sign-out | K14 |
 | CF-26 | Daily automatic backups with retention, manual backups, restore (Owner only, type RESTORE to confirm), and a month-end export pack | K15 |
@@ -126,7 +126,7 @@ The full per-page analysis is in [02-UI-Inventory.md](02-UI-Inventory.md). Total
 | GAP-16 | Ambiguity | The expense list mixes EXP-numbered entries with PV-numbered payment vouchers | The expense list is a **view of posted lines on expense-category ledgers**, whatever voucher created them | |
 | GAP-17 | Ambiguity | Usance LC acceptance liability (bank acceptance) is not designed | Model the acceptance as a liability to the bank until maturity (06 §12.6) | ⚑ |
 | GAP-18 | Ambiguity | Cash count (G2) shows a match; there is no flow for differences | A shortage/excess posts to a "Cash short/over" ledger with approval | |
-| GAP-19 | Out of scope signal | "LedgerFlow on Android" in sessions | A native mobile app is out of scope; the web app is responsive | |
+| GAP-19 | Out of scope signal | "Pluto on Android" in sessions | A native mobile app is out of scope; the web app is responsive | |
 | GAP-20 | Contradiction | D6 says stock groups decide "where value rolls up in … the balance sheet", but the chart of accounts gives inventory a ledger per **warehouse** | The inventory ledger comes from the **warehouse**; stock groups are a reporting hierarchy for valuation reports only | ⚑ |
 | GAP-21 | Missing field | H4 has "Require a cost centre on every entry", but cost centres appear nowhere else | Cost centres are deferred: the switch is hidden in v1 | |
 | GAP-22 | Ambiguity | K15 offers company-level backup and restore, but a physical MySQL backup covers every company on the server | Two layers: system physical backups (operations), plus a per-company **logical snapshot** used by the K15 restore (see 11-Deployment-and-Operations) | ⚑ |

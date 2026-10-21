@@ -3,7 +3,7 @@
 #   ./scripts/live.sh init               first time: .env.live with random secrets, build, migrate, keys
 #   ./scripts/live.sh up | down | ps     start (and wait until healthy) / stop / status
 #   ./scripts/live.sh logs [service]     follow logs
-#   ./scripts/live.sh artisan <args>     php artisan in the live app (e.g. ledgerflow:company:create …)
+#   ./scripts/live.sh artisan <args>     php artisan in the live app (e.g. pluto:company:create …)
 # The live stack is the Compose project "pluto-erp-live": its containers, database volume and port (8090)
 # are separate from the developer stack on the same machine.
 LIVE=1
@@ -35,12 +35,12 @@ case "$cmd" in
     say "Migrating, seeding reference data, creating signing keys, caching config"
     artisan migrate --force
     artisan db:seed --force
-    artisan ledgerflow:jwt-keys
+    artisan pluto:jwt-keys
     artisan config:cache
     artisan route:cache
     if [ "$(company_count)" = "0" ]; then
       say "No company yet. Create the real one (asks for the owner's password):"
-      echo "    ./scripts/live.sh artisan ledgerflow:company:create \"Company Ltd.\" --owner-email=owner@example.com --owner-name=\"Owner Name\""
+      echo "    ./scripts/live.sh artisan pluto:company:create \"Company Ltd.\" --owner-email=owner@example.com --owner-name=\"Owner Name\""
     fi
     "$0" url || true
     echo "Put PROXY_SHARED_SECRET from .env.live into Vercel (P0.6-FE-03) and keep .env.live in the password manager."
@@ -51,7 +51,7 @@ case "$cmd" in
   logs)  dc logs -f --tail=100 "$@" ;;
   artisan)
     # Pass the owner/user password variables through when they are set.
-    envs=(); for v in LEDGERFLOW_OWNER_PASSWORD LEDGERFLOW_USER_PASSWORD; do [ -n "${!v:-}" ] && envs+=(-e "$v"); done
+    envs=(); for v in PLUTO_OWNER_PASSWORD PLUTO_USER_PASSWORD; do [ -n "${!v:-}" ] && envs+=(-e "$v"); done
     if [ -t 0 ]; then dc exec ${envs[@]+"${envs[@]}"} app php artisan "$@"; else dc exec -T ${envs[@]+"${envs[@]}"} app php artisan "$@"; fi ;;
   url)   "$(dirname "$0")/tunnel-url.sh" ;;
   *)     sed -n '2,8p' "$0" | sed 's/^# \{0,1\}//'; exit 1 ;;

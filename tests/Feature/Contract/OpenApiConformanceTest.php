@@ -18,7 +18,7 @@ use Tests\TestCase;
  */
 class OpenApiConformanceTest extends TestCase
 {
-    private const DOC_URI = 'https://contract.ledgerflow.example/openapi.json';
+    private const DOC_URI = 'https://contract.pluto.example/openapi.json';
 
     private static ?object $doc = null;
 
@@ -44,9 +44,9 @@ class OpenApiConformanceTest extends TestCase
         $this->assertConforms($this->api('GET', '/api/v1/me', $token, $this->company->id), 'GET', '/me');
         $this->assertConforms($this->postJson('/api/v1/auth/login', ['email' => 'owner@meghna.example', 'password' => 'wrong password!']), 'POST', '/auth/login');
         $this->assertConforms($this->postJson('/api/v1/auth/login', ['email' => 'not-an-email']), 'POST', '/auth/login');
-        $refresh = $this->withUnencryptedCookie('lf_rt', $rt)->withHeaders(['X-Requested-With' => 'XMLHttpRequest'])->postJson('/api/v1/auth/refresh');
+        $refresh = $this->withUnencryptedCookie('pl_rt', $rt)->withHeaders(['X-Requested-With' => 'XMLHttpRequest'])->postJson('/api/v1/auth/refresh');
         $this->assertConforms($refresh, 'POST', '/auth/refresh');
-        $this->assertConforms($this->withUnencryptedCookie('lf_rt', 'bogus')->withHeaders(['X-Requested-With' => 'XMLHttpRequest'])->postJson('/api/v1/auth/refresh'), 'POST', '/auth/refresh');
+        $this->assertConforms($this->withUnencryptedCookie('pl_rt', 'bogus')->withHeaders(['X-Requested-With' => 'XMLHttpRequest'])->postJson('/api/v1/auth/refresh'), 'POST', '/auth/refresh');
         $this->assertConforms($this->getJson('/api/v1/me'), 'GET', '/me');
     }
 

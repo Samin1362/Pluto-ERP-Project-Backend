@@ -1,6 +1,6 @@
 # Runbook: the tunnel URL changed
 
-**When:** the live site shows "The LedgerFlow server is offline", or the host machine / Docker / `cloudflared` restarted. The Cloudflare quick tunnel gets a new random `https://<words>.trycloudflare.com` URL every time `cloudflared` starts, and the Vercel frontend must be pointed at it. Backlog P0.4-BE-06; takes about two minutes.
+**When:** the live site shows "The Pluto server is offline", or the host machine / Docker / `cloudflared` restarted. The Cloudflare quick tunnel gets a new random `https://<words>.trycloudflare.com` URL every time `cloudflared` starts, and the Vercel frontend must be pointed at it. Backlog P0.4-BE-06; takes about two minutes.
 
 ## 1. On the host machine (backend repo)
 ```bash

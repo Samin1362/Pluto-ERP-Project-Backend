@@ -17,10 +17,10 @@ class ProxyTrustTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        config(['ledgerflow.proxy.shared_secret' => self::SECRET]);
+        config(['pluto.proxy.shared_secret' => self::SECRET]);
         Route::get('api/_probe', fn (Request $r) => response()->json([
             'ip' => $r->ip(), 'host' => $r->getHost(), 'secure' => $r->secure(),
-            'secret' => $r->header('X-LF-Proxy-Secret'), 'xff' => $r->header('X-Forwarded-For'),
+            'secret' => $r->header('X-Pluto-Proxy-Secret'), 'xff' => $r->header('X-Forwarded-For'),
         ]));
     }
 
@@ -31,7 +31,7 @@ class ProxyTrustTest extends TestCase
             'X-Forwarded-For' => $clientIp.', 76.76.21.21',
             'X-Forwarded-Host' => 'pluto-erp-frontend.vercel.app',
             'X-Forwarded-Proto' => 'https',
-            'X-LF-Proxy-Secret' => $secret,
+            'X-Pluto-Proxy-Secret' => $secret,
         ]));
     }
 
@@ -39,6 +39,17 @@ class ProxyTrustTest extends TestCase
     {
         $this->viaProxy('203.0.113.7')->getJson('/api/_probe')->assertOk()
             ->assertJson(['ip' => '203.0.113.7', 'host' => 'pluto-erp-frontend.vercel.app', 'secure' => true, 'secret' => null, 'xff' => null]);
+    }
+
+    public function test_the_old_secret_header_still_works_for_one_release_and_is_removed_too(): void
+    {
+        // P1.7-BE-01: Vercel may still run the old proxy during the live switch (P1.7-BE-04).
+        $this->withServerVariables(['REMOTE_ADDR' => self::TUNNEL_IP])->withHeaders([
+            'X-Forwarded-For' => '203.0.113.8', 'X-Forwarded-Host' => 'pluto-erp-frontend.vercel.app', 'X-Forwarded-Proto' => 'https',
+            'X-LF-Proxy-Secret' => self::SECRET,
+        ])->getJson('/api/_probe')->assertOk()->assertJson(['ip' => '203.0.113.8', 'secret' => null]);
+        Route::get('api/_probe_legacy', fn (Request $r) => response()->json(['legacy' => $r->header('X-LF-Proxy-Secret')]));
+        $this->withHeaders(['X-LF-Proxy-Secret' => self::SECRET])->getJson('/api/_probe_legacy')->assertJson(['legacy' => null]);
     }
 
     public function test_forwarded_headers_are_ignored_without_the_right_secret(): void
@@ -51,7 +62,7 @@ class ProxyTrustTest extends TestCase
 
     public function test_an_empty_configured_secret_trusts_nobody(): void
     {
-        config(['ledgerflow.proxy.shared_secret' => '']);
+        config(['pluto.proxy.shared_secret' => '']);
         $this->viaProxy('203.0.113.7', '')->getJson('/api/_probe')->assertJson(['ip' => self::TUNNEL_IP]);
     }
 
@@ -74,7 +85,7 @@ class ProxyTrustTest extends TestCase
     {
         $this->makeUser('rafiq@meghna.example');
         $r = $this->viaProxy('203.0.113.7')->postJson('/api/v1/auth/login', ['email' => 'rafiq@meghna.example', 'password' => self::PASSWORD]);
-        $header = collect($r->headers->all('set-cookie'))->first(fn ($c) => str_starts_with($c, 'lf_rt='));
+        $header = collect($r->headers->all('set-cookie'))->first(fn ($c) => str_starts_with($c, 'pl_rt='));
 
         $this->assertNotNull($header);
         $attrs = array_map(fn ($a) => strtolower(trim($a)), array_slice(explode(';', $header), 1));

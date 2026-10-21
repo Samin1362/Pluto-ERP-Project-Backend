@@ -39,7 +39,7 @@ abstract class TestCase extends BaseTestCase
             config(['app.key' => 'base64:'.base64_encode(random_bytes(32))]);
             $this->app->forgetInstance('encrypter');
         }
-        config(['ledgerflow.jwt.private_key_path' => "$dir/jwt-private.pem", 'ledgerflow.jwt.public_key_path' => "$dir/jwt-public.pem"]);
+        config(['pluto.jwt.private_key_path' => "$dir/jwt-private.pem", 'pluto.jwt.public_key_path' => "$dir/jwt-public.pem"]);
         $this->seed(ReferenceDataSeeder::class);
         $this->withCredentials(); // send cookies on JSON requests, as the browser does for the refresh cookie
     }
@@ -103,7 +103,7 @@ abstract class TestCase extends BaseTestCase
     protected function refreshCookie(TestResponse $r): ?Cookie
     {
         foreach ($r->headers->getCookies() as $c) {
-            if ($c->getName() === 'lf_rt') {
+            if ($c->getName() === 'pl_rt') {
                 return $c;
             }
         }

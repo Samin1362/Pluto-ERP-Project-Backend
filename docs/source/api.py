@@ -1,4 +1,4 @@
-"""API registry: every REST endpoint of LedgerFlow /api/v1, consumed by build_api.py to produce
+"""API registry: every REST endpoint of Pluto /api/v1, consumed by build_api.py to produce
 docs/05-API-Specification.md and docs/openapi.yaml.
 
 E(method, path, summary, perm, tables, pages, ...)
@@ -35,7 +35,7 @@ TXP = "One DB transaction; SELECT ... FOR UPDATE on the document row, number_seq
 T = "Auth"
 E("POST", "/auth/login", "Sign in with e-mail and password", "public", ["users", "user_sessions", "audit_logs", "company_users"], ["S1"],
   rules=["BR-061"], req="LoginRequest", resp="LoginResponse", tag=T, fr=["FR-001"],
-  desc='Returns an access token, or a two-factor challenge when 2FA is on. Sets the refresh cookie `lf_rt` (HttpOnly, Secure, SameSite=Strict, Path=/api/v1/auth). Throttled per (e-mail, source IP): after 5 failures in 15 minutes that source gets 429 with Retry-After; wrong credentials and locked accounts both answer 401 `invalid_credentials` (no account enumeration, R-12).',
+  desc='Returns an access token, or a two-factor challenge when 2FA is on. Sets the refresh cookie `pl_rt` (HttpOnly, Secure, SameSite=Strict, Path=/api/v1/auth). Throttled per (e-mail, source IP): after 5 failures in 15 minutes that source gets 429 with Retry-After; wrong credentials and locked accounts both answer 401 `invalid_credentials` (no account enumeration, R-12).',
   codes=[200, 401, 422, 429], errors=['invalid_credentials', 'rate_limited'])
 E("POST", "/auth/two-factor", "Complete sign-in with a TOTP or recovery code", "public", ["users", "user_sessions", "audit_logs"], ["S1"],
   req="TwoFactorRequest", resp="LoginResponse", tag=T, fr=["FR-001"], codes=[200, 401, 422, 429], errors=['two_factor_failed', 'rate_limited'])

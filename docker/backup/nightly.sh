@@ -3,7 +3,7 @@
 # needs no cron (macOS blocks cron from ~/Desktop; Windows has none). Same file names and 14-day retention as
 # scripts/backup.sh. BACKUP_AT=HHMM in TZ (default 0200 Asia/Dhaka); BACKUP_NOW=1 runs once at start.
 set -u
-DB="${DB_DATABASE:-ledgerflow}"
+DB="${DB_DATABASE:-pluto}"
 AT="${BACKUP_AT:-0200}"
 export MYSQL_PWD="$MYSQL_ROOT_PASSWORD"
 

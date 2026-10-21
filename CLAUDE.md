@@ -1,6 +1,6 @@
 # CLAUDE.md · Pluto-ERP-Project backend
 
-Laravel 12 / PHP 8.3 API for **LedgerFlow ERP** (product name in code and docs; project name Pluto-ERP-Project): a multi-company ERP for Bangladeshi trading firms. Business forms (invoices, bills, receipts, stock moves, LC charges) generate double-entry journals through posting services; posted records are immutable and corrected by reversal. Money is BDT with lakh/crore formatting; the financial year runs July–June. MySQL 8.0 strict, row tenancy by `company_id` + `X-Company-Id`, JWT ES256 access tokens + `lf_rt` refresh cookie, TOTP 2-step, REST `/api/v1`.
+Laravel 12 / PHP 8.3 API for **Pluto ERP** (repos, Jira project PEP and Vercel are named Pluto-ERP-Project): a multi-company ERP for Bangladeshi trading firms. Business forms (invoices, bills, receipts, stock moves, LC charges) generate double-entry journals through posting services; posted records are immutable and corrected by reversal. Money is BDT with lakh/crore formatting; the financial year runs July–June. MySQL 8.0 strict, row tenancy by `company_id` + `X-Company-Id`, JWT ES256 access tokens + `pl_rt` refresh cookie, TOTP 2-step, REST `/api/v1`.
 
 ## Where tasks come from
 Each piece of work is one **backlog task key** (e.g. `P4.3-BE-02`) with a Jira issue in project **PEP** whose description holds the full task text (the master copy is `backlog.md`, kept by the tech lead outside the repos). Read that task's **Read first**, **Do**, **Contract** and **Done when** sections; do only that task.
@@ -15,13 +15,13 @@ Each piece of work is one **backlog task key** (e.g. `P4.3-BE-02`) with a Jira i
 7. Finish with the task's **Done when** list, then run the checks in §4.6 below.
 8. Git is run **by the developer manually**. AI sessions do not commit, push or open PRs unless the developer asks.
 9. **Never edit generated files by hand**: `docs/01,02,04,05,09,14*.md`, `docs/openapi.yaml`, `database/migrations/*`, `database/schema-contract.json`, `app/Support/Problem/ErrorCatalogue.php`, `app/Domain/Access/RoleTemplates.php`, `contract/*`. Change `docs/source/*.py` and run `make docs`.
-10. Keep code identifiers named LedgerFlow (`ledgerflow:*` commands, `LEDGERFLOW_*` env, `ledgerflow` databases, `lf_rt`); only repos, Jira, Vercel and Compose use "Pluto".
+10. The product is **Pluto** (owner decision, 21 Oct 2026; Jira PEP-436): use Pluto in code, config, commands (`pluto:*`), env (`PLUTO_*`), databases (`pluto*`), the `pl_rt` cookie, `X-Pluto-Proxy-Secret` and docs. The old product name must not come back (PEP-446 checks); the only mention is the history note in docs 00. `TrustPlutoProxy` still accepts the old `X-LF-Proxy-Secret` header for one release (remove it after the live switch, PEP-444).
 
 ## Commands (Docker only; see README)
 ```bash
 ./scripts/setup.sh     # first time
 make up / make down    # start / stop the dev stack (API http://localhost:8080)
-make test              # PHPUnit against ledgerflow_test (never the dev DB)
+make test              # PHPUnit against pluto_test (never the dev DB)
 make lint / make fix   # Laravel Pint
 make docs              # regenerate docs, contract and generated code, then validate
 make sh                # shell in the app container (php artisan …)

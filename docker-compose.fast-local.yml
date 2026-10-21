@@ -1,0 +1,42 @@
+# Optional local speed-ups for Docker Desktop on Windows/macOS when the repo is not on a Linux filesystem
+# (found in the fresh-machine test, backlog P0.10-VAL-01). Never used by the live stack: scripts/live.sh passes its
+# compose files with -f, which ignores COMPOSE_FILE.
+#
+# 1. vendor/ in a Docker volume. The repo is shared into the containers through a slow 9p mount, and Laravel reads
+#    8,000+ files from vendor/: artisan went from ~13 s to ~1 s, one API request from ~5 s to ~0.3 s. Your own code
+#    stays on the shared drive, so edits apply at once. Your IDE no longer sees vendor/ on disk; run
+#    `composer install` on the host too if you want code completion for the libraries.
+# 2. MySQL without disk syncs. A synced write took ~12 ms in Docker on a Windows 11 NVMe laptop, so migrations and
+#    the test suite spent most of their time waiting for the disk. The local databases are disposable (setup.sh
+#    rebuilds them), so they skip the binary log and fsync. Never copy these flags to a server.
+#
+# Turn it on in .env (both lines), then run ./scripts/setup.sh (or `docker compose build app && docker compose up -d`
+# and `docker compose exec app composer install`):
+#   COMPOSE_PATH_SEPARATOR=:
+#   COMPOSE_FILE=docker-compose.yml:docker-compose.fast-local.yml
+
+x-vendor: &vendor
+  volumes:
+    - ./:/var/www/html
+    - vendor:/var/www/html/vendor   # the image's empty vendor/ belongs to the app user, so the volume starts writable
+
+services:
+  app: *vendor
+  worker: *vendor
+  scheduler: *vendor
+  app-e2e: *vendor
+
+  mysql:
+    command:  # the base flags from docker-compose.yml, then the local-only ones
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_0900_ai_ci
+      - --sql-mode=STRICT_ALL_TABLES,NO_ZERO_DATE,NO_ZERO_IN_DATE,ERROR_FOR_DIVISION_BY_ZERO
+      - --default-time-zone=+00:00
+      - --log-bin-trust-function-creators=1
+      - --skip-log-bin
+      - --innodb-flush-log-at-trx-commit=0
+      - --innodb-doublewrite=OFF
+      - --innodb-flush-method=nosync
+
+volumes:
+  vendor:

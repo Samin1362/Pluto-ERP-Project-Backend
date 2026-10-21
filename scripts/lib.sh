@@ -5,7 +5,7 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
 DEMO_COMPANY="Meghna Traders Ltd."
-DEMO_OWNER_EMAIL="owner@ledgerflow.local"
+DEMO_OWNER_EMAIL="owner@pluto.local"
 TEST_ROLES=(viewer store accountant sales finance)
 
 say() { printf '\033[1;34m==>\033[0m %s\n' "$*"; }
@@ -57,15 +57,15 @@ ensure_demo_company() {
     say "A company already exists; demo company not created."
     return
   fi
-  need_password LEDGERFLOW_OWNER_PASSWORD "the demo owner ($DEMO_OWNER_EMAIL)"
+  need_password PLUTO_OWNER_PASSWORD "the demo owner ($DEMO_OWNER_EMAIL)"
   say "Creating demo company \"$DEMO_COMPANY\""
-  dc exec -T -e LEDGERFLOW_OWNER_PASSWORD app php artisan ledgerflow:company:create "$DEMO_COMPANY" \
+  dc exec -T -e PLUTO_OWNER_PASSWORD app php artisan pluto:company:create "$DEMO_COMPANY" \
      --owner-email="$DEMO_OWNER_EMAIL" --owner-name="Demo Owner"
 }
 
 ensure_test_users() {
-  need_password LEDGERFLOW_USER_PASSWORD "the test users"
+  need_password PLUTO_USER_PASSWORD "the test users"
   for role in "${TEST_ROLES[@]}"; do
-    dc exec -T -e LEDGERFLOW_USER_PASSWORD app php artisan ledgerflow:user:add 1 "$role@ledgerflow.local" --role="$role" --name="Test $role"
+    dc exec -T -e PLUTO_USER_PASSWORD app php artisan pluto:user:add 1 "$role@pluto.local" --role="$role" --name="Test $role"
   done
 }

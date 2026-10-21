@@ -1,4 +1,4 @@
-"""Page registry: every screen in the LedgerFlow design (canvas codes) with its UI contract.
+"""Page registry: every screen in the Pluto design (canvas codes) with its UI contract.
 
 Field spec string: "Label | type | req/opt | rule"   (type = text, number, money, pct, date, select, segmented,
 switch, checkbox, textarea, file, readonly, table)
@@ -29,7 +29,7 @@ page("S0", "App shell", "Shell", "Shell", "dashboard.view",
      workflows=["Find anything fast"], deps=["L2", "L3", "L5"], fr=["FR-005", "FR-012", "FR-013"], artboard="Shell.dc.html (04)")
 page("S1", "Sign in (NEW: not in design)", "Shell", "Auth", "public",
      "Authenticate with e-mail and password; second step asks the TOTP or a recovery code when 2-step is on.",
-     "Centered card on paper background using the LedgerFlow logo, Field, Input and Button components.",
+     "Centered card on paper background using the Pluto logo, Field, Input and Button components.",
      fields=["Email | text | req | Valid e-mail", "Password | password | req | ", "Authenticator code | text | cond | 6 digits; shown only after step 1 when 2FA is on"],
      actions=["Sign in", "Use a recovery code", "Forgot password"],
      validation=["Generic error 'E-mail or password is incorrect' (no account enumeration)", "Lockout message after 5 failures shows the retry time"],
@@ -285,7 +285,7 @@ page("E15", "Returns and credit notes (NEW)", "Sales", "List", "sales.view", "Sa
 for code, name, desc in [("Sal-DlgPost", "Dialog · Post invoice", "Confirms posting with customer, total and due; explains credit-note correction."),
                          ("Sal-DlgCancel", "Dialog · Cancel invoice", "Danger dialog with required reason (customer cancelled, entered by mistake, wrong customer, duplicate)."),
                          ("Sal-DlgDelete", "Dialog · Delete draft", "Danger dialog; drafts never reached the books.")]:
-    page(code, name, "Sales", "Dialog", "sales.edit" if "Delete" not in name else "sales.delete", desc, "LedgerFlow Dialog with summary rows and footer Keep / Confirm.",
+    page(code, name, "Sales", "Dialog", "sales.edit" if "Delete" not in name else "sales.delete", desc, "Pluto Dialog with summary rows and footer Keep / Confirm.",
          actions=["Keep", "Confirm"], rules=["BR-024", "BR-025", "BR-009"], deps=["E5", "E6"], fr=["FR-041", "FR-046"], artboard=code + ".dc.html")
 
 page("F1", "Purchase overview", "Purchases", "Overview", "purchases.view", "Purchases this month, bills, owed to suppliers, open POs; bars; status; recent; top suppliers.",
@@ -600,7 +600,7 @@ page("M5", "LC amendments", "LC", "List", "lc.view", "All amendments with filter
 page("M6", "LC documents", "LC", "Matrix", "lc.view", "Document status matrix across open LCs, follow-up list, default checklist template.",
      "KPIs; legend; LC × document-type grid; needs follow-up list; template list with Edit templates.", actions=["Open LC documents", "Edit templates (NEW editor, GAP-14)"], rules=[], deps=["M4"], fr=["FR-095"], artboard="LC-Documents.dc.html")
 page("M7", "Charges and cost summary", "LC", "Report", "lc.view", "All charges with LC and paid filters; landed cost breakdown for an arrived LC with per-kg cost.",
-     "KPIs; filters; charges table; landed-cost bar and rows; note 'Duties … LedgerFlow does not calculate them'.", actions=["Add charge", "Choose LC", "Allocate landed cost"],
+     "KPIs; filters; charges table; landed-cost bar and rows; note 'Duties … Pluto does not calculate them'.", actions=["Add charge", "Choose LC", "Allocate landed cost"],
      rules=["BR-045", "BR-047"], deps=["M4"], fr=["FR-097", "FR-098"], artboard="LC-Charges.dc.html")
 page("M8", "LC reports", "LC", "Report", "lc.view", "Eight tabs: register, active and expired, outstanding commitments, upcoming expiry, document completion, amendment history, charges and payments, import cost summary.",
      "Tabs; date range; bank; segment; paper report table.", actions=["Export (xlsx, pdf)", "Open LC"], deps=["M4"], fr=["FR-099"], artboard="LC-Rpt*.dc.html (8)")
