@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Api\V1\Parties;
 
 use App\Domain\Parties\PartyService;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Parties\BulkIdsRequest;
+use App\Http\Requests\Parties\PartyGroupRequest;
 use App\Http\Requests\Parties\PartyListRequest;
 use App\Http\Requests\Parties\PartyRequest;
 use App\Http\Resources\PartyResource;
@@ -46,6 +48,20 @@ class PartyController extends Controller
 
         return $this->partyResponse($request, $r['party'], 201, $r['warnings'])
             ->header('Location', url('/api/v1/parties/'.$r['party']->id));
+    }
+
+    /** POST /party-groups: the group shape is the one GET /party-groups lists (no single-group endpoint, so no Location). */
+    public function storeGroup(PartyGroupRequest $request): JsonResponse
+    {
+        $g = $this->parties->createGroup($request->validated());
+
+        return response()->json(['data' => ['id' => $g->id, 'party_type' => $g->party_type, 'name' => $g->name]], 201);
+    }
+
+    /** POST /parties/bulk-deactivate: always 200 with per-item results (BulkResult); the body only fails as a whole on 422. */
+    public function bulkDeactivate(BulkIdsRequest $request): JsonResponse
+    {
+        return response()->json(['data' => $this->parties->bulkDeactivate(array_map('intval', $request->validated('ids')))]);
     }
 
     public function update(PartyRequest $request, int $id): JsonResponse

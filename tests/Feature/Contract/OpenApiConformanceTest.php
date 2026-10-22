@@ -72,6 +72,10 @@ class OpenApiConformanceTest extends TestCase
         $this->assertConforms($this->api('GET', '/api/v1/parties?type=customer', $t), 'GET', '/parties');                                     // 400
         $this->assertConforms($this->api('GET', '/api/v1/payment-terms', $t, $c), 'GET', '/payment-terms');
         $this->assertConforms($this->api('GET', '/api/v1/party-groups?type=customer', $t, $c), 'GET', '/party-groups');
+        $this->assertConforms($this->api('POST', '/api/v1/party-groups', $t, $c, ['party_type' => 'customer', 'name' => 'Wholesale']), 'POST', '/party-groups');
+        $this->assertConforms($this->api('POST', '/api/v1/party-groups', $t, $c, ['party_type' => 'customer', 'name' => 'Wholesale']), 'POST', '/party-groups'); // 422
+        $this->assertConforms($this->api('POST', '/api/v1/parties/bulk-deactivate', $t, $c, ['ids' => [$id, 999999]]), 'POST', '/parties/bulk-deactivate');
+        $this->assertConforms($this->api('POST', '/api/v1/parties/bulk-deactivate', $t, $c, ['ids' => []]), 'POST', '/parties/bulk-deactivate'); // 422
         $this->assertConforms($this->api('DELETE', "/api/v1/parties/{$id}", $t, $c), 'DELETE', '/parties/{id}');
 
         $store = $this->login('store@meghna.example');

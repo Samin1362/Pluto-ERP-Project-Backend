@@ -178,7 +178,7 @@ E("GET", "/export-jobs/{id}", "Export job status and signed download URL when co
 # ---------------------------------------------------------------- Parties
 T = "Parties"
 E("GET", "/parties", "List customers or suppliers", "parties.view", ["parties", "party_groups", "payment_terms", "sales_invoices", "purchase_bills"],
-  ['B1', 'C1', 'E3', 'F3', 'E7', 'F5', 'M3'], params=LISTQ + ["type", "status", "balance", "area", "group_id"], resp="Page<Party>", tag=T,
+  ['B1', 'C1', 'E3', 'F3', 'E7', 'F5', 'M3'], params=LISTQ + ["type", "status", "balance", "area", "group_id", "country_code"], resp="Page<Party>", tag=T,
   fr=["FR-020"], desc="`type` (customer|supplier) is required. Balance and overdue are computed from posted documents.")
 E("POST", "/parties", "Create a customer or supplier (and its ledger, and opening balance entry)", "parties.create",
   ["parties", "party_bank_accounts", "ledgers", "account_mappings", "number_sequences", "journal_entries", "journal_lines", "audit_logs"], ["B2", "C2", "E3", "L5"],
@@ -207,7 +207,7 @@ E("GET", "/parties/{id}/statement/pdf", "Statement of account as PDF (same param
 E("POST", "/parties/statements/send", "E-mail statements to one or more parties (queued)", "parties.view", ["parties", "export_jobs", "audit_logs"],
   ['B1', 'B8', 'C8'], req="StatementSendRequest", resp="ExportJob", idem=True, tag=T, fr=["FR-024"], codes=[202, 422])
 E("GET", "/party-groups", "Customer or supplier groups", "parties.view", ["party_groups"], ["B2", "C2", "B1"], params=["type"], resp="Page<PartyGroup>", tag=T, fr=["FR-021"])
-E("POST", "/party-groups", "Add a group", "parties.create", ["party_groups"], ["B2", "C2"], req="PartyGroupInput", resp="PartyGroup", tag=T, fr=["FR-021"], codes=[201, 422])
+E("POST", "/party-groups", "Add a group", "parties.create", ["party_groups", "audit_logs"], ["B2", "C2"], req="PartyGroupInput", resp="PartyGroup", idem=True, tag=T, fr=["FR-021"], codes=[201, 422])
 
 # ---------------------------------------------------------------- Inventory
 T = "Inventory"

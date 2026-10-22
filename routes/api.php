@@ -36,9 +36,11 @@ Route::middleware(['jwt', 'throttle:api-user'])->group(function () {
 
         Route::get('payment-terms', [LookupController::class, 'paymentTerms']);
         Route::get('party-groups', [LookupController::class, 'partyGroups'])->middleware('perm:parties.view');
+        Route::post('party-groups', [PartyController::class, 'storeGroup'])->middleware(['perm:parties.create', 'idempotent']);
 
         Route::get('parties', [PartyController::class, 'index'])->middleware('perm:parties.view');
         Route::post('parties', [PartyController::class, 'store'])->middleware(['perm:parties.create', 'idempotent']);
+        Route::post('parties/bulk-deactivate', [PartyController::class, 'bulkDeactivate'])->middleware('perm:parties.edit');
         Route::get('parties/{id}', [PartyController::class, 'show'])->whereNumber('id')->middleware('perm:parties.view');
         Route::patch('parties/{id}', [PartyController::class, 'update'])->whereNumber('id')->middleware('perm:parties.edit');
         Route::post('parties/{id}/deactivate', [PartyController::class, 'deactivate'])->whereNumber('id')->middleware('perm:parties.edit');

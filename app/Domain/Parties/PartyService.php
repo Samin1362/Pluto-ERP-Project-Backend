@@ -7,7 +7,9 @@ use App\Domain\Shared\DocumentNumberService;
 use App\Models\AccountMapping;
 use App\Models\Ledger;
 use App\Models\Party;
+use App\Models\PartyGroup;
 use App\Support\Problem\ApiProblem;
+use App\Support\Problem\ErrorCatalogue;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -94,13 +96,47 @@ final class PartyService
         });
     }
 
+    /** "Add group…" in the B2/C2 group select (backlog P2.1-BE-02); the request checks the name is unused. */
+    public function createGroup(array $data): PartyGroup
+    {
+        return DB::transaction(function () use ($data) {
+            $group = PartyGroup::create(['party_type' => $data['party_type'], 'name' => $data['name']]);
+            $this->audit->record('created', $group, null, $group->only(['party_type', 'name']));
+
+            return $group;
+        });
+    }
+
+    /**
+     * "Mark inactive" for several parties (B1/C1, backlog P2.1-BE-03; ERR-5): each id on its own, so one failure never
+     * undoes the others. Ids of other companies or deleted parties fail as not_found; already inactive ones succeed.
+     *
+     * @param  list<int>  $ids
+     * @return array{succeeded: list<int>, failed: list<array{id: int, code: string, detail: string}>}
+     */
+    public function bulkDeactivate(array $ids): array
+    {
+        $out = ['succeeded' => [], 'failed' => []];
+        foreach ($ids as $id) {
+            try {
+                $party = Party::find($id) ?? throw new ApiProblem('not_found');
+                $this->setStatus($party, 'inactive');
+                $out['succeeded'][] = $id;
+            } catch (ApiProblem $e) {
+                $out['failed'][] = ['id' => $id, 'code' => $e->errorCode, 'detail' => $e->detail ?? ErrorCatalogue::title($e->errorCode)];
+            }
+        }
+
+        return $out;
+    }
+
     /** BR-026: only a party without history can be deleted (soft delete); otherwise make it inactive. */
     public function delete(Party $party): void
     {
         DB::transaction(function () use ($party) {
             $party = Party::whereKey($party->id)->lockForUpdate()->firstOrFail();
             if ($this->hasHistory($party)) {
-                throw new ApiProblem('has_history', 'This customer has transactions; mark it inactive instead.');
+                throw new ApiProblem('has_history', "This {$party->party_type} has transactions; mark it inactive instead.");
             }
             Ledger::whereKey($party->ledger_id)->first()?->update(['is_active' => false]);
             $party->delete();

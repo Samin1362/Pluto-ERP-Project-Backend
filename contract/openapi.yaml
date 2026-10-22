@@ -7578,6 +7578,13 @@ paths:
         schema:
           type: string
         description: group id
+      - name: country_code
+        in: query
+        required: false
+        schema:
+          type: string
+          pattern: ^[A-Za-z]{2}$
+        description: ISO 3166-1 alpha-2 country, e.g. CN (international suppliers)
       - $ref: '#/components/parameters/CompanyHeader'
       responses:
         '200':
@@ -9484,7 +9491,7 @@ paths:
       summary: Add a group
       tags:
       - Parties
-      description: "**Permission:** `parties.create`  \n**Database:** insert: audit_logs, party_groups  \n**Rules:** —"
+      description: "**Permission:** `parties.create`  \n**Database:** insert: audit_logs, idempotency_keys, party_groups  \n**Rules:** —"
       x-permission: parties.create
       x-business-rules: []
       x-requirements:
@@ -9497,12 +9504,16 @@ paths:
       - 'C2: Add group inline (NEW)'
       x-tables:
       - party_groups
+      - audit_logs
       x-db-operations:
         party_groups: C
         audit_logs: C
+        idempotency_keys: C
       x-error-codes:
       - company_maintenance
       - company_required
+      - idempotency_in_progress
+      - idempotency_key_reused
       - malformed_json
       - not_a_member
       - permission_denied
@@ -9513,6 +9524,7 @@ paths:
       - validation_failed
       parameters:
       - $ref: '#/components/parameters/CompanyHeader'
+      - $ref: '#/components/parameters/IdempotencyKey'
       requestBody:
         required: true
         content:
@@ -9554,8 +9566,14 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/Error'
+        '409':
+          description: 'Conflict (version mismatch, state not allowed, duplicate): `idempotency_in_progress`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
         '422':
-          description: 'Validation or business-rule failure: `validation_failed`'
+          description: 'Validation or business-rule failure: `idempotency_key_reused`, `validation_failed`'
           content:
             application/problem+json:
               schema:
