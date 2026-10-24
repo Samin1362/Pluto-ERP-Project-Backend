@@ -8,6 +8,7 @@ use App\Models\Permission;
 use App\Models\Role;
 use App\Models\User;
 use App\Support\CurrentCompany;
+use Illuminate\Support\Str;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
@@ -108,6 +109,51 @@ class CompanyAccessTest extends TestCase
             ['parties.edit', 'PATCH', '/api/v1/parties/{id}'],
             ['parties.edit', 'POST', '/api/v1/parties/{id}/deactivate'],
             ['parties.delete', 'DELETE', '/api/v1/parties/{id}'],
+        ];
+        $cases = [];
+        foreach (array_keys(RoleTemplates::ROLES) as $role) {
+            foreach ($calls as [$perm, $method, $uri]) {
+                $cases["{$role} {$method} {$uri}"] = [$role, $perm, $method, $uri];
+            }
+        }
+
+        return $cases;
+    }
+
+    /** Every role x the purchase bill endpoints (P4.3-BE-01: a Store keeper reads bills but cannot post them). */
+    #[DataProvider('billMatrix')]
+    public function test_role_matrix_on_purchase_bill_endpoints(string $role, string $permission, string $method, string $uri): void
+    {
+        $owner = $this->login('owner@meghna.example');
+        $c = $this->company->id;
+        $key = fn () => ['Idempotency-Key' => (string) Str::uuid()];
+        $supplier = $this->api('POST', '/api/v1/parties', $owner, $c, ['party_type' => 'supplier', 'name' => 'Bengal Edible Oils', 'mobile' => '01911222333'], $key())->json('data.id');
+        $wh = $this->api('POST', '/api/v1/warehouses', $owner, $c, ['code' => 'WH-1', 'name' => 'Main', 'branch_id' => \DB::table('branches')->where('company_id', $c)->value('id')], $key())->json('data.id');
+        $product = $this->api('POST', '/api/v1/products', $owner, $c, ['item_type' => 'product', 'name' => 'Rice', 'unit_id' => \DB::table('units')->where('company_id', $c)->value('id'),
+            'selling_price' => '1.00', 'income_ledger_id' => \DB::table('ledgers')->where('company_id', $c)->where('code', '4101')->value('id')], $key())->json('data.id');
+        $bill = fn (string $no) => ['party_id' => $supplier, 'supplier_bill_no' => $no, 'bill_date' => now('Asia/Dhaka')->toDateString(), 'warehouse_id' => $wh,
+            'lines' => [['product_id' => $product, 'quantity' => '1', 'unit_cost' => '10.00']]];
+        $id = $this->api('POST', '/api/v1/purchase-bills', $owner, $c, $bill('SB-1'), $key())->assertCreated()->json('data.id');
+
+        $token = $role === 'owner' ? $owner : $this->login("{$role}@meghna.example", '10.0.2.'.random_int(2, 250));
+        $uri = str_replace('{id}', (string) $id, $uri);
+        $r = $this->api($method, $uri, $token, $c, $method === 'POST' && str_ends_with($uri, '/purchase-bills') ? $bill('SB-2') : [], $method === 'POST' ? $key() : []);
+
+        $allowed = $role === 'owner' || in_array($permission, RoleTemplates::ROLES[$role][1], true);
+        if ($allowed) {
+            $this->assertContains($r->status(), [200, 201], "{$role} should be allowed {$method} {$uri}: ".$r->getContent());
+        } else {
+            $this->assertProblem($r, 403, 'permission_denied');
+        }
+    }
+
+    public static function billMatrix(): array
+    {
+        $calls = [
+            ['purchases.view', 'GET', '/api/v1/purchase-bills'],
+            ['purchases.view', 'GET', '/api/v1/purchase-bills/{id}'],
+            ['purchases.create', 'POST', '/api/v1/purchase-bills'],
+            ['purchases.create', 'POST', '/api/v1/purchase-bills/{id}/post'],
         ];
         $cases = [];
         foreach (array_keys(RoleTemplates::ROLES) as $role) {
