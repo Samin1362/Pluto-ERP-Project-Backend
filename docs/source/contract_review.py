@@ -43,6 +43,8 @@ CHANGED = [
     ("All PUT/PATCH with If-Match", "Missing If-Match is 428 `if_match_required` (RFC 6585) instead of 412; a stale version stays 409 `version_conflict` (BR-049)."),
     ("All request bodies", "Strict: unknown properties are rejected (`additionalProperties: false`)."),
     ("Party schema", "Adds `port_of_loading` and `default_purchase_ledger_id`, which PartyInput accepts but the response did not return (found by the slice-1 contract test, 19 Oct 2026). Additive."),
+    ("POST /party-groups", "Idempotent (Idempotency-Key, like every other create) and audited; a name already used for that party type is a 422 on `name` (P2.1-BE-02, 22 Oct 2026). Additive."),
+    ("GET /parties", "Adds the `country_code` filter so C1 can list international suppliers (P2.1-BE-01, 22 Oct 2026). Additive."),
     ("POST /me/two-factor, POST /me/two-factor/confirm", "Declare 409 `invalid_transition` (set-up while 2-step is already on, or confirm without a set-up) and 429 `rate_limited` on confirm; found while implementing 2-step in slice 1 (19 Oct 2026). Additive."),
     ("All company-scoped endpoints", "May return 503 `company_maintenance` with Retry-After while that company is restored from a backup (11 §8); previously promised in operations but missing from the contract."),
     ("GET /backups/{id}/download", "Permission `settings.restore` (Owner) instead of `settings.backup`; an Owner-only action on K15, no longer a page load (R-11)."),

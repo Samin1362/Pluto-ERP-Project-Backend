@@ -120,6 +120,7 @@ PARAM_DEF = {
     "purpose": {"schema": {"type": "string", "enum": ["income_for_product", "expense_for_product", "purchase_for_supplier", "tax", "category", "any"]},
                 "description": "Picker purpose; required without accounting.view (R-26)"},
     "status": {"schema": {"type": "string", "maxLength": 30}, "description": "Status filter (values as in the resource's status enum)"},
+    "country_code": {"schema": {"type": "string", "pattern": "^[A-Za-z]{2}$"}, "description": "ISO 3166-1 alpha-2 country, e.g. CN (international suppliers)"},
 }
 STATUS_TEXT = {200: "OK", 201: "Created", 202: "Accepted (queued or awaiting approval)", 204: "No content", 400: "Malformed request", 401: "Not authenticated",
                403: "Not permitted", 404: "Not found (also for other companies' records)", 409: "Conflict (version mismatch, state not allowed, duplicate)",

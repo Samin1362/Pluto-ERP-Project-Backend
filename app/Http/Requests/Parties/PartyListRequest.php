@@ -12,7 +12,7 @@ class PartyListRequest extends StrictRequest
 
     protected function allowedFields(): array
     {
-        return ['page', 'per_page', 'sort', 'q', 'type', 'status', 'balance', 'area', 'group_id'];
+        return ['page', 'per_page', 'sort', 'q', 'type', 'status', 'balance', 'area', 'group_id', 'country_code'];
     }
 
     public function rules(): array
@@ -24,6 +24,7 @@ class PartyListRequest extends StrictRequest
             'q' => ['sometimes', 'string', 'max:100'],
             'area' => ['sometimes', 'string', 'max:80'],
             'group_id' => ['sometimes', 'integer'],
+            'country_code' => ['sometimes', 'string', 'size:2', 'alpha'],
             'sort' => ['sometimes', Rule::in(self::SORTS)],
             'page' => ['sometimes', 'integer', 'min:1'],
             'per_page' => ['sometimes', 'integer', 'min:1', 'max:100'],

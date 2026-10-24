@@ -79,7 +79,7 @@
 | `duplicate_statement` | 409 | This statement file was already imported | BR-032 | 1 |
 | `duplicate_supplier_bill` | 409 | This supplier's bill number is already entered | BR-018 | 3 |
 | `has_history` | 409 | This record is used elsewhere; make it inactive instead | BR-026 | 9 |
-| `idempotency_in_progress` | 409 | The same request is still being processed | BR-050 | 71 |
+| `idempotency_in_progress` | 409 | The same request is still being processed | BR-050 | 72 |
 | `invalid_transition` | 409 | This status change is not allowed from the current status | BR-003, BR-040 | 9 |
 | `last_owner` | 409 | A company must keep at least one active Owner | BR-060 | 3 |
 | `not_draft` | 409 | Only a draft can be changed, posted or deleted | BR-025 | 18 |
@@ -99,7 +99,7 @@
 | `exceeds_tolerance` | 422 | Payments would exceed the LC amount plus tolerance | BR-042 | 1 |
 | `fiscal_year_not_closable` | 422 | The year has not ended or a period is still open | BR-034 | 1 |
 | `foreign_document` | 422 | The document belongs to another party | BR-021 | 5 |
-| `idempotency_key_reused` | 422 | This Idempotency-Key was used with a different request | BR-050 | 71 |
+| `idempotency_key_reused` | 422 | This Idempotency-Key was used with a different request | BR-050 | 72 |
 | `inactive_reference` | 422 | An inactive party, product, ledger, warehouse or account was used | BR-026 | 8 |
 | `insufficient_funds` | 422 | The account would go below zero (or below its overdraft limit) | BR-031 | 7 |
 | `insufficient_stock` | 422 | Not enough stock in the warehouse | BR-014, BR-030 | 8 |
@@ -582,8 +582,8 @@ Last run: 24 rules, **24 passed, 0 failed**; 6 negative tests, 6 detected. Offic
 | A17 | Every data-changing endpoint is triggered by at least one page action (only token refresh is system-driven) | 176 | ✅ pass |
 | A18 | Every page has at least one endpoint (shared components use their host page's) | 162 | ✅ pass |
 | A19 | For every action, at least one role can both open the page and call the endpoint | 322 | ✅ pass |
-| A20 | Database operations name real tables; nothing deletes posted or append-only rows; every write changes something | 1283 | ✅ pass |
-| A21 | Every parameter has a typed schema | 522 | ✅ pass |
+| A20 | Database operations name real tables; nothing deletes posted or append-only rows; every write changes something | 1284 | ✅ pass |
+| A21 | Every parameter has a typed schema | 523 | ✅ pass |
 | A22 | Business rules exist; 43 rejecting rules map to error codes | 346 | ✅ pass |
 | A23 | Calculate/preview endpoints never reject on business state; they return warnings[] (BR-015) | 4 | ✅ pass |
 | A24 | Ledger/stock writes are coherent: entries have lines, stock movements update balances, system entries take an SJ number, bulk post = single post | 84 | ✅ pass |
@@ -2307,7 +2307,7 @@ List customers or suppliers. `type` (customer|supplier) is required. Balance and
 |---|---|
 | **Auth** | Bearer JWT + `X-Company-Id` |
 | **Permission** | `parties.view` — roles: Owner, Finance manager, Accountant, Sales staff, Viewer |
-| **Path / query params** | — / `page`, `per_page`, `sort`, `q`, `type`, `status`, `balance`, `area`, `group_id` |
+| **Path / query params** | — / `page`, `per_page`, `sort`, `q`, `type`, `status`, `balance`, `area`, `group_id`, `country_code` |
 | **Request body** | — |
 | **Validation** | Query parameters only (unknown parameters: 422). |
 | **Success** | 200 `data[]` of [`Party`](#schema-party) + `meta` |
@@ -2663,10 +2663,10 @@ Add a group.
 | **Request body** | [`PartyGroupInput`](#schema-partygroupinput) |
 | **Validation** | `party_type`* one of customer/supplier; `name`* string ≤ 80<br>Unknown fields are rejected (422). |
 | **Success** | 201 `data`: [`PartyGroup`](#schema-partygroup) |
-| **Status codes** | 201, 400, 401, 403, 422, 503 |
-| **Error codes** | **`company_maintenance`**; standard: `company_required`, `malformed_json`, `not_a_member`, `permission_denied`, `server_error`, `token_expired`, `token_invalid`, `unauthenticated`, `validation_failed` |
-| **Headers** | `Location` on 201 |
-| **Database** | insert: audit_logs, party_groups |
+| **Status codes** | 201, 400, 401, 403, 409, 422, 503 |
+| **Error codes** | **`company_maintenance`**; standard: `company_required`, `idempotency_in_progress`, `idempotency_key_reused`, `malformed_json`, `not_a_member`, `permission_denied`, `server_error`, `token_expired`, `token_invalid`, `unauthenticated`, `validation_failed` |
+| **Headers** | `Idempotency-Key`, `Location` on 201 |
+| **Database** | insert: audit_logs, idempotency_keys, party_groups |
 | **Business rules** | — |
 | **Requirements** | FR-021 |
 | **Pages and actions** | B2, C2<br>B2 · Add group inline (NEW)<br>C2 · Add group inline (NEW) |
@@ -12465,6 +12465,8 @@ View permission `lc.create`. **Loads:** nothing of its own (host page data).
 | All PUT/PATCH with If-Match | Missing If-Match is 428 `if_match_required` (RFC 6585) instead of 412; a stale version stays 409 `version_conflict` (BR-049). |
 | All request bodies | Strict: unknown properties are rejected (`additionalProperties: false`). |
 | Party schema | Adds `port_of_loading` and `default_purchase_ledger_id`, which PartyInput accepts but the response did not return (found by the slice-1 contract test, 19 Oct 2026). Additive. |
+| POST /party-groups | Idempotent (Idempotency-Key, like every other create) and audited; a name already used for that party type is a 422 on `name` (P2.1-BE-02, 22 Oct 2026). Additive. |
+| GET /parties | Adds the `country_code` filter so C1 can list international suppliers (P2.1-BE-01, 22 Oct 2026). Additive. |
 | POST /me/two-factor, POST /me/two-factor/confirm | Declare 409 `invalid_transition` (set-up while 2-step is already on, or confirm without a set-up) and 429 `rate_limited` on confirm; found while implementing 2-step in slice 1 (19 Oct 2026). Additive. |
 | All company-scoped endpoints | May return 503 `company_maintenance` with Retry-After while that company is restored from a backup (11 §8); previously promised in operations but missing from the contract. |
 | GET /backups/{id}/download | Permission `settings.restore` (Owner) instead of `settings.backup`; an Owner-only action on K15, no longer a page load (R-11). |

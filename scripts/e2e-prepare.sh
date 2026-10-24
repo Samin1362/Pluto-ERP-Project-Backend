@@ -3,7 +3,8 @@
 #   E2E_PASSWORD=<any 10+ chars> ./scripts/e2e-prepare.sh
 # Starts app-e2e + nginx-e2e (http://localhost:8081) on the pluto_e2e database, wipes it, seeds reference
 # data and creates the company and users the E2E tests expect:
-#   owner@e2e.pluto.test (Owner), viewer@e2e.pluto.test (Viewer), store@e2e.pluto.test (Store keeper)
+#   owner@e2e.pluto.test (Owner), viewer@e2e.pluto.test (Viewer), store@e2e.pluto.test (Store keeper),
+#   accountant@e2e.pluto.test (Accountant), sales@e2e.pluto.test (Sales staff)
 # Your dev database is never touched. Needs the dev stack set up once (./scripts/setup.sh).
 source "$(dirname "$0")/lib.sh"
 : "${E2E_PASSWORD:?Set E2E_PASSWORD (10+ characters; the E2E tests sign in with it)}"
@@ -26,7 +27,7 @@ e2e exec -T app-e2e php artisan pluto:jwt-keys
 say "Creating the E2E company and users"
 e2e exec -T -e PLUTO_OWNER_PASSWORD="$E2E_PASSWORD" app-e2e php artisan pluto:company:create "Meghna Traders Ltd." \
    --owner-email=owner@e2e.pluto.test --owner-name="Rafiq Hasan"
-for role in viewer store; do
+for role in viewer store accountant sales; do
   e2e exec -T -e PLUTO_USER_PASSWORD="$E2E_PASSWORD" app-e2e php artisan pluto:user:add 1 "$role@e2e.pluto.test" \
      --role="$role" --name="E2E $role"
 done

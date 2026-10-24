@@ -59,6 +59,9 @@ final class PartyQuery
         if (isset($f['area'])) {
             $q->where('parties.area', $f['area']);
         }
+        if (isset($f['country_code'])) {
+            $q->where('parties.country_code', strtoupper($f['country_code']));
+        }
         if (isset($f['q']) && $f['q'] !== '') {
             $term = '%'.addcslashes($f['q'], '%_\\').'%';
             $q->where(fn ($w) => $w->where('parties.name', 'like', $term)->orWhere('parties.code', 'like', $term)
@@ -71,6 +74,10 @@ final class PartyQuery
         $sort = $f['sort'] ?? 'name';
         $dir = str_starts_with($sort, '-') ? 'desc' : 'asc';
         $col = ltrim($sort, '-');
+        // balance_net is debit - credit: a supplier's payable is negative, so "balance, high to low" runs the other way.
+        if ($col === 'balance' && $f['type'] === 'supplier') {
+            $dir = $dir === 'asc' ? 'desc' : 'asc';
+        }
         $q->orderBy($col === 'balance' ? 'balance_net' : 'parties.'.$col, $dir)->orderBy('parties.id');
 
         return $q;
