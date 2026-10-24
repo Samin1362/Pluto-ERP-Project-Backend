@@ -4,6 +4,8 @@ namespace Tests\Feature\Contract;
 
 use App\Domain\Access\Totp;
 use App\Models\Company;
+use Database\Seeders\DemoTaxRuleSeeder;
+use Illuminate\Support\Str;
 use Illuminate\Testing\TestResponse;
 use Opis\JsonSchema\Errors\ErrorFormatter;
 use Opis\JsonSchema\ValidationResult;
@@ -103,6 +105,73 @@ class OpenApiConformanceTest extends TestCase
         $this->assertConforms($this->api('GET', '/api/v1/ledgers?per_page=100', $t, $c), 'GET', '/ledgers');                                   // chart with balances
         $this->assertConforms($this->api('GET', '/api/v1/ledgers?purpose=tax', $store, $c), 'GET', '/ledgers');                                // picker, no balances
         $this->assertConforms($this->api('GET', '/api/v1/ledgers', $store, $c), 'GET', '/ledgers');                                            // 422 purpose_required
+    }
+
+    public function test_inventory_lookups_match_the_contract(): void
+    {
+        $t = $this->login('owner@meghna.example');
+        $c = $this->company->id;
+        $this->seed(DemoTaxRuleSeeder::class);
+        $this->assertConforms($this->api('GET', '/api/v1/units?q=k&sort=-name&per_page=5', $t, $c), 'GET', '/units');
+        $this->assertConforms($this->api('POST', '/api/v1/units', $t, $c, ['name' => 'ream', 'decimals' => 0]), 'POST', '/units');
+        $this->assertConforms($this->api('POST', '/api/v1/units', $t, $c, ['name' => 'ream']), 'POST', '/units');                 // 422
+        $this->assertConforms($this->api('GET', '/api/v1/tax-rules', $this->login('store@meghna.example'), $c), 'GET', '/tax-rules');
+
+        foreach (['/product-categories', '/stock-groups'] as $path) {
+            $top = $this->api('POST', "/api/v1{$path}", $t, $c, ['name' => 'Top', 'sort_order' => 1] + ($path === '/product-categories' ? ['code_prefix' => 'TOP'] : []));
+            $this->assertConforms($top, 'POST', $path);
+            $id = $top->json('data.id');
+            $this->assertConforms($this->api('POST', "/api/v1{$path}", $t, $c, ['name' => 'Child', 'parent_id' => $id]), 'POST', $path);
+            $this->assertConforms($this->api('POST', "/api/v1{$path}", $t, $c, ['name' => 'Top']), 'POST', $path);                   // 422
+            $this->assertConforms($this->api('GET', "/api/v1{$path}?per_page=10", $t, $c), 'GET', $path);
+            $this->assertConforms($this->api('GET', "/api/v1{$path}", $this->login('store@meghna.example'), $c), 'GET', $path);   // no stock_value
+            $this->assertConforms($this->api('PATCH', "/api/v1{$path}/{$id}", $t, $c, ['name' => 'Top level']), 'PATCH', "{$path}/{id}");
+            $this->assertConforms($this->api('DELETE', "/api/v1{$path}/{$id}", $t, $c), 'DELETE', "{$path}/{id}");                 // 409 has_history
+            $this->assertConforms($this->api('DELETE', "/api/v1{$path}/999999", $t, $c), 'DELETE', "{$path}/{id}");                // 404
+        }
+    }
+
+    public function test_warehouse_and_product_endpoints_match_the_contract(): void
+    {
+        $t = $this->login('owner@meghna.example');
+        $store = $this->login('store@meghna.example');
+        $c = $this->company->id;
+        $key = fn () => ['Idempotency-Key' => (string) Str::uuid()];
+        $branch = \DB::table('branches')->where('company_id', $c)->value('id');
+
+        $wh = $this->api('POST', '/api/v1/warehouses', $t, $c, ['code' => 'WH-TEJ', 'name' => 'Tejgaon warehouse', 'branch_id' => $branch, 'opens_on' => '2026-07-01'], $key());
+        $this->assertConforms($wh, 'POST', '/warehouses');
+        $w = $wh->json('data.id');
+        $this->assertConforms($this->api('POST', '/api/v1/warehouses', $t, $c, ['code' => 'WH-TEJ', 'name' => 'Again', 'branch_id' => $branch], $key()), 'POST', '/warehouses'); // 422
+        $this->assertConforms($this->api('GET', '/api/v1/warehouses', $t, $c), 'GET', '/warehouses');
+        $this->assertConforms($this->api('GET', '/api/v1/warehouses', $store, $c), 'GET', '/warehouses');                             // no stock_value
+        $this->assertConforms($this->api('GET', "/api/v1/warehouses/{$w}", $t, $c), 'GET', '/warehouses/{id}');
+        $this->assertConforms($this->api('GET', '/api/v1/warehouses/999999', $t, $c), 'GET', '/warehouses/{id}');                    // 404
+        $this->assertConforms($this->api('PATCH', "/api/v1/warehouses/{$w}", $t, $c, ['phone' => '01711000111'], ['If-Match' => 'W/"1"']), 'PATCH', '/warehouses/{id}');
+        $this->assertConforms($this->api('PATCH', "/api/v1/warehouses/{$w}", $t, $c, ['phone' => '1'], ['If-Match' => 'W/"1"']), 'PATCH', '/warehouses/{id}'); // 409
+        $this->assertConforms($this->api('PATCH', "/api/v1/warehouses/{$w}", $t, $c, ['phone' => '1']), 'PATCH', '/warehouses/{id}');  // 428
+
+        $unit = \DB::table('units')->where('company_id', $c)->where('name', 'jar')->value('id');
+        $income = \DB::table('ledgers')->where('company_id', $c)->where('code', '4101')->value('id');
+        $p = $this->api('POST', '/api/v1/products', $t, $c, ['item_type' => 'product', 'name' => 'Soybean oil 5L', 'unit_id' => $unit, 'selling_price' => '920.00',
+            'income_ledger_id' => $income, 'last_purchase_cost' => '845.0000', 'warehouses' => [['warehouse_id' => $w, 'reorder_level' => '20', 'reorder_qty' => '50']]], $key());
+        $this->assertConforms($p, 'POST', '/products');
+        $id = $p->json('data.id');
+        $this->assertConforms($this->api('POST', '/api/v1/products', $t, $c, ['item_type' => 'service', 'name' => 'Delivery', 'unit_id' => $unit, 'selling_price' => '50.00',
+            'income_ledger_id' => $income], $key()), 'POST', '/products');                                                                    // service
+        $this->assertConforms($this->api('POST', '/api/v1/products', $t, $c, ['item_type' => 'product'], $key()), 'POST', '/products');    // 422
+        $this->assertConforms($this->api('GET', "/api/v1/products/{$id}", $t, $c), 'GET', '/products/{id}');                              // unmasked
+        $this->assertConforms($this->api('GET', "/api/v1/products/{$id}", $store, $c), 'GET', '/products/{id}');                          // masked (BR-052)
+        $this->assertConforms($this->api('GET', '/api/v1/products/999999', $t, $c), 'GET', '/products/{id}');                            // 404
+        $this->assertConforms($this->api('PATCH', "/api/v1/products/{$id}", $t, $c, ['selling_price' => '930.00'], ['If-Match' => 'W/"1"']), 'PATCH', '/products/{id}');
+        $this->assertConforms($this->api('PATCH', "/api/v1/products/{$id}", $t, $c, ['on_hand' => '5'], ['If-Match' => 'W/"2"']), 'PATCH', '/products/{id}'); // 422
+        $this->assertConforms($this->api('PATCH', "/api/v1/products/{$id}", $t, $c, ['name' => 'X'], ['If-Match' => 'W/"1"']), 'PATCH', '/products/{id}'); // 409
+
+        $this->assertConforms($this->api('GET', "/api/v1/products?q=oil&sort=-on_hand&warehouse_id={$w}&per_page=5", $t, $c), 'GET', '/products');
+        $this->assertConforms($this->api('GET', '/api/v1/products?active=all', $store, $c), 'GET', '/products');                        // masked
+        $this->assertConforms($this->api('GET', '/api/v1/products?stock_status=low', $t, $c), 'GET', '/products');                      // 422
+        $this->assertConforms($this->api('DELETE', "/api/v1/products/{$id}", $t, $c), 'DELETE', '/products/{id}');
+        $this->assertConforms($this->api('DELETE', "/api/v1/products/{$id}", $t, $c), 'DELETE', '/products/{id}');                       // 404
     }
 
     public function test_two_factor_endpoints_match_the_contract(): void

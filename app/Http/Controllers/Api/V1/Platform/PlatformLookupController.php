@@ -11,10 +11,12 @@ use App\Http\Resources\AuditLogResource;
 use App\Http\Resources\BranchResource;
 use App\Http\Resources\CompanySettingsResource;
 use App\Http\Resources\FiscalYearResource;
+use App\Http\Resources\TaxRuleResource;
 use App\Models\AuditLog;
 use App\Models\Branch;
 use App\Models\CompanySetting;
 use App\Models\FiscalYear;
+use App\Models\TaxRule;
 use App\Support\CurrentCompany;
 use App\Support\Problem\ApiProblem;
 use Illuminate\Http\JsonResponse;
@@ -24,7 +26,8 @@ use Illuminate\Support\Facades\DB;
 /**
  * Platform lookups every member needs (backlog P1.1-BE-01): financial years with period status, active branches
  * for pickers and filters, and the company's formatting/control settings. Read only; editing comes with P15.
- * Plus the activity of one record for detail-page timelines (P1.1-BE-02).
+ * Plus the activity of one record for detail-page timelines (P1.1-BE-02), and tax rules for product and document
+ * forms (P3.1-BE-01; they are created in Settings K6, P15).
  */
 class PlatformLookupController extends Controller
 {
@@ -94,6 +97,18 @@ class PlatformLookupController extends Controller
         return response()->json([
             'data' => AuditLogResource::collection($page->getCollection())->resolve($request),
             'meta' => ['current_page' => $page->currentPage(), 'per_page' => $page->perPage(), 'total' => $page->total(), 'last_page' => $page->lastPage()],
+        ]);
+    }
+
+    /** GET /tax-rules: every rule of the company (active first, then by name) with the ledger it posts to. */
+    public function taxRules(Request $request): JsonResponse
+    {
+        $this->noUnknownParams($request);
+        $rules = TaxRule::with('ledger')->orderByDesc('is_active')->orderBy('name')->get();
+
+        return response()->json([
+            'data' => TaxRuleResource::collection($rules)->resolve($request),
+            'meta' => ['current_page' => 1, 'per_page' => max($rules->count(), 1), 'total' => $rules->count(), 'last_page' => 1],
         ]);
     }
 

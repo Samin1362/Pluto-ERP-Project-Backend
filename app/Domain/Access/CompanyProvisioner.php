@@ -13,6 +13,7 @@ use App\Models\NumberSequence;
 use App\Models\PaymentTerm;
 use App\Models\Permission;
 use App\Models\Role;
+use App\Models\Unit;
 use App\Models\User;
 use App\Support\CurrentCompany;
 use Carbon\CarbonImmutable;
@@ -21,7 +22,7 @@ use Illuminate\Support\Facades\DB;
 /**
  * Company bootstrap (04 §11.2), in one transaction: settings, payment terms, head-office branch, roles from the
  * K11 matrix, the default chart of accounts with its account mappings (04 §11.3), the current financial year with
- * 12 periods, the number series, and the Owner membership.
+ * 12 periods, the number series, the default units of measure, and the Owner membership.
  */
 final class CompanyProvisioner
 {
@@ -82,6 +83,9 @@ final class CompanyProvisioner
         'stock_transfer' => ['TRF-{FY}-', 4], 'letter_of_credit' => ['LC-{FY}-', 3], 'challan' => ['DC-{FY}-', 4],
         'system_journal' => ['SJ-{FY}-', 4],
     ];
+
+    /** Default units of measure (backlog P3.1-BE-01): name => decimals its quantities allow. */
+    public const UNITS = ['pcs' => 0, 'kg' => 3, 'bag' => 0, 'jar' => 0, 'litre' => 3, 'box' => 0, 'carton' => 0, 'dozen' => 0, 'metre' => 2];
 
     /** Approval limits; NULL only for the system Owner role (R-10). Finance journal limit is an assumption (see 15 §6). */
     private const LIMITS = [
@@ -184,5 +188,24 @@ final class CompanyProvisioner
             NumberSequence::create(['fiscal_year_id' => null, 'document_type' => $type, 'prefix' => $prefix,
                 'next_number' => 1, 'padding' => 4, 'reset_policy' => 'never']);
         }
+        $this->seedDefaultUnits();
+    }
+
+    /**
+     * Adds the default units the current company does not have yet (by name), so it is also safe for companies
+     * created before P3 (`php artisan pluto:company:defaults`).
+     */
+    public function seedDefaultUnits(): int
+    {
+        $have = Unit::pluck('name')->map(fn ($n) => mb_strtolower($n))->all();
+        $added = 0;
+        foreach (self::UNITS as $name => $decimals) {
+            if (! in_array($name, $have, true)) {
+                Unit::create(['name' => $name, 'decimals' => $decimals]);
+                $added++;
+            }
+        }
+
+        return $added;
     }
 }
