@@ -198,6 +198,48 @@ class OpenApiConformanceTest extends TestCase
         $this->assertConforms($this->api('DELETE', '/api/v1/me/two-factor', $t, null, ['password' => self::PASSWORD]), 'DELETE', '/me/two-factor');        // 204
     }
 
+    public function test_purchase_bill_calculate_matches_the_contract(): void
+    {
+        $t = $this->login('owner@meghna.example');
+        $c = $this->company->id;
+        $key = fn () => ['Idempotency-Key' => (string) Str::uuid()];
+        $supplier = $this->api('POST', '/api/v1/parties', $t, $c, ['party_type' => 'supplier', 'name' => 'Bengal Edible Oils', 'mobile' => '01911222333'], $key())->json('data.id');
+        $wh = $this->api('POST', '/api/v1/warehouses', $t, $c, ['code' => 'WH-1', 'name' => 'Main', 'branch_id' => \DB::table('branches')->where('company_id', $c)->value('id')], $key())->json('data.id');
+        $product = $this->api('POST', '/api/v1/products', $t, $c, ['item_type' => 'product', 'name' => 'Rice', 'unit_id' => \DB::table('units')->where('company_id', $c)->value('id'),
+            'selling_price' => '1.00', 'income_ledger_id' => \DB::table('ledgers')->where('company_id', $c)->where('code', '4101')->value('id')], $key())->json('data.id');
+        $body = ['party_id' => $supplier, 'supplier_bill_no' => 'CST-1', 'bill_date' => now('Asia/Dhaka')->toDateString(), 'warehouse_id' => $wh,
+            'lines' => [['product_id' => $product, 'quantity' => '10', 'unit_cost' => '2340.00', 'discount_pct' => '2']]];
+        $this->assertConforms($this->api('POST', '/api/v1/purchase-bills/calculate', $t, $c, $body), 'POST', '/purchase-bills/calculate');
+        $this->assertConforms($this->api('POST', '/api/v1/purchase-bills/calculate', $t, $c, ['lines' => []]), 'POST', '/purchase-bills/calculate');    // 422
+        $this->assertConforms($this->api('POST', '/api/v1/purchase-bills/calculate', $this->login('store@meghna.example'), $c, $body), 'POST', '/purchase-bills/calculate'); // 403
+
+        $bill = $this->api('POST', '/api/v1/purchase-bills', $t, $c, $body, $key());
+        $this->assertConforms($bill, 'POST', '/purchase-bills');
+        $this->assertConforms($this->api('POST', '/api/v1/purchase-bills', $t, $c, $body, $key()), 'POST', '/purchase-bills');                 // 409 duplicate_supplier_bill
+        $this->assertConforms($this->api('POST', '/api/v1/purchase-bills', $t, $c, ['lines' => []], $key()), 'POST', '/purchase-bills');        // 422
+        $id = $bill->json('data.id');
+        $this->assertConforms($this->api('GET', "/api/v1/purchase-bills/{$id}", $t, $c), 'GET', '/purchase-bills/{id}');
+        $this->assertConforms($this->api('GET', '/api/v1/purchase-bills/999999', $t, $c), 'GET', '/purchase-bills/{id}');                     // 404
+        $this->assertConforms($this->api('PUT', "/api/v1/purchase-bills/{$id}", $t, $c, $body), 'PUT', '/purchase-bills/{id}');                // 428
+        $this->assertConforms($this->api('PUT', "/api/v1/purchase-bills/{$id}", $t, $c, $body, ['If-Match' => 'W/"1"']), 'PUT', '/purchase-bills/{id}');
+        $this->assertConforms($this->api('PUT', "/api/v1/purchase-bills/{$id}", $t, $c, $body, ['If-Match' => 'W/"1"']), 'PUT', '/purchase-bills/{id}'); // 409
+        $posted = $this->api('POST', '/api/v1/purchase-bills', $t, $c, ['supplier_bill_no' => 'CST-2'] + $body, $key())->json('data.id');
+        $this->assertConforms($this->api('POST', "/api/v1/purchase-bills/{$posted}/post", $t, $c, [], $key()), 'POST', '/purchase-bills/{id}/post');        // 200 with journal
+        $this->assertConforms($this->api('POST', "/api/v1/purchase-bills/{$posted}/post", $t, $c, [], $key()), 'POST', '/purchase-bills/{id}/post');        // 409 already_posted
+        $this->assertConforms($this->api('POST', "/api/v1/purchase-bills/{$posted}/post", $t, $c, ['when' => 'now'], $key()), 'POST', '/purchase-bills/{id}/post'); // 422
+        $this->assertConforms($this->api('GET', "/api/v1/purchase-bills/{$posted}", $t, $c), 'GET', '/purchase-bills/{id}');                                 // posted, journal lines
+        $this->assertConforms($this->api('POST', "/api/v1/purchase-bills/{$posted}/cancel", $t, $c, [], $key()), 'POST', '/purchase-bills/{id}/cancel');      // 422 reason
+        $this->assertConforms($this->api('POST', "/api/v1/purchase-bills/{$posted}/cancel", $t, $c, ['reason' => 'duplicate'], $key()), 'POST', '/purchase-bills/{id}/cancel');
+        $this->assertConforms($this->api('POST', "/api/v1/purchase-bills/{$posted}/cancel", $t, $c, ['reason' => 'duplicate'], $key()), 'POST', '/purchase-bills/{id}/cancel'); // 409
+        $this->assertConforms($this->api('GET', '/api/v1/stock-movements?per_page=10', $t, $c), 'GET', '/stock-movements');
+        $this->assertConforms($this->api('GET', '/api/v1/stock-movements', $this->login('store@meghna.example'), $c), 'GET', '/stock-movements');      // masked
+        $this->assertConforms($this->api('GET', '/api/v1/stock-movements?movement_type=sale', $t, $c), 'GET', '/stock-movements');               // 422
+        $this->assertConforms($this->api('GET', '/api/v1/purchase-bills?q=CST&status=draft&sort=-total&per_page=5', $t, $c), 'GET', '/purchase-bills');
+        $this->assertConforms($this->api('GET', '/api/v1/purchase-bills?status=open', $t, $c), 'GET', '/purchase-bills');                     // 422
+        $this->assertConforms($this->api('DELETE', "/api/v1/purchase-bills/{$id}", $t, $c), 'DELETE', '/purchase-bills/{id}');
+        $this->assertConforms($this->api('DELETE', "/api/v1/purchase-bills/{$id}", $t, $c), 'DELETE', '/purchase-bills/{id}');                 // 404
+    }
+
     public function test_the_validator_rejects_bodies_that_break_the_contract(): void
     {
         $t = $this->login('owner@meghna.example');

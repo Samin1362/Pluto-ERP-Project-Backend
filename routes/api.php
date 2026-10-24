@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\V1\Auth\AuthController;
 use App\Http\Controllers\Api\V1\Inventory\ProductCategoryController;
 use App\Http\Controllers\Api\V1\Inventory\ProductController;
 use App\Http\Controllers\Api\V1\Inventory\StockGroupController;
+use App\Http\Controllers\Api\V1\Inventory\StockMovementController;
 use App\Http\Controllers\Api\V1\Inventory\UnitController;
 use App\Http\Controllers\Api\V1\Inventory\WarehouseController;
 use App\Http\Controllers\Api\V1\Me\TwoFactorController;
@@ -12,6 +13,7 @@ use App\Http\Controllers\Api\V1\MeController;
 use App\Http\Controllers\Api\V1\Parties\LookupController;
 use App\Http\Controllers\Api\V1\Parties\PartyController;
 use App\Http\Controllers\Api\V1\Platform\PlatformLookupController;
+use App\Http\Controllers\Api\V1\Purchases\PurchaseBillController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -71,5 +73,17 @@ Route::middleware(['jwt', 'throttle:api-user'])->group(function () {
         Route::delete('products/{id}', [ProductController::class, 'destroy'])->whereNumber('id')->middleware('perm:inventory.delete');
         Route::get('products/{id}', [ProductController::class, 'show'])->whereNumber('id')->middleware('perm:inventory.view');
         Route::patch('products/{id}', [ProductController::class, 'update'])->whereNumber('id')->middleware('perm:inventory.edit');
+
+        Route::get('stock-movements', [StockMovementController::class, 'index'])->middleware('perm:inventory.view');
+
+        // Purchase bills (P4.2).
+        Route::post('purchase-bills/calculate', [PurchaseBillController::class, 'calculate'])->middleware('perm:purchases.create');
+        Route::get('purchase-bills', [PurchaseBillController::class, 'index'])->middleware('perm:purchases.view');
+        Route::post('purchase-bills', [PurchaseBillController::class, 'store'])->middleware(['perm:purchases.create', 'idempotent']);
+        Route::get('purchase-bills/{id}', [PurchaseBillController::class, 'show'])->whereNumber('id')->middleware('perm:purchases.view');
+        Route::put('purchase-bills/{id}', [PurchaseBillController::class, 'update'])->whereNumber('id')->middleware('perm:purchases.edit');
+        Route::post('purchase-bills/{id}/post', [PurchaseBillController::class, 'post'])->whereNumber('id')->middleware(['perm:purchases.create', 'idempotent']);
+        Route::post('purchase-bills/{id}/cancel', [PurchaseBillController::class, 'cancel'])->whereNumber('id')->middleware(['perm:purchases.edit', 'idempotent']);
+        Route::delete('purchase-bills/{id}', [PurchaseBillController::class, 'destroy'])->whereNumber('id')->middleware('perm:purchases.delete');
     });
 });

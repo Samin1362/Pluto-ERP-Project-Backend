@@ -37,5 +37,5 @@ lint: ## Code style check (Laravel Pint; `make fix` applies it)
 fix: ## Apply the code style (Laravel Pint)
 	docker compose exec -T app vendor/bin/pint
 
-integrity: ## Books consistency check (added in P4.1)
-	@echo "make integrity arrives with P4.1"; exit 1
+integrity: ## Books consistency check: balanced journals, stock = movements = inventory ledgers (exit 1 on a mismatch)
+	docker compose exec -T app php artisan pluto:integrity
