@@ -6,6 +6,7 @@ use App\Domain\Accounting\AccountMapper;
 use App\Domain\Accounting\JournalBuilder;
 use App\Domain\Accounting\PostingService;
 use App\Domain\Inventory\StockService;
+use App\Domain\Settlements\AllocationService;
 use App\Domain\Shared\AuditLogger;
 use App\Domain\Shared\Money;
 use App\Domain\Shared\Quantity;
@@ -25,7 +26,7 @@ use Illuminate\Support\Facades\DB;
  *    cancellation date) that reverses it, COGS included; the original entry becomes `reversed`;
  *  - each stocked line comes back into the warehouse as a `reversal` movement at the cost it left at (the line's
  *    cost_amount). When that covers negative stock (R-16) the true-up goes Dr inventory / Cr COGS, as for a receipt;
- *  - receipts allocated to the invoice become advances (hook below; customer receipts arrive in P6);
+ *  - receipts allocated to the invoice become advances again (AllocationService::releaseAll; P6.1-BE-04);
  *  - the invoice is `cancelled` with its reason; its number is kept.
  */
 final class SalesInvoiceCancellationService
@@ -35,6 +36,7 @@ final class SalesInvoiceCancellationService
         private readonly PostingService $posting,
         private readonly AccountMapper $mapper,
         private readonly AuditLogger $audit,
+        private readonly AllocationService $allocations,
     ) {}
 
     public function cancel(SalesInvoice $invoice, string $reason, ?string $note = null, ?string $date = null): SalesInvoice
@@ -67,7 +69,7 @@ final class SalesInvoiceCancellationService
                     $b->debit($warehouse->inventory_ledger_id, $after->trueUp, ['warehouse_id' => $warehouse->id])->credit($this->mapper->ledgerFor('cogs'), $after->trueUp);
                 }
             }
-            $this->releaseAllocations($invoice);
+            $this->allocations->releaseAll($invoice); // BR-024: what was paid on it becomes an advance again
 
             $entry = $this->posting->persist($b, $invoice, 'cancellation', $date, null, "Cancellation of {$invoice->number} ({$reason})".($note ? ": {$note}" : ''),
                 $invoice->number, $invoice->branch_id, $original->id);
@@ -79,16 +81,5 @@ final class SalesInvoiceCancellationService
 
             return $invoice->refresh()->load('lines');
         }, attempts: 2); // a MySQL deadlock (1213) is retried once (09 §9); the fixed lock order should make it rare
-    }
-
-    /**
-     * BR-024: receipts allocated to the invoice become advances on the customer (TC-SAL-012). Customer receipts and
-     * their bill_allocations arrive in P6; until then a posted invoice has no allocations, so there is nothing to release.
-     */
-    private function releaseAllocations(SalesInvoice $invoice): void
-    {
-        if (DB::table('bill_allocations')->where('sales_invoice_id', $invoice->id)->whereNull('reversed_at')->exists()) {
-            throw new \LogicException('Releasing invoice allocations arrives with customer receipts (P6).');
-        }
     }
 }

@@ -4,12 +4,15 @@ namespace Tests\Feature\Concurrency;
 
 use App\Domain\Access\CompanyProvisioner;
 use App\Domain\Accounting\BooksIntegrity;
+use App\Domain\Accounting\JournalBuilder;
+use App\Domain\Accounting\PostingService;
 use App\Domain\Inventory\ProductService;
 use App\Domain\Inventory\WarehouseService;
 use App\Domain\Parties\PartyService;
 use App\Domain\Purchases\PurchaseBillPostingService;
 use App\Domain\Purchases\PurchaseBillService;
 use App\Domain\Sales\SalesInvoiceService;
+use App\Domain\Shared\Money;
 use App\Models\Company;
 use App\Models\JournalEntry;
 use App\Models\PurchaseBill;
@@ -82,14 +85,14 @@ class PostingConcurrencyTest extends BaseTestCase
             'lines' => array_map(fn ($id) => ['product_id' => $id, 'quantity' => '10', 'unit_cost' => '100.00'], $productIds)])->id;
     }
 
-    /** Starts one child per document, releases them together, and returns their JSON results. */
+    /** Starts one child per document (or per argument list), releases them together, and returns their JSON results. */
     private function postInParallel(array $billIds, string $script = 'post-bill.php'): array
     {
         $barrier = tempnam(sys_get_temp_dir(), 'pluto-barrier-');
         unlink($barrier);
         $procs = [];
         foreach ($billIds as $id) {
-            $p = new Process([PHP_BINARY, base_path("tests/Concurrency/{$script}"), (string) $this->company->id, (string) $this->user->id, (string) $id, $barrier],
+            $p = new Process([PHP_BINARY, base_path("tests/Concurrency/{$script}"), (string) $this->company->id, (string) $this->user->id, ...array_map('strval', (array) $id), $barrier],
                 base_path(), ['DB_DATABASE' => config('database.connections.mysql.database'), 'APP_ENV' => 'testing'], null, 120);
             $p->start();
             $procs[] = $p;
@@ -139,6 +142,27 @@ class PostingConcurrencyTest extends BaseTestCase
         app(CurrentCompany::class)->set($this->company, null);
         $this->assertSame(1, SalesInvoice::where('status', 'posted')->count());
         $this->assertSame('0.000', DB::table('stock_balances')->where('product_id', $oil)->value('qty_on_hand'), 'never negative');
+        $this->assertBooks();
+    }
+
+    public function test_tc_con_002_two_allocations_to_the_same_bill_never_over_settle_it(): void
+    {
+        $bill = PurchaseBill::findOrFail($this->bill('ALLOC-1', [$this->products[0]])); // 10 × 100 = 1,000
+        app(PurchaseBillPostingService::class)->post($bill);
+        $ledger = DB::table('parties')->where('id', $this->supplier)->value('ledger_id');
+        $cash = DB::table('ledgers')->where('company_id', $this->company->id)->where('code', '1101-01')->value('id');
+        $lines = [];
+        foreach ([1, 2] as $_) { // two advances of 800 to the supplier
+            $entry = app(PostingService::class)->persist((new JournalBuilder)->debit($ledger, Money::of('800'))->credit($cash, Money::of('800')), null, 'journal',
+                CarbonImmutable::now('Asia/Dhaka'), null, 'Advance');
+            $lines[] = $entry->lines->firstWhere('ledger_id', $ledger)->id;
+        }
+        $results = $this->postInParallel(array_map(fn ($l) => [$l, 'purchase_bill', $bill->id, '800.00'], $lines), 'allocate.php');
+        $codes = array_map(fn ($r) => $r['ok'] ? 'allocated' : $r['code'], $results);
+        sort($codes);
+        $this->assertSame(['allocated', 'allocation_exceeds_balance'], $codes, json_encode($results));
+        app(CurrentCompany::class)->set($this->company, null);
+        $this->assertSame(['800.00', '200.00'], [(string) $bill->refresh()->amount_settled, (string) $bill->balance_due]);
         $this->assertBooks();
     }
 

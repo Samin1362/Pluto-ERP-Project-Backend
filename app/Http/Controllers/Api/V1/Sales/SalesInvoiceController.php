@@ -95,7 +95,7 @@ class SalesInvoiceController extends Controller
     /** POST /sales-invoices/{id}/post (P5.1-BE-03): stock out at average cost, journal, customer balance. */
     public function post(PostRequest $request, int $id, SalesInvoicePostingService $posting): JsonResponse
     {
-        return $this->respond($request, $posting->post(SalesInvoice::findOrFail($id), (bool) $request->validated('confirm_backdated', false)));
+        return $this->respond($request, $posting->post(SalesInvoice::findOrFail($id), (bool) $request->validated('confirm_backdated', false), $request->validated('receipt')));
     }
 
     /** POST /sales-invoices/bulk-post (P5.1-BE-04): each draft in its own transaction; per-item results (BulkResult). */

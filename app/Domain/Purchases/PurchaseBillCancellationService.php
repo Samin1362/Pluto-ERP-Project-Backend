@@ -6,6 +6,7 @@ use App\Domain\Accounting\AccountMapper;
 use App\Domain\Accounting\JournalBuilder;
 use App\Domain\Accounting\PostingService;
 use App\Domain\Inventory\StockService;
+use App\Domain\Settlements\AllocationService;
 use App\Domain\Shared\AuditLogger;
 use App\Domain\Shared\Money;
 use App\Domain\Shared\Quantity;
@@ -26,7 +27,7 @@ use Illuminate\Support\Facades\DB;
  *  - each stocked line leaves the warehouse as a `reversal` movement at its original value (insufficient_stock when
  *    it was sold meanwhile, unless negative stock is allowed — TC-PUR-010). When R-17 lowers that value, the
  *    difference goes to the stock-adjustment ledger so the inventory ledger keeps matching the stock;
- *  - allocated payments become advances (hook below; supplier payments arrive in P8);
+ *  - payments and advances allocated to the bill become advances again (AllocationService::releaseAll; P6.1-BE-04);
  *  - the bill is `cancelled` with its reason; its number is kept.
  */
 final class PurchaseBillCancellationService
@@ -36,6 +37,7 @@ final class PurchaseBillCancellationService
         private readonly PostingService $posting,
         private readonly AccountMapper $mapper,
         private readonly AuditLogger $audit,
+        private readonly AllocationService $allocations,
     ) {}
 
     public function cancel(PurchaseBill $bill, string $reason, ?string $note = null, ?string $date = null): PurchaseBill
@@ -73,7 +75,7 @@ final class PurchaseBillCancellationService
                     $b->debit($warehouse->inventory_ledger_id, $diff, ['warehouse_id' => $warehouse->id])->credit($this->mapper->ledgerFor('stock_adjustment'), $diff);
                 }
             }
-            $this->releaseAllocations($bill);
+            $this->allocations->releaseAll($bill); // BR-024: what was paid on it becomes an advance again
 
             $entry = $this->posting->persist($b, $bill, 'cancellation', $date, null, "Cancellation of {$bill->number} ({$reason})".($note ? ": {$note}" : ''),
                 $bill->number, $bill->branch_id, $original->id);
@@ -85,16 +87,5 @@ final class PurchaseBillCancellationService
 
             return $bill->refresh()->load('lines');
         }, attempts: 2); // a MySQL deadlock (1213) is retried once (09 §9); the fixed lock order should make it rare
-    }
-
-    /**
-     * BR-024: payments allocated to the bill become advances on the supplier. Supplier payments and bill_allocations
-     * arrive in P8 (backlog P8.x); until then a posted bill has no allocations, so there is nothing to release.
-     */
-    private function releaseAllocations(PurchaseBill $bill): void
-    {
-        if (DB::table('bill_allocations')->where('purchase_bill_id', $bill->id)->whereNull('reversed_at')->exists()) {
-            throw new \LogicException('Releasing bill allocations arrives with supplier payments (P8).');
-        }
     }
 }

@@ -3,7 +3,11 @@
 namespace Tests\Feature\Contract;
 
 use App\Domain\Access\Totp;
+use App\Domain\Accounting\JournalBuilder;
+use App\Domain\Accounting\PostingService;
+use App\Domain\Shared\Money;
 use App\Models\Company;
+use App\Support\CurrentCompany;
 use Database\Seeders\DemoTaxRuleSeeder;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
@@ -295,6 +299,90 @@ class OpenApiConformanceTest extends TestCase
         $this->assertConforms($this->api('POST', "/api/v1/sales-invoices/{$service}/cancel", $t, $c, [], $key()), 'POST', '/sales-invoices/{id}/cancel');             // 422 reason
         $this->assertConforms($this->api('POST', "/api/v1/sales-invoices/{$service}/cancel", $t, $c, ['reason' => 'duplicate'], $key()), 'POST', '/sales-invoices/{id}/cancel');
         $this->assertConforms($this->api('POST', "/api/v1/sales-invoices/{$service}/cancel", $t, $c, ['reason' => 'duplicate'], $key()), 'POST', '/sales-invoices/{id}/cancel'); // 409
+    }
+
+    public function test_money_account_endpoints_match_the_contract(): void
+    {
+        $t = $this->login('owner@meghna.example');
+        $c = $this->company->id;
+        $key = fn () => ['Idempotency-Key' => (string) Str::uuid()];
+        $body = ['account_type' => 'bank', 'bank_name' => 'Sonali Bank', 'account_name' => 'Meghna Traders Ltd.', 'account_number' => '0012-4521', 'opening_balance' => '500000.00'];
+        $a = $this->api('POST', '/api/v1/money-accounts', $t, $c, $body, $key());
+        $this->assertConforms($a, 'POST', '/money-accounts');
+        $this->assertConforms($this->api('POST', '/api/v1/money-accounts', $t, $c, ['account_type' => 'bank'], $key()), 'POST', '/money-accounts');   // 422
+        $id = $a->json('data.id');
+        $this->assertConforms($this->api('GET', '/api/v1/money-accounts?type=bank', $t, $c), 'GET', '/money-accounts');
+        $this->assertConforms($this->api('GET', "/api/v1/money-accounts/{$id}", $t, $c), 'GET', '/money-accounts/{id}');
+        $this->assertConforms($this->api('GET', '/api/v1/money-accounts/999999', $t, $c), 'GET', '/money-accounts/{id}');                             // 404
+        $this->assertConforms($this->api('PATCH', "/api/v1/money-accounts/{$id}", $t, $c, ['name' => 'Sonali current']), 'PATCH', '/money-accounts/{id}');       // 428
+        $this->assertConforms($this->api('PATCH', "/api/v1/money-accounts/{$id}", $t, $c, ['name' => 'Sonali current'], ['If-Match' => 'W/"1"']), 'PATCH', '/money-accounts/{id}');
+        $this->assertConforms($this->api('PATCH', "/api/v1/money-accounts/{$id}", $t, $c, ['name' => 'Again'], ['If-Match' => 'W/"1"']), 'PATCH', '/money-accounts/{id}'); // 409
+        $this->assertConforms($this->api('GET', "/api/v1/money-accounts/{$id}", $this->login('store@meghna.example'), $c), 'GET', '/money-accounts/{id}'); // 403
+    }
+
+    public function test_allocation_endpoints_match_the_contract(): void
+    {
+        $t = $this->login('owner@meghna.example');
+        $c = $this->company->id;
+        $key = fn () => ['Idempotency-Key' => (string) Str::uuid()];
+        $customer = $this->api('POST', '/api/v1/parties', $t, $c, ['party_type' => 'customer', 'name' => 'Karim Distributors', 'mobile' => '01711458230'], $key())->json('data');
+        $wh = $this->api('POST', '/api/v1/warehouses', $t, $c, ['code' => 'WH-1', 'name' => 'Main', 'branch_id' => \DB::table('branches')->where('company_id', $c)->value('id')], $key())->json('data.id');
+        $trip = $this->api('POST', '/api/v1/products', $t, $c, ['item_type' => 'service', 'name' => 'Delivery', 'unit_id' => \DB::table('units')->where('company_id', $c)->value('id'),
+            'selling_price' => '150.00', 'income_ledger_id' => \DB::table('ledgers')->where('company_id', $c)->where('code', '4201')->value('id')], $key())->json('data.id');
+        $inv = $this->api('POST', '/api/v1/sales-invoices', $t, $c, ['party_id' => $customer['id'], 'invoice_date' => now('Asia/Dhaka')->toDateString(), 'warehouse_id' => $wh,
+            'lines' => [['product_id' => $trip, 'quantity' => '10']]], $key())->json('data.id');
+        $this->api('POST', "/api/v1/sales-invoices/{$inv}/post", $t, $c, [], $key())->assertOk();
+        app(CurrentCompany::class)->set($this->company, null);
+        $cash = \DB::table('ledgers')->where('company_id', $c)->where('code', '1101-01')->value('id');
+        $partyLedger = \DB::table('parties')->where('id', $customer['id'])->value('ledger_id');
+        $entry = app(PostingService::class)->persist((new JournalBuilder)->debit($cash, Money::of('1000'))->credit($partyLedger, Money::of('1000')),
+            null, 'journal', now('Asia/Dhaka'), null, 'Advance');
+        $line = $entry->lines->firstWhere('ledger_id', $partyLedger)->id;
+
+        $this->assertConforms($this->api('GET', "/api/v1/parties/{$customer['id']}/open-documents", $t, $c), 'GET', '/parties/{id}/open-documents');
+        $a = $this->api('POST', '/api/v1/allocations', $t, $c, ['journal_line_id' => $line, 'document_type' => 'sales_invoice', 'document_id' => $inv, 'amount' => '500.00'], $key());
+        $this->assertConforms($a, 'POST', '/allocations');
+        $this->assertConforms($this->api('POST', '/api/v1/allocations', $t, $c, ['journal_line_id' => $line, 'document_type' => 'sales_invoice', 'document_id' => $inv,
+            'amount' => '5000.00'], $key()), 'POST', '/allocations');                                                                                         // 422 exceeds
+        $this->assertConforms($this->api('GET', "/api/v1/sales-invoices/{$inv}", $t, $c), 'GET', '/sales-invoices/{id}');                               // with allocations
+        $this->assertConforms($this->api('DELETE', '/api/v1/allocations/'.$a->json('data.id'), $t, $c), 'DELETE', '/allocations/{id}');
+        $this->assertConforms($this->api('DELETE', '/api/v1/allocations/'.$a->json('data.id'), $t, $c), 'DELETE', '/allocations/{id}');               // 404
+    }
+
+    public function test_customer_receipt_endpoints_match_the_contract(): void
+    {
+        $t = $this->login('owner@meghna.example');
+        $c = $this->company->id;
+        $key = fn () => ['Idempotency-Key' => (string) Str::uuid()];
+        $customer = $this->api('POST', '/api/v1/parties', $t, $c, ['party_type' => 'customer', 'name' => 'Karim Distributors', 'mobile' => '01711458230'], $key())->json('data.id');
+        $account = $this->api('POST', '/api/v1/money-accounts', $t, $c, ['account_type' => 'cash'], $key())->json('data.id');
+        $body = ['party_id' => $customer, 'date' => now('Asia/Dhaka')->toDateString(), 'amount' => '5000.00', 'money_account_id' => $account, 'method' => 'cash', 'auto_allocate' => true];
+        $r = $this->api('POST', '/api/v1/customer-receipts', $t, $c, $body, $key());
+        $this->assertConforms($r, 'POST', '/customer-receipts');
+        $this->assertConforms($this->api('POST', '/api/v1/customer-receipts', $t, $c, ['method' => 'cheque'] + $body, $key()), 'POST', '/customer-receipts'); // 422
+        $this->assertConforms($this->api('GET', '/api/v1/customer-receipts?unapplied=true&per_page=5', $t, $c), 'GET', '/customer-receipts');
+        $this->assertConforms($this->api('GET', '/api/v1/customer-receipts/'.$r->json('data.id'), $t, $c), 'GET', '/customer-receipts/{id}');
+        $this->assertConforms($this->api('GET', '/api/v1/customer-receipts/999999', $t, $c), 'GET', '/customer-receipts/{id}');                         // 404
+        $this->assertConforms($this->api('GET', '/api/v1/customer-receipts', $this->login('store@meghna.example'), $c), 'GET', '/customer-receipts');     // 403
+    }
+
+    public function test_party_account_endpoints_match_the_contract(): void
+    {
+        $t = $this->login('owner@meghna.example');
+        $c = $this->company->id;
+        $key = fn () => ['Idempotency-Key' => (string) Str::uuid()];
+        $id = $this->api('POST', '/api/v1/parties', $t, $c, ['party_type' => 'customer', 'name' => 'Rahman Super Shop', 'mobile' => '01811000222',
+            'opening_balance' => '185000.00'], $key())->json('data.id');
+        $this->assertConforms($this->api('GET', "/api/v1/parties/{$id}", $t, $c), 'GET', '/parties/{id}');
+        $this->assertConforms($this->api('GET', "/api/v1/parties/{$id}/ledger", $t, $c), 'GET', '/parties/{id}/ledger');
+        $this->assertConforms($this->api('GET', "/api/v1/parties/{$id}/ledger?colour=red", $t, $c), 'GET', '/parties/{id}/ledger');      // 422
+        $this->assertConforms($this->api('GET', "/api/v1/parties/{$id}/transactions", $t, $c), 'GET', '/parties/{id}/transactions');
+        $this->assertConforms($this->api('GET', '/api/v1/parties/outstanding?type=customer', $t, $c), 'GET', '/parties/outstanding');
+        $this->assertConforms($this->api('GET', "/api/v1/parties/{$id}/statement?aging=true", $t, $c), 'GET', '/parties/{id}/statement');
+        $this->assertConforms($this->api('GET', '/api/v1/parties/999999/statement', $t, $c), 'GET', '/parties/{id}/statement');             // 404
+        Mail::fake();
+        $this->assertConforms($this->api('POST', '/api/v1/parties/statements/send', $t, $c, ['party_ids' => [$id], 'date_from' => now('Asia/Dhaka')->toDateString(),
+            'date_to' => now('Asia/Dhaka')->toDateString()], $key()), 'POST', '/parties/statements/send');                                   // 202 ExportJob
     }
 
     public function test_the_validator_rejects_bodies_that_break_the_contract(): void

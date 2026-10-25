@@ -7,6 +7,7 @@ use App\Domain\Accounting\JournalBuilder;
 use App\Domain\Accounting\PeriodGuard;
 use App\Domain\Accounting\PostingService;
 use App\Domain\Inventory\StockService;
+use App\Domain\Settlements\PartyPaymentService;
 use App\Domain\Shared\AuditLogger;
 use App\Domain\Shared\Money;
 use App\Domain\Shared\Quantity;
@@ -47,9 +48,13 @@ final class SalesInvoicePostingService
         private readonly AuditLogger $audit,
     ) {}
 
-    public function post(SalesInvoice $invoice, bool $confirmBackdated = false): SalesInvoice
+    /**
+     * @param  array{money_account_id: int, method: string, amount: string, transaction_reference?: ?string}|null  $receipt  a cash sale (R-28): the
+     *                                                                                                                       money received now, equal to the total; its RV posts in the same transaction and settles the invoice
+     */
+    public function post(SalesInvoice $invoice, bool $confirmBackdated = false, ?array $receipt = null): SalesInvoice
     {
-        return DB::transaction(function () use ($invoice, $confirmBackdated) {
+        return DB::transaction(function () use ($invoice, $confirmBackdated, $receipt) {
             $invoice = SalesInvoice::with('lines')->whereKey($invoice->id)->lockForUpdate()->firstOrFail();
             if ($invoice->status === 'posted') {
                 throw new ApiProblem('already_posted', "{$invoice->number} is already posted.");
@@ -96,6 +101,9 @@ final class SalesInvoicePostingService
             $invoice->forceFill(['status' => 'posted', 'journal_entry_id' => $entry->id, 'posted_at' => now(), 'posted_by' => Auth::id(), 'balance_due' => $invoice->total,
                 'party_snapshot' => ['code' => $party->code, 'name' => $party->name, 'mobile' => $party->mobile, 'address' => $party->address]])->save(); // frozen for reprints (R-30)
             $this->audit->record('posted', $invoice, ['status' => 'draft'], ['status' => 'posted', 'journal_entry_id' => $entry->id, 'total' => (string) $invoice->total]);
+            if ($receipt) {
+                $this->cashSale($invoice, $receipt, $confirmBackdated);
+            }
 
             return $invoice->refresh()->load('lines');
         }, attempts: 2); // a MySQL deadlock (1213) is retried once (09 §9); the fixed lock order should make it rare
@@ -122,6 +130,18 @@ final class SalesInvoicePostingService
         }
 
         return $out;
+    }
+
+    /** Cash sale (06 §5, R-28): the receipt for exactly the total, dated the invoice date, allocated to this invoice. */
+    private function cashSale(SalesInvoice $invoice, array $receipt, bool $confirmBackdated): void
+    {
+        if (! Money::of($receipt['amount'])->isEqualTo($invoice->total)) {
+            throw new ApiProblem('validation_failed', errors: ['receipt.amount' => ["A cash sale receives the whole total ({$invoice->total})"]]);
+        }
+        app(PartyPaymentService::class)->receive(['party_id' => $invoice->party_id, 'date' => $invoice->invoice_date->toDateString(), 'amount' => $receipt['amount'],
+            'money_account_id' => $receipt['money_account_id'], 'method' => $receipt['method'], 'transaction_reference' => $receipt['transaction_reference'] ?? null,
+            'narration' => "Cash sale {$invoice->number}", 'allocations' => [['document_id' => $invoice->id, 'amount' => $receipt['amount']]],
+            'confirm_backdated' => $confirmBackdated]);
     }
 
     /** BR-064: COGS must be an expense ledger; a mapping to any other nature is refused before it reaches the books (TC-ACC-024). */

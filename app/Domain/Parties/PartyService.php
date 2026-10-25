@@ -2,8 +2,10 @@
 
 namespace App\Domain\Parties;
 
+use App\Domain\Accounting\OpeningBalanceService;
 use App\Domain\Shared\AuditLogger;
 use App\Domain\Shared\DocumentNumberService;
+use App\Domain\Shared\Money;
 use App\Models\AccountMapping;
 use App\Models\Ledger;
 use App\Models\Party;
@@ -25,6 +27,7 @@ final class PartyService
     public function __construct(
         private readonly DocumentNumberService $numbers,
         private readonly AuditLogger $audit,
+        private readonly OpeningBalanceService $openings,
     ) {}
 
     /** @return array{party: Party, warnings: list<array>} */
@@ -49,7 +52,9 @@ final class PartyService
             $party->status ??= 'active';
             $party->save();
             $this->syncBankAccounts($party, $data['bank_accounts'] ?? null);
-            $this->audit->record('created', $party, null, $party->only(self::AUDITED) + ['code' => $party->code]);
+            $this->setOpening($party, $data);
+            $this->audit->record('created', $party, null, $party->only(self::AUDITED) + ['code' => $party->code]
+                + array_intersect_key($data, array_flip(['opening_balance', 'opening_side'])));
 
             return ['party' => $party->refresh(), 'warnings' => $this->duplicateWarnings($party)];
         });
@@ -74,11 +79,27 @@ final class PartyService
             if (array_key_exists('bank_accounts', $data)) {
                 $this->syncBankAccounts($party, $data['bank_accounts']);
             }
+            if (array_key_exists('opening_balance', $data) || array_key_exists('opening_side', $data)) {
+                $this->setOpening($party, $data);
+            }
             $this->audit->record('updated', $party, array_diff_assoc($old, $party->only(self::AUDITED)) ?: $old,
                 array_diff_assoc($party->only(self::AUDITED), $old));
 
             return $party->refresh();
         });
+    }
+
+    /**
+     * BR-028 / docs 15 D4 (resolved in P6.1-BE-06): the opening balance posts an opening_balance entry at the FY start
+     * against opening_balance_adjustment — a customer's on the debit side (they owe us) unless opening_side says cr,
+     * a supplier's on the credit side unless dr. Editable until the party's ledger has any other entry.
+     */
+    private function setOpening(Party $party, array $data): void
+    {
+        $current = $this->openings->current($party, $party->ledger_id);
+        $amount = Money::of($data['opening_balance'] ?? (string) $current->abs());
+        $side = $data['opening_side'] ?? ($current->isZero() ? ($party->party_type === 'customer' ? 'dr' : 'cr') : ($current->isNegative() ? 'cr' : 'dr'));
+        $this->openings->set($party, $party->ledger_id, $side === 'dr' ? $amount : $amount->negated(), $party->name);
     }
 
     public function setStatus(Party $party, string $status): Party

@@ -13,7 +13,8 @@ use Illuminate\Support\Facades\DB;
  *
  * Documents link their entry through `journal_entry_id`; the entry's source_type is the document's morph alias,
  * which by convention is its table name (purchase_bills, sales_invoices, …; registered as models arrive).
- * `balance_due = total − live allocations` joins this list with the allocations of P6.
+ * Posted invoices and bills keep amount_settled = Σ live allocations and balance_due = total − amount_settled, and no
+ * settling line is allocated beyond its amount (BR-020; P6.1-BE-02).
  */
 final class BooksIntegrity
 {
@@ -31,6 +32,8 @@ final class BooksIntegrity
             'stock quantity = movements' => $this->stockAgainstMovements($companyId, 'qty'),
             'stock value = movements' => $this->stockAgainstMovements($companyId, 'value'),
             'inventory ledgers = stock valuation' => $this->inventoryLedgers($companyId),
+            'document balances = total − allocations' => $this->settlements($companyId),
+            'opening balance adjustment = sum of openings' => $this->openingAdjustment($companyId),
         ];
     }
 
@@ -63,6 +66,46 @@ final class BooksIntegrity
             ->havingRaw('d <> c OR d <> e.total_debit OR c <> e.total_credit OR e.total_debit <> e.total_credit OR unposted > 0 OR COUNT(l.id) = 0')->get();
 
         return $rows->map(fn ($r) => "{$r->voucher_number}: header {$r->total_debit}/{$r->total_credit}, lines {$r->d}/{$r->c}".($r->unposted ? ", {$r->unposted} line(s) not marked posted" : ''))->all();
+    }
+
+    /**
+     * BR-028 / 06 §16: every opening_balance entry is one ledger against 3301, so 3301's posted balance must be the
+     * negative of the openings booked on all other ledgers (a stray manual line on 3301 shows here).
+     */
+    private function openingAdjustment(int $c): array
+    {
+        $adjust = DB::table('account_mappings')->where('company_id', $c)->where('mapping_key', 'opening_balance_adjustment')->value('ledger_id');
+        if (! $adjust) {
+            return [];
+        }
+        $onAdjust = DB::table('journal_lines')->where('company_id', $c)->where('ledger_id', $adjust)->where('is_posted', 1)->selectRaw('COALESCE(SUM(debit) - SUM(credit), 0) b')->value('b');
+        $openings = DB::table('journal_lines as l')->join('journal_entries as e', 'e.id', '=', 'l.journal_entry_id')->where('l.company_id', $c)->where('l.is_posted', 1)
+            ->where('l.ledger_id', '!=', $adjust)->where(fn ($w) => $w->where('e.entry_type', 'opening_balance')
+            ->orWhere(fn ($r) => $r->where('e.entry_type', 'reversal')->whereIn('e.reverses_entry_id', DB::table('journal_entries')->where('entry_type', 'opening_balance')->select('id'))))
+            ->selectRaw('COALESCE(SUM(l.debit) - SUM(l.credit), 0) b')->value('b');
+
+        return Money::of((string) $onAdjust)->plus((string) $openings)->isZero() ? [] : ["3301 balance {$onAdjust}, openings on other ledgers {$openings}"];
+    }
+
+    private function settlements(int $c): array
+    {
+        $out = [];
+        foreach (['sales_invoices' => 'sales_invoice_id', 'purchase_bills' => 'purchase_bill_id'] as $table => $col) {
+            $live = DB::table('bill_allocations')->whereNull('reversed_at')->groupBy($col)->selectRaw("{$col} doc, SUM(amount) used");
+            $bad = DB::table("{$table} as d")->where('d.company_id', $c)->where('d.status', 'posted')->leftJoinSub($live, 'a', 'a.doc', '=', 'd.id')
+                ->whereRaw('(d.amount_settled <> COALESCE(a.used, 0) OR d.balance_due <> d.total - d.amount_settled OR d.balance_due < 0)')
+                ->get(['d.number', 'd.total', 'd.amount_settled', 'd.balance_due', DB::raw('COALESCE(a.used, 0) used')]);
+            foreach ($bad as $d) {
+                $out[] = "{$d->number}: total {$d->total}, settled {$d->amount_settled}, balance {$d->balance_due}, live allocations {$d->used}";
+            }
+        }
+        $over = DB::table('bill_allocations as a')->join('journal_lines as l', 'l.id', '=', 'a.journal_line_id')->where('a.company_id', $c)->whereNull('a.reversed_at')
+            ->groupBy('a.journal_line_id', 'l.debit', 'l.credit')->havingRaw('SUM(a.amount) > GREATEST(l.debit, l.credit)')->pluck('a.journal_line_id');
+        foreach ($over as $id) {
+            $out[] = "journal line #{$id} is allocated beyond its amount";
+        }
+
+        return $out;
     }
 
     private function documentLinks(int $c): array

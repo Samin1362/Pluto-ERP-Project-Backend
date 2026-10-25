@@ -67,8 +67,8 @@ class CustomerWorkflowTest extends TestCase
             ->assertJsonStructure(['errors' => ['credit_limit']]);
         $this->assertProblem($this->req('POST', '/api/v1/parties', ['party_type' => 'customer', 'name' => 'X', 'mobile' => '01711458230', 'nickname' => 'x']), 422, 'validation_failed')
             ->assertJsonPath('errors.nickname.0', 'This field is not part of the API.');
-        $this->assertProblem($this->req('POST', '/api/v1/parties', ['party_type' => 'customer', 'name' => 'X', 'mobile' => '01711458230', 'opening_balance' => '1500.00']), 422, 'validation_failed')
-            ->assertJsonStructure(['errors' => ['opening_balance']]);
+        $this->assertProblem($this->req('POST', '/api/v1/parties', ['party_type' => 'customer', 'name' => 'X', 'mobile' => '01711458230', 'opening_balance' => '1500.123']), 422, 'validation_failed')
+            ->assertJsonStructure(['errors' => ['opening_balance']]); // openings are allowed since P6.1-BE-06; the shape is still checked
 
         // An international supplier has no Bangladeshi mobile (R-33).
         $this->req('POST', '/api/v1/parties', ['party_type' => 'supplier', 'name' => 'Guangzhou Packaging Co.', 'country_code' => 'cn', 'default_currency_code' => 'CNY'])
