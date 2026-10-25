@@ -5,6 +5,7 @@ namespace Tests\Feature\Contract;
 use App\Domain\Access\Totp;
 use App\Models\Company;
 use Database\Seeders\DemoTaxRuleSeeder;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Illuminate\Testing\TestResponse;
 use Opis\JsonSchema\Errors\ErrorFormatter;
@@ -240,6 +241,62 @@ class OpenApiConformanceTest extends TestCase
         $this->assertConforms($this->api('DELETE', "/api/v1/purchase-bills/{$id}", $t, $c), 'DELETE', '/purchase-bills/{id}');                 // 404
     }
 
+    public function test_sales_invoice_endpoints_match_the_contract(): void
+    {
+        $t = $this->login('owner@meghna.example');
+        $c = $this->company->id;
+        $key = fn () => ['Idempotency-Key' => (string) Str::uuid()];
+        $customer = $this->api('POST', '/api/v1/parties', $t, $c, ['party_type' => 'customer', 'name' => 'Karim Distributors', 'mobile' => '01711458230',
+            'credit_limit' => '100.00'], $key())->json('data.id');
+        $wh = $this->api('POST', '/api/v1/warehouses', $t, $c, ['code' => 'WH-1', 'name' => 'Main', 'branch_id' => \DB::table('branches')->where('company_id', $c)->value('id')], $key())->json('data.id');
+        $unit = \DB::table('units')->where('company_id', $c)->value('id');
+        $income = fn (string $code) => \DB::table('ledgers')->where('company_id', $c)->where('code', $code)->value('id');
+        $oil = $this->api('POST', '/api/v1/products', $t, $c, ['item_type' => 'product', 'name' => 'Oil', 'unit_id' => $unit, 'selling_price' => '940.00',
+            'income_ledger_id' => $income('4101')], $key())->json('data.id');
+        $trip = $this->api('POST', '/api/v1/products', $t, $c, ['item_type' => 'service', 'name' => 'Delivery', 'unit_id' => $unit, 'selling_price' => '150.00',
+            'income_ledger_id' => $income('4201')], $key())->json('data.id');
+        $body = ['party_id' => $customer, 'invoice_date' => now('Asia/Dhaka')->toDateString(), 'warehouse_id' => $wh,
+            'lines' => [['product_id' => $oil, 'quantity' => '24', 'discount_pct' => '2'], ['product_id' => $trip, 'quantity' => '1']]];
+        $this->assertConforms($this->api('POST', '/api/v1/sales-invoices/calculate', $t, $c, $body), 'POST', '/sales-invoices/calculate');   // LOW_STOCK, credit limit
+        $this->assertConforms($this->api('POST', '/api/v1/sales-invoices/calculate', $t, $c, ['lines' => []]), 'POST', '/sales-invoices/calculate'); // 422
+        $this->assertConforms($this->api('POST', '/api/v1/sales-invoices/calculate', $this->login('store@meghna.example'), $c, $body), 'POST', '/sales-invoices/calculate'); // 403
+
+        $inv = $this->api('POST', '/api/v1/sales-invoices', $t, $c, $body, $key());
+        $this->assertConforms($inv, 'POST', '/sales-invoices');
+        $this->assertConforms($this->api('POST', '/api/v1/sales-invoices', $t, $c, ['lines' => []], $key()), 'POST', '/sales-invoices');         // 422
+        $id = $inv->json('data.id');
+        $this->assertConforms($this->api('GET', "/api/v1/sales-invoices/{$id}", $t, $c), 'GET', '/sales-invoices/{id}');
+        $this->assertConforms($this->api('GET', '/api/v1/sales-invoices/999999', $t, $c), 'GET', '/sales-invoices/{id}');                      // 404
+        $this->assertConforms($this->api('PUT', "/api/v1/sales-invoices/{$id}", $t, $c, $body), 'PUT', '/sales-invoices/{id}');                 // 428
+        $this->assertConforms($this->api('PUT', "/api/v1/sales-invoices/{$id}", $t, $c, $body, ['If-Match' => 'W/"1"']), 'PUT', '/sales-invoices/{id}');
+        $this->assertConforms($this->api('PUT', "/api/v1/sales-invoices/{$id}", $t, $c, $body, ['If-Match' => 'W/"1"']), 'PUT', '/sales-invoices/{id}');  // 409
+        $this->assertConforms($this->api('GET', '/api/v1/sales-invoices?q=Karim&status=draft&sort=-total&per_page=5', $t, $c), 'GET', '/sales-invoices');
+        $this->assertConforms($this->api('GET', '/api/v1/sales-invoices?status=open', $t, $c), 'GET', '/sales-invoices');                      // 422
+        $this->assertConforms($this->api('DELETE', "/api/v1/sales-invoices/{$id}", $t, $c), 'DELETE', '/sales-invoices/{id}');
+        $this->assertConforms($this->api('DELETE', "/api/v1/sales-invoices/{$id}", $t, $c), 'DELETE', '/sales-invoices/{id}');                  // 404
+
+        $short = $this->api('POST', '/api/v1/sales-invoices', $t, $c, $body, $key())->json('data.id');
+        $this->assertConforms($this->api('POST', "/api/v1/sales-invoices/{$short}/post", $t, $c, [], $key()), 'POST', '/sales-invoices/{id}/post');      // 422 insufficient_stock
+        $service = $this->api('POST', '/api/v1/sales-invoices', $t, $c, ['lines' => [['product_id' => $trip, 'quantity' => '2']]] + $body, $key())->json('data.id');
+        $this->assertConforms($this->api('POST', "/api/v1/sales-invoices/{$service}/post", $t, $c, ['acknowledge_warnings' => ['CREDIT_LIMIT_EXCEEDED']], $key()), 'POST', '/sales-invoices/{id}/post');
+        $this->assertConforms($this->api('POST', "/api/v1/sales-invoices/{$service}/post", $t, $c, [], $key()), 'POST', '/sales-invoices/{id}/post');    // 409 already_posted
+        $this->assertConforms($this->api('GET', "/api/v1/sales-invoices/{$service}", $t, $c), 'GET', '/sales-invoices/{id}');                             // posted, journal lines
+        Mail::fake();
+        $this->assertConforms($this->api('POST', "/api/v1/sales-invoices/{$service}/send", $t, $c, ['to' => ['a@karim.example']], $key()), 'POST', '/sales-invoices/{id}/send'); // 202
+        $this->assertConforms($this->api('POST', "/api/v1/sales-invoices/{$service}/send", $t, $c, ['to' => ['nope']], $key()), 'POST', '/sales-invoices/{id}/send');         // 422
+        $this->assertConforms($this->api('GET', "/api/v1/sales-invoices/{$service}/pdf?variant=receipt", $t, $c), 'GET', '/sales-invoices/{id}/pdf');                       // 422
+
+        $this->assertConforms($this->api('PATCH', "/api/v1/sales-invoices/{$service}/delivery", $t, $c, ['challan_no' => 'DC-1']), 'PATCH', '/sales-invoices/{id}/delivery');  // 428
+        $this->assertConforms($this->api('PATCH', "/api/v1/sales-invoices/{$service}/delivery", $t, $c, ['challan_no' => 'DC-1', 'delivered_at' => '2026-10-24T15:30:00+06:00'],
+            ['If-Match' => 'W/"2"']), 'PATCH', '/sales-invoices/{id}/delivery');
+        $this->assertConforms($this->api('PATCH', "/api/v1/sales-invoices/{$service}/delivery", $t, $c, ['colour' => 'red'], ['If-Match' => 'W/"3"']), 'PATCH', '/sales-invoices/{id}/delivery'); // 422
+        $this->assertConforms($this->api('POST', '/api/v1/sales-invoices/bulk-post', $t, $c, ['ids' => [$short, $service]], $key()), 'POST', '/sales-invoices/bulk-post');
+        $this->assertConforms($this->api('POST', '/api/v1/sales-invoices/bulk-post', $t, $c, ['ids' => []], $key()), 'POST', '/sales-invoices/bulk-post');            // 422
+        $this->assertConforms($this->api('POST', "/api/v1/sales-invoices/{$service}/cancel", $t, $c, [], $key()), 'POST', '/sales-invoices/{id}/cancel');             // 422 reason
+        $this->assertConforms($this->api('POST', "/api/v1/sales-invoices/{$service}/cancel", $t, $c, ['reason' => 'duplicate'], $key()), 'POST', '/sales-invoices/{id}/cancel');
+        $this->assertConforms($this->api('POST', "/api/v1/sales-invoices/{$service}/cancel", $t, $c, ['reason' => 'duplicate'], $key()), 'POST', '/sales-invoices/{id}/cancel'); // 409
+    }
+
     public function test_the_validator_rejects_bodies_that_break_the_contract(): void
     {
         $t = $this->login('owner@meghna.example');
@@ -274,7 +331,7 @@ class OpenApiConformanceTest extends TestCase
         $this->assertNotNull($op, "{$method} {$pathKey} is not in the contract");
         $status = (string) $r->status();
         $this->assertTrue(isset($op->responses->{$status}), "{$method} {$path} returned {$status}, which the contract does not declare: ".$r->getContent());
-        if ($status === '204') {
+        if ($status === '204' || ! isset($op->responses->{$status}->content)) { // 204, or e.g. 202 accepted without a body
             $this->assertSame('', $r->getContent());
 
             return;

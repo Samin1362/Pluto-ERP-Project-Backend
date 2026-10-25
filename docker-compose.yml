@@ -145,9 +145,10 @@ services:
 
   # Public https://<random>.trycloudflare.com URL for nginx (backlog P0.4-BE-01). Only with `--profile live`;
   # read the URL with ./scripts/tunnel-url.sh. The URL changes only when this container restarts.
+  # HTTP/2 over TCP, not QUIC: QUIC (UDP) connections kept dropping and stopped re-registering.
   cloudflared:
     image: cloudflare/cloudflared:2025.10.0
-    command: ["tunnel", "--no-autoupdate", "--url", "http://nginx:80"]
+    command: ["tunnel", "--no-autoupdate", "--protocol", "http2", "--url", "http://nginx:80"]
     depends_on:
       nginx:
         condition: service_healthy

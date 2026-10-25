@@ -14,6 +14,7 @@ use App\Http\Controllers\Api\V1\Parties\LookupController;
 use App\Http\Controllers\Api\V1\Parties\PartyController;
 use App\Http\Controllers\Api\V1\Platform\PlatformLookupController;
 use App\Http\Controllers\Api\V1\Purchases\PurchaseBillController;
+use App\Http\Controllers\Api\V1\Sales\SalesInvoiceController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -85,5 +86,19 @@ Route::middleware(['jwt', 'throttle:api-user'])->group(function () {
         Route::post('purchase-bills/{id}/post', [PurchaseBillController::class, 'post'])->whereNumber('id')->middleware(['perm:purchases.create', 'idempotent']);
         Route::post('purchase-bills/{id}/cancel', [PurchaseBillController::class, 'cancel'])->whereNumber('id')->middleware(['perm:purchases.edit', 'idempotent']);
         Route::delete('purchase-bills/{id}', [PurchaseBillController::class, 'destroy'])->whereNumber('id')->middleware('perm:purchases.delete');
+
+        // Sales invoices (P5.1).
+        Route::post('sales-invoices/calculate', [SalesInvoiceController::class, 'calculate'])->middleware('perm:sales.create');
+        Route::get('sales-invoices', [SalesInvoiceController::class, 'index'])->middleware('perm:sales.view');
+        Route::post('sales-invoices', [SalesInvoiceController::class, 'store'])->middleware(['perm:sales.create', 'idempotent']);
+        Route::get('sales-invoices/{id}', [SalesInvoiceController::class, 'show'])->whereNumber('id')->middleware('perm:sales.view');
+        Route::put('sales-invoices/{id}', [SalesInvoiceController::class, 'update'])->whereNumber('id')->middleware('perm:sales.edit');
+        Route::post('sales-invoices/{id}/post', [SalesInvoiceController::class, 'post'])->whereNumber('id')->middleware(['perm:sales.create', 'idempotent']);
+        Route::post('sales-invoices/bulk-post', [SalesInvoiceController::class, 'bulkPost'])->middleware(['perm:sales.create', 'idempotent']);
+        Route::post('sales-invoices/{id}/cancel', [SalesInvoiceController::class, 'cancel'])->whereNumber('id')->middleware(['perm:sales.edit', 'idempotent']);
+        Route::get('sales-invoices/{id}/pdf', [SalesInvoiceController::class, 'pdf'])->whereNumber('id')->middleware('perm:sales.view');
+        Route::post('sales-invoices/{id}/send', [SalesInvoiceController::class, 'send'])->whereNumber('id')->middleware(['perm:sales.edit', 'idempotent']);
+        Route::patch('sales-invoices/{id}/delivery', [SalesInvoiceController::class, 'delivery'])->whereNumber('id')->middleware('perm:sales.edit');
+        Route::delete('sales-invoices/{id}', [SalesInvoiceController::class, 'destroy'])->whereNumber('id')->middleware('perm:sales.delete');
     });
 });

@@ -7,10 +7,13 @@ use App\Domain\Accounting\BooksIntegrity;
 use App\Domain\Inventory\ProductService;
 use App\Domain\Inventory\WarehouseService;
 use App\Domain\Parties\PartyService;
+use App\Domain\Purchases\PurchaseBillPostingService;
 use App\Domain\Purchases\PurchaseBillService;
+use App\Domain\Sales\SalesInvoiceService;
 use App\Models\Company;
 use App\Models\JournalEntry;
 use App\Models\PurchaseBill;
+use App\Models\SalesInvoice;
 use App\Models\StockMovement;
 use App\Models\User;
 use App\Support\CurrentCompany;
@@ -24,10 +27,10 @@ use Illuminate\Support\Facades\Hash;
 use Symfony\Component\Process\Process;
 
 /**
- * Concurrency and failure tests with real parallel processes (09 §9; TC-CON-003, TC-CON-004, TC-CON-005; backlog
- * P4.3-BE-04). The children must see committed rows, so this class commits for real and truncates afterwards
+ * Concurrency and failure tests with real parallel processes (09 §9; TC-CON-001, TC-CON-003, TC-CON-004, TC-CON-005;
+ * backlog P4.3-BE-04, P5.1-BE-03). The children must see committed rows, so this class commits for real and truncates afterwards
  * (DatabaseTruncation, not the rolled-back transaction of the other feature tests). Children run
- * tests/Concurrency/post-bill.php against the same test database and start together on a barrier file.
+ * tests/Concurrency/post-bill.php (or post-invoice.php) against the same test database and start together on a barrier file.
  */
 class PostingConcurrencyTest extends BaseTestCase
 {
@@ -79,14 +82,14 @@ class PostingConcurrencyTest extends BaseTestCase
             'lines' => array_map(fn ($id) => ['product_id' => $id, 'quantity' => '10', 'unit_cost' => '100.00'], $productIds)])->id;
     }
 
-    /** Starts one child per bill, releases them together, and returns their JSON results. */
-    private function postInParallel(array $billIds): array
+    /** Starts one child per document, releases them together, and returns their JSON results. */
+    private function postInParallel(array $billIds, string $script = 'post-bill.php'): array
     {
         $barrier = tempnam(sys_get_temp_dir(), 'pluto-barrier-');
         unlink($barrier);
         $procs = [];
         foreach ($billIds as $id) {
-            $p = new Process([PHP_BINARY, base_path('tests/Concurrency/post-bill.php'), (string) $this->company->id, (string) $this->user->id, (string) $id, $barrier],
+            $p = new Process([PHP_BINARY, base_path("tests/Concurrency/{$script}"), (string) $this->company->id, (string) $this->user->id, (string) $id, $barrier],
                 base_path(), ['DB_DATABASE' => config('database.connections.mysql.database'), 'APP_ENV' => 'testing'], null, 120);
             $p->start();
             $procs[] = $p;
@@ -119,6 +122,23 @@ class PostingConcurrencyTest extends BaseTestCase
         app(CurrentCompany::class)->set($this->company, null);
         $this->assertSame(10, PurchaseBill::where('status', 'posted')->count());
         $this->assertSame('100.000', DB::table('stock_balances')->where('product_id', $a)->value('qty_on_hand'), '10 bills × 10');
+        $this->assertBooks();
+    }
+
+    public function test_tc_con_001_two_invoices_for_the_last_10_units_one_posts(): void
+    {
+        [$oil] = $this->products;
+        app(PurchaseBillPostingService::class)->post(PurchaseBill::findOrFail($this->bill('STOCK-1', [$oil]))); // 10 on hand
+        $customer = app(PartyService::class)->create(['party_type' => 'customer', 'name' => 'Karim Distributors', 'mobile' => '01711458230', 'default_currency_code' => 'BDT'])['party']->id;
+        $invoice = fn () => app(SalesInvoiceService::class)->createDraft(['party_id' => $customer, 'invoice_date' => CarbonImmutable::now('Asia/Dhaka')->toDateString(),
+            'warehouse_id' => $this->warehouse, 'lines' => [['product_id' => $oil, 'quantity' => '10']]])->id;
+        $results = $this->postInParallel([$invoice(), $invoice()], 'post-invoice.php');
+        $codes = array_map(fn ($r) => $r['ok'] ? 'posted' : $r['code'], $results);
+        sort($codes);
+        $this->assertSame(['insufficient_stock', 'posted'], $codes, json_encode($results));
+        app(CurrentCompany::class)->set($this->company, null);
+        $this->assertSame(1, SalesInvoice::where('status', 'posted')->count());
+        $this->assertSame('0.000', DB::table('stock_balances')->where('product_id', $oil)->value('qty_on_hand'), 'never negative');
         $this->assertBooks();
     }
 
