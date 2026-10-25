@@ -17,7 +17,7 @@ use Illuminate\Http\JsonResponse;
 class StockMovementController extends Controller
 {
     /** Source morph alias → its table's number column (documents as they arrive: bills now, invoices in P5 …). */
-    private const SOURCES = ['purchase_bills' => 'number'];
+    private const SOURCES = ['purchase_bills' => 'number', 'sales_invoices' => 'number'];
 
     public function __construct(private readonly CurrentCompany $current, private readonly PermissionResolver $permissions) {}
 
