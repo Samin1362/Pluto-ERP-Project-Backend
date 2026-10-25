@@ -15,6 +15,7 @@ use App\Http\Requests\Purchases\PurchaseBillRequest;
 use App\Http\Resources\PurchaseBillResource;
 use App\Models\PurchaseBill;
 use App\Queries\PurchaseBillQuery;
+use App\Support\Problem\ApiProblem;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -82,6 +83,10 @@ class PurchaseBillController extends Controller
     /** POST /purchase-bills/{id}/post (P4.3-BE-01): stock in, average cost, journal, supplier balance. */
     public function post(PostRequest $request, int $id, PurchaseBillPostingService $posting): JsonResponse
     {
+        if ($request->has('receipt')) { // a cash purchase is a supplier payment (P8), not part of posting the bill
+            throw new ApiProblem('validation_failed', errors: ['receipt' => ['Only a sales invoice takes a receipt when posting']]);
+        }
+
         return $this->respond($request, $posting->post(PurchaseBill::findOrFail($id), (bool) $request->validated('confirm_backdated', false)));
     }
 

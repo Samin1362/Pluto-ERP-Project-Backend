@@ -6,6 +6,7 @@ use App\Domain\Accounting\AccountMapper;
 use App\Domain\Accounting\JournalBuilder;
 use App\Domain\Accounting\PostingService;
 use App\Domain\Inventory\StockService;
+use App\Domain\Shared\Money;
 use App\Domain\Shared\Quantity;
 use App\Models\AccountingPeriod;
 use App\Models\AuditLog;
@@ -159,8 +160,20 @@ class PurchaseBillCancelTest extends TestCase
         $this->assertSame(1, JournalEntry::where('entry_type', 'cancellation')->count());
     }
 
+    /** BR-024: an advance paid to the supplier and applied to the bill is free again (supplier payment vouchers themselves arrive in P8). */
     public function test_allocated_payments_become_advances(): void
     {
-        $this->markTestIncomplete('BR-024: allocations turn into supplier advances once supplier payments and bill_allocations exist (P8); the hook is PurchaseBillCancellationService::releaseAllocations.');
+        $bill = $this->postedBill('10', '800');
+        $this->useBooks();
+        $cash = DB::table('ledgers')->where('company_id', $this->books->id)->where('code', '1101-01')->value('id');
+        $entry = app(PostingService::class)->persist((new JournalBuilder)->debit($this->supplier->ledger_id, Money::of('3000'))
+            ->credit($cash, Money::of('3000')), null, 'journal', CarbonImmutable::now('Asia/Dhaka'), null, 'Advance to supplier');
+        $line = $entry->lines->firstWhere('ledger_id', $this->supplier->ledger_id)->id;
+        $this->req('POST', '/api/v1/allocations', ['journal_line_id' => $line, 'document_type' => 'purchase_bill', 'document_id' => $bill['id'], 'amount' => '3000.00'])->assertCreated();
+        $this->assertSame('part_paid', PurchaseBill::findOrFail($bill['id'])->payment_status);
+
+        $this->cancel($bill['id'])->assertOk()->assertJsonPath('data.payment_status', 'unpaid')->assertJsonPath('data.amount_settled', '0.00')
+            ->assertJsonPath('data.allocations.0.reversed', true);
+        $this->req('GET', "/api/v1/parties/{$this->supplier->id}/open-documents")->assertJsonPath('data.documents', [])->assertJsonPath('data.credits.0.unapplied', '3000.00');
     }
 }

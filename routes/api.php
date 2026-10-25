@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\V1\Accounting\LedgerController;
 use App\Http\Controllers\Api\V1\Auth\AuthController;
+use App\Http\Controllers\Api\V1\Banking\MoneyAccountController;
 use App\Http\Controllers\Api\V1\Inventory\ProductCategoryController;
 use App\Http\Controllers\Api\V1\Inventory\ProductController;
 use App\Http\Controllers\Api\V1\Inventory\StockGroupController;
@@ -11,10 +12,13 @@ use App\Http\Controllers\Api\V1\Inventory\WarehouseController;
 use App\Http\Controllers\Api\V1\Me\TwoFactorController;
 use App\Http\Controllers\Api\V1\MeController;
 use App\Http\Controllers\Api\V1\Parties\LookupController;
+use App\Http\Controllers\Api\V1\Parties\PartyAccountController;
 use App\Http\Controllers\Api\V1\Parties\PartyController;
 use App\Http\Controllers\Api\V1\Platform\PlatformLookupController;
 use App\Http\Controllers\Api\V1\Purchases\PurchaseBillController;
 use App\Http\Controllers\Api\V1\Sales\SalesInvoiceController;
+use App\Http\Controllers\Api\V1\Settlements\AllocationController;
+use App\Http\Controllers\Api\V1\Settlements\CustomerReceiptController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -50,6 +54,13 @@ Route::middleware(['jwt', 'throttle:api-user'])->group(function () {
         Route::get('parties', [PartyController::class, 'index'])->middleware('perm:parties.view');
         Route::post('parties', [PartyController::class, 'store'])->middleware(['perm:parties.create', 'idempotent']);
         Route::post('parties/bulk-deactivate', [PartyController::class, 'bulkDeactivate'])->middleware('perm:parties.edit');
+        // Party accounts (P6.1-BE-05). parties/outstanding sits before parties/{id}.
+        Route::get('parties/outstanding', [PartyAccountController::class, 'outstanding'])->name('parties.outstanding')->middleware('perm:parties.view');
+        Route::post('parties/statements/send', [PartyAccountController::class, 'send'])->middleware(['perm:parties.view', 'idempotent']);
+        Route::get('parties/{id}/ledger', [PartyAccountController::class, 'ledger'])->whereNumber('id')->name('parties.ledger')->middleware('perm:parties.view');
+        Route::get('parties/{id}/transactions', [PartyAccountController::class, 'transactions'])->whereNumber('id')->name('parties.transactions')->middleware('perm:parties.view');
+        Route::get('parties/{id}/statement', [PartyAccountController::class, 'statement'])->whereNumber('id')->name('parties.statement')->middleware('perm:parties.view');
+        Route::get('parties/{id}/statement/pdf', [PartyAccountController::class, 'statementPdf'])->whereNumber('id')->name('parties.statement.pdf')->middleware('perm:parties.view');
         Route::get('parties/{id}', [PartyController::class, 'show'])->whereNumber('id')->middleware('perm:parties.view');
         Route::patch('parties/{id}', [PartyController::class, 'update'])->whereNumber('id')->middleware('perm:parties.edit');
         Route::post('parties/{id}/deactivate', [PartyController::class, 'deactivate'])->whereNumber('id')->middleware('perm:parties.edit');
@@ -86,6 +97,23 @@ Route::middleware(['jwt', 'throttle:api-user'])->group(function () {
         Route::post('purchase-bills/{id}/post', [PurchaseBillController::class, 'post'])->whereNumber('id')->middleware(['perm:purchases.create', 'idempotent']);
         Route::post('purchase-bills/{id}/cancel', [PurchaseBillController::class, 'cancel'])->whereNumber('id')->middleware(['perm:purchases.edit', 'idempotent']);
         Route::delete('purchase-bills/{id}', [PurchaseBillController::class, 'destroy'])->whereNumber('id')->middleware('perm:purchases.delete');
+
+        // Money accounts (P6.1). The list is open to every member (pickers; masked without banking.view).
+        Route::get('money-accounts', [MoneyAccountController::class, 'index']);
+        Route::post('money-accounts', [MoneyAccountController::class, 'store'])->middleware(['perm:banking.create', 'idempotent']);
+        Route::get('money-accounts/{id}', [MoneyAccountController::class, 'show'])->whereNumber('id')->middleware('perm:banking.view');
+        Route::patch('money-accounts/{id}', [MoneyAccountController::class, 'update'])->whereNumber('id')->middleware('perm:banking.edit');
+
+        // Allocations (P6.1, R-08): permission follows the party (sales.* or purchases.*), checked in the controller.
+        Route::post('allocations', [AllocationController::class, 'store'])->middleware('idempotent');
+        Route::delete('allocations/{id}', [AllocationController::class, 'destroy'])->whereNumber('id');
+        Route::get('parties/{id}/open-documents', [AllocationController::class, 'openDocuments'])->whereNumber('id')->middleware('perm:parties.view');
+
+        // Customer receipts (P6.1).
+        Route::get('customer-receipts', [CustomerReceiptController::class, 'index'])->middleware('perm:sales.view');
+        Route::post('customer-receipts', [CustomerReceiptController::class, 'store'])->middleware(['perm:sales.create', 'idempotent']);
+        Route::get('customer-receipts/{id}', [CustomerReceiptController::class, 'show'])->whereNumber('id')->middleware('perm:sales.view');
+        Route::get('customer-receipts/{id}/pdf', [CustomerReceiptController::class, 'pdf'])->whereNumber('id')->middleware('perm:sales.view');
 
         // Sales invoices (P5.1).
         Route::post('sales-invoices/calculate', [SalesInvoiceController::class, 'calculate'])->middleware('perm:sales.create');

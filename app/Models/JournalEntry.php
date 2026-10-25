@@ -32,6 +32,11 @@ class JournalEntry extends Model
         return $this->hasMany(JournalLine::class)->orderBy('line_no');
     }
 
+    public function createdBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
     public function period(): BelongsTo
     {
         return $this->belongsTo(AccountingPeriod::class, 'accounting_period_id');

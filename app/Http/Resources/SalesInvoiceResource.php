@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Domain\Settlements\AllocationService;
 use App\Domain\Shared\AmountInWords;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
@@ -50,7 +51,7 @@ class SalesInvoiceResource extends JsonResource
             ])->all() : [],
             'amount_settled' => (string) $inv->amount_settled,
             'balance_due' => (string) $inv->balance_due,
-            'allocations' => [],
+            'allocations' => $this->summary ? [] : AllocationService::forDocument('sales_invoice_id', $inv->id),
             'journal' => $this->summary ? [] : $this->journal($inv->journal_entry_id),
             'delivery' => $delivery,
             'posted_at' => $inv->posted_at?->toIso8601String(),

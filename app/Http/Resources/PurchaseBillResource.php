@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Domain\Settlements\AllocationService;
 use App\Domain\Shared\AmountInWords;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
@@ -50,7 +51,7 @@ class PurchaseBillResource extends JsonResource
             ])->all() : [],
             'amount_settled' => (string) $b->amount_settled,
             'balance_due' => (string) $b->balance_due,
-            'allocations' => [],
+            'allocations' => $this->summary ? [] : AllocationService::forDocument('purchase_bill_id', $b->id),
             'journal' => $this->summary ? [] : $this->journal($b->journal_entry_id),
             'posted_at' => $b->posted_at?->toIso8601String(),
             'subtotal' => (string) $b->subtotal,

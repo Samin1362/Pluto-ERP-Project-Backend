@@ -22,8 +22,10 @@ final class PartyQuery
         $cid = $this->current->id();
         $balance = DB::table('journal_lines')->selectRaw('CAST(COALESCE(SUM(debit) - SUM(credit), 0) AS DECIMAL(18,2))')
             ->whereColumn('journal_lines.ledger_id', 'parties.ledger_id')->where('journal_lines.company_id', $cid)->where('journal_lines.is_posted', true);
-        $entries = DB::table('journal_lines')->selectRaw('COUNT(*) > 0')
-            ->whereColumn('journal_lines.ledger_id', 'parties.ledger_id')->where('journal_lines.company_id', $cid);
+        // Locks the opening balance (BR-028): any entry on the ledger besides the party's own opening entries.
+        $entries = DB::table('journal_lines')->join('journal_entries as je', 'je.id', '=', 'journal_lines.journal_entry_id')->selectRaw('COUNT(*) > 0')
+            ->whereColumn('journal_lines.ledger_id', 'parties.ledger_id')->where('journal_lines.company_id', $cid)
+            ->where(fn ($w) => $w->whereNotIn('je.entry_type', ['opening_balance', 'reversal'])->orWhere('je.source_type', '!=', 'parties')->orWhereNull('je.source_type'));
         $opening = DB::table('journal_lines')->join('journal_entries', 'journal_entries.id', '=', 'journal_lines.journal_entry_id')
             ->selectRaw('CAST(COALESCE(SUM(journal_lines.debit) - SUM(journal_lines.credit), 0) AS DECIMAL(18,2))')
             ->whereColumn('journal_lines.ledger_id', 'parties.ledger_id')->where('journal_lines.company_id', $cid)

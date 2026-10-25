@@ -77,7 +77,7 @@ class PartyRequest extends StrictRequest
             'tax_registration_no' => ['nullable', 'string', 'max:40'],
             'port_of_loading' => ['nullable', 'string', 'max:120'],
             'notes' => ['nullable', 'string', 'max:2000'],
-            'opening_balance' => ['sometimes', 'string', 'regex:'.self::MONEY, 'in:0,0.0,0.00'],
+            'opening_balance' => ['sometimes', 'string', 'regex:'.self::MONEY],
             'opening_side' => ['sometimes', Rule::in(['dr', 'cr'])],
             'bank_accounts' => ['sometimes', 'array', 'max:5'],
             'bank_accounts.*' => ['array:id,bank_name,branch,account_name,account_number,routing_number,swift_code,is_default'],
@@ -121,7 +121,7 @@ class PartyRequest extends StrictRequest
             'mobile.regex' => 'Mobile numbers have 11 digits starting 01',
             'email.email' => 'Enter a valid e-mail address',
             'credit_limit.regex' => 'Enter an amount with up to 2 decimals, e.g. "500000.00"',
-            'opening_balance.in' => 'Opening balances are posted by the accounting module, which is not part of this release; leave it at 0.00',
+            'opening_balance.regex' => 'Enter an amount with up to 2 decimals, e.g. "185000.00"',
             'party_group_id.exists' => 'Choose a group of this company and party type',
             'payment_term_id.exists' => 'Choose one of this company\'s payment terms',
         ];
