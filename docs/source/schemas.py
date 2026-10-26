@@ -268,7 +268,7 @@ s("RecurringTemplateInput", "Edit a recurring entry.", frequency="enum:weekly|mo
 s("AccountTree", "Chart of accounts tree.", as_of="date!", nodes="[ref:AccountNode]!", total_debit="money!", total_credit="money!", balanced="bool!")
 s("AccountNode", "Group or ledger node.", kind="enum:primary|group|ledger!", id="id!", code="str!", name="str!", nature="str!", balance="money!", balance_side="enum:dr|cr!", note="str?", children="[ref:AccountNode]")
 s("AccountGroup", "Account group.", id="id!", code="str!", name="str!", parent_id="id?", nature="str!", normal_balance="str!", report_section="str!", cash_flow_category="str?", is_system="bool!",
-  balance="money!", children="[obj]", version="int!")
+  used_in_cash_vouchers="bool", sort_order="int", balance="money!", balance_side="enum:dr|cr", children="[ref:AccountNode]", version="int!")
 s("AccountGroupInput", "Create or edit a group.", code="str:20!", name="str:120!", parent_id="id!", cash_flow_category="enum:operating|investing|financing|cash?", sort_order="int", used_in_cash_vouchers="bool")
 s("Ledger", "Ledger. opening_balance, opening_side, balance and balance_side are present only for callers with accounting.view (pickers never see balances, R-26).", id="id!", code="str!", name="str!", account_group_id="id!", group_path="[str]!", nature="str!", normal_balance="str!", ledger_kind="str!", description="str?",
   track_bills="bool!", show_in_cash_vouchers="bool!", is_system="bool!", is_active="bool!", has_entries="bool!", opening_balance="money", opening_side="enum:dr|cr", balance="money",

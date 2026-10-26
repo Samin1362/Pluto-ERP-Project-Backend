@@ -10035,8 +10035,11 @@ Account group.
 | `report_section` | `str` | yes |
 | `cash_flow_category` | `str \| null` | no |
 | `is_system` | `bool` | yes |
+| `used_in_cash_vouchers` | `bool` | no |
+| `sort_order` | `int` | no |
 | `balance` | `money` | yes |
-| `children` | `[obj]` | no |
+| `balance_side` | `enum:dr\|cr` | no |
+| `children` | `[ref:AccountNode]` | no |
 | `version` | `int` | yes |
 
 <a id="schema-accountgroupinput"></a>
@@ -12471,6 +12474,7 @@ View permission `lc.create`. **Loads:** nothing of its own (host page data).
 | All company-scoped endpoints | May return 503 `company_maintenance` with Retry-After while that company is restored from a backup (11 §8); previously promised in operations but missing from the contract. |
 | GET /backups/{id}/download | Permission `settings.restore` (Owner) instead of `settings.backup`; an Owner-only action on K15, no longer a page load (R-11). |
 | Database operations (second pass) | Corrected derived writes: bulk post now posts like the single post; 13 system-entry postings lock number_sequences for the SJ number (R-06); voucher post updates rather than inserts its lines; landed cost updates stock_balances (R-02); allocations create no journal lines; quote/PO convert create the draft document. Rule A23 now enforces these invariants. |
+| AccountGroup schema | Adds `used_in_cash_vouchers` and `sort_order` (accepted by AccountGroupInput but not returned, so H3 could not prefill its edit form) and `balance_side` (the balance is an amount, like AccountNode); `children` are AccountNode items (P7.1-BE-01, 25 Oct 2026). Additive. |
 | Dashboard lenses A2–A8 | Load only `GET /dashboard/lenses/{lens}`; the overlapping report and list endpoints were removed from their page lists. |
 
 ### 12.5 Overlaps kept on purpose

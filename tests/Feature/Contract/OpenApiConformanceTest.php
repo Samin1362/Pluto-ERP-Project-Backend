@@ -9,6 +9,7 @@ use App\Domain\Shared\Money;
 use App\Models\Company;
 use App\Support\CurrentCompany;
 use Database\Seeders\DemoTaxRuleSeeder;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Illuminate\Testing\TestResponse;
@@ -318,6 +319,53 @@ class OpenApiConformanceTest extends TestCase
         $this->assertConforms($this->api('PATCH', "/api/v1/money-accounts/{$id}", $t, $c, ['name' => 'Sonali current'], ['If-Match' => 'W/"1"']), 'PATCH', '/money-accounts/{id}');
         $this->assertConforms($this->api('PATCH', "/api/v1/money-accounts/{$id}", $t, $c, ['name' => 'Again'], ['If-Match' => 'W/"1"']), 'PATCH', '/money-accounts/{id}'); // 409
         $this->assertConforms($this->api('GET', "/api/v1/money-accounts/{$id}", $this->login('store@meghna.example'), $c), 'GET', '/money-accounts/{id}'); // 403
+    }
+
+    public function test_account_group_endpoints_match_the_contract(): void
+    {
+        $t = $this->login('owner@meghna.example');
+        $c = $this->company->id;
+        $parent = (int) DB::table('account_groups')->where('company_id', $c)->where('code', '61')->value('id');
+        $this->assertConforms($this->api('GET', '/api/v1/account-groups', $t, $c), 'GET', '/account-groups');
+        $this->assertConforms($this->api('GET', '/api/v1/account-groups?zero=maybe', $t, $c), 'GET', '/account-groups');                                   // 422
+        $a = $this->api('POST', '/api/v1/account-groups', $t, $c, ['code' => '6103', 'name' => 'Office running costs', 'parent_id' => $parent]);
+        $this->assertConforms($a, 'POST', '/account-groups');
+        $this->assertConforms($this->api('POST', '/api/v1/account-groups', $t, $c, ['code' => '6103']), 'POST', '/account-groups');                          // 422
+        $id = $a->json('data.id');
+        $this->assertConforms($this->api('GET', "/api/v1/account-groups/{$parent}", $t, $c), 'GET', '/account-groups/{id}');
+        $this->assertConforms($this->api('GET', '/api/v1/account-groups/999999', $t, $c), 'GET', '/account-groups/{id}');                                 // 404
+        $this->assertConforms($this->api('PATCH', "/api/v1/account-groups/{$id}", $t, $c, ['name' => 'Office costs']), 'PATCH', '/account-groups/{id}');      // 428
+        $this->assertConforms($this->api('PATCH', "/api/v1/account-groups/{$id}", $t, $c, ['name' => 'Office costs'], ['If-Match' => 'W/"1"']), 'PATCH', '/account-groups/{id}');
+        $this->assertConforms($this->api('PATCH', "/api/v1/account-groups/{$id}", $t, $c, ['name' => 'Again'], ['If-Match' => 'W/"1"']), 'PATCH', '/account-groups/{id}'); // 409
+        $income = (int) DB::table('account_groups')->where('company_id', $c)->where('code', '41')->value('id');
+        $this->assertConforms($this->api('PATCH', "/api/v1/account-groups/{$id}", $t, $c, ['parent_id' => $income], ['If-Match' => 'W/"2"']), 'PATCH', '/account-groups/{id}'); // 422 nature
+        $this->assertConforms($this->api('GET', '/api/v1/account-groups', $this->login('store@meghna.example'), $c), 'GET', '/account-groups');            // 403
+    }
+
+    public function test_ledger_management_endpoints_match_the_contract(): void
+    {
+        $t = $this->login('owner@meghna.example');
+        $c = $this->company->id;
+        $key = fn () => ['Idempotency-Key' => (string) Str::uuid()];
+        $group = (int) DB::table('account_groups')->where('company_id', $c)->where('code', '61')->value('id');
+        $a = $this->api('POST', '/api/v1/ledgers', $t, $c, ['name' => 'Generator fuel', 'account_group_id' => $group, 'opening_balance' => '500.00', 'opening_side' => 'dr'], $key());
+        $this->assertConforms($a, 'POST', '/ledgers');
+        $this->assertConforms($this->api('POST', '/api/v1/ledgers', $t, $c, ['name' => 'X'], $key()), 'POST', '/ledgers');                                 // 422
+        $id = $a->json('data.id');
+        $this->assertConforms($this->api('GET', "/api/v1/ledgers/{$id}", $t, $c), 'GET', '/ledgers/{id}');
+        $this->assertConforms($this->api('GET', '/api/v1/ledgers/999999', $t, $c), 'GET', '/ledgers/{id}');                                               // 404
+        $this->assertConforms($this->api('PATCH', "/api/v1/ledgers/{$id}", $t, $c, ['name' => 'Fuel']), 'PATCH', '/ledgers/{id}');                        // 428
+        $this->assertConforms($this->api('PATCH', "/api/v1/ledgers/{$id}", $t, $c, ['name' => 'Fuel'], ['If-Match' => 'W/"1"']), 'PATCH', '/ledgers/{id}');
+        $this->assertConforms($this->api('PATCH', "/api/v1/ledgers/{$id}", $t, $c, ['name' => 'Again'], ['If-Match' => 'W/"1"']), 'PATCH', '/ledgers/{id}'); // 409
+        $income = (int) DB::table('account_groups')->where('company_id', $c)->where('code', '41')->value('id');
+        $this->assertConforms($this->api('PATCH', "/api/v1/ledgers/{$id}", $t, $c, ['account_group_id' => $income], ['If-Match' => 'W/"2"']), 'PATCH', '/ledgers/{id}'); // 422 nature
+        $this->assertConforms($this->api('POST', "/api/v1/ledgers/{$id}/deactivate", $t, $c), 'POST', '/ledgers/{id}/deactivate');                       // 409 balance
+        $spare = $this->api('POST', '/api/v1/ledgers', $t, $c, ['name' => 'Spare', 'account_group_id' => $group], $key())->json('data.id');
+        $this->assertConforms($this->api('POST', "/api/v1/ledgers/{$spare}/deactivate", $t, $c), 'POST', '/ledgers/{id}/deactivate');
+        $this->assertConforms($this->api('GET', "/api/v1/ledgers/{$id}", $this->login('store@meghna.example'), $c), 'GET', '/ledgers/{id}');            // 403
+        $this->assertConforms($this->api('GET', "/api/v1/ledgers/{$id}/entries", $t, $c), 'GET', '/ledgers/{id}/entries');
+        $this->assertConforms($this->api('GET', "/api/v1/ledgers/{$id}/entries?date_from=bad", $t, $c), 'GET', '/ledgers/{id}/entries');                 // 422
+        $this->assertConforms($this->api('GET', '/api/v1/accounting/overview', $t, $c), 'GET', '/accounting/overview');
     }
 
     public function test_allocation_endpoints_match_the_contract(): void

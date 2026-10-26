@@ -12,7 +12,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
  */
 class LedgerResource extends JsonResource
 {
-    public function __construct($resource, private readonly array $groupPaths, private readonly bool $withBalances)
+    public function __construct($resource, private readonly array $groupPaths, private readonly bool $withBalances, private readonly ?array $fySummary = null)
     {
         parent::__construct($resource);
     }
@@ -42,6 +42,9 @@ class LedgerResource extends JsonResource
                 $data[$field === 'opening' ? 'opening_balance' : 'balance'] = $negative ? substr($net, 1) : $net;
                 $data[$field === 'opening' ? 'opening_side' : 'balance_side'] = $negative ? 'cr' : 'dr';
             }
+        }
+        if ($this->fySummary !== null) {
+            $data['fy_summary'] = $this->fySummary;
         }
         $data['version'] = (int) $this->lock_version;
 

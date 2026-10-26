@@ -94,8 +94,11 @@ export interface AccountGroup {
   report_section: string
   cash_flow_category?: string | null
   is_system: boolean
+  used_in_cash_vouchers?: boolean
+  sort_order?: number
   balance: Decimal
-  children?: Array<Record<string, unknown>>
+  balance_side?: 'dr' | 'cr'
+  children?: Array<AccountNode>
   version: number
 }
 
