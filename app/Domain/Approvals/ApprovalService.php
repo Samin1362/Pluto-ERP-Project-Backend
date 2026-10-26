@@ -15,10 +15,16 @@ use Illuminate\Support\Facades\DB;
  */
 final class ApprovalService
 {
-    /** Cash vouchers are approved by banking.approve; journals by accounting.approve. */
-    public static function permissionFor(string $entryType): string
+    /** Journals: accounting.approve; supplier payments: purchases.approve (05 approvals); other cash vouchers: banking.approve. */
+    public static function permissionFor(string $entryType, ?int $entryId = null): string
     {
-        return $entryType === 'journal' ? 'accounting.approve' : 'banking.approve';
+        if ($entryType === 'journal') {
+            return 'accounting.approve';
+        }
+        $toSupplier = $entryType === 'payment' && $entryId && DB::table('payment_details as p')->join('parties as y', 'y.id', '=', 'p.party_id')
+            ->where('p.journal_entry_id', $entryId)->where('y.party_type', 'supplier')->exists();
+
+        return $toSupplier ? 'purchases.approve' : 'banking.approve';
     }
 
     public function __construct(private readonly NotificationService $notifications) {}
@@ -27,9 +33,9 @@ final class ApprovalService
     public function request(JournalEntry $entry, Money $amount): int
     {
         $this->cancelPending($entry);
-        $permission = self::permissionFor($entry->entry_type);
+        $permission = self::permissionFor($entry->entry_type, $entry->id);
         $id = DB::table('approval_requests')->insertGetId(['company_id' => $entry->company_id, 'document_type' => 'journal_entries', 'document_id' => $entry->id,
-            'amount' => (string) $amount, 'required_permission' => self::permissionFor($entry->entry_type), 'status' => 'pending',
+            'amount' => (string) $amount, 'required_permission' => $permission, 'status' => 'pending',
             'requested_by' => auth()->id(), 'requested_at' => now(), 'created_by' => auth()->id(), 'updated_by' => auth()->id(), 'created_at' => now(), 'updated_at' => now()]);
         $this->notifications->notify($entry->company_id, $this->notifications->holders($permission, auth()->id()), 'approval_requested',
             "{$entry->voucher_number} waits for your approval", 'Tk '.Taka::format($amount, symbol: false).($entry->narration ? " · {$entry->narration}" : ''), 'approvals', 'approval_requests', $id);

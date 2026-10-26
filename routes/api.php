@@ -26,6 +26,7 @@ use App\Http\Controllers\Api\V1\Purchases\PurchaseBillController;
 use App\Http\Controllers\Api\V1\Sales\SalesInvoiceController;
 use App\Http\Controllers\Api\V1\Settlements\AllocationController;
 use App\Http\Controllers\Api\V1\Settlements\CustomerReceiptController;
+use App\Http\Controllers\Api\V1\Settlements\SupplierPaymentController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -159,6 +160,11 @@ Route::middleware(['jwt', 'throttle:api-user'])->group(function () {
         Route::post('customer-receipts', [CustomerReceiptController::class, 'store'])->middleware(['perm:sales.create', 'idempotent']);
         Route::get('customer-receipts/{id}', [CustomerReceiptController::class, 'show'])->whereNumber('id')->middleware('perm:sales.view');
         Route::get('customer-receipts/{id}/pdf', [CustomerReceiptController::class, 'pdf'])->whereNumber('id')->middleware('perm:sales.view');
+        // Supplier payments (P8.1-BE-01).
+        Route::get('supplier-payments', [SupplierPaymentController::class, 'index'])->middleware('perm:purchases.view');
+        Route::post('supplier-payments', [SupplierPaymentController::class, 'store'])->middleware(['perm:purchases.create', 'idempotent']);
+        Route::get('supplier-payments/{id}', [SupplierPaymentController::class, 'show'])->whereNumber('id')->middleware('perm:purchases.view');
+        Route::get('supplier-payments/{id}/pdf', [SupplierPaymentController::class, 'pdf'])->whereNumber('id')->middleware('perm:purchases.view');
 
         // Sales invoices (P5.1).
         Route::post('sales-invoices/calculate', [SalesInvoiceController::class, 'calculate'])->middleware('perm:sales.create');

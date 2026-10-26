@@ -353,7 +353,7 @@ E("POST", "/purchase-bills/{id}/cancel", "Cancel a posted bill (reverse; stock o
 E("POST", "/supplier-payments", "Record a supplier payment with allocations (creates PV; may need approval)", "purchases.create",
   ["journal_entries", "journal_lines", "payment_details", "bill_allocations", "purchase_bills", "money_accounts", "number_sequences", "approval_requests", "roles"], ["F5", "Pur-DlgPay", "F4", "C4"],
   rules=["BR-020", "BR-021", "BR-031", "BR-065", "BR-007", "BR-043", "BR-001", "BR-004", "BR-009"], req="PartyPaymentInput", idem=True, resp="Voucher", tx=TXP, tag=T, fr=["FR-052"], codes=[201, 202, 409, 422],
-  desc="Returns 201 when posted, or 202 with status=submitted when above the role's payment limit.")
+  desc="Returns 201 when posted, or 202 with status=submitted when above the role's payment limit.", errors=['backdated_confirmation_required'])
 E("GET", "/supplier-payments", "List supplier payments (PV) with party, account, method and status", "purchases.view",
   ["journal_entries", "payment_details", "bill_allocations", "parties", "money_accounts", "approval_requests"], ['F12'],
   params=LISTQ + DATEQ + ["party_id", "money_account_id", "status"], resp="Page<Voucher>", tag=T, fr=["FR-052"], added="R-07")

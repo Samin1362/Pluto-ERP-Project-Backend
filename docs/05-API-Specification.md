@@ -92,7 +92,7 @@
 | `file_too_large` | 413 | Files may be up to 10 MB | BR-051 | 5 |
 | `file_type_not_allowed` | 415 | Only JPG, PNG or PDF up to 10 MB | BR-051 | 5 |
 | `allocation_exceeds_balance` | 422 | The allocation is more than the document's open balance or the payment | BR-020, BR-023 | 12 |
-| `backdated_confirmation_required` | 422 | The date is older than the back-date window; confirm to continue | BR-053 | 4 |
+| `backdated_confirmation_required` | 422 | The date is older than the back-date window; confirm to continue | BR-053 | 5 |
 | `base_currency_locked` | 422 | The base currency cannot change once entries exist | BR-035 | 1 |
 | `comment_required` | 422 | A comment is required to reject | FR-014 | 1 |
 | `difference_not_zero` | 422 | The reconciliation difference must be zero | BR-032 | 1 |
@@ -5052,7 +5052,7 @@ Record a supplier payment with allocations (creates PV; may need approval). Retu
 | **Validation** | `party_id`* id of a record in this company; `date`* YYYY-MM-DD; `amount`* decimal string, 2 dp; `money_account_id`* id of a record in this company; `method`* one of cash/cheque/bank_transfer/beftn/rtgs/npsb/bkash/nagad/card; `cheque_number` string ≤ 20 (nullable); `cheque_date` YYYY-MM-DD (nullable); `drawn_on` string ≤ 120 (nullable); `transaction_reference` string ≤ 60 (nullable); `bank_charge` decimal string, 2 dp; `exchange_rate` decimal string, 6 dp (nullable); `narration` string ≤ 1000 (nullable); `allocations` array of AllocationInput; `auto_allocate` boolean; `confirm_backdated` boolean<br>Unknown fields are rejected (422).<br>BR-020: Allocations never exceed a document's open balance, their sum never exceeds the payment; default allocation is oldest due first; any excess stays as an advance on the party ledger.<br>BR-021: Allocations, notes and returns may reference only documents of the same party and company.<br>BR-031: A payment, transfer or contra cannot take a cash or wallet account below zero, or a bank or cash-credit account below minus its overdraft_limit (zero when not set).<br>BR-065: A receipt debits the money account and credits the party ledger; a payment debits the party (or expense) ledger and credits the money account; bank charges debit the bank-charges ledger.<br>BR-007: A payment or journal voucher whose amount exceeds the submitter's role limit must be approved by a user with the module's approve permission before it posts.<br>BR-043: Differences between the rate at which a foreign bill was booked and the rate at which it is paid post to the exchange gain or loss ledger.<br>BR-001: Every posted journal entry balances: total debit = total credit > 0.<br>BR-004: A document or voucher date must fall inside an open accounting period of an open financial year; posting, editing or reversing into a locked period is rejected.<br>BR-009: A document posts at most once: one journal entry per document (unique journal_entry_id); a repeated post request returns the existing result. |
 | **Success** | 201 `data`: [`Voucher`](#schema-voucher) · 202 when above the approval limit |
 | **Status codes** | 201, 202, 400, 401, 403, 409, 422, 503 |
-| **Error codes** | **`allocation_exceeds_balance`, `already_posted`, `company_maintenance`, `foreign_document`, `insufficient_funds`, `mapping_missing`, `period_locked`, `unbalanced_entry`**; standard: `company_required`, `idempotency_in_progress`, `idempotency_key_reused`, `malformed_json`, `not_a_member`, `permission_denied`, `server_error`, `token_expired`, `token_invalid`, `unauthenticated`, `validation_failed` |
+| **Error codes** | **`allocation_exceeds_balance`, `already_posted`, `backdated_confirmation_required`, `company_maintenance`, `foreign_document`, `insufficient_funds`, `mapping_missing`, `period_locked`, `unbalanced_entry`**; standard: `company_required`, `idempotency_in_progress`, `idempotency_key_reused`, `malformed_json`, `not_a_member`, `permission_denied`, `server_error`, `token_expired`, `token_invalid`, `unauthenticated`, `validation_failed` |
 | **Headers** | `Idempotency-Key`, `Location` on 201 |
 | **Database** | lock: number_sequences, purchase_bills; insert: approval_requests, audit_logs, bill_allocations, idempotency_keys, journal_entries, journal_lines, payment_details; update: number_sequences, purchase_bills; read: money_accounts, roles |
 | **Business rules** | BR-020, BR-021, BR-031, BR-065, BR-007, BR-043, BR-001, BR-004, BR-009 |
@@ -11395,7 +11395,7 @@ View permission `purchases.create`. **Loads:** nothing of its own (host page dat
 | # | Action | Calls | Permission | Body → data | Success | Business errors to handle |
 |---|---|---|---|---|---|---|
 | 1 | Cancel | ui:close the dialog | — | — | — | — |
-| 2 | Save payment | [`POST /supplier-payments`](#postsupplierpayments) | `purchases.create` | [`PartyPaymentInput`](#schema-partypaymentinput) → [`Voucher`](#schema-voucher) | 201 | `allocation_exceeds_balance`, `already_posted`, `foreign_document`, `insufficient_funds`, `mapping_missing`, `period_locked`, `unbalanced_entry` |
+| 2 | Save payment | [`POST /supplier-payments`](#postsupplierpayments) | `purchases.create` | [`PartyPaymentInput`](#schema-partypaymentinput) → [`Voucher`](#schema-voucher) | 201 | `allocation_exceeds_balance`, `already_posted`, `backdated_confirmation_required`, `foreign_document`, `insufficient_funds`, `mapping_missing`, `period_locked`, `unbalanced_entry` |
 
 ### Banking
 
@@ -12475,6 +12475,7 @@ View permission `lc.create`. **Loads:** nothing of its own (host page data).
 | GET /backups/{id}/download | Permission `settings.restore` (Owner) instead of `settings.backup`; an Owner-only action on K15, no longer a page load (R-11). |
 | Database operations (second pass) | Corrected derived writes: bulk post now posts like the single post; 13 system-entry postings lock number_sequences for the SJ number (R-06); voucher post updates rather than inserts its lines; landed cost updates stock_balances (R-02); allocations create no journal lines; quote/PO convert create the draft document. Rule A23 now enforces these invariants. |
 | AccountGroup schema | Adds `used_in_cash_vouchers` and `sort_order` (accepted by AccountGroupInput but not returned, so H3 could not prefill its edit form) and `balance_side` (the balance is an amount, like AccountNode); `children` are AccountNode items (P7.1-BE-01, 25 Oct 2026). Additive. |
+| POST /supplier-payments | Declares 422 `backdated_confirmation_required` (BR-053; the payment voucher asks for confirmation like any voucher) (P8.1-BE-01, 26 Oct 2026). Additive. |
 | Dashboard lenses A2–A8 | Load only `GET /dashboard/lenses/{lens}`; the overlapping report and list endpoints were removed from their page lists. |
 
 ### 12.5 Overlaps kept on purpose

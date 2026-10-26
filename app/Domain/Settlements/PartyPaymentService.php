@@ -6,11 +6,13 @@ use App\Domain\Accounting\AccountMapper;
 use App\Domain\Accounting\JournalBuilder;
 use App\Domain\Accounting\PeriodGuard;
 use App\Domain\Accounting\PostingService;
+use App\Domain\Accounting\VoucherService;
 use App\Domain\Shared\AuditLogger;
 use App\Domain\Shared\DocumentNumberService;
 use App\Domain\Shared\Money;
 use App\Domain\Shared\Rate;
 use App\Models\CompanySetting;
+use App\Models\CompanyUser;
 use App\Models\JournalEntry;
 use App\Models\MoneyAccount;
 use App\Models\Party;
@@ -23,7 +25,7 @@ use Illuminate\Support\Facades\DB;
  * RV-YYYY-NNNN entry Dr money account (amount − bank charge) · Dr bank_charges (charge) · Cr customer (amount), its
  * payment_details row (method, cheque, unapplied amount), then the allocations — the explicit list, or with
  * auto_allocate the open invoices oldest due first (AllocationPlanner) — each through AllocationService. Whatever is
- * not allocated stays on the customer ledger as an advance. Supplier payments (F5) follow in P8 on the same pattern.
+ * not allocated stays on the customer ledger as an advance. Supplier payments (F5): pay(), a PV through VoucherService.
  */
 final class PartyPaymentService
 {
@@ -35,6 +37,7 @@ final class PartyPaymentService
         private readonly AllocationService $allocations,
         private readonly AllocationPlanner $planner,
         private readonly AuditLogger $audit,
+        private readonly VoucherService $vouchers,
     ) {}
 
     public function receive(array $in): JournalEntry
@@ -78,12 +81,54 @@ final class PartyPaymentService
     }
 
     /**
+     * Supplier payment (F5, Pur-DlgPay; 06 §9; BR-007, BR-020, BR-031, BR-065; backlog P8.1-BE-01): a PV through
+     * VoucherService — Dr supplier (amount), Dr bank_charges (charge), Cr money account (amount + charge) — so the
+     * funds check (overdraft limit), the back-date window and the role's payment limit apply as for any payment
+     * voucher. Allocations (explicit, or auto oldest due first) settle the supplier's bills when it posts; above the
+     * limit it is submitted for approval instead (`approval` true, 202) and posts when a purchases.approve holder agrees.
+     *
+     * @return array{0: JournalEntry, 1: bool} the voucher, and whether it went for approval
+     */
+    public function pay(array $in, CompanyUser $membership): array
+    {
+        return DB::transaction(function () use ($in, $membership) {
+            $party = Party::findOrFail($in['party_id']);
+            $account = MoneyAccount::findOrFail($in['money_account_id']);
+            $errors = [];
+            if ($party->status !== 'active') {
+                $errors['party_id'] = ["{$party->name} is inactive"];
+            }
+            if (! $account->is_active || ! $account->use_for_payments) {
+                $errors['money_account_id'] = [$account->is_active ? "{$account->name} is not used for payments" : "{$account->name} is inactive"];
+            }
+            if ($errors) {
+                throw new ApiProblem('validation_failed', errors: $errors); // the supplier-payments contract declares no inactive_reference
+            }
+            if (isset($in['exchange_rate']) && ! Rate::of($in['exchange_rate'])->isEqualTo(1)) {
+                throw new ApiProblem('validation_failed', errors: ['exchange_rate' => ['Payments are in taka; foreign-currency payments come with LC payments']]);
+            }
+            $amount = Money::of($in['amount']);
+            $allocations = array_map(fn ($a) => ['document_id' => $a['id'], 'amount' => (string) $a['amount']], $this->plan($party, $amount, $in, 'purchase_bills', 'bill_date'));
+            [$entry, $approval] = $this->vouchers->create([
+                'entry_type' => 'payment', 'action' => 'post', 'date' => $in['date'], 'narration' => $in['narration'] ?? "Paid to {$party->name}",
+                'reference' => $in['transaction_reference'] ?? $in['cheque_number'] ?? null, 'confirm_backdated' => (bool) ($in['confirm_backdated'] ?? false),
+                'payment' => ['money_account_id' => $account->id, 'method' => $in['method'], 'party_id' => $party->id, 'cheque_number' => $in['cheque_number'] ?? null,
+                    'cheque_date' => $in['cheque_date'] ?? null, 'drawn_on' => $in['drawn_on'] ?? null, 'transaction_reference' => $in['transaction_reference'] ?? null,
+                    'bank_charge' => $in['bank_charge'] ?? '0'],
+                'lines' => [['ledger_id' => $party->ledger_id, 'amount' => (string) $amount, 'allocations' => $allocations]],
+            ], $membership);
+
+            return [$entry->refresh()->load('lines'), $approval];
+        }, attempts: 2);
+    }
+
+    /**
      * Explicit allocations (in document id order, the lock order of 05 §4; their sum ≤ the amount) or, with
-     * auto_allocate, the planner's oldest-due-first plan over the customer's open invoices.
+     * auto_allocate, the planner's oldest-due-first plan over the party's open invoices (or bills).
      *
      * @return list<array{id: int, amount: Money}>
      */
-    private function plan(Party $party, Money $amount, array $in): array
+    private function plan(Party $party, Money $amount, array $in, string $table = 'sales_invoices', string $dateColumn = 'invoice_date'): array
     {
         if (! empty($in['allocations'])) {
             $rows = collect($in['allocations'])->map(fn ($a) => ['id' => (int) $a['document_id'], 'amount' => Money::of($a['amount'])])->sortBy('id')->values()->all();
@@ -98,9 +143,9 @@ final class PartyPaymentService
         if (! ($in['auto_allocate'] ?? false)) {
             return [];
         }
-        $open = DB::table('sales_invoices')->where('party_id', $party->id)->where('status', 'posted')->where('balance_due', '>', 0)
-            ->get(['id', 'due_date', 'invoice_date', 'balance_due'])
-            ->map(fn ($d) => ['id' => $d->id, 'due_date' => (string) $d->due_date, 'date' => (string) $d->invoice_date, 'balance' => Money::of($d->balance_due)])->all();
+        $open = DB::table($table)->where('party_id', $party->id)->where('status', 'posted')->where('balance_due', '>', 0)
+            ->get(['id', 'due_date', $dateColumn, 'balance_due'])
+            ->map(fn ($d) => ['id' => $d->id, 'due_date' => (string) $d->due_date, 'date' => (string) $d->{$dateColumn}, 'balance' => Money::of($d->balance_due)])->all();
         $plan = $this->planner->plan($amount, $open)['allocations'];
         usort($plan, fn ($a, $b) => $a['id'] <=> $b['id']); // lock order
 
