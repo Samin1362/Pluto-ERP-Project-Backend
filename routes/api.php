@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Api\V1\Accounting\AccountGroupController;
+use App\Http\Controllers\Api\V1\Accounting\AccountingOverviewController;
 use App\Http\Controllers\Api\V1\Accounting\LedgerController;
 use App\Http\Controllers\Api\V1\Auth\AuthController;
 use App\Http\Controllers\Api\V1\Banking\MoneyAccountController;
@@ -45,6 +47,17 @@ Route::middleware(['jwt', 'throttle:api-user'])->group(function () {
         Route::get('company/settings', [PlatformLookupController::class, 'companySettings']);
         Route::get('audit-logs', [PlatformLookupController::class, 'auditLogs']); // P1.1-BE-02: permission is contextual
         Route::get('ledgers', [LedgerController::class, 'index']); // P1.1-BE-03: chart for accounting.view, picker by purpose otherwise
+        Route::post('ledgers', [LedgerController::class, 'store'])->middleware(['perm:accounting.create', 'idempotent']); // P7.1-BE-02
+        Route::get('ledgers/{id}', [LedgerController::class, 'show'])->whereNumber('id')->middleware('perm:accounting.view');
+        Route::patch('ledgers/{id}', [LedgerController::class, 'update'])->whereNumber('id')->middleware('perm:accounting.edit');
+        Route::post('ledgers/{id}/deactivate', [LedgerController::class, 'deactivate'])->whereNumber('id')->middleware('perm:accounting.edit');
+        Route::get('ledgers/{id}/entries', [LedgerController::class, 'entries'])->whereNumber('id')->middleware('perm:accounting.view'); // P7.1-BE-03
+        Route::get('accounting/overview', AccountingOverviewController::class)->middleware('perm:accounting.view');
+        // Chart of accounts (P7.1-BE-01).
+        Route::get('account-groups', [AccountGroupController::class, 'index'])->middleware('perm:accounting.view');
+        Route::post('account-groups', [AccountGroupController::class, 'store'])->middleware('perm:accounting.create');
+        Route::get('account-groups/{id}', [AccountGroupController::class, 'show'])->whereNumber('id')->middleware('perm:accounting.view');
+        Route::patch('account-groups/{id}', [AccountGroupController::class, 'update'])->whereNumber('id')->middleware('perm:accounting.edit');
         Route::get('tax-rules', [PlatformLookupController::class, 'taxRules']); // P3.1-BE-01: any member (product and document forms)
 
         Route::get('payment-terms', [LookupController::class, 'paymentTerms']);

@@ -43166,16 +43166,24 @@ components:
           - 'null'
         is_system:
           type: boolean
+        used_in_cash_vouchers:
+          type: boolean
+        sort_order:
+          type: integer
         balance:
           type: string
           pattern: ^-?\d{1,16}(\.\d{1,2})?$
           example: '118450.00'
           description: Decimal as string (money)
+        balance_side:
+          type: string
+          enum:
+          - dr
+          - cr
         children:
           type: array
           items:
-            type: object
-            additionalProperties: true
+            $ref: '#/components/schemas/AccountNode'
         version:
           type: integer
       required:

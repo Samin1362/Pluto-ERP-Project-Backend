@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Models\AccountGroup;
+use App\Models\Ledger;
 use App\Models\MoneyAccount;
 use App\Models\Party;
 use App\Models\PurchaseBill;
@@ -25,7 +27,7 @@ class AppServiceProvider extends ServiceProvider
     {
         // Document morph aliases are their table names (journal_entries.source_type, stock_movements.source_type;
         // BooksIntegrity relies on it). Models not listed keep their class name.
-        Relation::morphMap(['purchase_bills' => PurchaseBill::class, 'sales_invoices' => SalesInvoice::class, 'money_accounts' => MoneyAccount::class, 'parties' => Party::class]);
+        Relation::morphMap(['account_groups' => AccountGroup::class, 'ledgers' => Ledger::class, 'purchase_bills' => PurchaseBill::class, 'sales_invoices' => SalesInvoice::class, 'money_accounts' => MoneyAccount::class, 'parties' => Party::class]);
 
         // The `api` guard reads the user that AuthenticateJwt verified; it never accepts a session cookie.
         Auth::viaRequest('pluto-jwt', fn (Request $request) => $request->attributes->get('auth_user'));

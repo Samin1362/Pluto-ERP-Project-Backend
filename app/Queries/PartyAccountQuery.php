@@ -35,40 +35,7 @@ final class PartyAccountQuery
     /** LedgerStatement (05 schema) of the party's ledger for [from, to]. */
     public function ledger(Party $party, string $from, string $to): array
     {
-        $ledger = DB::table('ledgers')->where('id', $party->ledger_id)->first(['id', 'code', 'name']);
-        $opening = Money::of((string) DB::table('journal_lines')->where('ledger_id', $ledger->id)->where('is_posted', 1)->where('entry_date', '<', $from)
-            ->selectRaw('CAST(COALESCE(SUM(debit) - SUM(credit), 0) AS DECIMAL(18,2)) b')->value('b'));
-        $rows = DB::table('journal_lines as l')->join('journal_entries as e', 'e.id', '=', 'l.journal_entry_id')
-            ->where('l.ledger_id', $ledger->id)->where('l.is_posted', 1)->whereBetween('l.entry_date', [$from, $to])
-            ->orderBy('l.entry_date')->orderBy('e.id')->orderBy('l.line_no')
-            ->get(['l.entry_date', 'e.id as entry_id', 'e.voucher_number', 'e.entry_type', 'e.narration', 'l.debit', 'l.credit', 'l.line_narration']);
-        $others = DB::table('journal_lines as l')->join('ledgers as g', 'g.id', '=', 'l.ledger_id')->whereIn('l.journal_entry_id', $rows->pluck('entry_id')->unique())
-            ->where('l.ledger_id', '!=', $ledger->id)->orderBy('l.line_no')->get(['l.journal_entry_id', 'g.name'])->groupBy('journal_entry_id');
-        $balance = $opening;
-        $lines = [];
-        $monthly = [];
-        foreach ($rows as $r) {
-            $balance = $balance->plus($r->debit)->minus($r->credit);
-            $names = ($others[$r->entry_id] ?? collect())->pluck('name')->unique()->values();
-            $lines[] = ['date' => (string) $r->entry_date, 'voucher_id' => $r->entry_id, 'voucher_number' => $r->voucher_number, 'entry_type' => $r->entry_type,
-                'particulars' => $names->take(2)->implode(', ').($names->count() > 2 ? ' and others' : ''), 'narration' => $r->line_narration ?? $r->narration,
-                'debit' => (string) Money::of($r->debit), 'credit' => (string) Money::of($r->credit), 'balance' => (string) $balance->abs(), 'balance_side' => $balance->isNegative() ? 'cr' : 'dr'];
-            $m = substr((string) $r->entry_date, 0, 7);
-            $monthly[$m] ??= ['month' => $m, 'debit' => Money::zero(), 'credit' => Money::zero()];
-            $monthly[$m]['debit'] = $monthly[$m]['debit']->plus($r->debit);
-            $monthly[$m]['credit'] = $monthly[$m]['credit']->plus($r->credit);
-        }
-
-        return [
-            'ledger' => ['id' => $ledger->id, 'code' => $ledger->code, 'name' => $ledger->name],
-            'period' => ['from' => $from, 'to' => $to],
-            'opening' => (string) $opening->abs(), 'opening_side' => $opening->isNegative() ? 'cr' : 'dr',
-            'lines' => $lines,
-            'total_debit' => (string) Money::sum($rows->pluck('debit')), 'total_credit' => (string) Money::sum($rows->pluck('credit')),
-            'closing' => (string) $balance->abs(), 'closing_side' => $balance->isNegative() ? 'cr' : 'dr',
-            'monthly' => array_values(array_map(fn ($m) => ['month' => $m['month'], 'debit' => (string) $m['debit'], 'credit' => (string) $m['credit']], $monthly)),
-            'meta' => null,
-        ];
+        return app(LedgerEntriesQuery::class)->statement((int) $party->ledger_id, $from, $to);
     }
 
     /**

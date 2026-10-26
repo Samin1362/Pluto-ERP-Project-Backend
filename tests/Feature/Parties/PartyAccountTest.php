@@ -94,7 +94,7 @@ class PartyAccountTest extends TestCase
         $this->assertSame('Cash in hand', $r->json('data.lines.3.particulars'));
         $tb = DB::table('journal_lines')->where('ledger_id', $this->karim->ledger_id)->where('is_posted', 1)->selectRaw('SUM(debit) - SUM(credit) b')->value('b');
         $this->assertSame('14000.00', (string) $tb, 'running balance = trial balance of the party ledger');
-        $this->assertSame([['month' => substr($this->today(), 0, 7), 'debit' => '18000.00', 'credit' => '4000.00']], $r->json('data.monthly'));
+        $this->assertSame([['month' => substr($this->today(), 0, 7), 'debit' => '18000.00', 'credit' => '4000.00', 'closing' => '14000.00', 'closing_side' => 'dr']], $r->json('data.monthly'));
 
         // A range after today: everything is in the opening balance.
         $tomorrow = CarbonImmutable::parse($this->today())->addDay()->toDateString();
