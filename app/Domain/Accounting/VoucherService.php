@@ -12,7 +12,6 @@ use App\Models\JournalEntry;
 use App\Models\JournalLine;
 use App\Models\Party;
 use App\Support\Problem\ApiProblem;
-use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -64,11 +63,11 @@ final class VoucherService
     {
         return DB::transaction(function () use ($entry, $in, $expectedVersion, $membership) {
             $entry = $this->lockVoucher($entry->id);
-            if ((int) $entry->lock_version !== $expectedVersion) {
-                throw new ApiProblem('version_conflict', extra: ['current_version' => (int) $entry->lock_version]);
-            }
             if (! in_array($entry->status, ['draft', 'rejected'], true)) {
                 throw new ApiProblem('not_draft', "{$entry->voucher_number} is {$entry->status}; only a draft or rejected voucher can be changed.");
+            }
+            if ((int) $entry->lock_version !== $expectedVersion) {
+                throw new ApiProblem('version_conflict', extra: ['current_version' => (int) $entry->lock_version]);
             }
             if ($in['entry_type'] !== $entry->entry_type) {
                 throw new ApiProblem('validation_failed', errors: ['entry_type' => ['The voucher type cannot change; delete the draft and enter a new voucher']]);

@@ -368,6 +368,87 @@ class OpenApiConformanceTest extends TestCase
         $this->assertConforms($this->api('GET', '/api/v1/accounting/overview', $t, $c), 'GET', '/accounting/overview');
     }
 
+    public function test_voucher_endpoints_match_the_contract(): void
+    {
+        $t = $this->login('owner@meghna.example');
+        $c = $this->company->id;
+        $key = fn () => ['Idempotency-Key' => (string) Str::uuid()];
+        $ledger = fn (string $code) => (int) DB::table('ledgers')->where('company_id', $c)->where('code', $code)->value('id');
+        $jv = fn (string $action, string $amount = '5000.00') => ['entry_type' => 'journal', 'action' => $action, 'date' => now('Asia/Dhaka')->toDateString(), 'narration' => 'Depreciation',
+            'lines' => [['ledger_id' => $ledger('6501'), 'debit' => $amount], ['ledger_id' => $ledger('1509'), 'credit' => $amount]]];
+        $this->assertConforms($this->api('POST', '/api/v1/vouchers/calculate', $t, $c, $jv('post')), 'POST', '/vouchers/calculate');
+        $this->assertConforms($this->api('POST', '/api/v1/vouchers/calculate', $t, $c, ['entry_type' => 'journal']), 'POST', '/vouchers/calculate');          // 422
+        $draft = $this->api('POST', '/api/v1/vouchers', $t, $c, $jv('draft'), $key());
+        $this->assertConforms($draft, 'POST', '/vouchers');
+        $id = $draft->json('data.id');
+        $this->assertConforms($this->api('GET', "/api/v1/vouchers/{$id}", $t, $c), 'GET', '/vouchers/{id}');
+        $this->assertConforms($this->api('PUT', "/api/v1/vouchers/{$id}", $t, $c, $jv('draft', '6000.00'), ['If-Match' => 'W/"1"']), 'PUT', '/vouchers/{id}');
+        $this->assertConforms($this->api('POST', "/api/v1/vouchers/{$id}/post", $t, $c, [], $key()), 'POST', '/vouchers/{id}/post');
+        $this->assertConforms($this->api('DELETE', "/api/v1/vouchers/{$id}", $t, $c), 'DELETE', '/vouchers/{id}');                                         // 409
+        $other = $this->api('POST', '/api/v1/vouchers', $t, $c, $jv('draft'), $key())->json('data.id');
+        $this->assertConforms($this->api('POST', "/api/v1/vouchers/{$other}/submit", $t, $c), 'POST', '/vouchers/{id}/submit');
+        $bad = $jv('post');
+        $bad['lines'][1]['credit'] = '1.00';
+        $this->assertConforms($this->api('POST', '/api/v1/vouchers', $t, $c, $bad, $key()), 'POST', '/vouchers');                                             // 422 unbalanced
+        $this->assertConforms($this->api('GET', '/api/v1/vouchers?entry_type=journal', $t, $c), 'GET', '/vouchers');
+        $this->assertConforms($this->api('GET', '/api/v1/voucher-templates', $t, $c), 'GET', '/voucher-templates');
+        $this->assertConforms($this->api('POST', '/api/v1/vouchers', $this->login('store@meghna.example'), $c, $jv('post'), $key()), 'POST', '/vouchers');     // 403
+    }
+
+    public function test_approval_and_notification_endpoints_match_the_contract(): void
+    {
+        $c = $this->company->id;
+        $this->addMember($this->company, $this->makeUser('accountant@meghna.example'), 'accountant');
+        $owner = $this->login('owner@meghna.example');
+        $acc = $this->login('accountant@meghna.example');
+        $ledger = fn (string $code) => (int) DB::table('ledgers')->where('company_id', $c)->where('code', $code)->value('id');
+        $jv = fn () => ['entry_type' => 'journal', 'action' => 'post', 'date' => now('Asia/Dhaka')->toDateString(),
+            'lines' => [['ledger_id' => $ledger('6501'), 'debit' => '150000.00'], ['ledger_id' => $ledger('1509'), 'credit' => '150000.00']]];
+        $v = $this->api('POST', '/api/v1/vouchers', $acc, $c, $jv(), ['Idempotency-Key' => (string) Str::uuid()]);
+        $this->assertConforms($v, 'POST', '/vouchers');                                                                                                 // 202
+        $id = $v->json('data.approval.id');
+        $this->assertConforms($this->api('GET', '/api/v1/approvals', $owner, $c), 'GET', '/approvals');
+        $this->assertConforms($this->api('GET', "/api/v1/approvals/{$id}", $owner, $c), 'GET', '/approvals/{id}');
+        $this->assertConforms($this->api('POST', "/api/v1/approvals/{$id}/reject", $owner, $c, []), 'POST', '/approvals/{id}/reject');               // 422 comment
+        $this->assertConforms($this->api('POST', "/api/v1/approvals/{$id}/approve", $acc, $c, [], ['Idempotency-Key' => (string) Str::uuid()]), 'POST', '/approvals/{id}/approve'); // 403 self
+        $this->assertConforms($this->api('POST', "/api/v1/approvals/{$id}/approve", $owner, $c, ['comment' => 'OK'], ['Idempotency-Key' => (string) Str::uuid()]), 'POST', '/approvals/{id}/approve');
+        $second = $this->api('POST', '/api/v1/vouchers', $acc, $c, $jv(), ['Idempotency-Key' => (string) Str::uuid()])->json('data.approval.id');
+        $this->assertConforms($this->api('POST', "/api/v1/approvals/{$second}/reject", $owner, $c, ['comment' => 'Split it']), 'POST', '/approvals/{id}/reject');
+        $this->assertConforms($this->api('GET', '/api/v1/notifications?unread=true', $acc, $c), 'GET', '/notifications');
+        $n = $this->api('GET', '/api/v1/notifications', $acc, $c)->json('data.0.id');
+        $this->assertConforms($this->api('POST', "/api/v1/notifications/{$n}/read", $acc, $c), 'POST', '/notifications/{id}/read');
+        $this->assertConforms($this->api('POST', '/api/v1/notifications/read-all', $acc, $c), 'POST', '/notifications/read-all');
+    }
+
+    public function test_reverse_period_and_mapping_endpoints_match_the_contract(): void
+    {
+        $t = $this->login('owner@meghna.example');
+        $c = $this->company->id;
+        $key = fn () => ['Idempotency-Key' => (string) Str::uuid()];
+        $ledger = fn (string $code) => (int) DB::table('ledgers')->where('company_id', $c)->where('code', $code)->value('id');
+        $today = now('Asia/Dhaka')->toDateString();
+        $id = $this->api('POST', '/api/v1/vouchers', $t, $c, ['entry_type' => 'journal', 'action' => 'post', 'date' => $today,
+            'lines' => [['ledger_id' => $ledger('6501'), 'debit' => '100.00'], ['ledger_id' => $ledger('1509'), 'credit' => '100.00']]], $key())->json('data.id');
+        $this->assertConforms($this->api('POST', "/api/v1/vouchers/{$id}/reverse", $t, $c, ['reversal_date' => $today, 'reason' => 'Twice'], $key()), 'POST', '/vouchers/{id}/reverse');
+        $this->assertConforms($this->api('POST', "/api/v1/vouchers/{$id}/reverse", $t, $c, ['reversal_date' => $today, 'reason' => 'Again'], $key()), 'POST', '/vouchers/{id}/reverse'); // 409
+        $this->assertConforms($this->api('POST', "/api/v1/vouchers/{$id}/reverse", $t, $c, [], $key()), 'POST', '/vouchers/{id}/reverse');                 // 422
+
+        $periods = DB::table('accounting_periods')->where('company_id', $c)->orderBy('start_date')->pluck('id');
+        $this->assertConforms($this->api('POST', "/api/v1/accounting-periods/{$periods[1]}/lock", $t, $c, []), 'POST', '/accounting-periods/{id}/lock');    // 422 order
+        $this->assertConforms($this->api('POST', "/api/v1/accounting-periods/{$periods[0]}/lock", $t, $c, ['note' => 'Done']), 'POST', '/accounting-periods/{id}/lock');
+        $this->assertConforms($this->api('POST', "/api/v1/accounting-periods/{$periods[0]}/unlock", $t, $c, []), 'POST', '/accounting-periods/{id}/unlock'); // 422
+        $this->assertConforms($this->api('POST', "/api/v1/accounting-periods/{$periods[0]}/unlock", $t, $c, ['reason' => 'Late bill']), 'POST', '/accounting-periods/{id}/unlock');
+        $fy = DB::table('fiscal_years')->where('company_id', $c)->value('id');
+        $this->assertConforms($this->api('POST', "/api/v1/fiscal-years/{$fy}/close", $t, $c, [], $key()), 'POST', '/fiscal-years/{id}/close');               // 422
+        $this->assertConforms($this->api('GET', '/api/v1/fiscal-years', $t, $c), 'GET', '/fiscal-years');
+
+        $m = $this->api('GET', '/api/v1/account-mappings', $t, $c);
+        $this->assertConforms($m, 'GET', '/account-mappings');
+        $this->assertConforms($this->api('PUT', '/api/v1/account-mappings', $t, $c, ['mappings' => [['mapping_key' => 'cogs', 'ledger_id' => $ledger('5001'), 'required_nature' => 'expense']]]),
+            'PUT', '/account-mappings');
+        $this->assertConforms($this->api('PUT', '/api/v1/account-mappings', $t, $c, ['mappings' => [['mapping_key' => 'cogs', 'ledger_id' => $ledger('4101')]]]), 'PUT', '/account-mappings'); // 422
+    }
+
     public function test_allocation_endpoints_match_the_contract(): void
     {
         $t = $this->login('owner@meghna.example');

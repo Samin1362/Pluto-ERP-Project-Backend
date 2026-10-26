@@ -4,6 +4,7 @@ namespace App\Domain\Accounting;
 
 use App\Domain\Shared\DocumentNumberService;
 use App\Domain\Shared\Money;
+use App\Models\AccountingPeriod;
 use App\Models\JournalEntry;
 use App\Models\JournalLine;
 use Carbon\CarbonInterface;
@@ -27,13 +28,14 @@ final class PostingService
     /**
      * @param  string  $entryType  journal_entries.entry_type (purchase_bill, cancellation, opening_balance, …)
      * @param  string|null  $number  the document's own number; null = next system journal number
+     * @param  AccountingPeriod|null  $closingPeriod  only the year-end close: the FY's last, locked period (BR-004 exception, R-05)
      */
     public function persist(JournalBuilder $builder, ?Model $source, string $entryType, CarbonInterface|string $date, ?string $number = null,
-        ?string $narration = null, ?string $reference = null, ?int $branchId = null, ?int $reversesEntryId = null): JournalEntry
+        ?string $narration = null, ?string $reference = null, ?int $branchId = null, ?int $reversesEntryId = null, ?AccountingPeriod $closingPeriod = null): JournalEntry
     {
-        return DB::transaction(function () use ($builder, $source, $entryType, $date, $number, $narration, $reference, $branchId, $reversesEntryId) {
+        return DB::transaction(function () use ($builder, $source, $entryType, $date, $number, $narration, $reference, $branchId, $reversesEntryId, $closingPeriod) {
             $lines = $builder->lines(); // throws unbalanced_entry before anything is written
-            $period = $this->periods->assertOpen($date);
+            $period = $closingPeriod ?? $this->periods->assertOpen($date);
             $entryDate = $date instanceof CarbonInterface ? $date->toDateString() : $date;
             $total = Money::sum(array_map(fn ($l) => $l['debit'], $lines));
 
