@@ -11,7 +11,6 @@ use App\Models\Ledger;
 use App\Models\MoneyAccount;
 use App\Support\Problem\ApiProblem;
 use Carbon\CarbonImmutable;
-use Illuminate\Support\Facades\DB;
 
 /**
  * Turns a VoucherInput into the lines it posts (H9–H12; 05 postVouchersCalculate, R-27; BR-001, BR-002, BR-007,

@@ -2,7 +2,12 @@
 
 use App\Http\Controllers\Api\V1\Accounting\AccountGroupController;
 use App\Http\Controllers\Api\V1\Accounting\AccountingOverviewController;
+use App\Http\Controllers\Api\V1\Accounting\AccountMappingController;
+use App\Http\Controllers\Api\V1\Accounting\FiscalYearController;
 use App\Http\Controllers\Api\V1\Accounting\LedgerController;
+use App\Http\Controllers\Api\V1\Accounting\VoucherController;
+use App\Http\Controllers\Api\V1\Approvals\ApprovalController;
+use App\Http\Controllers\Api\V1\Approvals\NotificationController;
 use App\Http\Controllers\Api\V1\Auth\AuthController;
 use App\Http\Controllers\Api\V1\Banking\MoneyAccountController;
 use App\Http\Controllers\Api\V1\Inventory\ProductCategoryController;
@@ -53,6 +58,33 @@ Route::middleware(['jwt', 'throttle:api-user'])->group(function () {
         Route::post('ledgers/{id}/deactivate', [LedgerController::class, 'deactivate'])->whereNumber('id')->middleware('perm:accounting.edit');
         Route::get('ledgers/{id}/entries', [LedgerController::class, 'entries'])->whereNumber('id')->middleware('perm:accounting.view'); // P7.1-BE-03
         Route::get('accounting/overview', AccountingOverviewController::class)->middleware('perm:accounting.view');
+        // Vouchers (P7.1-BE-04). Create/replace/submit/post/calculate check the permission by voucher type in the controller (R-09).
+        Route::get('vouchers', [VoucherController::class, 'index'])->middleware('perm:accounting.view');
+        Route::post('vouchers', [VoucherController::class, 'store'])->middleware('idempotent');
+        Route::post('vouchers/calculate', [VoucherController::class, 'calculate']);
+        Route::get('voucher-templates', [VoucherController::class, 'templates'])->middleware('perm:accounting.view');
+        Route::get('vouchers/{id}', [VoucherController::class, 'show'])->whereNumber('id')->middleware('perm:accounting.view');
+        Route::put('vouchers/{id}', [VoucherController::class, 'update'])->whereNumber('id');
+        Route::delete('vouchers/{id}', [VoucherController::class, 'destroy'])->whereNumber('id')->middleware('perm:accounting.delete');
+        Route::post('vouchers/{id}/submit', [VoucherController::class, 'submit'])->whereNumber('id');
+        Route::post('vouchers/{id}/post', [VoucherController::class, 'post'])->whereNumber('id')->middleware('idempotent');
+        Route::post('vouchers/{id}/reverse', [VoucherController::class, 'reverse'])->whereNumber('id')->middleware(['perm:accounting.create', 'idempotent']); // P7.1-BE-06
+        Route::get('vouchers/{id}/pdf', [VoucherController::class, 'pdf'])->whereNumber('id')->middleware('perm:accounting.view');
+        // Period lock/unlock and year close (P7.1-BE-07).
+        Route::post('accounting-periods/{id}/lock', [FiscalYearController::class, 'lock'])->whereNumber('id')->middleware('perm:accounting.lock_period');
+        Route::post('accounting-periods/{id}/unlock', [FiscalYearController::class, 'unlock'])->whereNumber('id')->middleware('perm:accounting.lock_period');
+        Route::post('fiscal-years/{id}/close', [FiscalYearController::class, 'close'])->whereNumber('id')->middleware(['perm:accounting.close_year', 'idempotent']);
+        // Accounting defaults (P7.1-BE-08).
+        Route::get('account-mappings', [AccountMappingController::class, 'index'])->middleware('perm:accounting.view');
+        Route::put('account-mappings', [AccountMappingController::class, 'update'])->middleware('perm:settings.edit');
+        // Approvals and notifications (P7.1-BE-05). Deciding needs the request's required_permission, checked by the service (BR-008).
+        Route::get('approvals', [ApprovalController::class, 'index']);
+        Route::get('approvals/{id}', [ApprovalController::class, 'show'])->whereNumber('id');
+        Route::post('approvals/{id}/approve', [ApprovalController::class, 'approve'])->whereNumber('id')->middleware('idempotent');
+        Route::post('approvals/{id}/reject', [ApprovalController::class, 'reject'])->whereNumber('id');
+        Route::get('notifications', [NotificationController::class, 'index']);
+        Route::post('notifications/read-all', [NotificationController::class, 'readAll']);
+        Route::post('notifications/{id}/read', [NotificationController::class, 'read'])->whereNumber('id');
         // Chart of accounts (P7.1-BE-01).
         Route::get('account-groups', [AccountGroupController::class, 'index'])->middleware('perm:accounting.view');
         Route::post('account-groups', [AccountGroupController::class, 'store'])->middleware('perm:accounting.create');

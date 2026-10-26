@@ -87,9 +87,9 @@ final class CompanyProvisioner
     /** Default units of measure (backlog P3.1-BE-01): name => decimals its quantities allow. */
     public const UNITS = ['pcs' => 0, 'kg' => 3, 'bag' => 0, 'jar' => 0, 'litre' => 3, 'box' => 0, 'carton' => 0, 'dozen' => 0, 'metre' => 2];
 
-    /** Approval limits; NULL only for the system Owner role (R-10). Finance journal limit is an assumption (see 15 §6). */
+    /** [payment, journal] approval limits; NULL only for the system Owner role (R-10). Finance manager has no journal limit (owner decision 25 Oct 2026, docs 15 D8): the column's maximum stands for it. */
     private const LIMITS = [
-        'owner' => [null, null], 'finance' => ['500000.00', '500000.00'], 'accountant' => ['50000.00', '100000.00'],
+        'owner' => [null, null], 'finance' => ['500000.00', '9999999999999999.99'], 'accountant' => ['50000.00', '100000.00'],
         'sales' => ['0.00', '0.00'], 'store' => ['0.00', '0.00'], 'viewer' => ['0.00', '0.00'],
     ];
 
@@ -166,29 +166,43 @@ final class CompanyProvisioner
 
         // Current financial year (July-June) and its 12 periods; months up to today are open, later ones future.
         $startYear = $today->month >= $company->fy_start_month ? $today->year : $today->year - 1;
-        $fyStart = CarbonImmutable::create($startYear, $company->fy_start_month, 1, 0, 0, 0, 'Asia/Dhaka');
+        $this->openYear($company->id, $startYear, (int) $company->fy_start_month, $today);
+        foreach (['customer' => 'CUS-', 'supplier' => 'SUP-'] as $type => $prefix) {
+            NumberSequence::create(['fiscal_year_id' => null, 'document_type' => $type, 'prefix' => $prefix,
+                'next_number' => 1, 'padding' => 4, 'reset_policy' => 'never']);
+        }
+        $this->seedDefaultUnits();
+    }
+
+    /**
+     * A financial year starting in `$startYear` (FY 2026-27 = Jul 2026 – Jun 2027): its row, 12 monthly periods (open up
+     * to today, future after) and its number series. Used at provisioning and to open the next year ahead (R-05).
+     *
+     * @return int the fiscal year id
+     */
+    public function openYear(int $companyId, int $startYear, int $startMonth, CarbonImmutable $today): int
+    {
+        $fyStart = CarbonImmutable::create($startYear, $startMonth, 1, 0, 0, 0, 'Asia/Dhaka');
         $fyId = DB::table('fiscal_years')->insertGetId([
-            'company_id' => $company->id, 'name' => sprintf('FY %d-%02d', $startYear, ($startYear + 1) % 100),
+            'company_id' => $companyId, 'name' => sprintf('FY %d-%02d', $startYear, ($startYear + 1) % 100),
             'start_date' => $fyStart->toDateString(), 'end_date' => $fyStart->addYear()->subDay()->toDateString(),
             'status' => 'open', 'created_at' => now(), 'updated_at' => now(),
         ]);
         for ($i = 0; $i < 12; $i++) {
             $m = $fyStart->addMonths($i);
             DB::table('accounting_periods')->insert([
-                'company_id' => $company->id, 'fiscal_year_id' => $fyId, 'name' => $m->format('M Y'),
+                'company_id' => $companyId, 'fiscal_year_id' => $fyId, 'name' => $m->format('M Y'),
                 'start_date' => $m->toDateString(), 'end_date' => $m->endOfMonth()->toDateString(),
                 'status' => $m->startOfMonth()->lte($today) ? 'open' : 'future', 'created_at' => now(), 'updated_at' => now(),
             ]);
         }
         foreach (self::SEQUENCES as $type => [$prefix, $padding]) {
-            NumberSequence::create(['fiscal_year_id' => $fyId, 'document_type' => $type, 'prefix' => str_replace('{FY}', (string) $startYear, $prefix),
-                'next_number' => 1, 'padding' => $padding, 'reset_policy' => 'fiscal_year']);
+            DB::table('number_sequences')->insert(['company_id' => $companyId, 'fiscal_year_id' => $fyId, 'document_type' => $type,
+                'prefix' => str_replace('{FY}', (string) $startYear, $prefix), 'next_number' => 1, 'padding' => $padding, 'reset_policy' => 'fiscal_year',
+                'created_at' => now(), 'updated_at' => now()]);
         }
-        foreach (['customer' => 'CUS-', 'supplier' => 'SUP-'] as $type => $prefix) {
-            NumberSequence::create(['fiscal_year_id' => null, 'document_type' => $type, 'prefix' => $prefix,
-                'next_number' => 1, 'padding' => 4, 'reset_policy' => 'never']);
-        }
-        $this->seedDefaultUnits();
+
+        return $fyId;
     }
 
     /**

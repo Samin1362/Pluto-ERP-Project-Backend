@@ -2,11 +2,13 @@
 
 namespace App\Http\Resources;
 
+use App\Domain\Approvals\ApprovalService;
 use App\Domain\Shared\AmountInWords;
 use App\Domain\Shared\Money;
 use App\Models\JournalEntry;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -41,16 +43,27 @@ class VoucherResource extends JsonResource
                 ->map(fn ($l) => ['line_no' => $l->line_no, 'ledger_id' => $l->ledger_id, 'ledger_code' => $l->code, 'ledger_name' => $l->name, 'debit' => $l->debit,
                     'credit' => $l->credit, 'line_narration' => $l->line_narration, 'against_reference' => $l->against_reference])->all(),
             'payment' => $this->payment($e),
-            'source' => null,
+            'source' => $e->source_type ? ['type' => $e->source_type, 'id' => $e->source_id] : null,
             'reverses_entry_id' => $e->reverses_entry_id,
             'reversed_by_entry_id' => JournalEntry::where('reverses_entry_id', $e->id)->value('id'),
-            'approval' => null,
+            'approval' => ApprovalService::latestFor($e),
+            'audit_trail' => $this->summary ? [] : $this->auditTrail($e),
             'amount_in_words' => AmountInWords::of($e->total_debit, 'BDT'),
             'created_at' => $e->created_at->toIso8601String(),
             'created_by' => $e->createdBy ? ['id' => $e->createdBy->id, 'name' => $e->createdBy->name] : null,
             'updated_at' => $e->updated_at->toIso8601String(),
             'version' => (int) $e->lock_version,
         ];
+    }
+
+    /** AuditLog rows (05 schema) of this voucher, oldest first. */
+    private function auditTrail(JournalEntry $e): array
+    {
+        return DB::table('audit_logs as a')->leftJoin('users as u', 'u.id', '=', 'a.user_id')->where('a.auditable_type', 'journal_entries')->where('a.auditable_id', $e->id)
+            ->orderBy('a.id')->get(['a.id', 'a.action', 'a.user_id', 'u.name', 'a.old_values', 'a.new_values', 'a.ip_address', 'a.created_at'])
+            ->map(fn ($a) => ['id' => $a->id, 'action' => $a->action, 'user' => $a->user_id ? ['id' => $a->user_id, 'name' => $a->name] : null,
+                'old_values' => $a->old_values ? json_decode($a->old_values, true) : null, 'new_values' => $a->new_values ? json_decode($a->new_values, true) : null,
+                'ip_address' => $a->ip_address, 'created_at' => Carbon::parse($a->created_at)->toIso8601String()])->all();
     }
 
     private function payment(JournalEntry $e): ?array
