@@ -20855,6 +20855,7 @@ paths:
       x-error-codes:
       - allocation_exceeds_balance
       - already_posted
+      - backdated_confirmation_required
       - company_maintenance
       - company_required
       - foreign_document
@@ -20934,8 +20935,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '422':
-          description: 'Validation or business-rule failure: `allocation_exceeds_balance`, `foreign_document`, `idempotency_key_reused`, `insufficient_funds`, `mapping_missing`,
-            `period_locked`, `unbalanced_entry`, `validation_failed`'
+          description: 'Validation or business-rule failure: `allocation_exceeds_balance`, `backdated_confirmation_required`, `foreign_document`, `idempotency_key_reused`,
+            `insufficient_funds`, `mapping_missing`, `period_locked`, `unbalanced_entry`, `validation_failed`'
           content:
             application/problem+json:
               schema:

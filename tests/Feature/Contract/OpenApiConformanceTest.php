@@ -449,6 +449,24 @@ class OpenApiConformanceTest extends TestCase
         $this->assertConforms($this->api('PUT', '/api/v1/account-mappings', $t, $c, ['mappings' => [['mapping_key' => 'cogs', 'ledger_id' => $ledger('4101')]]]), 'PUT', '/account-mappings'); // 422
     }
 
+    public function test_supplier_payment_endpoints_match_the_contract(): void
+    {
+        $t = $this->login('owner@meghna.example');
+        $c = $this->company->id;
+        $key = fn () => ['Idempotency-Key' => (string) Str::uuid()];
+        $supplier = $this->api('POST', '/api/v1/parties', $t, $c, ['party_type' => 'supplier', 'name' => 'Bengal Edible Oils', 'mobile' => '01911222333'], $key())->json('data.id');
+        $bank = $this->api('POST', '/api/v1/money-accounts', $t, $c, ['account_type' => 'bank', 'bank_name' => 'Sonali Bank', 'account_name' => 'Meghna Traders Ltd.',
+            'account_number' => '0012-4521', 'opening_balance' => '50000.00'], $key())->json('data.id');
+        $body = ['party_id' => $supplier, 'date' => now('Asia/Dhaka')->toDateString(), 'amount' => '1000.00', 'money_account_id' => $bank, 'method' => 'cash'];
+        $p = $this->api('POST', '/api/v1/supplier-payments', $t, $c, $body, $key());
+        $this->assertConforms($p, 'POST', '/supplier-payments');
+        $this->assertConforms($this->api('POST', '/api/v1/supplier-payments', $t, $c, ['amount' => '0'], $key()), 'POST', '/supplier-payments');                      // 422
+        $this->assertConforms($this->api('POST', '/api/v1/supplier-payments', $t, $c, ['amount' => '90000.00'] + $body, $key()), 'POST', '/supplier-payments');        // 422 funds
+        $this->assertConforms($this->api('GET', '/api/v1/supplier-payments?status=posted', $t, $c), 'GET', '/supplier-payments');
+        $this->assertConforms($this->api('GET', "/api/v1/supplier-payments/{$p->json('data.id')}", $t, $c), 'GET', '/supplier-payments/{id}');
+        $this->assertConforms($this->api('GET', '/api/v1/supplier-payments/999999', $t, $c), 'GET', '/supplier-payments/{id}');                                         // 404
+    }
+
     public function test_allocation_endpoints_match_the_contract(): void
     {
         $t = $this->login('owner@meghna.example');

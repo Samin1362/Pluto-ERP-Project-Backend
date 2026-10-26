@@ -3,6 +3,7 @@
 namespace App\Domain\Accounting;
 
 use App\Domain\Approvals\ApprovalService;
+use App\Domain\Settlements\AllocationPlanner;
 use App\Domain\Settlements\AllocationService;
 use App\Domain\Shared\AuditLogger;
 use App\Domain\Shared\DocumentNumberService;
@@ -36,6 +37,7 @@ final class VoucherService
         private readonly PeriodGuard $periods,
         private readonly DocumentNumberService $numbers,
         private readonly AllocationService $allocations,
+        private readonly AllocationPlanner $planner,
         private readonly ApprovalService $approvals,
         private readonly AuditLogger $audit,
     ) {}
@@ -168,7 +170,11 @@ final class VoucherService
         $entry->forceFill(['status' => 'posted', 'fiscal_year_id' => $period->fiscal_year_id, 'accounting_period_id' => $period->id,
             'posted_at' => now(), 'posted_by' => auth()->id(), 'lock_version' => (int) $entry->lock_version + 1])->save();
         JournalLine::where('journal_entry_id', $entry->id)->update(['is_posted' => true, 'entry_date' => $date]);
-        $this->settle($entry, $lines, $allocations, $date);
+        if ($approved && $allocations === []) {
+            $this->settleOldestFirst($entry, $lines, $date);
+        } else {
+            $this->settle($entry, $lines, $allocations, $date);
+        }
         $this->audit->record('posted', $entry, ['status' => 'draft'], ['status' => 'posted', 'voucher_number' => $entry->voucher_number], type: 'journal_entries');
 
         return [$entry->refresh(), false];
@@ -258,6 +264,33 @@ final class VoucherService
             foreach (collect($rows)->sortBy('document_id') as $a) {
                 $this->allocations->allocate($line->id, $type, (int) $a['document_id'], Money::of($a['amount']), $date);
             }
+        }
+    }
+
+    /**
+     * An approved payment or receipt to a party settles that party's open bills or invoices oldest due first (BR-020's
+     * default), since the allocations chosen when it was submitted are not kept while it waits.
+     */
+    private function settleOldestFirst(JournalEntry $entry, $lines, string $date): void
+    {
+        $partyId = DB::table('payment_details')->where('journal_entry_id', $entry->id)->value('party_id');
+        $party = $partyId ? Party::find($partyId) : null;
+        $line = $party ? $lines->firstWhere('ledger_id', $party->ledger_id) : null;
+        if (! $line) {
+            return;
+        }
+        $supplier = $party->party_type === 'supplier';
+        $amount = Money::of((string) ($supplier ? $line->debit : $line->credit));
+        if (! $amount->isPositive()) {
+            return;
+        }
+        [$table, $dateColumn] = $supplier ? ['purchase_bills', 'bill_date'] : ['sales_invoices', 'invoice_date'];
+        $open = DB::table($table)->where('party_id', $party->id)->where('status', 'posted')->where('balance_due', '>', 0)->get(['id', 'due_date', $dateColumn, 'balance_due'])
+            ->map(fn ($d) => ['id' => $d->id, 'due_date' => (string) $d->due_date, 'date' => (string) $d->{$dateColumn}, 'balance' => Money::of($d->balance_due)])->all();
+        $plan = $this->planner->plan($amount, $open)['allocations'];
+        usort($plan, fn ($a, $b) => $a['id'] <=> $b['id']); // lock order
+        foreach ($plan as $a) {
+            $this->allocations->allocate($line->id, $supplier ? 'purchase_bill' : 'sales_invoice', $a['id'], $a['amount'], $date);
         }
     }
 

@@ -14,11 +14,15 @@ final class CustomerReceiptQuery
 {
     public const SORTS = ['entry_date', '-entry_date', 'voucher_number', '-voucher_number', 'total_debit', '-total_debit'];
 
-    public function page(array $f): LengthAwarePaginator
+    /** Supplier payments (F12; P8.1-BE-01) use the same list: payment entries of suppliers, also filtered by status (draft, submitted, posted, reversed). */
+    public function page(array $f, string $entryType = 'receipt', string $partyType = 'customer'): LengthAwarePaginator
     {
         $q = JournalEntry::query()->select('journal_entries.*')->with('createdBy')
             ->join('payment_details as p', 'p.journal_entry_id', '=', 'journal_entries.id')->join('parties as y', 'y.id', '=', 'p.party_id')
-            ->where('journal_entries.entry_type', 'receipt')->where('y.party_type', 'customer');
+            ->where('journal_entries.entry_type', $entryType)->where('y.party_type', $partyType);
+        if (isset($f['status'])) {
+            $q->where('journal_entries.status', $f['status']);
+        }
         if (isset($f['party_id'])) {
             $q->where('p.party_id', $f['party_id']);
         }
