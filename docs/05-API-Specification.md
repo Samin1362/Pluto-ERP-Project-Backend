@@ -378,13 +378,13 @@ The journal debits the supplier ৳ 46,88,640 (an advance until the import bill 
 | 132 | `GET` | [`/api/v1/reports/inventory/summary`](#getreportsinventorysummary) | Inventory summary (value by group, flow, movers, attention) | `inventory.view` | 200 |
 | 133 | `GET` | [`/api/v1/reports/inventory/low-stock`](#getreportsinventorylowstock) | Items at or below reorder level with suggested quantities | `inventory.view` | 200 |
 | 134 | `GET` | [`/api/v1/reports/inventory/valuation`](#getreportsinventoryvaluation) | Stock valuation at weighted average cost as of a date | `inventory.view_costs` | 200 |
-| 135 | `GET` | [`/api/v1/reports/trial-balance`](#getreportstrialbalance) | Trial balance (JSON; xlsx/pdf/csv via format) | `reports.view` | 200 |
-| 136 | `GET` | [`/api/v1/reports/profit-and-loss`](#getreportsprofitandloss) | Profit and loss (JSON; xlsx/pdf/csv via format) | `reports.view` | 200 |
-| 137 | `GET` | [`/api/v1/reports/balance-sheet`](#getreportsbalancesheet) | Balance sheet (JSON; xlsx/pdf/csv via format) | `reports.view` | 200 |
-| 138 | `GET` | [`/api/v1/reports/cash-flow`](#getreportscashflow) | Cash flow (indirect) (JSON; xlsx/pdf/csv via format) | `reports.view` | 200 |
-| 139 | `GET` | [`/api/v1/reports/general-ledger`](#getreportsgeneralledger) | General ledger (JSON; xlsx/pdf/csv via format) | `reports.view` | 200 |
-| 140 | `GET` | [`/api/v1/reports/receivables-aging`](#getreportsreceivablesaging) | Receivables aging (JSON; xlsx/pdf/csv via format) | `reports.view` | 200 |
-| 141 | `GET` | [`/api/v1/reports/payables-aging`](#getreportspayablesaging) | Payables aging (JSON; xlsx/pdf/csv via format) | `reports.view` | 200 |
+| 135 | `GET` | [`/api/v1/reports/trial-balance`](#getreportstrialbalance) | Trial balance (JSON; xlsx/pdf/csv via format) | `reports.financial` | 200 |
+| 136 | `GET` | [`/api/v1/reports/profit-and-loss`](#getreportsprofitandloss) | Profit and loss (JSON; xlsx/pdf/csv via format) | `reports.financial` | 200 |
+| 137 | `GET` | [`/api/v1/reports/balance-sheet`](#getreportsbalancesheet) | Balance sheet (JSON; xlsx/pdf/csv via format) | `reports.financial` | 200 |
+| 138 | `GET` | [`/api/v1/reports/cash-flow`](#getreportscashflow) | Cash flow (indirect) (JSON; xlsx/pdf/csv via format) | `reports.financial` | 200 |
+| 139 | `GET` | [`/api/v1/reports/general-ledger`](#getreportsgeneralledger) | General ledger (JSON; xlsx/pdf/csv via format) | `reports.financial` | 200 |
+| 140 | `GET` | [`/api/v1/reports/receivables-aging`](#getreportsreceivablesaging) | Receivables aging (JSON; xlsx/pdf/csv via format) | `reports.financial` | 200 |
+| 141 | `GET` | [`/api/v1/reports/payables-aging`](#getreportspayablesaging) | Payables aging (JSON; xlsx/pdf/csv via format) | `reports.financial` | 200 |
 | 142 | `GET` | [`/api/v1/reports/sales`](#getreportssales) | Sales report | `reports.view` | 200 |
 | 143 | `GET` | [`/api/v1/reports/sales-returns`](#getreportssalesreturns) | Sales return report | `reports.view` | 200 |
 | 144 | `GET` | [`/api/v1/reports/purchases`](#getreportspurchases) | Purchase report | `reports.view` | 200 |
@@ -583,7 +583,7 @@ Last run: 24 rules, **24 passed, 0 failed**; 6 negative tests, 6 detected. Offic
 | A18 | Every page has at least one endpoint (shared components use their host page's) | 162 | ✅ pass |
 | A19 | For every action, at least one role can both open the page and call the endpoint | 322 | ✅ pass |
 | A20 | Database operations name real tables; nothing deletes posted or append-only rows; every write changes something | 1284 | ✅ pass |
-| A21 | Every parameter has a typed schema | 523 | ✅ pass |
+| A21 | Every parameter has a typed schema | 524 | ✅ pass |
 | A22 | Business rules exist; 43 rejecting rules map to error codes | 346 | ✅ pass |
 | A23 | Calculate/preview endpoints never reject on business state; they return warnings[] (BR-015) | 4 | ✅ pass |
 | A24 | Ledger/stock writes are coherent: entries have lines, stock movements update balances, system entries take an SJ number, bulk post = single post | 84 | ✅ pass |
@@ -3588,8 +3588,8 @@ Trial balance (JSON; xlsx/pdf/csv via format). Reads posted lines only. `format=
 | | |
 |---|---|
 | **Auth** | Bearer JWT + `X-Company-Id` |
-| **Permission** | `reports.view` — roles: Owner, Finance manager, Accountant, Sales staff, Viewer |
-| **Path / query params** | — / `as_of`, `level`, `format` |
+| **Permission** | `reports.financial` — roles: Owner, Finance manager, Accountant |
+| **Path / query params** | — / `as_of`, `level`, `branch_id`, `format` |
 | **Request body** | — |
 | **Validation** | BR-005: Drafts, submitted and rejected vouchers never affect ledger balances, stock or reports.<br>BR-001: Every posted journal entry balances: total debit = total credit > 0. |
 | **Success** | 200 `data`: [`ReportData`](#schema-reportdata) · `format=xlsx\|pdf\|csv` returns the file; 202 + ExportJob above 5,000 rows |
@@ -3599,7 +3599,7 @@ Trial balance (JSON; xlsx/pdf/csv via format). Reads posted lines only. `format=
 | **Database** | read: account_groups, journal_entries, journal_lines, ledgers |
 | **Business rules** | BR-005, BR-001 |
 | **Requirements** | FR-076 |
-| **Pages and actions** | H15, H1, J1<br>H15 · Export (xlsx, pdf, csv) |
+| **Pages and actions** | H15<br>H15 · Export (xlsx, pdf, csv) |
 | **Transaction / concurrency** | Read-only; consistent snapshot. |
 
 <a id="getreportsprofitandloss"></a>
@@ -3610,7 +3610,7 @@ Profit and loss (JSON; xlsx/pdf/csv via format). Reads posted lines only. `forma
 | | |
 |---|---|
 | **Auth** | Bearer JWT + `X-Company-Id` |
-| **Permission** | `reports.view` — roles: Owner, Finance manager, Accountant, Sales staff, Viewer |
+| **Permission** | `reports.financial` — roles: Owner, Finance manager, Accountant |
 | **Path / query params** | — / `date_from`, `date_to`, `compare`, `detail`, `branch_id`, `format` |
 | **Request body** | — |
 | **Validation** | BR-005: Drafts, submitted and rejected vouchers never affect ledger balances, stock or reports.<br>BR-001: Every posted journal entry balances: total debit = total credit > 0. |
@@ -3621,7 +3621,7 @@ Profit and loss (JSON; xlsx/pdf/csv via format). Reads posted lines only. `forma
 | **Database** | read: account_groups, journal_entries, journal_lines, ledgers |
 | **Business rules** | BR-005, BR-001 |
 | **Requirements** | FR-076 |
-| **Pages and actions** | H16, J1<br>H16 · Export (xlsx, pdf, csv) |
+| **Pages and actions** | H16<br>H16 · Export (xlsx, pdf, csv) |
 | **Transaction / concurrency** | Read-only; consistent snapshot. |
 
 <a id="getreportsbalancesheet"></a>
@@ -3632,7 +3632,7 @@ Balance sheet (JSON; xlsx/pdf/csv via format). Reads posted lines only. `format=
 | | |
 |---|---|
 | **Auth** | Bearer JWT + `X-Company-Id` |
-| **Permission** | `reports.view` — roles: Owner, Finance manager, Accountant, Sales staff, Viewer |
+| **Permission** | `reports.financial` — roles: Owner, Finance manager, Accountant |
 | **Path / query params** | — / `as_of`, `compare`, `detail`, `format` |
 | **Request body** | — |
 | **Validation** | BR-005: Drafts, submitted and rejected vouchers never affect ledger balances, stock or reports.<br>BR-001: Every posted journal entry balances: total debit = total credit > 0. |
@@ -3643,7 +3643,7 @@ Balance sheet (JSON; xlsx/pdf/csv via format). Reads posted lines only. `format=
 | **Database** | read: account_groups, journal_entries, journal_lines, ledgers |
 | **Business rules** | BR-005, BR-001 |
 | **Requirements** | FR-076 |
-| **Pages and actions** | H17, J1<br>H17 · Export (xlsx, pdf, csv) |
+| **Pages and actions** | H17<br>H17 · Export (xlsx, pdf, csv) |
 | **Transaction / concurrency** | Read-only; consistent snapshot. |
 
 <a id="getreportscashflow"></a>
@@ -3654,7 +3654,7 @@ Cash flow (indirect) (JSON; xlsx/pdf/csv via format). Reads posted lines only. `
 | | |
 |---|---|
 | **Auth** | Bearer JWT + `X-Company-Id` |
-| **Permission** | `reports.view` — roles: Owner, Finance manager, Accountant, Sales staff, Viewer |
+| **Permission** | `reports.financial` — roles: Owner, Finance manager, Accountant |
 | **Path / query params** | — / `date_from`, `date_to`, `format` |
 | **Request body** | — |
 | **Validation** | BR-005: Drafts, submitted and rejected vouchers never affect ledger balances, stock or reports.<br>BR-001: Every posted journal entry balances: total debit = total credit > 0. |
@@ -3665,7 +3665,7 @@ Cash flow (indirect) (JSON; xlsx/pdf/csv via format). Reads posted lines only. `
 | **Database** | read: account_groups, journal_entries, journal_lines, ledgers |
 | **Business rules** | BR-005, BR-001 |
 | **Requirements** | FR-076 |
-| **Pages and actions** | H18, J1<br>H18 · Export (xlsx, pdf, csv) |
+| **Pages and actions** | H18<br>H18 · Export (xlsx, pdf, csv) |
 | **Transaction / concurrency** | Read-only; consistent snapshot. |
 
 <a id="getreportsgeneralledger"></a>
@@ -3676,7 +3676,7 @@ General ledger (JSON; xlsx/pdf/csv via format). Reads posted lines only. `format
 | | |
 |---|---|
 | **Auth** | Bearer JWT + `X-Company-Id` |
-| **Permission** | `reports.view` — roles: Owner, Finance manager, Accountant, Sales staff, Viewer |
+| **Permission** | `reports.financial` — roles: Owner, Finance manager, Accountant |
 | **Path / query params** | — / `date_from`, `date_to`, `ledger_ids`, `group_by`, `format` |
 | **Request body** | — |
 | **Validation** | BR-005: Drafts, submitted and rejected vouchers never affect ledger balances, stock or reports.<br>BR-001: Every posted journal entry balances: total debit = total credit > 0. |
@@ -3687,7 +3687,7 @@ General ledger (JSON; xlsx/pdf/csv via format). Reads posted lines only. `format
 | **Database** | read: account_groups, journal_entries, journal_lines, ledgers |
 | **Business rules** | BR-005, BR-001 |
 | **Requirements** | FR-076 |
-| **Pages and actions** | H19, J1<br>H19 · Export (xlsx, pdf, csv) |
+| **Pages and actions** | H19<br>H19 · Export (xlsx, pdf, csv) |
 | **Transaction / concurrency** | Read-only; consistent snapshot. |
 
 <a id="getreportsreceivablesaging"></a>
@@ -3698,7 +3698,7 @@ Receivables aging (JSON; xlsx/pdf/csv via format). Reads posted lines only. `for
 | | |
 |---|---|
 | **Auth** | Bearer JWT + `X-Company-Id` |
-| **Permission** | `reports.view` — roles: Owner, Finance manager, Accountant, Sales staff, Viewer |
+| **Permission** | `reports.financial` — roles: Owner, Finance manager, Accountant |
 | **Path / query params** | — / `as_of`, `q`, `overdue_only`, `format` |
 | **Request body** | — |
 | **Validation** | BR-005: Drafts, submitted and rejected vouchers never affect ledger balances, stock or reports.<br>BR-001: Every posted journal entry balances: total debit = total credit > 0. |
@@ -3720,7 +3720,7 @@ Payables aging (JSON; xlsx/pdf/csv via format). Reads posted lines only. `format
 | | |
 |---|---|
 | **Auth** | Bearer JWT + `X-Company-Id` |
-| **Permission** | `reports.view` — roles: Owner, Finance manager, Accountant, Sales staff, Viewer |
+| **Permission** | `reports.financial` — roles: Owner, Finance manager, Accountant |
 | **Path / query params** | — / `as_of`, `q`, `overdue_only`, `format` |
 | **Request body** | — |
 | **Validation** | BR-005: Drafts, submitted and rejected vouchers never affect ledger balances, stock or reports.<br>BR-001: Every posted journal entry balances: total debit = total credit > 0. |
@@ -11663,7 +11663,7 @@ View permission `reports.view`. **Loads:** [`GET /reports/expenses`](#getreports
 <a id="actions-h1"></a>
 #### H1 · Accounting overview
 
-View permission `accounting.view`. **Loads:** [`GET /approvals`](#getapprovals), [`GET /accounting/overview`](#getaccountingoverview), [`GET /vouchers`](#getvouchers), [`GET /reports/trial-balance`](#getreportstrialbalance).
+View permission `accounting.view`. **Loads:** [`GET /approvals`](#getapprovals), [`GET /accounting/overview`](#getaccountingoverview), [`GET /vouchers`](#getvouchers).
 
 | # | Action | Calls | Permission | Body → data | Success | Business errors to handle |
 |---|---|---|---|---|---|---|
@@ -11851,62 +11851,62 @@ View permission `settings.edit`. **Loads:** [`GET /account-mappings`](#getaccoun
 <a id="actions-h15"></a>
 #### H15 · Trial balance
 
-View permission `reports.view`. **Loads:** [`GET /reports/trial-balance`](#getreportstrialbalance).
+View permission `reports.financial`. **Loads:** [`GET /reports/trial-balance`](#getreportstrialbalance).
 
 | # | Action | Calls | Permission | Body → data | Success | Business errors to handle |
 |---|---|---|---|---|---|---|
 | 1 | Print | ui:browser print of the loaded view (print stylesheet) | — | — | — | — |
-| 2 | Export (xlsx, pdf, csv) | export:[`GET /reports/trial-balance`](#getreportstrialbalance) | `reports.view` | — | 200 | `unbalanced_entry` |
+| 2 | Export (xlsx, pdf, csv) | export:[`GET /reports/trial-balance`](#getreportstrialbalance) | `reports.financial` | — | 200 | `unbalanced_entry` |
 | 3 | Drill into ledger | nav:H7 | — | — | — | — |
 
 <a id="actions-h16"></a>
 #### H16 · Profit and loss
 
-View permission `reports.view`. **Loads:** [`GET /reports/profit-and-loss`](#getreportsprofitandloss).
+View permission `reports.financial`. **Loads:** [`GET /reports/profit-and-loss`](#getreportsprofitandloss).
 
 | # | Action | Calls | Permission | Body → data | Success | Business errors to handle |
 |---|---|---|---|---|---|---|
 | 1 | Print | ui:browser print of the loaded view (print stylesheet) | — | — | — | — |
-| 2 | Export (xlsx, pdf, csv) | export:[`GET /reports/profit-and-loss`](#getreportsprofitandloss) | `reports.view` | — | 200 | `unbalanced_entry` |
+| 2 | Export (xlsx, pdf, csv) | export:[`GET /reports/profit-and-loss`](#getreportsprofitandloss) | `reports.financial` | — | 200 | `unbalanced_entry` |
 | 3 | Drill into ledger | nav:H7 | — | — | — | — |
 
 <a id="actions-h17"></a>
 #### H17 · Balance sheet
 
-View permission `reports.view`. **Loads:** [`GET /reports/balance-sheet`](#getreportsbalancesheet).
+View permission `reports.financial`. **Loads:** [`GET /reports/balance-sheet`](#getreportsbalancesheet).
 
 | # | Action | Calls | Permission | Body → data | Success | Business errors to handle |
 |---|---|---|---|---|---|---|
 | 1 | Print | ui:browser print of the loaded view (print stylesheet) | — | — | — | — |
-| 2 | Export (xlsx, pdf, csv) | export:[`GET /reports/balance-sheet`](#getreportsbalancesheet) | `reports.view` | — | 200 | `unbalanced_entry` |
+| 2 | Export (xlsx, pdf, csv) | export:[`GET /reports/balance-sheet`](#getreportsbalancesheet) | `reports.financial` | — | 200 | `unbalanced_entry` |
 | 3 | Drill into ledger | nav:H7 | — | — | — | — |
 
 <a id="actions-h18"></a>
 #### H18 · Cash flow statement
 
-View permission `reports.view`. **Loads:** [`GET /reports/cash-flow`](#getreportscashflow).
+View permission `reports.financial`. **Loads:** [`GET /reports/cash-flow`](#getreportscashflow).
 
 | # | Action | Calls | Permission | Body → data | Success | Business errors to handle |
 |---|---|---|---|---|---|---|
 | 1 | Print | ui:browser print of the loaded view (print stylesheet) | — | — | — | — |
-| 2 | Export (xlsx, pdf, csv) | export:[`GET /reports/cash-flow`](#getreportscashflow) | `reports.view` | — | 200 | `unbalanced_entry` |
+| 2 | Export (xlsx, pdf, csv) | export:[`GET /reports/cash-flow`](#getreportscashflow) | `reports.financial` | — | 200 | `unbalanced_entry` |
 | 3 | Drill into ledger | nav:H7 | — | — | — | — |
 
 <a id="actions-h19"></a>
 #### H19 · General ledger
 
-View permission `reports.view`. **Loads:** [`GET /reports/general-ledger`](#getreportsgeneralledger).
+View permission `reports.financial`. **Loads:** [`GET /reports/general-ledger`](#getreportsgeneralledger).
 
 | # | Action | Calls | Permission | Body → data | Success | Business errors to handle |
 |---|---|---|---|---|---|---|
 | 1 | Print | ui:browser print of the loaded view (print stylesheet) | — | — | — | — |
-| 2 | Export (xlsx, pdf, csv) | export:[`GET /reports/general-ledger`](#getreportsgeneralledger) | `reports.view` | — | 200 | `unbalanced_entry` |
+| 2 | Export (xlsx, pdf, csv) | export:[`GET /reports/general-ledger`](#getreportsgeneralledger) | `reports.financial` | — | 200 | `unbalanced_entry` |
 | 3 | Drill into ledger | nav:H7 | — | — | — | — |
 
 <a id="actions-j1"></a>
 #### J1 · Reports centre
 
-View permission `reports.view`. **Loads:** [`GET /export-jobs/{id}`](#getexportjobsid), [`GET /reports/inventory/valuation`](#getreportsinventoryvaluation), [`GET /reports/trial-balance`](#getreportstrialbalance), [`GET /reports/profit-and-loss`](#getreportsprofitandloss), [`GET /reports/balance-sheet`](#getreportsbalancesheet), [`GET /reports/cash-flow`](#getreportscashflow), [`GET /reports/general-ledger`](#getreportsgeneralledger), [`GET /reports/sales`](#getreportssales), [`GET /reports/purchases`](#getreportspurchases), [`GET /reports/income`](#getreportsincome), [`GET /reports/expenses`](#getreportsexpenses).
+View permission `reports.view`. **Loads:** [`GET /export-jobs/{id}`](#getexportjobsid), [`GET /reports/inventory/valuation`](#getreportsinventoryvaluation), [`GET /reports/sales`](#getreportssales), [`GET /reports/purchases`](#getreportspurchases), [`GET /reports/income`](#getreportsincome), [`GET /reports/expenses`](#getreportsexpenses).
 
 | # | Action | Calls | Permission | Body → data | Success | Business errors to handle |
 |---|---|---|---|---|---|---|
@@ -11915,24 +11915,24 @@ View permission `reports.view`. **Loads:** [`GET /export-jobs/{id}`](#getexportj
 <a id="actions-j6"></a>
 #### J6 · Receivables aging
 
-View permission `reports.view`. **Loads:** [`GET /parties/{id}/statement`](#getpartiesidstatement), [`GET /reports/receivables-aging`](#getreportsreceivablesaging).
+View permission `reports.financial`. **Loads:** [`GET /parties/{id}/statement`](#getpartiesidstatement), [`GET /reports/receivables-aging`](#getreportsreceivablesaging).
 
 | # | Action | Calls | Permission | Body → data | Success | Business errors to handle |
 |---|---|---|---|---|---|---|
 | 1 | Statement (row) | nav:B8 | — | — | — | — |
 | 2 | Print | ui:browser print of the loaded view (print stylesheet) | — | — | — | — |
-| 3 | Export | export:[`GET /reports/receivables-aging`](#getreportsreceivablesaging) | `reports.view` | — | 200 | `unbalanced_entry` |
+| 3 | Export | export:[`GET /reports/receivables-aging`](#getreportsreceivablesaging) | `reports.financial` | — | 200 | `unbalanced_entry` |
 
 <a id="actions-j7"></a>
 #### J7 · Payables aging
 
-View permission `reports.view`. **Loads:** [`GET /parties/{id}/statement`](#getpartiesidstatement), [`GET /reports/payables-aging`](#getreportspayablesaging).
+View permission `reports.financial`. **Loads:** [`GET /parties/{id}/statement`](#getpartiesidstatement), [`GET /reports/payables-aging`](#getreportspayablesaging).
 
 | # | Action | Calls | Permission | Body → data | Success | Business errors to handle |
 |---|---|---|---|---|---|---|
 | 1 | Statement (row) | nav:C8 | — | — | — | — |
 | 2 | Print | ui:browser print of the loaded view (print stylesheet) | — | — | — | — |
-| 3 | Export | export:[`GET /reports/payables-aging`](#getreportspayablesaging) | `reports.view` | — | 200 | `unbalanced_entry` |
+| 3 | Export | export:[`GET /reports/payables-aging`](#getreportspayablesaging) | `reports.financial` | — | 200 | `unbalanced_entry` |
 
 ### Settings
 
@@ -12476,6 +12476,8 @@ View permission `lc.create`. **Loads:** nothing of its own (host page data).
 | Database operations (second pass) | Corrected derived writes: bulk post now posts like the single post; 13 system-entry postings lock number_sequences for the SJ number (R-06); voucher post updates rather than inserts its lines; landed cost updates stock_balances (R-02); allocations create no journal lines; quote/PO convert create the draft document. Rule A23 now enforces these invariants. |
 | AccountGroup schema | Adds `used_in_cash_vouchers` and `sort_order` (accepted by AccountGroupInput but not returned, so H3 could not prefill its edit form) and `balance_side` (the balance is an amount, like AccountNode); `children` are AccountNode items (P7.1-BE-01, 25 Oct 2026). Additive. |
 | POST /supplier-payments | Declares 422 `backdated_confirmation_required` (BR-053; the payment voucher asks for confirmation like any voucher) (P8.1-BE-01, 26 Oct 2026). Additive. |
+| Financial reports (DEC-13 / R-25) | TB, P&L, balance sheet, cash flow, general ledger and the aging reports need the new `reports.financial` (Owner, Finance manager, Accountant; owner decision 25 Oct 2026); Sales staff and Viewer keep `reports.view` for operational reports. H1 and J1 no longer list them as loads (H1 loads `/accounting/overview`; J1 only links to the reports) (P9.0-SETUP-01, 27 Oct 2026). Dashboard money widgets follow in P14. |
+| GET /reports/trial-balance | Adds the `branch_id` filter, like the P&L (P9.1-BE-01, 27 Oct 2026). Additive. |
 | Dashboard lenses A2–A8 | Load only `GET /dashboard/lenses/{lens}`; the overlapping report and list endpoints were removed from their page lists. |
 
 ### 12.5 Overlaps kept on purpose
@@ -12539,7 +12541,6 @@ Each pair returns similar data but serves a different permission audience. Remov
 | Decision | Effect on the API |
 |---|---|
 | DEC-02 | Access token in memory + refresh cookie (assumed throughout the contract). If tokens move to a BFF/session cookie, `bearerAuth` changes and CSRF headers are added. |
-| DEC-13 / R-25 | Sales staff and Viewer can read the dashboard's cash and P&L widgets and the financial statements. If restricted, add `reports.financial` and mask those widgets; no path changes. |
 | R-02 / R-13 | Per-warehouse average cost and cash-credit accounts are reflected in the schema the API reads; reverting either changes response fields, not endpoints. |
 | R-24 | Store keeper: confirm that goods are received by purchasing (no purchases.create for the role). |
 | Design sign-off | Seven NEW list/recurring screens and the NEW actions listed in 12.6 need design approval before the frontend builds them. |

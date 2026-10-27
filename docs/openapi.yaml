@@ -30067,9 +30067,9 @@ paths:
       tags:
       - Reports
       description: "Reads posted lines only. `format=xlsx|pdf|csv` requires reports.export and returns the file; when the export exceeds 5,000 rows the answer is\
-        \ 202 with an ExportJob to poll.\n\n**Permission:** `reports.view`  \n**Database:** read: account_groups, journal_entries, journal_lines, ledgers  \n**Rules:**\
-        \ BR-005, BR-001"
-      x-permission: reports.view
+        \ 202 with an ExportJob to poll.\n\n**Permission:** `reports.financial`  \n**Database:** read: account_groups, journal_entries, journal_lines, ledgers  \n\
+        **Rules:** BR-005, BR-001"
+      x-permission: reports.financial
       x-business-rules:
       - BR-005
       - BR-001
@@ -30077,8 +30077,6 @@ paths:
       - FR-076
       x-pages:
       - H15
-      - H1
-      - J1
       x-page-actions:
       - 'H15: Export (xlsx, pdf, csv)'
       x-tables:
@@ -30116,6 +30114,12 @@ paths:
         schema:
           type: string
         description: level
+      - name: branch_id
+        in: query
+        required: false
+        schema:
+          type: string
+        description: branch id
       - name: format
         in: query
         required: false
@@ -30219,9 +30223,9 @@ paths:
       tags:
       - Reports
       description: "Reads posted lines only. `format=xlsx|pdf|csv` requires reports.export and returns the file; when the export exceeds 5,000 rows the answer is\
-        \ 202 with an ExportJob to poll.\n\n**Permission:** `reports.view`  \n**Database:** read: account_groups, journal_entries, journal_lines, ledgers  \n**Rules:**\
-        \ BR-005, BR-001"
-      x-permission: reports.view
+        \ 202 with an ExportJob to poll.\n\n**Permission:** `reports.financial`  \n**Database:** read: account_groups, journal_entries, journal_lines, ledgers  \n\
+        **Rules:** BR-005, BR-001"
+      x-permission: reports.financial
       x-business-rules:
       - BR-005
       - BR-001
@@ -30229,7 +30233,6 @@ paths:
       - FR-076
       x-pages:
       - H16
-      - J1
       x-page-actions:
       - 'H16: Export (xlsx, pdf, csv)'
       x-tables:
@@ -30389,9 +30392,9 @@ paths:
       tags:
       - Reports
       description: "Reads posted lines only. `format=xlsx|pdf|csv` requires reports.export and returns the file; when the export exceeds 5,000 rows the answer is\
-        \ 202 with an ExportJob to poll.\n\n**Permission:** `reports.view`  \n**Database:** read: account_groups, journal_entries, journal_lines, ledgers  \n**Rules:**\
-        \ BR-005, BR-001"
-      x-permission: reports.view
+        \ 202 with an ExportJob to poll.\n\n**Permission:** `reports.financial`  \n**Database:** read: account_groups, journal_entries, journal_lines, ledgers  \n\
+        **Rules:** BR-005, BR-001"
+      x-permission: reports.financial
       x-business-rules:
       - BR-005
       - BR-001
@@ -30399,7 +30402,6 @@ paths:
       - FR-076
       x-pages:
       - H17
-      - J1
       x-page-actions:
       - 'H17: Export (xlsx, pdf, csv)'
       x-tables:
@@ -30546,9 +30548,9 @@ paths:
       tags:
       - Reports
       description: "Reads posted lines only. `format=xlsx|pdf|csv` requires reports.export and returns the file; when the export exceeds 5,000 rows the answer is\
-        \ 202 with an ExportJob to poll.\n\n**Permission:** `reports.view`  \n**Database:** read: account_groups, journal_entries, journal_lines, ledgers  \n**Rules:**\
-        \ BR-005, BR-001"
-      x-permission: reports.view
+        \ 202 with an ExportJob to poll.\n\n**Permission:** `reports.financial`  \n**Database:** read: account_groups, journal_entries, journal_lines, ledgers  \n\
+        **Rules:** BR-005, BR-001"
+      x-permission: reports.financial
       x-business-rules:
       - BR-005
       - BR-001
@@ -30556,7 +30558,6 @@ paths:
       - FR-076
       x-pages:
       - H18
-      - J1
       x-page-actions:
       - 'H18: Export (xlsx, pdf, csv)'
       x-tables:
@@ -30698,9 +30699,9 @@ paths:
       tags:
       - Reports
       description: "Reads posted lines only. `format=xlsx|pdf|csv` requires reports.export and returns the file; when the export exceeds 5,000 rows the answer is\
-        \ 202 with an ExportJob to poll.\n\n**Permission:** `reports.view`  \n**Database:** read: account_groups, journal_entries, journal_lines, ledgers  \n**Rules:**\
-        \ BR-005, BR-001"
-      x-permission: reports.view
+        \ 202 with an ExportJob to poll.\n\n**Permission:** `reports.financial`  \n**Database:** read: account_groups, journal_entries, journal_lines, ledgers  \n\
+        **Rules:** BR-005, BR-001"
+      x-permission: reports.financial
       x-business-rules:
       - BR-005
       - BR-001
@@ -30708,7 +30709,6 @@ paths:
       - FR-076
       x-pages:
       - H19
-      - J1
       x-page-actions:
       - 'H19: Export (xlsx, pdf, csv)'
       x-tables:
@@ -30862,9 +30862,9 @@ paths:
       tags:
       - Reports
       description: "Reads posted lines only. `format=xlsx|pdf|csv` requires reports.export and returns the file; when the export exceeds 5,000 rows the answer is\
-        \ 202 with an ExportJob to poll.\n\n**Permission:** `reports.view`  \n**Database:** read: account_groups, journal_entries, journal_lines, ledgers, parties,\
+        \ 202 with an ExportJob to poll.\n\n**Permission:** `reports.financial`  \n**Database:** read: account_groups, journal_entries, journal_lines, ledgers, parties,\
         \ purchase_bills, sales_invoices  \n**Rules:** BR-005, BR-001"
-      x-permission: reports.view
+      x-permission: reports.financial
       x-business-rules:
       - BR-005
       - BR-001
@@ -31025,9 +31025,9 @@ paths:
       tags:
       - Reports
       description: "Reads posted lines only. `format=xlsx|pdf|csv` requires reports.export and returns the file; when the export exceeds 5,000 rows the answer is\
-        \ 202 with an ExportJob to poll.\n\n**Permission:** `reports.view`  \n**Database:** read: account_groups, journal_entries, journal_lines, ledgers, parties,\
+        \ 202 with an ExportJob to poll.\n\n**Permission:** `reports.financial`  \n**Database:** read: account_groups, journal_entries, journal_lines, ledgers, parties,\
         \ purchase_bills, sales_invoices  \n**Rules:** BR-005, BR-001"
-      x-permission: reports.view
+      x-permission: reports.financial
       x-business-rules:
       - BR-005
       - BR-001

@@ -490,11 +490,11 @@ E("GET", "/voucher-templates", "Journal templates (depreciation, accruals, recla
 
 # ---------------------------------------------------------------- Reports
 T = "Reports"
-for path, name, pg, extra in [("trial-balance", "Trial balance", ["H15", "H1", "J1"], ["as_of", "level"]), ("profit-and-loss", "Profit and loss", ["H16", "J1"], DATEQ + ["compare", "detail", "branch_id"]),
-                              ("balance-sheet", "Balance sheet", ["H17", "J1"], ["as_of", "compare", "detail"]), ("cash-flow", "Cash flow (indirect)", ["H18", "J1"], DATEQ),
-                              ("general-ledger", "General ledger", ["H19", "J1"], DATEQ + ["ledger_ids", "group_by"]), ("receivables-aging", "Receivables aging", ["J6"], ["as_of", "q", "overdue_only"]),
+for path, name, pg, extra in [("trial-balance", "Trial balance", ["H15"], ["as_of", "level", "branch_id"]), ("profit-and-loss", "Profit and loss", ["H16"], DATEQ + ["compare", "detail", "branch_id"]),
+                              ("balance-sheet", "Balance sheet", ["H17"], ["as_of", "compare", "detail"]), ("cash-flow", "Cash flow (indirect)", ["H18"], DATEQ),
+                              ("general-ledger", "General ledger", ["H19"], DATEQ + ["ledger_ids", "group_by"]), ("receivables-aging", "Receivables aging", ["J6"], ["as_of", "q", "overdue_only"]),
                               ("payables-aging", "Payables aging", ["J7"], ["as_of", "q", "overdue_only"])]:
-    E("GET", f"/reports/{path}", f"{name} (JSON; xlsx/pdf/csv via format)", "reports.view",
+    E("GET", f"/reports/{path}", f"{name} (JSON; xlsx/pdf/csv via format)", "reports.financial",
       ["journal_lines", "journal_entries", "ledgers", "account_groups"] + (["sales_invoices", "purchase_bills", "parties"] if "aging" in path else []), pg, rules=["BR-005", "BR-001"],
       params=extra + ["format"], resp="ReportData", tag=T, fr=["FR-076"], codes=[200, 202, 422], desc="Reads posted lines only. `format=xlsx|pdf|csv` requires reports.export and returns the file; when the export exceeds 5,000 rows the answer is 202 with an ExportJob to poll.")
 for path, name, pg in [("sales", "Sales report", ["E11", "J1"]), ("sales-returns", "Sales return report", ["E12"]), ("purchases", "Purchase report", ["F9", "J1"]), ("purchase-returns", "Purchase return report", ["F10"]),

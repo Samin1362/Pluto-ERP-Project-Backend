@@ -80,6 +80,7 @@ V = view, C = create, E = edit, A = approve, D = delete. Rows in `code` style ar
 | settings | VCEAD | VE | — | — | — | — |
 | `inventory.view_costs` | ✓ | ✓ | ✓ | ✓ | — | ✓ |
 | `reports.export` | ✓ | ✓ | ✓ | — | — | — |
+| `reports.financial` | ✓ | ✓ | ✓ | — | — | — |
 | `accounting.lock_period` | ✓ | ✓ | — | — | — | — |
 | `accounting.close_year` | ✓ | — | — | — | — | — |
 | `banking.reconcile` | ✓ | ✓ | ✓ | — | — | — |

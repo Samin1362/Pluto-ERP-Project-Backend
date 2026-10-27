@@ -51,6 +51,8 @@ CHANGED = [
     ("Database operations (second pass)", "Corrected derived writes: bulk post now posts like the single post; 13 system-entry postings lock number_sequences for the SJ number (R-06); voucher post updates rather than inserts its lines; landed cost updates stock_balances (R-02); allocations create no journal lines; quote/PO convert create the draft document. Rule A23 now enforces these invariants."),
     ("AccountGroup schema", "Adds `used_in_cash_vouchers` and `sort_order` (accepted by AccountGroupInput but not returned, so H3 could not prefill its edit form) and `balance_side` (the balance is an amount, like AccountNode); `children` are AccountNode items (P7.1-BE-01, 25 Oct 2026). Additive."),
     ("POST /supplier-payments", "Declares 422 `backdated_confirmation_required` (BR-053; the payment voucher asks for confirmation like any voucher) (P8.1-BE-01, 26 Oct 2026). Additive."),
+    ("Financial reports (DEC-13 / R-25)", "TB, P&L, balance sheet, cash flow, general ledger and the aging reports need the new `reports.financial` (Owner, Finance manager, Accountant; owner decision 25 Oct 2026); Sales staff and Viewer keep `reports.view` for operational reports. H1 and J1 no longer list them as loads (H1 loads `/accounting/overview`; J1 only links to the reports) (P9.0-SETUP-01, 27 Oct 2026). Dashboard money widgets follow in P14."),
+    ("GET /reports/trial-balance", "Adds the `branch_id` filter, like the P&L (P9.1-BE-01, 27 Oct 2026). Additive."),
     ("Dashboard lenses A2–A8", "Load only `GET /dashboard/lenses/{lens}`; the overlapping report and list endpoints were removed from their page lists."),
 ]
 KEPT_OVERLAPS = [
@@ -62,7 +64,6 @@ KEPT_OVERLAPS = [
 ]
 OPEN = [
     ("DEC-02", "Access token in memory + refresh cookie (assumed throughout the contract). If tokens move to a BFF/session cookie, `bearerAuth` changes and CSRF headers are added."),
-    ("DEC-13 / R-25", "Sales staff and Viewer can read the dashboard's cash and P&L widgets and the financial statements. If restricted, add `reports.financial` and mask those widgets; no path changes."),
     ("R-02 / R-13", "Per-warehouse average cost and cash-credit accounts are reflected in the schema the API reads; reverting either changes response fields, not endpoints."),
     ("R-24", "Store keeper: confirm that goods are received by purchasing (no purchases.create for the role)."),
     ("Design sign-off", "Seven NEW list/recurring screens and the NEW actions listed in 12.6 need design approval before the frontend builds them."),

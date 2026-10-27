@@ -124,7 +124,7 @@
 | [I10](#page-i10) | Recurring entries (NEW) | IncExp | List | `banking.view` | 2 | — |
 | [I8](#page-i8) | Income report | IncExp | Report | `reports.view` | 1 | Inc-Report.dc.html |
 | [I9](#page-i9) | Expense report | IncExp | Report | `reports.view` | 1 | Exp-Report.dc.html |
-| [H1](#page-h1) | Accounting overview | Accounting | Overview | `accounting.view` | 4 | Accounting.dc.html (H1) |
+| [H1](#page-h1) | Accounting overview | Accounting | Overview | `accounting.view` | 3 | Accounting.dc.html (H1) |
 | [H2](#page-h2) | Chart of accounts | Accounting | Tree | `accounting.view` | 4 | Acc-COA.dc.html |
 | [H3](#page-h3) | Account group details | Accounting | Detail | `accounting.view` | 4 | Acc-Group.dc.html |
 | [H4](#page-h4) | Add ledger account | Accounting | Form | `accounting.create` | 2 | Acc-AddLedger.dc.html |
@@ -139,15 +139,15 @@
 | [H13](#page-h13) | Voucher details | Accounting | Detail | `accounting.view` | 9 | Acc-Voucher.dc.html |
 | [Acc-DlgReverse](#page-acc-dlgreverse) | Dialog · Reverse voucher | Accounting | Dialog | `accounting.create` | 1 | Acc-DlgReverse.dc.html |
 | [H14](#page-h14) | Printable voucher | Accounting | Print | `accounting.view` | 2 | Acc-Print.dc.html |
-| [H15](#page-h15) | Trial balance | Reports | Statement | `reports.view` | 1 | Rpt-TB.dc.html |
-| [H16](#page-h16) | Profit and loss | Reports | Statement | `reports.view` | 1 | Rpt-PL.dc.html |
-| [H17](#page-h17) | Balance sheet | Reports | Statement | `reports.view` | 1 | Rpt-BS.dc.html |
-| [H18](#page-h18) | Cash flow statement | Reports | Statement | `reports.view` | 1 | Rpt-CF.dc.html |
-| [H19](#page-h19) | General ledger | Reports | Statement | `reports.view` | 1 | Rpt-GL.dc.html |
+| [H15](#page-h15) | Trial balance | Reports | Statement | `reports.financial` | 1 | Rpt-TB.dc.html |
+| [H16](#page-h16) | Profit and loss | Reports | Statement | `reports.financial` | 1 | Rpt-PL.dc.html |
+| [H17](#page-h17) | Balance sheet | Reports | Statement | `reports.financial` | 1 | Rpt-BS.dc.html |
+| [H18](#page-h18) | Cash flow statement | Reports | Statement | `reports.financial` | 1 | Rpt-CF.dc.html |
+| [H19](#page-h19) | General ledger | Reports | Statement | `reports.financial` | 1 | Rpt-GL.dc.html |
 | [K16](#page-k16) | Accounting defaults (NEW: GAP-01) | Accounting | Settings | `settings.edit` | 4 | — |
-| [J1](#page-j1) | Reports centre | Reports | Hub | `reports.view` | 12 | Statements.dc.html (J1) |
-| [J6](#page-j6) | Receivables aging | Reports | Report | `reports.view` | 2 | Rpt-AR.dc.html |
-| [J7](#page-j7) | Payables aging | Reports | Report | `reports.view` | 2 | Rpt-AP.dc.html |
+| [J1](#page-j1) | Reports centre | Reports | Hub | `reports.view` | 7 | Statements.dc.html (J1) |
+| [J6](#page-j6) | Receivables aging | Reports | Report | `reports.financial` | 2 | Rpt-AR.dc.html |
+| [J7](#page-j7) | Payables aging | Reports | Report | `reports.financial` | 2 | Rpt-AP.dc.html |
 | [K1](#page-k1) | Company profile | Settings | Detail | `settings.view` | 4 | Settings.dc.html (K1) |
 | [K2](#page-k2) | Edit company | Settings | Form | `settings.edit` | 3 | Settings.dc.html (K2) |
 | [K3](#page-k3) | Business preferences | Settings | Settings | `settings.edit` | 5 | Settings.dc.html (K3) |
@@ -2333,8 +2333,8 @@ Each entry follows the 13 points of the brief: (1) purpose · (2) components and
 6. **Tables:** —
 7. **Validation and rules:** Standard server validation (422).
 8. **Roles allowed:** `accounting.view` → Owner, Finance manager, Accountant, Viewer. Actions additionally check their own permission (see endpoints).
-9. **APIs:** [`GET /approvals`](05-API-Specification.md#getapprovals), [`GET /accounting/overview`](05-API-Specification.md#getaccountingoverview), [`GET /vouchers`](05-API-Specification.md#getvouchers), [`GET /reports/trial-balance`](05-API-Specification.md#getreportstrialbalance)
-10. **Entities:** `account_groups`, `accounting_periods`, `approval_requests`, `bank_statement_lines`, `journal_entries`, `journal_lines`, `ledgers`
+9. **APIs:** [`GET /approvals`](05-API-Specification.md#getapprovals), [`GET /accounting/overview`](05-API-Specification.md#getaccountingoverview), [`GET /vouchers`](05-API-Specification.md#getvouchers)
+10. **Entities:** `accounting_periods`, `approval_requests`, `bank_statement_lines`, `journal_entries`, `journal_lines`, `ledgers`
 11. **Workflows:** — · FR: FR-070
 12. **States:** Loading skeleton tiles and charts; each widget fails independently with an error ref (L11). Empty period: 'Nothing posted in this period'.
 13. **Depends on:** [H2](#page-h2), [H8](#page-h8), [H9](#page-h9), [H15](#page-h15)
@@ -2677,7 +2677,7 @@ Each entry follows the 13 points of the brief: (1) purpose · (2) components and
 5. **Actions → API** ([full map](05-API-Specification.md#actions-h15)): Print → ui:browser print of the loaded view (print stylesheet)<br>Export (xlsx, pdf, csv) → export:GET /reports/trial-balance<br>Drill into ledger → nav:H7
 6. **Tables:** —
 7. **Validation and rules:** BR-005: Drafts, submitted and rejected vouchers never affect ledger balances, stock or reports.<br>BR-001: Every posted journal entry balances: total debit = total credit > 0.
-8. **Roles allowed:** `reports.view` → Owner, Finance manager, Accountant, Sales staff, Viewer. Actions additionally check their own permission (see endpoints).
+8. **Roles allowed:** `reports.financial` → Owner, Finance manager, Accountant. Actions additionally check their own permission (see endpoints).
 9. **APIs:** [`GET /reports/trial-balance`](05-API-Specification.md#getreportstrialbalance)
 10. **Entities:** `account_groups`, `journal_entries`, `journal_lines`, `ledgers`
 11. **Workflows:** Close the month · FR: FR-076
@@ -2699,7 +2699,7 @@ Each entry follows the 13 points of the brief: (1) purpose · (2) components and
 5. **Actions → API** ([full map](05-API-Specification.md#actions-h16)): Print → ui:browser print of the loaded view (print stylesheet)<br>Export (xlsx, pdf, csv) → export:GET /reports/profit-and-loss<br>Drill into ledger → nav:H7
 6. **Tables:** —
 7. **Validation and rules:** BR-005: Drafts, submitted and rejected vouchers never affect ledger balances, stock or reports.<br>BR-001: Every posted journal entry balances: total debit = total credit > 0.
-8. **Roles allowed:** `reports.view` → Owner, Finance manager, Accountant, Sales staff, Viewer. Actions additionally check their own permission (see endpoints).
+8. **Roles allowed:** `reports.financial` → Owner, Finance manager, Accountant. Actions additionally check their own permission (see endpoints).
 9. **APIs:** [`GET /reports/profit-and-loss`](05-API-Specification.md#getreportsprofitandloss)
 10. **Entities:** `account_groups`, `journal_entries`, `journal_lines`, `ledgers`
 11. **Workflows:** Close the month · FR: FR-076
@@ -2721,7 +2721,7 @@ Each entry follows the 13 points of the brief: (1) purpose · (2) components and
 5. **Actions → API** ([full map](05-API-Specification.md#actions-h17)): Print → ui:browser print of the loaded view (print stylesheet)<br>Export (xlsx, pdf, csv) → export:GET /reports/balance-sheet<br>Drill into ledger → nav:H7
 6. **Tables:** —
 7. **Validation and rules:** BR-005: Drafts, submitted and rejected vouchers never affect ledger balances, stock or reports.<br>BR-001: Every posted journal entry balances: total debit = total credit > 0.
-8. **Roles allowed:** `reports.view` → Owner, Finance manager, Accountant, Sales staff, Viewer. Actions additionally check their own permission (see endpoints).
+8. **Roles allowed:** `reports.financial` → Owner, Finance manager, Accountant. Actions additionally check their own permission (see endpoints).
 9. **APIs:** [`GET /reports/balance-sheet`](05-API-Specification.md#getreportsbalancesheet)
 10. **Entities:** `account_groups`, `journal_entries`, `journal_lines`, `ledgers`
 11. **Workflows:** Close the month · FR: FR-076
@@ -2743,7 +2743,7 @@ Each entry follows the 13 points of the brief: (1) purpose · (2) components and
 5. **Actions → API** ([full map](05-API-Specification.md#actions-h18)): Print → ui:browser print of the loaded view (print stylesheet)<br>Export (xlsx, pdf, csv) → export:GET /reports/cash-flow<br>Drill into ledger → nav:H7
 6. **Tables:** —
 7. **Validation and rules:** BR-005: Drafts, submitted and rejected vouchers never affect ledger balances, stock or reports.<br>BR-001: Every posted journal entry balances: total debit = total credit > 0.
-8. **Roles allowed:** `reports.view` → Owner, Finance manager, Accountant, Sales staff, Viewer. Actions additionally check their own permission (see endpoints).
+8. **Roles allowed:** `reports.financial` → Owner, Finance manager, Accountant. Actions additionally check their own permission (see endpoints).
 9. **APIs:** [`GET /reports/cash-flow`](05-API-Specification.md#getreportscashflow)
 10. **Entities:** `account_groups`, `journal_entries`, `journal_lines`, `ledgers`
 11. **Workflows:** Close the month · FR: FR-076
@@ -2765,7 +2765,7 @@ Each entry follows the 13 points of the brief: (1) purpose · (2) components and
 5. **Actions → API** ([full map](05-API-Specification.md#actions-h19)): Print → ui:browser print of the loaded view (print stylesheet)<br>Export (xlsx, pdf, csv) → export:GET /reports/general-ledger<br>Drill into ledger → nav:H7
 6. **Tables:** —
 7. **Validation and rules:** BR-005: Drafts, submitted and rejected vouchers never affect ledger balances, stock or reports.<br>BR-001: Every posted journal entry balances: total debit = total credit > 0.
-8. **Roles allowed:** `reports.view` → Owner, Finance manager, Accountant, Sales staff, Viewer. Actions additionally check their own permission (see endpoints).
+8. **Roles allowed:** `reports.financial` → Owner, Finance manager, Accountant. Actions additionally check their own permission (see endpoints).
 9. **APIs:** [`GET /reports/general-ledger`](05-API-Specification.md#getreportsgeneralledger)
 10. **Entities:** `account_groups`, `journal_entries`, `journal_lines`, `ledgers`
 11. **Workflows:** Close the month · FR: FR-076
@@ -2786,8 +2786,8 @@ Each entry follows the 13 points of the brief: (1) purpose · (2) components and
 6. **Tables:** —
 7. **Validation and rules:** Standard server validation (422).
 8. **Roles allowed:** `reports.view` → Owner, Finance manager, Accountant, Sales staff, Viewer. Actions additionally check their own permission (see endpoints).
-9. **APIs:** [`POST /export-jobs`](05-API-Specification.md#postexportjobs), [`GET /export-jobs/{id}`](05-API-Specification.md#getexportjobsid), [`GET /reports/inventory/valuation`](05-API-Specification.md#getreportsinventoryvaluation), [`GET /reports/trial-balance`](05-API-Specification.md#getreportstrialbalance), [`GET /reports/profit-and-loss`](05-API-Specification.md#getreportsprofitandloss), [`GET /reports/balance-sheet`](05-API-Specification.md#getreportsbalancesheet), [`GET /reports/cash-flow`](05-API-Specification.md#getreportscashflow), [`GET /reports/general-ledger`](05-API-Specification.md#getreportsgeneralledger), [`GET /reports/sales`](05-API-Specification.md#getreportssales), [`GET /reports/purchases`](05-API-Specification.md#getreportspurchases), [`GET /reports/income`](05-API-Specification.md#getreportsincome), [`GET /reports/expenses`](05-API-Specification.md#getreportsexpenses)
-10. **Entities:** `account_groups`, `export_jobs`, `ie_categories`, `journal_entries`, `journal_lines`, `ledgers`, `parties`, `product_categories`, `products`, `purchase_bill_lines`, `purchase_bills`, `purchase_returns`, `sales_invoice_lines`, `sales_invoices`, `sales_returns`, `stock_groups`, `stock_movements`
+9. **APIs:** [`POST /export-jobs`](05-API-Specification.md#postexportjobs), [`GET /export-jobs/{id}`](05-API-Specification.md#getexportjobsid), [`GET /reports/inventory/valuation`](05-API-Specification.md#getreportsinventoryvaluation), [`GET /reports/sales`](05-API-Specification.md#getreportssales), [`GET /reports/purchases`](05-API-Specification.md#getreportspurchases), [`GET /reports/income`](05-API-Specification.md#getreportsincome), [`GET /reports/expenses`](05-API-Specification.md#getreportsexpenses)
+10. **Entities:** `export_jobs`, `ie_categories`, `journal_lines`, `parties`, `product_categories`, `products`, `purchase_bill_lines`, `purchase_bills`, `purchase_returns`, `sales_invoice_lines`, `sales_invoices`, `sales_returns`, `stock_groups`, `stock_movements`
 11. **Workflows:** — · FR: FR-076
 12. **States:** Search with no-match state.
 13. **Depends on:** [H15](#page-h15), [H16](#page-h16), [H17](#page-h17), [H18](#page-h18), [H19](#page-h19), [J6](#page-j6), [J7](#page-j7), [E11](#page-e11), [F9](#page-f9), [I8](#page-i8), [I9](#page-i9), [G11](#page-g11), [G12](#page-g12), [D13](#page-d13), [D14](#page-d14), [B8](#page-b8), [C8](#page-c8), [H8](#page-h8)
@@ -2807,7 +2807,7 @@ Each entry follows the 13 points of the brief: (1) purpose · (2) components and
 5. **Actions → API** ([full map](05-API-Specification.md#actions-j6)): Statement (row) → nav:B8<br>Print → ui:browser print of the loaded view (print stylesheet)<br>Export → export:GET /reports/receivables-aging
 6. **Table:** columns Customer, Not due, 1–30, 31–60, 61–90, 90+, Total (৳), Oldest; filters overdue; search; server-side pagination and sorting.
 7. **Validation and rules:** Standard server validation (422).
-8. **Roles allowed:** `reports.view` → Owner, Finance manager, Accountant, Sales staff, Viewer. Actions additionally check their own permission (see endpoints).
+8. **Roles allowed:** `reports.financial` → Owner, Finance manager, Accountant. Actions additionally check their own permission (see endpoints).
 9. **APIs:** [`GET /parties/{id}/statement`](05-API-Specification.md#getpartiesidstatement), [`GET /reports/receivables-aging`](05-API-Specification.md#getreportsreceivablesaging)
 10. **Entities:** `account_groups`, `companies`, `journal_entries`, `journal_lines`, `ledgers`, `parties`, `purchase_bills`, `sales_invoices`
 11. **Workflows:** — · FR: FR-076
@@ -2829,7 +2829,7 @@ Each entry follows the 13 points of the brief: (1) purpose · (2) components and
 5. **Actions → API** ([full map](05-API-Specification.md#actions-j7)): Statement (row) → nav:C8<br>Print → ui:browser print of the loaded view (print stylesheet)<br>Export → export:GET /reports/payables-aging
 6. **Table:** columns Supplier, Not due, 1–30, 31–60, 61–90, 90+, Total (৳), Oldest; filters overdue; search; server-side pagination and sorting.
 7. **Validation and rules:** Standard server validation (422).
-8. **Roles allowed:** `reports.view` → Owner, Finance manager, Accountant, Sales staff, Viewer. Actions additionally check their own permission (see endpoints).
+8. **Roles allowed:** `reports.financial` → Owner, Finance manager, Accountant. Actions additionally check their own permission (see endpoints).
 9. **APIs:** [`GET /parties/{id}/statement`](05-API-Specification.md#getpartiesidstatement), [`GET /reports/payables-aging`](05-API-Specification.md#getreportspayablesaging)
 10. **Entities:** `account_groups`, `companies`, `journal_entries`, `journal_lines`, `ledgers`, `parties`, `purchase_bills`, `sales_invoices`
 11. **Workflows:** — · FR: FR-076

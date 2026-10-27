@@ -120,6 +120,37 @@ class CompanyAccessTest extends TestCase
         return $cases;
     }
 
+    /** Every role x the financial statements (DEC-13, P9.0-SETUP-01): reports.financial, and reports.export for a file. */
+    #[DataProvider('reportMatrix')]
+    public function test_role_matrix_on_financial_reports(string $role, string $permission, string $uri): void
+    {
+        $token = $this->login($role === 'owner' ? 'owner@meghna.example' : "{$role}@meghna.example", '10.0.3.'.random_int(2, 250));
+        $r = $this->api('GET', $uri, $token, $this->company->id);
+
+        $allowed = $role === 'owner' || ($permission === 'reports.export'
+            ? array_intersect(['reports.financial', 'reports.export'], RoleTemplates::ROLES[$role][1]) === ['reports.financial', 'reports.export']
+            : in_array($permission, RoleTemplates::ROLES[$role][1], true));
+        if ($allowed) {
+            $this->assertSame(200, $r->status(), "{$role} should be allowed {$uri}");
+        } else {
+            $this->assertProblem($r, 403, 'permission_denied');
+        }
+    }
+
+    public static function reportMatrix(): array
+    {
+        $calls = [['reports.financial', '/api/v1/reports/trial-balance'], ['reports.financial', '/api/v1/reports/profit-and-loss'],
+            ['reports.financial', '/api/v1/reports/receivables-aging'], ['reports.export', '/api/v1/reports/balance-sheet?format=pdf']];
+        $cases = [];
+        foreach (array_keys(RoleTemplates::ROLES) as $role) {
+            foreach ($calls as [$perm, $uri]) {
+                $cases["{$role} GET {$uri}"] = [$role, $perm, $uri];
+            }
+        }
+
+        return $cases;
+    }
+
     /** Every role x the purchase bill endpoints (P4.3-BE-01: a Store keeper reads bills but cannot post them). */
     #[DataProvider('billMatrix')]
     public function test_role_matrix_on_purchase_bill_endpoints(string $role, string $permission, string $method, string $uri): void
