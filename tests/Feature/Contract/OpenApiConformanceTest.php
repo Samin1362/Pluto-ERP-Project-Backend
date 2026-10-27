@@ -532,6 +532,19 @@ class OpenApiConformanceTest extends TestCase
             'date_to' => now('Asia/Dhaka')->toDateString()], $key()), 'POST', '/parties/statements/send');                                   // 202 ExportJob
     }
 
+    public function test_financial_report_endpoints_match_the_contract(): void
+    {
+        $t = $this->login('owner@meghna.example');
+        $c = $this->company->id;
+        $this->api('POST', '/api/v1/parties', $t, $c, ['party_type' => 'customer', 'name' => 'Rahman Super Shop', 'mobile' => '01811000222',
+            'opening_balance' => '185000.00'], ['Idempotency-Key' => (string) Str::uuid()]);
+        foreach (['trial-balance' => 'level=group', 'profit-and-loss' => 'compare=prior', 'balance-sheet' => 'compare=prior', 'cash-flow' => '',
+            'general-ledger' => 'group_by=month', 'receivables-aging' => 'overdue_only=false', 'payables-aging' => ''] as $path => $query) {
+            $this->assertConforms($this->api('GET', "/api/v1/reports/{$path}?{$query}", $t, $c), 'GET', "/reports/{$path}");
+            $this->assertConforms($this->api('GET', "/api/v1/reports/{$path}?colour=red", $t, $c), 'GET', "/reports/{$path}");                   // 422
+        }
+    }
+
     public function test_the_validator_rejects_bodies_that_break_the_contract(): void
     {
         $t = $this->login('owner@meghna.example');

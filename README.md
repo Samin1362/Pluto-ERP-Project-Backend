@@ -227,8 +227,8 @@ Samin owns every open decision and collects the client's answers for the busines
 | C3 | Vercel plan: Hobby is non-commercial; Pro for a paid client project? | P0.6 | Open |
 | C4 | SMTP provider for e-mails | P5 | Open (client); live uses the `log` mail driver until then |
 | C5 | File storage beyond the host disk (e.g. Cloudflare R2) | P13 | Open (client) |
-| C6 | Finance manager journal approval limit (docs 15 D8, assumed ৳ 5,00,000) | P7 | Open (client) |
-| C7 | DEC-13: financial reports and dashboard figures for Sales staff and Viewer | P9 | Open (client) |
+| C6 | Finance manager journal approval limit (docs 15 D8, assumed ৳ 5,00,000) | P7 | **Decided** (25 Oct 2026): no limit |
+| C7 | DEC-13: financial reports and dashboard figures for Sales staff and Viewer | P9 | **Decided** (25 Oct 2026): hidden; `reports.financial` (Owner, Finance manager, Accountant) |
 | C8 | DEC-11: branch-restricted users needed? | P15 | Open (client) |
 | C9 | DEC-04: can one business be both customer and supplier? | P10 | Open (client); today: no |
 | C10 | VAT / Mushak requirements | P17 | Open (client + tax adviser) |

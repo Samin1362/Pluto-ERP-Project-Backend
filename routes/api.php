@@ -23,6 +23,7 @@ use App\Http\Controllers\Api\V1\Parties\PartyAccountController;
 use App\Http\Controllers\Api\V1\Parties\PartyController;
 use App\Http\Controllers\Api\V1\Platform\PlatformLookupController;
 use App\Http\Controllers\Api\V1\Purchases\PurchaseBillController;
+use App\Http\Controllers\Api\V1\Reports\FinancialReportController;
 use App\Http\Controllers\Api\V1\Sales\SalesInvoiceController;
 use App\Http\Controllers\Api\V1\Settlements\AllocationController;
 use App\Http\Controllers\Api\V1\Settlements\CustomerReceiptController;
@@ -179,5 +180,10 @@ Route::middleware(['jwt', 'throttle:api-user'])->group(function () {
         Route::post('sales-invoices/{id}/send', [SalesInvoiceController::class, 'send'])->whereNumber('id')->middleware(['perm:sales.edit', 'idempotent']);
         Route::patch('sales-invoices/{id}/delivery', [SalesInvoiceController::class, 'delivery'])->whereNumber('id')->middleware('perm:sales.edit');
         Route::delete('sales-invoices/{id}', [SalesInvoiceController::class, 'destroy'])->whereNumber('id')->middleware('perm:sales.delete');
+        // Financial statements (P9.1): reports.financial (DEC-13); format=xlsx|pdf|csv also needs reports.export.
+        foreach (['trial-balance' => 'trialBalance', 'profit-and-loss' => 'profitAndLoss', 'balance-sheet' => 'balanceSheet', 'cash-flow' => 'cashFlow',
+            'general-ledger' => 'generalLedger', 'receivables-aging' => 'receivablesAging', 'payables-aging' => 'payablesAging'] as $path => $method) {
+            Route::get("reports/{$path}", [FinancialReportController::class, $method])->name("reports.{$path}")->middleware('perm:reports.financial');
+        }
     });
 });

@@ -22,7 +22,7 @@ Last run: 24 rules, **24 passed, 0 failed**; 6 negative tests, 6 detected. Offic
 | A18 | Every page has at least one endpoint (shared components use their host page's) | 162 | ✅ pass |
 | A19 | For every action, at least one role can both open the page and call the endpoint | 322 | ✅ pass |
 | A20 | Database operations name real tables; nothing deletes posted or append-only rows; every write changes something | 1284 | ✅ pass |
-| A21 | Every parameter has a typed schema | 523 | ✅ pass |
+| A21 | Every parameter has a typed schema | 524 | ✅ pass |
 | A22 | Business rules exist; 43 rejecting rules map to error codes | 346 | ✅ pass |
 | A23 | Calculate/preview endpoints never reject on business state; they return warnings[] (BR-015) | 4 | ✅ pass |
 | A24 | Ledger/stock writes are coherent: entries have lines, stock movements update balances, system entries take an SJ number, bulk post = single post | 84 | ✅ pass |

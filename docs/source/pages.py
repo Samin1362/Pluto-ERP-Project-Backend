@@ -486,7 +486,7 @@ for code, name, desc in [("H15", "Trial balance", "Closing debit and credit of e
                          ("H17", "Balance sheet", "Assets, equity and liabilities as of a date, compared with last year end."),
                          ("H18", "Cash flow statement", "Indirect method reconciled to the cash and bank group."),
                          ("H19", "General ledger", "One block per chosen ledger: opening, entries, closing.")]:
-    page(code, name, "Reports", "Statement", "reports.view", desc,
+    page(code, name, "Reports", "Statement", "reports.financial", desc,
          "Toolbar (date or period, compare, detail/level, basis badge); paper statement; agreement check; aside checks or ratios; rows drill into the general ledger.",
          fields=["As of / period | date | req | ", "Compare | segmented | opt | prior/none", "Detail | segmented | opt | ledgers/totals"],
          actions=["Print", "Export (xlsx, pdf, csv)", "Drill into ledger"], rules=["BR-005", "BR-001"], workflows=["Close the month"], deps=["H7"], fr=["FR-076"], artboard=f"Rpt-{ {'H15': 'TB', 'H16': 'PL', 'H17': 'BS', 'H18': 'CF', 'H19': 'GL'}[code]}.dc.html")
@@ -499,7 +499,7 @@ page("J1", "Reports centre", "Reports", "Hub", "reports.view", "Find any report;
      "Search; sections of report buttons with module tags; reused screens open with the Reports breadcrumb.", fields=["Find a report | text | opt | "], actions=["Open report"],
      deps=["H15", "H16", "H17", "H18", "H19", "J6", "J7", "E11", "F9", "I8", "I9", "G11", "G12", "D13", "D14", "B8", "C8", "H8"], fr=["FR-076"], artboard="Statements.dc.html (J1)")
 for code, name, party in [("J6", "Receivables aging", "Customer"), ("J7", "Payables aging", "Supplier")]:
-    page(code, name, "Reports", "Report", "reports.view", f"What {party.lower()}s {'owe' if party == 'Customer' else 'are owed'} by days past due.",
+    page(code, name, "Reports", "Report", "reports.financial", f"What {party.lower()}s {'owe' if party == 'Customer' else 'are owed'} by days past due.",
          "Total and overdue; stacked bucket bar; search; overdue-only; table with buckets and oldest-age badge; statement action.", fields=["As of | date | req | ", "Search | text | opt | ", "Overdue only | checkbox | opt | "],
          actions=["Statement (row)", "Print", "Export"], table={"cols": [party, "Not due", "1–30", "31–60", "61–90", "90+", "Total (৳)", "Oldest"], "filters": ["overdue"], "search": True},
          deps=["B8" if party == "Customer" else "C8"], fr=["FR-076"], artboard=f"Rpt-{'AR' if party == 'Customer' else 'AP'}.dc.html")

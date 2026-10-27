@@ -26,6 +26,7 @@ ROLE_NAMES = {"owner": "Owner", "finance": "Finance manager", "accountant": "Acc
 SPECIAL_PERMS = {  # permission -> roles that hold it by default
     "inventory.view_costs": ["owner", "finance", "accountant", "sales", "viewer"],
     "reports.export": ["owner", "finance", "accountant"],
+    "reports.financial": ["owner", "finance", "accountant"],  # DEC-13 (owner decision 25 Oct 2026): TB, P&L, BS, cash flow, GL, aging
     "accounting.lock_period": ["owner", "finance"],
     "accounting.close_year": ["owner"],
     "banking.reconcile": ["owner", "finance", "accountant"],
