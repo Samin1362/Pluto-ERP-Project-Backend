@@ -38,6 +38,7 @@ final class PurchaseBillCancellationService
         private readonly AccountMapper $mapper,
         private readonly AuditLogger $audit,
         private readonly AllocationService $allocations,
+        private readonly PurchaseOrderReceipts $orders,
     ) {}
 
     public function cancel(PurchaseBill $bill, string $reason, ?string $note = null, ?string $date = null): PurchaseBill
@@ -84,6 +85,7 @@ final class PurchaseBillCancellationService
             $bill->forceFill(['status' => 'cancelled', 'cancellation_entry_id' => $entry->id, 'cancel_reason' => $reason, 'cancelled_at' => now(),
                 'cancelled_by' => Auth::id(), 'balance_due' => Money::zero()])->save();
             $this->audit->record('cancelled', $bill, ['status' => 'posted'], ['status' => 'cancelled', 'reason' => $reason, 'note' => $note, 'cancellation_entry_id' => $entry->id]);
+            $this->orders->billCancelled($bill); // the goods no longer count as received on the order
 
             return $bill->refresh()->load('lines');
         }, attempts: 2); // a MySQL deadlock (1213) is retried once (09 §9); the fixed lock order should make it rare

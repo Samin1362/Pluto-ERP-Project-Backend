@@ -76,6 +76,7 @@ E = {
     "use_document_cancel": (409, "System entries are corrected through their document", ["BR-003"]),
     "note_applied": (409, "Remove the note's allocations before cancelling", ["BR-023"]),
     "created_from_return": (409, "This debit note belongs to a purchase return; cancel the return", ["BR-057"]),
+    "already_converted": (409, "This quotation or purchase order has already been converted", ["BR-056"]),
     "comment_required": (422, "A comment is required to reject", ["FR-014"]),
     "purpose_required": (422, "Choose what the ledger is for", ["BR-037"]),
     "role_in_use": (409, "Move the members to another role first", ["BR-060"]),

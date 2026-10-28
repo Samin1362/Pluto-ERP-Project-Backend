@@ -115,6 +115,9 @@ final class BooksIntegrity
             $bad = DB::table("{$table} as d")->where('d.company_id', $c)->whereNotNull('d.journal_entry_id')
                 ->leftJoin('journal_entries as e', 'e.id', '=', 'd.journal_entry_id')
                 ->where(fn ($q) => $q->whereNull('e.id')->orWhere('e.source_type', '!=', $table)->orWhereColumn('e.source_id', '!=', 'd.id')->orWhereColumn('e.company_id', '!=', 'd.company_id'))
+                // R-04: a purchase return's debit note shares the return's entry, which points at the return.
+                ->when($table === 'debit_notes', fn ($q) => $q->whereNot(fn ($w) => $w->whereNotNull('d.purchase_return_id')->where('e.source_type', 'purchase_returns')
+                    ->whereColumn('e.source_id', 'd.purchase_return_id')))
                 ->pluck('d.id');
             foreach ($bad as $id) {
                 $out[] = "{$table} #{$id}: its journal entry is missing or does not point back to it";

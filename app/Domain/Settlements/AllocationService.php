@@ -27,7 +27,7 @@ use Illuminate\Support\Facades\DB;
 final class AllocationService
 {
     /** Entry types whose party lines settle documents; everything else on the ledger is a document or its reversal. */
-    public const SETTLING_TYPES = ['receipt', 'payment', 'credit_note', 'debit_note', 'opening_balance', 'journal', 'contra'];
+    public const SETTLING_TYPES = ['receipt', 'payment', 'credit_note', 'debit_note', 'purchase_return', 'opening_balance', 'journal', 'contra'];
 
     public function __construct(private readonly PeriodGuard $periods, private readonly AuditLogger $audit) {}
 
@@ -99,6 +99,20 @@ final class AllocationService
     }
 
     /**
+     * Releases every live allocation made from one settling line (a cancelled credit or debit note, P10.3): each invoice or
+     * bill it settled gets the amount back as open balance.
+     */
+    public function releaseLine(int $journalLineId): void
+    {
+        foreach (DB::table('bill_allocations')->where('journal_line_id', $journalLineId)->whereNull('reversed_at')->orderBy('id')->lockForUpdate()->get() as $a) {
+            $doc = $this->lockDocument($a->sales_invoice_id ? 'sales_invoice' : 'purchase_bill', (int) ($a->sales_invoice_id ?? $a->purchase_bill_id));
+            DB::table('bill_allocations')->where('id', $a->id)->update(['reversed_at' => now(), 'updated_by' => auth()->id(), 'updated_at' => now()]);
+            $this->settle($doc, Money::of($a->amount)->negated());
+            $this->audit->record('allocation_removed', $doc, ['allocation_id' => $a->id, 'amount' => (string) $a->amount], null);
+        }
+    }
+
+    /**
      * A settling line with its number, kind and unapplied part, or 422 when the line cannot settle anything.
      *
      * @return object{id: int, journal_entry_id: int, ledger_id: int, number: string, kind: string, date: string, amount: Money, unapplied: Money}
@@ -138,6 +152,10 @@ final class AllocationService
 
     public static function kind(string $entryType): string
     {
+        if ($entryType === 'purchase_return') {
+            return 'debit_note'; // R-04: the return's entry is its debit note's
+        }
+
         return in_array($entryType, ['receipt', 'payment', 'credit_note', 'debit_note'], true) ? $entryType : 'advance';
     }
 

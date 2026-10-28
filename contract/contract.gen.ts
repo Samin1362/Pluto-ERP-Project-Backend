@@ -6,6 +6,7 @@ export type Decimal = string
 
 export type ErrorCode =
   | 'allocation_exceeds_balance'
+  | 'already_converted'
   | 'already_posted'
   | 'already_reversed'
   | 'approval_required'
@@ -1083,7 +1084,7 @@ export interface LookupInput {
   sort_order?: number | null
 }
 
-/** Rows to order. */
+/** Rows to order: each {product_id, warehouse_id, quantity?}; quantity defaults to the reorder quantity (or what brings stock back to the reorder level). Rows are grouped into one draft PO per preferred supplier and warehouse. */
 export interface LowStockOrderRequest {
   rows: Array<Record<string, unknown>>
   order_date: string
@@ -1205,8 +1206,20 @@ export interface Note {
   reason: string
   amount: Decimal
   usage: string
+  source_document_id?: number | null
+  source_number?: string | null
+  return_id?: number | null
+  return_number?: string | null
+  apply_to_document_id?: number | null
+  refund?: Record<string, unknown> | null
+  allocations?: Array<Allocation>
+  posted_at?: string | null
+  cancel_reason?: string | null
   effects?: Array<Record<string, unknown>>
   journal?: Array<PostingLine>
+  amount_in_words?: string | null
+  created_at?: string | null
+  created_by?: UserRef | null
   version: number
 }
 
@@ -1409,6 +1422,7 @@ export interface PartyInput {
   opening_balance?: Decimal
   opening_side?: 'dr' | 'cr'
   bank_accounts?: Array<PartyBankAccount>
+  status?: 'active' | 'prospect'
 }
 
 /** Customer receipt (E7) or supplier payment (F5). */
@@ -1641,7 +1655,7 @@ export interface PurchaseLineInput {
   tax_rule_id?: number | null
 }
 
-/** Purchase order. */
+/** Purchase order. Lines carry received_quantity and remaining_quantity; bills lists the bills made from it. */
 export interface PurchaseOrder {
   id: number
   number: string
@@ -1649,8 +1663,16 @@ export interface PurchaseOrder {
   party: PartyRef
   order_date: string
   expected_date?: string | null
+  warehouse_id: number
+  payment_term_id?: number | null
   currency_code: string
+  exchange_rate: Decimal
+  source_note?: string | null
+  notes?: string | null
+  internal_note?: string | null
+  sent_at?: string | null
   lines: Array<Record<string, unknown>>
+  bills?: Array<Record<string, unknown>>
   total_foreign?: Decimal | null
   subtotal: Decimal
   discount_total: Decimal
@@ -1687,8 +1709,14 @@ export interface Quotation {
   party: PartyRef
   quotation_date: string
   valid_until: string
+  warehouse_id?: number | null
+  payment_term_id?: number | null
+  notes?: string | null
+  internal_note?: string | null
+  sent_at?: string | null
   lines: Array<SalesLine>
   converted_invoice_id?: number | null
+  converted_invoice_number?: string | null
   subtotal: Decimal
   discount_total: Decimal
   tax_total: Decimal
@@ -1833,10 +1861,19 @@ export interface Return {
   source_number: string
   return_date: string
   stock_action: string
+  warehouse_id: number
+  notes?: string | null
+  usage?: string | null
+  apply_to_document_id?: number | null
+  posted_at?: string | null
+  cancel_reason?: string | null
   lines: Array<Record<string, unknown>>
   total: Decimal
   note_id?: number | null
   note_number?: string | null
+  note_status?: string | null
+  created_at?: string | null
+  created_by?: UserRef | null
   version: number
 }
 

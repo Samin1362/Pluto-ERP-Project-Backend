@@ -40,6 +40,7 @@ final class PurchaseBillPostingService
         private readonly PostingService $posting,
         private readonly AccountMapper $mapper,
         private readonly AuditLogger $audit,
+        private readonly PurchaseOrderReceipts $orders,
     ) {}
 
     public function post(PurchaseBill $bill, bool $confirmBackdated = false): PurchaseBill
@@ -94,6 +95,7 @@ final class PurchaseBillPostingService
             $this->stock->linkJournal($bill, $entry->id);
             $bill->forceFill(['status' => 'posted', 'journal_entry_id' => $entry->id, 'posted_at' => now(), 'posted_by' => Auth::id(), 'balance_due' => $bill->total])->save();
             $this->audit->record('posted', $bill, ['status' => 'draft'], ['status' => 'posted', 'journal_entry_id' => $entry->id, 'total' => (string) $bill->total]);
+            $this->orders->billPosted($bill); // TC-PUR-009: the order's received quantities and status
 
             return $bill->refresh()->load('lines');
         }, attempts: 2); // a MySQL deadlock (1213) is retried once (09 §9); the fixed lock order should make it rare

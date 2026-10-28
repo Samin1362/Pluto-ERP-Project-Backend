@@ -2,7 +2,7 @@
 
 > Status: **Release candidate 1.0.0-rc.1 for approval** (18 Oct 2026), Laravel + Eloquent. **No endpoint is to be implemented until this contract is approved.** ⚑ Auth details (DEC-02) and the items in §12.7 are still open.
 >
-> **Generated file.** The endpoint reference (§9), schemas (§10), page action map (§11) and contract review (§12) come from `docs/source/api.py`, `schemas.py`, `actions.py`, `errors.py` and `contract_review.py`. The machine-readable contract is [`openapi.yaml`](openapi.yaml) (OpenAPI 3.1), validated against the official OpenAPI 3.1 schema (§8). Size: 309 endpoints, 197 schemas, 70 error codes, 162 pages with 522 mapped actions.
+> **Generated file.** The endpoint reference (§9), schemas (§10), page action map (§11) and contract review (§12) come from `docs/source/api.py`, `schemas.py`, `actions.py`, `errors.py` and `contract_review.py`. The machine-readable contract is [`openapi.yaml`](openapi.yaml) (OpenAPI 3.1), validated against the official OpenAPI 3.1 schema (§8). Size: 309 endpoints, 197 schemas, 71 error codes, 162 pages with 522 mapped actions.
 
 ## 1. Conventions
 
@@ -71,18 +71,19 @@
 | `system_role` | 403 | The Owner role cannot be changed or deleted | BR-060 | 3 |
 | `two_factor_required_by_company` | 403 | Your company requires 2-step verification | FR-004 | 1 |
 | `not_found` | 404 | Not found (or it belongs to another company) | BR-037 | 162 |
+| `already_converted` | 409 | This quotation or purchase order has already been converted | BR-056 | 1 |
 | `already_posted` | 409 | This document has already been posted | BR-009 | 22 |
 | `already_reversed` | 409 | This entry has already been reversed or cancelled | BR-003 | 14 |
 | `charge_allocated` | 409 | The charge is part of a posted landed-cost allocation | BR-045 | 4 |
-| `created_from_return` | 409 | This debit note belongs to a purchase return; cancel the return | BR-057 | 2 |
+| `created_from_return` | 409 | This debit note belongs to a purchase return; cancel the return | BR-057 | 3 |
 | `duplicate` | 409 | A record with the same unique value already exists | — | 20 |
 | `duplicate_statement` | 409 | This statement file was already imported | BR-032 | 1 |
 | `duplicate_supplier_bill` | 409 | This supplier's bill number is already entered | BR-018 | 3 |
 | `has_history` | 409 | This record is used elsewhere; make it inactive instead | BR-026 | 9 |
 | `idempotency_in_progress` | 409 | The same request is still being processed | BR-050 | 72 |
-| `invalid_transition` | 409 | This status change is not allowed from the current status | BR-003, BR-040 | 9 |
+| `invalid_transition` | 409 | This status change is not allowed from the current status | BR-003, BR-040 | 19 |
 | `last_owner` | 409 | A company must keep at least one active Owner | BR-060 | 3 |
-| `not_draft` | 409 | Only a draft can be changed, posted or deleted | BR-025 | 18 |
+| `not_draft` | 409 | Only a draft can be changed, posted or deleted | BR-025 | 26 |
 | `note_applied` | 409 | Remove the note's allocations before cancelling | BR-023 | 1 |
 | `role_in_use` | 409 | Move the members to another role first | BR-060 | 3 |
 | `seat_limit_reached` | 409 | All seats are in use | BR-059 | 3 |
@@ -98,11 +99,11 @@
 | `difference_not_zero` | 422 | The reconciliation difference must be zero | BR-032 | 1 |
 | `exceeds_tolerance` | 422 | Payments would exceed the LC amount plus tolerance | BR-042 | 1 |
 | `fiscal_year_not_closable` | 422 | The year has not ended or a period is still open | BR-034 | 1 |
-| `foreign_document` | 422 | The document belongs to another party | BR-021 | 5 |
+| `foreign_document` | 422 | The document belongs to another party | BR-021 | 14 |
 | `idempotency_key_reused` | 422 | This Idempotency-Key was used with a different request | BR-050 | 72 |
-| `inactive_reference` | 422 | An inactive party, product, ledger, warehouse or account was used | BR-026 | 8 |
+| `inactive_reference` | 422 | An inactive party, product, ledger, warehouse or account was used | BR-026 | 18 |
 | `insufficient_funds` | 422 | The account would go below zero (or below its overdraft limit) | BR-031 | 7 |
-| `insufficient_stock` | 422 | Not enough stock in the warehouse | BR-014, BR-030 | 8 |
+| `insufficient_stock` | 422 | Not enough stock in the warehouse | BR-014, BR-030 | 10 |
 | `invalid_mobile` | 422 | Mobile numbers have 11 digits starting 01 | BR-063 | 2 |
 | `lc_not_closable` | 422 | Unpaid supplier, unpaid charges or missing documents; give an override reason | BR-046 | 1 |
 | `lc_submit_incomplete` | 422 | Supplier, amount, issuing bank and expiry are needed | BR-039 | 1 |
@@ -112,10 +113,10 @@
 | `mapping_missing` | 422 | A posting ledger is not mapped in Accounting defaults | BR-064, BR-065 | 6 |
 | `margin_exceeds_deposit` | 422 | More margin applied than was deposited | BR-044 | 3 |
 | `nature_mismatch` | 422 | The group must have the same nature (asset, liability, …) | BR-027 | 3 |
-| `period_locked` | 422 | The date is in a locked period or outside an open financial year | BR-004, BR-033 | 34 |
+| `period_locked` | 422 | The date is in a locked period or outside an open financial year | BR-004, BR-033 | 36 |
 | `purpose_required` | 422 | Choose what the ledger is for | BR-037 | 1 |
 | `restore_confirmation_required` | 422 | Type RESTORE to confirm | BR-062 | 1 |
-| `return_qty_exceeds` | 422 | More than the quantity still returnable | BR-022 | 5 |
+| `return_qty_exceeds` | 422 | More than the quantity still returnable | BR-022 | 6 |
 | `rounding_ledger_missing` | 422 | Map the rounding ledger in Accounting defaults first | BR-012 | 2 |
 | `same_warehouse` | 422 | Source and destination warehouses must differ | BR-030 | 3 |
 | `unbalanced_entry` | 422 | Total debit must equal total credit | BR-001, BR-002 | 29 |
@@ -572,11 +573,11 @@ Last run: 24 rules, **24 passed, 0 failed**; 6 negative tests, 6 detected. Offic
 | A07 | Every operation that posts a journal entry takes an Idempotency-Key and documents its locking; every body can be rejected with 422 | 309 | ✅ pass |
 | A08 | Every 201 response declares a Location header | 49 | ✅ pass |
 | A09 | Collections use the paginated envelope {data[], meta} | 47 | ✅ pass |
-| A10 | Every error code exists in the catalogue, has its HTTP status documented on the operation, and every catalogue code is reachable | 70 | ✅ pass |
+| A10 | Every error code exists in the catalogue, has its HTTP status documented on the operation, and every catalogue code is reachable | 71 | ✅ pass |
 | A11 | Request-only schemas reject unknown properties (additionalProperties: false) | 90 | ✅ pass |
-| A12 | Money, quantity, cost and rate fields are decimal strings (never JSON numbers) | 202 | ✅ pass |
+| A12 | Money, quantity, cost and rate fields are decimal strings (never JSON numbers) | 203 | ✅ pass |
 | A13 | PUT/PATCH on a versioned table requires If-Match, and If-Match is only required where a version exists | 39 | ✅ pass |
-| A14 | Request fields are stored: each maps to a column (or is declared virtual) with a compatible length, enum values and nullability | 377 | ✅ pass |
+| A14 | Request fields are stored: each maps to a column (or is declared virtual) with a compatible length, enum values and nullability | 378 | ✅ pass |
 | A15 | Response enum fields have exactly the values the database allows | 29 | ✅ pass |
 | A16 | Every action of every page maps to API calls, a dialog, navigation or explicit client behaviour, and every target exists | 522 | ✅ pass |
 | A17 | Every data-changing endpoint is triggered by at least one page action (only token refresh is system-driven) | 176 | ✅ pass |
@@ -2331,7 +2332,7 @@ Create a customer or supplier (and its ledger, and opening balance entry).
 | **Permission** | `parties.create` — roles: Owner, Finance manager, Accountant, Sales staff |
 | **Path / query params** | — / — |
 | **Request body** | [`PartyInput`](#schema-partyinput) |
-| **Validation** | `party_type`* one of customer/supplier; `name`* string ≤ 190; `category` one of business/individual/walk_in/manufacturer/distributor/service_provider (nullable); `party_group_id` id of a record in this company (nullable); `contact_person` string ≤ 120 (nullable); `mobile` string ≤ 20 (nullable); `email` e-mail (nullable); `alt_phone` string ≤ 20 (nullable); `address` string ≤ 255 (nullable); `district` string ≤ 60 (nullable); `area` string ≤ 80 (nullable); `country_code` string ≤ 2; `default_currency_code` ISO 4217; `payment_term_id` id of a record in this company (nullable); `credit_limit` decimal string, 2 dp (nullable); `price_tier` one of standard/wholesale; `default_purchase_ledger_id` id of a record in this company (nullable); `tax_registration_no` string ≤ 40 (nullable); `port_of_loading` string ≤ 120 (nullable); `notes` text ≤ 65,535 (nullable); `opening_balance` decimal string, 2 dp; `opening_side` one of dr/cr; `bank_accounts` array of PartyBankAccount<br>Unknown fields are rejected (422).<br>BR-063: Local party mobile numbers have 11 digits starting 01 (01XXX-XXXXXX); e-mail addresses must be valid when given.<br>BR-028: Opening balances (parties, ledgers, banks, stock) are posted as opening_balance entries dated the FY start against the opening balance adjustment ledger, and are locked after the first document.<br>BR-006: Document numbers come from the company's sequence for the document type and FY, are unique, are reserved at first save and are never reused; voiding a draft number is audited. |
+| **Validation** | `party_type`* one of customer/supplier; `name`* string ≤ 190; `category` one of business/individual/walk_in/manufacturer/distributor/service_provider (nullable); `party_group_id` id of a record in this company (nullable); `contact_person` string ≤ 120 (nullable); `mobile` string ≤ 20 (nullable); `email` e-mail (nullable); `alt_phone` string ≤ 20 (nullable); `address` string ≤ 255 (nullable); `district` string ≤ 60 (nullable); `area` string ≤ 80 (nullable); `country_code` string ≤ 2; `default_currency_code` ISO 4217; `payment_term_id` id of a record in this company (nullable); `credit_limit` decimal string, 2 dp (nullable); `price_tier` one of standard/wholesale; `default_purchase_ledger_id` id of a record in this company (nullable); `tax_registration_no` string ≤ 40 (nullable); `port_of_loading` string ≤ 120 (nullable); `notes` text ≤ 65,535 (nullable); `opening_balance` decimal string, 2 dp; `opening_side` one of dr/cr; `bank_accounts` array of PartyBankAccount; `status` one of active/prospect<br>Unknown fields are rejected (422).<br>BR-063: Local party mobile numbers have 11 digits starting 01 (01XXX-XXXXXX); e-mail addresses must be valid when given.<br>BR-028: Opening balances (parties, ledgers, banks, stock) are posted as opening_balance entries dated the FY start against the opening balance adjustment ledger, and are locked after the first document.<br>BR-006: Document numbers come from the company's sequence for the document type and FY, are unique, are reserved at first save and are never reused; voiding a draft number is audited. |
 | **Success** | 201 `data`: [`Party`](#schema-party) |
 | **Status codes** | 201, 400, 401, 403, 409, 422, 503 |
 | **Error codes** | **`company_maintenance`, `duplicate`, `invalid_mobile`**; standard: `company_required`, `idempotency_in_progress`, `idempotency_key_reused`, `malformed_json`, `not_a_member`, `permission_denied`, `server_error`, `token_expired`, `token_invalid`, `unauthenticated`, `validation_failed` |
@@ -2375,7 +2376,7 @@ Edit a party (opening balance locked after first document).
 | **Permission** | `parties.edit` — roles: Owner, Finance manager, Accountant |
 | **Path / query params** | `id` / — |
 | **Request body** | [`PartyInput`](#schema-partyinput) |
-| **Validation** | `party_type`* one of customer/supplier; `name`* string ≤ 190; `category` one of business/individual/walk_in/manufacturer/distributor/service_provider (nullable); `party_group_id` id of a record in this company (nullable); `contact_person` string ≤ 120 (nullable); `mobile` string ≤ 20 (nullable); `email` e-mail (nullable); `alt_phone` string ≤ 20 (nullable); `address` string ≤ 255 (nullable); `district` string ≤ 60 (nullable); `area` string ≤ 80 (nullable); `country_code` string ≤ 2; `default_currency_code` ISO 4217; `payment_term_id` id of a record in this company (nullable); `credit_limit` decimal string, 2 dp (nullable); `price_tier` one of standard/wholesale; `default_purchase_ledger_id` id of a record in this company (nullable); `tax_registration_no` string ≤ 40 (nullable); `port_of_loading` string ≤ 120 (nullable); `notes` text ≤ 65,535 (nullable); `opening_balance` decimal string, 2 dp; `opening_side` one of dr/cr; `bank_accounts` array of PartyBankAccount<br>Unknown fields are rejected (422).<br>BR-028: Opening balances (parties, ledgers, banks, stock) are posted as opening_balance entries dated the FY start against the opening balance adjustment ledger, and are locked after the first document.<br>BR-063: Local party mobile numbers have 11 digits starting 01 (01XXX-XXXXXX); e-mail addresses must be valid when given.<br>BR-049: Updates must send the current version (If-Match); a mismatch is rejected with 409 and the user's input is preserved. |
+| **Validation** | `party_type`* one of customer/supplier; `name`* string ≤ 190; `category` one of business/individual/walk_in/manufacturer/distributor/service_provider (nullable); `party_group_id` id of a record in this company (nullable); `contact_person` string ≤ 120 (nullable); `mobile` string ≤ 20 (nullable); `email` e-mail (nullable); `alt_phone` string ≤ 20 (nullable); `address` string ≤ 255 (nullable); `district` string ≤ 60 (nullable); `area` string ≤ 80 (nullable); `country_code` string ≤ 2; `default_currency_code` ISO 4217; `payment_term_id` id of a record in this company (nullable); `credit_limit` decimal string, 2 dp (nullable); `price_tier` one of standard/wholesale; `default_purchase_ledger_id` id of a record in this company (nullable); `tax_registration_no` string ≤ 40 (nullable); `port_of_loading` string ≤ 120 (nullable); `notes` text ≤ 65,535 (nullable); `opening_balance` decimal string, 2 dp; `opening_side` one of dr/cr; `bank_accounts` array of PartyBankAccount; `status` one of active/prospect<br>Unknown fields are rejected (422).<br>BR-028: Opening balances (parties, ledgers, banks, stock) are posted as opening_balance entries dated the FY start against the opening balance adjustment ledger, and are locked after the first document.<br>BR-063: Local party mobile numbers have 11 digits starting 01 (01XXX-XXXXXX); e-mail addresses must be valid when given.<br>BR-049: Updates must send the current version (If-Match); a mismatch is rejected with 409 and the user's input is preserved. |
 | **Success** | 200 `data`: [`Party`](#schema-party) |
 | **Status codes** | 200, 400, 401, 403, 404, 409, 422, 428, 503 |
 | **Error codes** | **`company_maintenance`, `invalid_mobile`**; standard: `company_required`, `if_match_required`, `malformed_json`, `not_a_member`, `not_found`, `permission_denied`, `server_error`, `token_expired`, `token_invalid`, `unauthenticated`, `validation_failed`, `version_conflict` |
@@ -4345,7 +4346,7 @@ Create a quotation.
 | **Validation** | `party_id`* id of a record in this company; `quotation_date`* YYYY-MM-DD; `valid_until`* YYYY-MM-DD; `warehouse_id` id of a record in this company (nullable); `payment_term_id` id of a record in this company (nullable); `notes` text ≤ 65,535 (nullable); `internal_note` text ≤ 65,535 (nullable); `lines`* array of SalesLineInput<br>Unknown fields are rejected (422).<br>BR-056: Quotations and purchase orders never post; converting copies lines and prices; bills update purchase-order received quantities.<br>BR-006: Document numbers come from the company's sequence for the document type and FY, are unique, are reserved at first save and are never reused; voiding a draft number is audited. |
 | **Success** | 201 `data`: [`Quotation`](#schema-quotation) |
 | **Status codes** | 201, 400, 401, 403, 409, 422, 503 |
-| **Error codes** | **`company_maintenance`, `duplicate`**; standard: `company_required`, `idempotency_in_progress`, `idempotency_key_reused`, `malformed_json`, `not_a_member`, `permission_denied`, `server_error`, `token_expired`, `token_invalid`, `unauthenticated`, `validation_failed` |
+| **Error codes** | **`company_maintenance`, `duplicate`, `inactive_reference`**; standard: `company_required`, `idempotency_in_progress`, `idempotency_key_reused`, `malformed_json`, `not_a_member`, `permission_denied`, `server_error`, `token_expired`, `token_invalid`, `unauthenticated`, `validation_failed` |
 | **Headers** | `Idempotency-Key`, `Location` on 201 |
 | **Database** | insert: audit_logs, idempotency_keys, quotation_lines, quotations; read: number_sequences |
 | **Business rules** | BR-056, BR-006 |
@@ -4389,7 +4390,7 @@ Replace a draft or sent quotation.
 | **Validation** | `party_id`* id of a record in this company; `quotation_date`* YYYY-MM-DD; `valid_until`* YYYY-MM-DD; `warehouse_id` id of a record in this company (nullable); `payment_term_id` id of a record in this company (nullable); `notes` text ≤ 65,535 (nullable); `internal_note` text ≤ 65,535 (nullable); `lines`* array of SalesLineInput<br>Unknown fields are rejected (422). |
 | **Success** | 200 `data`: [`Quotation`](#schema-quotation) |
 | **Status codes** | 200, 400, 401, 403, 404, 409, 422, 428, 503 |
-| **Error codes** | **`company_maintenance`**; standard: `company_required`, `if_match_required`, `malformed_json`, `not_a_member`, `not_found`, `permission_denied`, `server_error`, `token_expired`, `token_invalid`, `unauthenticated`, `validation_failed`, `version_conflict` |
+| **Error codes** | **`company_maintenance`, `inactive_reference`, `invalid_transition`**; standard: `company_required`, `if_match_required`, `malformed_json`, `not_a_member`, `not_found`, `permission_denied`, `server_error`, `token_expired`, `token_invalid`, `unauthenticated`, `validation_failed`, `version_conflict` |
 | **Headers** | `If-Match` (required) |
 | **Database** | insert: audit_logs, quotation_lines; update: quotations; delete: quotation_lines |
 | **Business rules** | — |
@@ -4400,7 +4401,7 @@ Replace a draft or sent quotation.
 <a id="postquotationsidsend"></a>
 #### `POST /api/v1/quotations/{id}/send`
 
-Mark sent and e-mail it.
+Mark sent and e-mail it. A draft becomes sent; a sent quotation can be sent again. Refused (409) once accepted, declined, expired or converted.
 
 | | |
 |---|---|
@@ -4410,8 +4411,8 @@ Mark sent and e-mail it.
 | **Request body** | [`EmailRequest`](#schema-emailrequest) |
 | **Validation** | `to`* array of email; `cc` array of email; `message` text ≤ 65,535 (nullable)<br>Unknown fields are rejected (422). |
 | **Success** | 200 `data`: [`Quotation`](#schema-quotation) |
-| **Status codes** | 200, 400, 401, 403, 404, 422, 503 |
-| **Error codes** | **`company_maintenance`**; standard: `company_required`, `malformed_json`, `not_a_member`, `not_found`, `permission_denied`, `server_error`, `token_expired`, `token_invalid`, `unauthenticated`, `validation_failed` |
+| **Status codes** | 200, 400, 401, 403, 404, 409, 422, 503 |
+| **Error codes** | **`company_maintenance`, `invalid_transition`**; standard: `company_required`, `malformed_json`, `not_a_member`, `not_found`, `permission_denied`, `server_error`, `token_expired`, `token_invalid`, `unauthenticated`, `validation_failed` |
 | **Headers** | — |
 | **Database** | lock: quotations; insert: audit_logs; update: quotations |
 | **Business rules** | — |
@@ -4422,7 +4423,7 @@ Mark sent and e-mail it.
 <a id="postquotationsidconvert"></a>
 #### `POST /api/v1/quotations/{id}/convert`
 
-Convert an accepted quotation into a draft invoice.
+Convert an accepted quotation into a draft invoice. Copies the lines and prices into a draft invoice dated today (once: a second convert is 409 `already_converted`). A prospect becomes an active customer. The quotation never posts.
 
 | | |
 |---|---|
@@ -4433,7 +4434,7 @@ Convert an accepted quotation into a draft invoice.
 | **Validation** | BR-056: Quotations and purchase orders never post; converting copies lines and prices; bills update purchase-order received quantities. |
 | **Success** | 201 `data`: [`SalesInvoice`](#schema-salesinvoice) |
 | **Status codes** | 201, 400, 401, 403, 404, 409, 422, 503 |
-| **Error codes** | **`company_maintenance`**; standard: `company_required`, `idempotency_in_progress`, `idempotency_key_reused`, `not_a_member`, `not_found`, `permission_denied`, `server_error`, `token_expired`, `token_invalid`, `unauthenticated` |
+| **Error codes** | **`already_converted`, `company_maintenance`, `inactive_reference`, `invalid_transition`, `period_locked`**; standard: `company_required`, `idempotency_in_progress`, `idempotency_key_reused`, `not_a_member`, `not_found`, `permission_denied`, `server_error`, `token_expired`, `token_invalid`, `unauthenticated` |
 | **Headers** | `Idempotency-Key`, `Location` on 201 |
 | **Database** | lock: number_sequences, quotations; insert: audit_logs, idempotency_keys, sales_invoice_lines, sales_invoices; update: number_sequences, quotations |
 | **Business rules** | BR-056 |
@@ -4444,7 +4445,7 @@ Convert an accepted quotation into a draft invoice.
 <a id="postquotationsidstatus"></a>
 #### `POST /api/v1/quotations/{id}/status`
 
-Set accepted, declined or expired.
+Set accepted, declined or expired. From draft or sent only; closed and cancelled are purchase-order statuses (422). Converted quotations are final (409).
 
 | | |
 |---|---|
@@ -4454,8 +4455,8 @@ Set accepted, declined or expired.
 | **Request body** | [`StatusChange`](#schema-statuschange) |
 | **Validation** | `status`* one of accepted/declined/expired/closed/cancelled; `reason` string ≤ 255 (nullable)<br>Unknown fields are rejected (422). |
 | **Success** | 200 `data`: [`Quotation`](#schema-quotation) |
-| **Status codes** | 200, 400, 401, 403, 404, 422, 503 |
-| **Error codes** | **`company_maintenance`**; standard: `company_required`, `malformed_json`, `not_a_member`, `not_found`, `permission_denied`, `server_error`, `token_expired`, `token_invalid`, `unauthenticated`, `validation_failed` |
+| **Status codes** | 200, 400, 401, 403, 404, 409, 422, 503 |
+| **Error codes** | **`company_maintenance`, `invalid_transition`**; standard: `company_required`, `malformed_json`, `not_a_member`, `not_found`, `permission_denied`, `server_error`, `token_expired`, `token_invalid`, `unauthenticated`, `validation_failed` |
 | **Headers** | — |
 | **Database** | lock: quotations; insert: audit_logs; update: quotations |
 | **Business rules** | — |
@@ -4532,7 +4533,7 @@ List sales returns.
 <a id="postsalesreturns"></a>
 #### `POST /api/v1/sales-returns`
 
-Create a draft return against an invoice.
+Create a draft return against an invoice. Lines are the invoice's lines (source_line_id) with the quantity coming back, at most what is still returnable (BR-022), and a reason (expired, damaged_in_transit, leaking, wrong_item, not_needed). Each line is valued at the invoice's price after discount, with its tax. usage / apply_to_document_id are kept for the credit note created on posting (default: apply to the invoice while it has a balance, else credit).
 
 | | |
 |---|---|
@@ -4543,7 +4544,7 @@ Create a draft return against an invoice.
 | **Validation** | `source_document_id`* id of a record in this company; `return_date`* YYYY-MM-DD; `warehouse_id`* id of a record in this company; `stock_action`* one of restock/write_off/send_back/already_disposed; `usage` one of apply/credit/refund; `apply_to_document_id` id of a record in this company (nullable); `notes` text ≤ 65,535 (nullable); `lines`* array of ReturnLineInput<br>Unknown fields are rejected (422).<br>BR-022: Returned quantity per line <= original quantity - quantity already returned.<br>BR-021: Allocations, notes and returns may reference only documents of the same party and company.<br>BR-006: Document numbers come from the company's sequence for the document type and FY, are unique, are reserved at first save and are never reused; voiding a draft number is audited. |
 | **Success** | 201 `data`: [`Return`](#schema-return) |
 | **Status codes** | 201, 400, 401, 403, 409, 422, 503 |
-| **Error codes** | **`company_maintenance`, `duplicate`, `foreign_document`, `return_qty_exceeds`**; standard: `company_required`, `idempotency_in_progress`, `idempotency_key_reused`, `malformed_json`, `not_a_member`, `permission_denied`, `server_error`, `token_expired`, `token_invalid`, `unauthenticated`, `validation_failed` |
+| **Error codes** | **`company_maintenance`, `duplicate`, `foreign_document`, `inactive_reference`, `return_qty_exceeds`**; standard: `company_required`, `idempotency_in_progress`, `idempotency_key_reused`, `malformed_json`, `not_a_member`, `permission_denied`, `server_error`, `token_expired`, `token_invalid`, `unauthenticated`, `validation_failed` |
 | **Headers** | `Idempotency-Key`, `Location` on 201 |
 | **Database** | insert: audit_logs, idempotency_keys, sales_return_lines, sales_returns; read: number_sequences, sales_invoice_lines |
 | **Business rules** | BR-022, BR-021, BR-006 |
@@ -4587,7 +4588,7 @@ Replace a draft return.
 | **Validation** | `source_document_id`* id of a record in this company; `return_date`* YYYY-MM-DD; `warehouse_id`* id of a record in this company; `stock_action`* one of restock/write_off/send_back/already_disposed; `usage` one of apply/credit/refund; `apply_to_document_id` id of a record in this company (nullable); `notes` text ≤ 65,535 (nullable); `lines`* array of ReturnLineInput<br>Unknown fields are rejected (422).<br>BR-022: Returned quantity per line <= original quantity - quantity already returned. |
 | **Success** | 200 `data`: [`Return`](#schema-return) |
 | **Status codes** | 200, 400, 401, 403, 404, 409, 422, 428, 503 |
-| **Error codes** | **`company_maintenance`, `return_qty_exceeds`**; standard: `company_required`, `if_match_required`, `malformed_json`, `not_a_member`, `not_found`, `permission_denied`, `server_error`, `token_expired`, `token_invalid`, `unauthenticated`, `validation_failed`, `version_conflict` |
+| **Error codes** | **`company_maintenance`, `foreign_document`, `not_draft`, `return_qty_exceeds`**; standard: `company_required`, `if_match_required`, `malformed_json`, `not_a_member`, `not_found`, `permission_denied`, `server_error`, `token_expired`, `token_invalid`, `unauthenticated`, `validation_failed`, `version_conflict` |
 | **Headers** | `If-Match` (required) |
 | **Database** | insert: audit_logs, sales_return_lines; update: sales_returns; delete: sales_return_lines |
 | **Business rules** | BR-022 |
@@ -4598,7 +4599,7 @@ Replace a draft return.
 <a id="postsalesreturnsidpost"></a>
 #### `POST /api/v1/sales-returns/{id}/post`
 
-Post the return (stock back if restock) and create a draft credit note.
+Post the return (stock back if restock) and create a draft credit note. Restock: stock back in at the invoice line's cost (Dr warehouse inventory / Cr COGS). Write-off: no stock and no entry. The invoice lines' returned_quantity grows, and a draft credit note for the return's value is created (E9 posts it).
 
 | | |
 |---|---|
@@ -4609,7 +4610,7 @@ Post the return (stock back if restock) and create a draft credit note.
 | **Validation** | BR-022: Returned quantity per line <= original quantity - quantity already returned.<br>BR-001: Every posted journal entry balances: total debit = total credit > 0.<br>BR-004: A document or voucher date must fall inside an open accounting period of an open financial year; posting, editing or reversing into a locked period is rejected.<br>BR-009: A document posts at most once: one journal entry per document (unique journal_entry_id); a repeated post request returns the existing result.<br>BR-017: On every stock-in to a warehouse, that warehouse's average cost = (warehouse value + incoming value) / (warehouse quantity + incoming quantity); when current quantity <= 0 the incoming unit cost becomes the average. |
 | **Success** | 200 `data`: [`Return`](#schema-return) |
 | **Status codes** | 200, 400, 401, 403, 404, 409, 422, 503 |
-| **Error codes** | **`already_posted`, `company_maintenance`, `period_locked`, `return_qty_exceeds`, `unbalanced_entry`**; standard: `company_required`, `idempotency_in_progress`, `idempotency_key_reused`, `not_a_member`, `not_found`, `permission_denied`, `server_error`, `token_expired`, `token_invalid`, `unauthenticated` |
+| **Error codes** | **`already_posted`, `company_maintenance`, `insufficient_stock`, `not_draft`, `period_locked`, `return_qty_exceeds`, `unbalanced_entry`**; standard: `company_required`, `idempotency_in_progress`, `idempotency_key_reused`, `not_a_member`, `not_found`, `permission_denied`, `server_error`, `token_expired`, `token_invalid`, `unauthenticated` |
 | **Headers** | `Idempotency-Key` |
 | **Database** | lock: number_sequences, sales_returns, stock_balances; insert: audit_logs, credit_notes, idempotency_keys, journal_entries, journal_lines, stock_movements; update: number_sequences, sales_invoice_lines, sales_return_lines, sales_returns, stock_balances |
 | **Business rules** | BR-022, BR-001, BR-004, BR-009, BR-017 |
@@ -4642,7 +4643,7 @@ Delete a draft sales return. _Contract change: C-02._
 <a id="postsalesreturnsidcancel"></a>
 #### `POST /api/v1/sales-returns/{id}/cancel`
 
-Cancel a posted return: mirror stock entry; its credit note is cancelled if unapplied. _Contract change: R-03._
+Cancel a posted return: mirror stock entry; its credit note is cancelled if unapplied. A draft credit note is cancelled with it; a posted one is cancelled too unless it was applied or refunded (409 note_applied: cancel the note first). _Contract change: R-03._
 
 | | |
 |---|---|
@@ -4697,7 +4698,7 @@ Edit a draft credit note (reason, amount, usage).
 | **Validation** | `party_id`* id of a record in this company; `source_document_id` id of a record in this company (nullable); `return_id` id of a record in this company (nullable); `note_date`* YYYY-MM-DD; `reason`* string ≤ 30; `amount`* decimal string, 2 dp; `usage`* one of apply/credit/refund; `apply_to_document_id` id of a record in this company (nullable); `refund` RefundInput (nullable)<br>Unknown fields are rejected (422).<br>BR-023: A credit/debit note applied to a document cannot exceed that document's balance; a refund usage requires recording a payment out (credit note) or money in (debit note). |
 | **Success** | 200 `data`: [`Note`](#schema-note) |
 | **Status codes** | 200, 400, 401, 403, 404, 409, 422, 428, 503 |
-| **Error codes** | **`allocation_exceeds_balance`, `company_maintenance`**; standard: `company_required`, `if_match_required`, `malformed_json`, `not_a_member`, `not_found`, `permission_denied`, `server_error`, `token_expired`, `token_invalid`, `unauthenticated`, `validation_failed`, `version_conflict` |
+| **Error codes** | **`allocation_exceeds_balance`, `company_maintenance`, `foreign_document`, `not_draft`**; standard: `company_required`, `if_match_required`, `malformed_json`, `not_a_member`, `not_found`, `permission_denied`, `server_error`, `token_expired`, `token_invalid`, `unauthenticated`, `validation_failed`, `version_conflict` |
 | **Headers** | `If-Match` (required) |
 | **Database** | insert: audit_logs; update: credit_notes |
 | **Business rules** | BR-023 |
@@ -4708,7 +4709,7 @@ Edit a draft credit note (reason, amount, usage).
 <a id="postcreditnotes"></a>
 #### `POST /api/v1/credit-notes`
 
-Create a credit note without a return (price correction, goodwill).
+Create a credit note without a return (price correction, goodwill). usage apply needs apply_to_document_id (a posted invoice of the customer); refund needs refund {money_account_id, method}. The note posts Dr sales_returns (and the tax of returned lines) / Cr customer.
 
 | | |
 |---|---|
@@ -4719,7 +4720,7 @@ Create a credit note without a return (price correction, goodwill).
 | **Validation** | `party_id`* id of a record in this company; `source_document_id` id of a record in this company (nullable); `return_id` id of a record in this company (nullable); `note_date`* YYYY-MM-DD; `reason`* string ≤ 30; `amount`* decimal string, 2 dp; `usage`* one of apply/credit/refund; `apply_to_document_id` id of a record in this company (nullable); `refund` RefundInput (nullable)<br>Unknown fields are rejected (422). |
 | **Success** | 201 `data`: [`Note`](#schema-note) |
 | **Status codes** | 201, 400, 401, 403, 409, 422, 503 |
-| **Error codes** | **`company_maintenance`**; standard: `company_required`, `idempotency_in_progress`, `idempotency_key_reused`, `malformed_json`, `not_a_member`, `permission_denied`, `server_error`, `token_expired`, `token_invalid`, `unauthenticated`, `validation_failed` |
+| **Error codes** | **`company_maintenance`, `foreign_document`, `inactive_reference`**; standard: `company_required`, `idempotency_in_progress`, `idempotency_key_reused`, `malformed_json`, `not_a_member`, `permission_denied`, `server_error`, `token_expired`, `token_invalid`, `unauthenticated`, `validation_failed` |
 | **Headers** | `Idempotency-Key`, `Location` on 201 |
 | **Database** | insert: audit_logs, credit_notes, idempotency_keys; read: number_sequences |
 | **Business rules** | — |
@@ -4730,7 +4731,7 @@ Create a credit note without a return (price correction, goodwill).
 <a id="postcreditnotesidpost"></a>
 #### `POST /api/v1/credit-notes/{id}/post`
 
-Post the credit note and apply it per usage.
+Post the credit note and apply it per usage. apply: allocated to the invoice (at most its balance, BR-023). credit: stays on the customer ledger as credit. refund: also posts a payment voucher Dr customer / Cr money account.
 
 | | |
 |---|---|
@@ -4741,7 +4742,7 @@ Post the credit note and apply it per usage.
 | **Validation** | BR-023: A credit/debit note applied to a document cannot exceed that document's balance; a refund usage requires recording a payment out (credit note) or money in (debit note).<br>BR-001: Every posted journal entry balances: total debit = total credit > 0.<br>BR-004: A document or voucher date must fall inside an open accounting period of an open financial year; posting, editing or reversing into a locked period is rejected.<br>BR-009: A document posts at most once: one journal entry per document (unique journal_entry_id); a repeated post request returns the existing result.<br>BR-020: Allocations never exceed a document's open balance, their sum never exceeds the payment; default allocation is oldest due first; any excess stays as an advance on the party ledger. |
 | **Success** | 200 `data`: [`Note`](#schema-note) |
 | **Status codes** | 200, 400, 401, 403, 404, 409, 422, 503 |
-| **Error codes** | **`allocation_exceeds_balance`, `already_posted`, `company_maintenance`, `period_locked`, `unbalanced_entry`**; standard: `company_required`, `idempotency_in_progress`, `idempotency_key_reused`, `not_a_member`, `not_found`, `permission_denied`, `server_error`, `token_expired`, `token_invalid`, `unauthenticated` |
+| **Error codes** | **`allocation_exceeds_balance`, `already_posted`, `company_maintenance`, `foreign_document`, `not_draft`, `period_locked`, `unbalanced_entry`**; standard: `company_required`, `idempotency_in_progress`, `idempotency_key_reused`, `not_a_member`, `not_found`, `permission_denied`, `server_error`, `token_expired`, `token_invalid`, `unauthenticated` |
 | **Headers** | `Idempotency-Key` |
 | **Database** | lock: credit_notes, number_sequences, sales_invoices; insert: audit_logs, bill_allocations, idempotency_keys, journal_entries, journal_lines; update: credit_notes, number_sequences, sales_invoices; read: account_mappings |
 | **Business rules** | BR-023, BR-001, BR-004, BR-009, BR-020 |
@@ -4796,7 +4797,7 @@ Delete a draft credit note. _Contract change: C-02._
 <a id="postcreditnotesidcancel"></a>
 #### `POST /api/v1/credit-notes/{id}/cancel`
 
-Cancel a posted credit note (mirror entry; its allocations are reversed). _Contract change: R-03._
+Cancel a posted credit note (mirror entry; its allocations are reversed). Mirror entry; allocations made from the note are released and a refund voucher is reversed with it. _Contract change: R-03._
 
 | | |
 |---|---|
@@ -4807,7 +4808,7 @@ Cancel a posted credit note (mirror entry; its allocations are reversed). _Contr
 | **Validation** | `reason`* string ≤ 255<br>Unknown fields are rejected (422).<br>BR-003: Posted journal entries, documents and stock movements are immutable; corrections are made only by reversal, cancellation or a credit/debit note. Non-financial fields (delivery challan, vehicle, delivered time, internal note, attachments) may still be updated after posting, and every change is audited.<br>BR-004: A document or voucher date must fall inside an open accounting period of an open financial year; posting, editing or reversing into a locked period is rejected.<br>BR-009: A document posts at most once: one journal entry per document (unique journal_entry_id); a repeated post request returns the existing result.<br>BR-020: Allocations never exceed a document's open balance, their sum never exceeds the payment; default allocation is oldest due first; any excess stays as an advance on the party ledger. |
 | **Success** | 200 `data`: [`Note`](#schema-note) |
 | **Status codes** | 200, 400, 401, 403, 404, 409, 422, 503 |
-| **Error codes** | **`allocation_exceeds_balance`, `already_posted`, `already_reversed`, `company_maintenance`, `period_locked`, `use_document_cancel`**; standard: `company_required`, `idempotency_in_progress`, `idempotency_key_reused`, `malformed_json`, `not_a_member`, `not_found`, `permission_denied`, `server_error`, `token_expired`, `token_invalid`, `unauthenticated`, `validation_failed` |
+| **Error codes** | **`allocation_exceeds_balance`, `already_posted`, `already_reversed`, `company_maintenance`, `invalid_transition`, `period_locked`, `use_document_cancel`**; standard: `company_required`, `idempotency_in_progress`, `idempotency_key_reused`, `malformed_json`, `not_a_member`, `not_found`, `permission_denied`, `server_error`, `token_expired`, `token_invalid`, `unauthenticated`, `validation_failed` |
 | **Headers** | `Idempotency-Key` |
 | **Database** | lock: credit_notes, number_sequences, sales_invoices; insert: audit_logs, bill_allocations, idempotency_keys, journal_entries, journal_lines; update: bill_allocations, credit_notes, journal_entries, number_sequences, sales_invoices |
 | **Business rules** | BR-003, BR-004, BR-009, BR-020 |
@@ -5151,7 +5152,7 @@ List purchase orders.
 <a id="postpurchaseorders"></a>
 #### `POST /api/v1/purchase-orders`
 
-Create a purchase order.
+Create a purchase order. Lines as PurchaseLineInput (purchase_order_line_id is ignored). The currency is the supplier's unless given; a foreign PO needs exchange_rate (planning rate).
 
 | | |
 |---|---|
@@ -5162,7 +5163,7 @@ Create a purchase order.
 | **Validation** | `party_id`* id of a record in this company; `order_date`* YYYY-MM-DD; `expected_date` YYYY-MM-DD (nullable); `warehouse_id`* id of a record in this company; `payment_term_id` id of a record in this company (nullable); `currency_code` ISO 4217; `exchange_rate` decimal string, 6 dp; `source_note` string ≤ 120 (nullable); `notes` text ≤ 65,535 (nullable); `internal_note` text ≤ 65,535 (nullable); `lines`* array of PurchaseLineInput<br>Unknown fields are rejected (422).<br>BR-056: Quotations and purchase orders never post; converting copies lines and prices; bills update purchase-order received quantities.<br>BR-006: Document numbers come from the company's sequence for the document type and FY, are unique, are reserved at first save and are never reused; voiding a draft number is audited. |
 | **Success** | 201 `data`: [`PurchaseOrder`](#schema-purchaseorder) |
 | **Status codes** | 201, 400, 401, 403, 409, 422, 503 |
-| **Error codes** | **`company_maintenance`, `duplicate`**; standard: `company_required`, `idempotency_in_progress`, `idempotency_key_reused`, `malformed_json`, `not_a_member`, `permission_denied`, `server_error`, `token_expired`, `token_invalid`, `unauthenticated`, `validation_failed` |
+| **Error codes** | **`company_maintenance`, `duplicate`, `inactive_reference`**; standard: `company_required`, `idempotency_in_progress`, `idempotency_key_reused`, `malformed_json`, `not_a_member`, `permission_denied`, `server_error`, `token_expired`, `token_invalid`, `unauthenticated`, `validation_failed` |
 | **Headers** | `Idempotency-Key`, `Location` on 201 |
 | **Database** | insert: audit_logs, idempotency_keys, purchase_order_lines, purchase_orders; read: number_sequences |
 | **Business rules** | BR-056, BR-006 |
@@ -5217,7 +5218,7 @@ Get a purchase order.
 <a id="putpurchaseordersid"></a>
 #### `PUT /api/v1/purchase-orders/{id}`
 
-Replace a draft or sent order.
+Replace a draft or sent order. Only while draft or sent (nothing received yet).
 
 | | |
 |---|---|
@@ -5228,7 +5229,7 @@ Replace a draft or sent order.
 | **Validation** | `party_id`* id of a record in this company; `order_date`* YYYY-MM-DD; `expected_date` YYYY-MM-DD (nullable); `warehouse_id`* id of a record in this company; `payment_term_id` id of a record in this company (nullable); `currency_code` ISO 4217; `exchange_rate` decimal string, 6 dp; `source_note` string ≤ 120 (nullable); `notes` text ≤ 65,535 (nullable); `internal_note` text ≤ 65,535 (nullable); `lines`* array of PurchaseLineInput<br>Unknown fields are rejected (422). |
 | **Success** | 200 `data`: [`PurchaseOrder`](#schema-purchaseorder) |
 | **Status codes** | 200, 400, 401, 403, 404, 409, 422, 428, 503 |
-| **Error codes** | **`company_maintenance`**; standard: `company_required`, `if_match_required`, `malformed_json`, `not_a_member`, `not_found`, `permission_denied`, `server_error`, `token_expired`, `token_invalid`, `unauthenticated`, `validation_failed`, `version_conflict` |
+| **Error codes** | **`company_maintenance`, `inactive_reference`, `invalid_transition`**; standard: `company_required`, `if_match_required`, `malformed_json`, `not_a_member`, `not_found`, `permission_denied`, `server_error`, `token_expired`, `token_invalid`, `unauthenticated`, `validation_failed`, `version_conflict` |
 | **Headers** | `If-Match` (required) |
 | **Database** | insert: audit_logs, purchase_order_lines; update: purchase_orders; delete: purchase_order_lines |
 | **Business rules** | — |
@@ -5239,7 +5240,7 @@ Replace a draft or sent order.
 <a id="postpurchaseordersidsend"></a>
 #### `POST /api/v1/purchase-orders/{id}/send`
 
-Mark sent and e-mail it.
+Mark sent and e-mail it. A draft becomes sent; a sent order can be sent again. Refused (409) once goods arrived, closed or cancelled.
 
 | | |
 |---|---|
@@ -5249,8 +5250,8 @@ Mark sent and e-mail it.
 | **Request body** | [`EmailRequest`](#schema-emailrequest) |
 | **Validation** | `to`* array of email; `cc` array of email; `message` text ≤ 65,535 (nullable)<br>Unknown fields are rejected (422). |
 | **Success** | 200 `data`: [`PurchaseOrder`](#schema-purchaseorder) |
-| **Status codes** | 200, 400, 401, 403, 404, 422, 503 |
-| **Error codes** | **`company_maintenance`**; standard: `company_required`, `malformed_json`, `not_a_member`, `not_found`, `permission_denied`, `server_error`, `token_expired`, `token_invalid`, `unauthenticated`, `validation_failed` |
+| **Status codes** | 200, 400, 401, 403, 404, 409, 422, 503 |
+| **Error codes** | **`company_maintenance`, `invalid_transition`**; standard: `company_required`, `malformed_json`, `not_a_member`, `not_found`, `permission_denied`, `server_error`, `token_expired`, `token_invalid`, `unauthenticated`, `validation_failed` |
 | **Headers** | — |
 | **Database** | lock: purchase_orders; insert: audit_logs; update: purchase_orders |
 | **Business rules** | — |
@@ -5261,7 +5262,7 @@ Mark sent and e-mail it.
 <a id="postpurchaseordersidconvert"></a>
 #### `POST /api/v1/purchase-orders/{id}/convert`
 
-Create a draft bill from remaining quantities.
+Create a draft bill from remaining quantities. A draft bill dated today for each line's remaining quantity (ordered − received), linked by purchase_order_line_id; supplier_bill_no starts as the PO number (change it to the supplier's before posting). Posting the bill adds to received_quantity and moves the order to partly_received / received; cancelling the bill takes it back. 409 when nothing remains or the order is closed or cancelled.
 
 | | |
 |---|---|
@@ -5272,7 +5273,7 @@ Create a draft bill from remaining quantities.
 | **Validation** | BR-056: Quotations and purchase orders never post; converting copies lines and prices; bills update purchase-order received quantities. |
 | **Success** | 201 `data`: [`PurchaseBill`](#schema-purchasebill) |
 | **Status codes** | 201, 400, 401, 403, 404, 409, 422, 503 |
-| **Error codes** | **`company_maintenance`**; standard: `company_required`, `idempotency_in_progress`, `idempotency_key_reused`, `not_a_member`, `not_found`, `permission_denied`, `server_error`, `token_expired`, `token_invalid`, `unauthenticated` |
+| **Error codes** | **`company_maintenance`, `inactive_reference`, `invalid_transition`, `period_locked`**; standard: `company_required`, `idempotency_in_progress`, `idempotency_key_reused`, `not_a_member`, `not_found`, `permission_denied`, `server_error`, `token_expired`, `token_invalid`, `unauthenticated` |
 | **Headers** | `Idempotency-Key`, `Location` on 201 |
 | **Database** | lock: number_sequences, purchase_orders; insert: audit_logs, idempotency_keys, purchase_bill_lines, purchase_bills; update: number_sequences, purchase_orders; read: purchase_order_lines |
 | **Business rules** | BR-056 |
@@ -5283,7 +5284,7 @@ Create a draft bill from remaining quantities.
 <a id="postpurchaseordersidstatus"></a>
 #### `POST /api/v1/purchase-orders/{id}/status`
 
-Close or cancel an order.
+Close or cancel an order. closed: stop expecting the rest (from sent, partly_received or received). cancelled: only before anything is received (draft or sent). accepted/declined/expired are quotation statuses (422).
 
 | | |
 |---|---|
@@ -5293,8 +5294,8 @@ Close or cancel an order.
 | **Request body** | [`StatusChange`](#schema-statuschange) |
 | **Validation** | `status`* one of accepted/declined/expired/closed/cancelled; `reason` string ≤ 255 (nullable)<br>Unknown fields are rejected (422). |
 | **Success** | 200 `data`: [`PurchaseOrder`](#schema-purchaseorder) |
-| **Status codes** | 200, 400, 401, 403, 404, 422, 503 |
-| **Error codes** | **`company_maintenance`**; standard: `company_required`, `malformed_json`, `not_a_member`, `not_found`, `permission_denied`, `server_error`, `token_expired`, `token_invalid`, `unauthenticated`, `validation_failed` |
+| **Status codes** | 200, 400, 401, 403, 404, 409, 422, 503 |
+| **Error codes** | **`company_maintenance`, `invalid_transition`**; standard: `company_required`, `malformed_json`, `not_a_member`, `not_found`, `permission_denied`, `server_error`, `token_expired`, `token_invalid`, `unauthenticated`, `validation_failed` |
 | **Headers** | — |
 | **Database** | lock: purchase_orders; insert: audit_logs; update: purchase_orders |
 | **Business rules** | — |
@@ -5371,7 +5372,7 @@ List purchase returns.
 <a id="postpurchasereturns"></a>
 #### `POST /api/v1/purchase-returns`
 
-Create a draft purchase return.
+Create a draft purchase return. Lines are the bill's lines (source_line_id) with the quantity going back, at most what is still returnable (BR-022), and a reason (leaking, broken, short_supply, stale_stock, torn_packs, quality_claim). Valued at the cost the goods came in at (BDT), plus the recoverable tax on them. stock_action send_back (stock out) or already_disposed (no stock moves).
 
 | | |
 |---|---|
@@ -5382,7 +5383,7 @@ Create a draft purchase return.
 | **Validation** | `source_document_id`* id of a record in this company; `return_date`* YYYY-MM-DD; `warehouse_id`* id of a record in this company; `stock_action`* one of restock/write_off/send_back/already_disposed; `usage` one of apply/credit/refund; `apply_to_document_id` id of a record in this company (nullable); `notes` text ≤ 65,535 (nullable); `lines`* array of ReturnLineInput<br>Unknown fields are rejected (422).<br>BR-022: Returned quantity per line <= original quantity - quantity already returned.<br>BR-021: Allocations, notes and returns may reference only documents of the same party and company. |
 | **Success** | 201 `data`: [`Return`](#schema-return) |
 | **Status codes** | 201, 400, 401, 403, 409, 422, 503 |
-| **Error codes** | **`company_maintenance`, `foreign_document`, `return_qty_exceeds`**; standard: `company_required`, `idempotency_in_progress`, `idempotency_key_reused`, `malformed_json`, `not_a_member`, `permission_denied`, `server_error`, `token_expired`, `token_invalid`, `unauthenticated`, `validation_failed` |
+| **Error codes** | **`company_maintenance`, `foreign_document`, `inactive_reference`, `return_qty_exceeds`**; standard: `company_required`, `idempotency_in_progress`, `idempotency_key_reused`, `malformed_json`, `not_a_member`, `permission_denied`, `server_error`, `token_expired`, `token_invalid`, `unauthenticated`, `validation_failed` |
 | **Headers** | `Idempotency-Key`, `Location` on 201 |
 | **Database** | insert: audit_logs, idempotency_keys, purchase_return_lines, purchase_returns; read: number_sequences, purchase_bill_lines |
 | **Business rules** | BR-022, BR-021 |
@@ -5426,7 +5427,7 @@ Replace a draft purchase return.
 | **Validation** | `source_document_id`* id of a record in this company; `return_date`* YYYY-MM-DD; `warehouse_id`* id of a record in this company; `stock_action`* one of restock/write_off/send_back/already_disposed; `usage` one of apply/credit/refund; `apply_to_document_id` id of a record in this company (nullable); `notes` text ≤ 65,535 (nullable); `lines`* array of ReturnLineInput<br>Unknown fields are rejected (422). |
 | **Success** | 200 `data`: [`Return`](#schema-return) |
 | **Status codes** | 200, 400, 401, 403, 404, 409, 422, 428, 503 |
-| **Error codes** | **`company_maintenance`**; standard: `company_required`, `if_match_required`, `malformed_json`, `not_a_member`, `not_found`, `permission_denied`, `server_error`, `token_expired`, `token_invalid`, `unauthenticated`, `validation_failed`, `version_conflict` |
+| **Error codes** | **`company_maintenance`, `foreign_document`, `not_draft`, `return_qty_exceeds`**; standard: `company_required`, `if_match_required`, `malformed_json`, `not_a_member`, `not_found`, `permission_denied`, `server_error`, `token_expired`, `token_invalid`, `unauthenticated`, `validation_failed`, `version_conflict` |
 | **Headers** | `If-Match` (required) |
 | **Database** | insert: audit_logs, purchase_return_lines; update: purchase_returns; delete: purchase_return_lines |
 | **Business rules** | — |
@@ -5448,7 +5449,7 @@ Post the return: stock out at bill cost and Dr supplier / Cr inventory; the debi
 | **Validation** | BR-022: Returned quantity per line <= original quantity - quantity already returned.<br>BR-057: A purchase return credits inventory at the original bill cost of the returned lines; the supplier is debited through the debit note.<br>BR-014: Posting a stock-out is rejected if quantity exceeds the warehouse's on-hand quantity, unless the company allows negative stock.<br>BR-023: A credit/debit note applied to a document cannot exceed that document's balance; a refund usage requires recording a payment out (credit note) or money in (debit note).<br>BR-001: Every posted journal entry balances: total debit = total credit > 0.<br>BR-004: A document or voucher date must fall inside an open accounting period of an open financial year; posting, editing or reversing into a locked period is rejected.<br>BR-009: A document posts at most once: one journal entry per document (unique journal_entry_id); a repeated post request returns the existing result. |
 | **Success** | 200 `data`: [`Return`](#schema-return) |
 | **Status codes** | 200, 400, 401, 403, 404, 409, 422, 503 |
-| **Error codes** | **`allocation_exceeds_balance`, `already_posted`, `company_maintenance`, `insufficient_stock`, `period_locked`, `return_qty_exceeds`, `unbalanced_entry`**; standard: `company_required`, `idempotency_in_progress`, `idempotency_key_reused`, `not_a_member`, `not_found`, `permission_denied`, `server_error`, `token_expired`, `token_invalid`, `unauthenticated` |
+| **Error codes** | **`allocation_exceeds_balance`, `already_posted`, `company_maintenance`, `foreign_document`, `insufficient_stock`, `not_draft`, `period_locked`, `return_qty_exceeds`, `unbalanced_entry`**; standard: `company_required`, `idempotency_in_progress`, `idempotency_key_reused`, `not_a_member`, `not_found`, `permission_denied`, `server_error`, `token_expired`, `token_invalid`, `unauthenticated` |
 | **Headers** | `Idempotency-Key` |
 | **Database** | lock: number_sequences, purchase_bills, purchase_returns, stock_balances; insert: audit_logs, bill_allocations, debit_notes, idempotency_keys, journal_entries, journal_lines, stock_movements; update: number_sequences, purchase_bill_lines, purchase_bills, purchase_return_lines, purchase_returns, stock_balances |
 | **Business rules** | BR-022, BR-057, BR-014, BR-023, BR-001, BR-004, BR-009 |
@@ -5492,7 +5493,7 @@ Cancel a posted purchase return: stock back at the same cost, supplier credited,
 | **Validation** | `reason`* string ≤ 255<br>Unknown fields are rejected (422).<br>BR-003: Posted journal entries, documents and stock movements are immutable; corrections are made only by reversal, cancellation or a credit/debit note. Non-financial fields (delivery challan, vehicle, delivered time, internal note, attachments) may still be updated after posting, and every change is audited.<br>BR-004: A document or voucher date must fall inside an open accounting period of an open financial year; posting, editing or reversing into a locked period is rejected.<br>BR-009: A document posts at most once: one journal entry per document (unique journal_entry_id); a repeated post request returns the existing result.<br>BR-024: Cancelling a posted invoice or bill requires a reason, posts a cancellation entry that reverses the original journal and stock, and turns its allocated payments into advances. |
 | **Success** | 200 `data`: [`Return`](#schema-return) |
 | **Status codes** | 200, 400, 401, 403, 404, 409, 422, 503 |
-| **Error codes** | **`already_posted`, `already_reversed`, `company_maintenance`, `invalid_transition`, `period_locked`, `use_document_cancel`**; standard: `company_required`, `idempotency_in_progress`, `idempotency_key_reused`, `malformed_json`, `not_a_member`, `not_found`, `permission_denied`, `server_error`, `token_expired`, `token_invalid`, `unauthenticated`, `validation_failed` |
+| **Error codes** | **`already_posted`, `already_reversed`, `company_maintenance`, `insufficient_stock`, `invalid_transition`, `period_locked`, `use_document_cancel`**; standard: `company_required`, `idempotency_in_progress`, `idempotency_key_reused`, `malformed_json`, `not_a_member`, `not_found`, `permission_denied`, `server_error`, `token_expired`, `token_invalid`, `unauthenticated`, `validation_failed` |
 | **Headers** | `Idempotency-Key` |
 | **Database** | lock: number_sequences, purchase_returns, stock_balances; insert: audit_logs, bill_allocations, debit_notes, idempotency_keys, journal_entries, journal_lines, stock_movements; update: bill_allocations, journal_entries, number_sequences, purchase_bill_lines, purchase_return_lines, purchase_returns, stock_balances |
 | **Business rules** | BR-003, BR-004, BR-009, BR-024 |
@@ -5536,7 +5537,7 @@ Edit a draft debit note.
 | **Validation** | `party_id`* id of a record in this company; `source_document_id` id of a record in this company (nullable); `return_id` id of a record in this company (nullable); `note_date`* YYYY-MM-DD; `reason`* string ≤ 30; `amount`* decimal string, 2 dp; `usage`* one of apply/credit/refund; `apply_to_document_id` id of a record in this company (nullable); `refund` RefundInput (nullable)<br>Unknown fields are rejected (422). |
 | **Success** | 200 `data`: [`Note`](#schema-note) |
 | **Status codes** | 200, 400, 401, 403, 404, 409, 422, 428, 503 |
-| **Error codes** | **`company_maintenance`**; standard: `company_required`, `if_match_required`, `malformed_json`, `not_a_member`, `not_found`, `permission_denied`, `server_error`, `token_expired`, `token_invalid`, `unauthenticated`, `validation_failed`, `version_conflict` |
+| **Error codes** | **`company_maintenance`, `created_from_return`, `foreign_document`, `not_draft`**; standard: `company_required`, `if_match_required`, `malformed_json`, `not_a_member`, `not_found`, `permission_denied`, `server_error`, `token_expired`, `token_invalid`, `unauthenticated`, `validation_failed`, `version_conflict` |
 | **Headers** | `If-Match` (required) |
 | **Database** | insert: audit_logs; update: debit_notes |
 | **Business rules** | — |
@@ -5547,7 +5548,7 @@ Edit a draft debit note.
 <a id="postdebitnotes"></a>
 #### `POST /api/v1/debit-notes`
 
-Create a debit note without a return (price difference, quality claim).
+Create a debit note without a return (price difference, quality claim). Price difference, short supply or quality claim: posts Dr supplier / Cr purchase returns (purchase_returns_non_stock). usage apply needs apply_to_document_id (a posted bill of the supplier). refund leaves the credit with the supplier until the money is received.
 
 | | |
 |---|---|
@@ -5558,7 +5559,7 @@ Create a debit note without a return (price difference, quality claim).
 | **Validation** | `party_id`* id of a record in this company; `source_document_id` id of a record in this company (nullable); `return_id` id of a record in this company (nullable); `note_date`* YYYY-MM-DD; `reason`* string ≤ 30; `amount`* decimal string, 2 dp; `usage`* one of apply/credit/refund; `apply_to_document_id` id of a record in this company (nullable); `refund` RefundInput (nullable)<br>Unknown fields are rejected (422). |
 | **Success** | 201 `data`: [`Note`](#schema-note) |
 | **Status codes** | 201, 400, 401, 403, 409, 422, 503 |
-| **Error codes** | **`company_maintenance`**; standard: `company_required`, `idempotency_in_progress`, `idempotency_key_reused`, `malformed_json`, `not_a_member`, `permission_denied`, `server_error`, `token_expired`, `token_invalid`, `unauthenticated`, `validation_failed` |
+| **Error codes** | **`company_maintenance`, `foreign_document`, `inactive_reference`**; standard: `company_required`, `idempotency_in_progress`, `idempotency_key_reused`, `malformed_json`, `not_a_member`, `permission_denied`, `server_error`, `token_expired`, `token_invalid`, `unauthenticated`, `validation_failed` |
 | **Headers** | `Idempotency-Key`, `Location` on 201 |
 | **Database** | insert: audit_logs, debit_notes, idempotency_keys; read: number_sequences |
 | **Business rules** | — |
@@ -5580,7 +5581,7 @@ Post a debit note that was not created from a return (price difference, short su
 | **Validation** | BR-023: A credit/debit note applied to a document cannot exceed that document's balance; a refund usage requires recording a payment out (credit note) or money in (debit note).<br>BR-057: A purchase return credits inventory at the original bill cost of the returned lines; the supplier is debited through the debit note.<br>BR-001: Every posted journal entry balances: total debit = total credit > 0.<br>BR-004: A document or voucher date must fall inside an open accounting period of an open financial year; posting, editing or reversing into a locked period is rejected.<br>BR-009: A document posts at most once: one journal entry per document (unique journal_entry_id); a repeated post request returns the existing result. |
 | **Success** | 200 `data`: [`Note`](#schema-note) |
 | **Status codes** | 200, 400, 401, 403, 404, 409, 422, 503 |
-| **Error codes** | **`allocation_exceeds_balance`, `already_posted`, `company_maintenance`, `created_from_return`, `period_locked`, `unbalanced_entry`**; standard: `company_required`, `idempotency_in_progress`, `idempotency_key_reused`, `not_a_member`, `not_found`, `permission_denied`, `server_error`, `token_expired`, `token_invalid`, `unauthenticated` |
+| **Error codes** | **`allocation_exceeds_balance`, `already_posted`, `company_maintenance`, `created_from_return`, `foreign_document`, `not_draft`, `period_locked`, `unbalanced_entry`**; standard: `company_required`, `idempotency_in_progress`, `idempotency_key_reused`, `not_a_member`, `not_found`, `permission_denied`, `server_error`, `token_expired`, `token_invalid`, `unauthenticated` |
 | **Headers** | `Idempotency-Key` |
 | **Database** | lock: debit_notes, number_sequences, purchase_bills; insert: audit_logs, bill_allocations, idempotency_keys, journal_entries, journal_lines; update: debit_notes, number_sequences, purchase_bills |
 | **Business rules** | BR-023, BR-057, BR-001, BR-004, BR-009 |
@@ -5646,7 +5647,7 @@ Cancel a posted debit note not created from a return (mirror entry; allocations 
 | **Validation** | `reason`* string ≤ 255<br>Unknown fields are rejected (422).<br>BR-003: Posted journal entries, documents and stock movements are immutable; corrections are made only by reversal, cancellation or a credit/debit note. Non-financial fields (delivery challan, vehicle, delivered time, internal note, attachments) may still be updated after posting, and every change is audited.<br>BR-004: A document or voucher date must fall inside an open accounting period of an open financial year; posting, editing or reversing into a locked period is rejected.<br>BR-009: A document posts at most once: one journal entry per document (unique journal_entry_id); a repeated post request returns the existing result.<br>BR-020: Allocations never exceed a document's open balance, their sum never exceeds the payment; default allocation is oldest due first; any excess stays as an advance on the party ledger. |
 | **Success** | 200 `data`: [`Note`](#schema-note) |
 | **Status codes** | 200, 400, 401, 403, 404, 409, 422, 503 |
-| **Error codes** | **`allocation_exceeds_balance`, `already_posted`, `already_reversed`, `company_maintenance`, `created_from_return`, `period_locked`, `use_document_cancel`**; standard: `company_required`, `idempotency_in_progress`, `idempotency_key_reused`, `malformed_json`, `not_a_member`, `not_found`, `permission_denied`, `server_error`, `token_expired`, `token_invalid`, `unauthenticated`, `validation_failed` |
+| **Error codes** | **`allocation_exceeds_balance`, `already_posted`, `already_reversed`, `company_maintenance`, `created_from_return`, `invalid_transition`, `period_locked`, `use_document_cancel`**; standard: `company_required`, `idempotency_in_progress`, `idempotency_key_reused`, `malformed_json`, `not_a_member`, `not_found`, `permission_denied`, `server_error`, `token_expired`, `token_invalid`, `unauthenticated`, `validation_failed` |
 | **Headers** | `Idempotency-Key` |
 | **Database** | lock: debit_notes, number_sequences, purchase_bills; insert: audit_logs, bill_allocations, idempotency_keys, journal_entries, journal_lines; update: bill_allocations, debit_notes, journal_entries, number_sequences, purchase_bills |
 | **Business rules** | BR-003, BR-004, BR-009, BR-020 |
@@ -8554,6 +8555,7 @@ Create or edit a customer or supplier. `mobile` is required when country_code = 
 | `opening_balance` | `money` | no |
 | `opening_side` | `enum:dr\|cr` | no |
 | `bank_accounts` | `[ref:PartyBankAccount]` | no |
+| `status` | `enum:active\|prospect` | no |
 
 <a id="schema-partybankaccount"></a>
 #### `PartyBankAccount`
@@ -9250,8 +9252,14 @@ Quotation.
 | `party` | `ref:PartyRef` | yes |
 | `quotation_date` | `date` | yes |
 | `valid_until` | `date` | yes |
+| `warehouse_id` | `id \| null` | no |
+| `payment_term_id` | `id \| null` | no |
+| `notes` | `text \| null` | no |
+| `internal_note` | `text \| null` | no |
+| `sent_at` | `datetime \| null` | no |
 | `lines` | `[ref:SalesLine]` | yes |
 | `converted_invoice_id` | `id \| null` | no |
+| `converted_invoice_number` | `str \| null` | no |
 | `subtotal` | `money` | yes |
 | `discount_total` | `money` | yes |
 | `tax_total` | `money` | yes |
@@ -9363,7 +9371,7 @@ Create or replace a PO. Unknown properties are rejected.
 <a id="schema-purchaseorder"></a>
 #### `PurchaseOrder`
 
-Purchase order.
+Purchase order. Lines carry received_quantity and remaining_quantity; bills lists the bills made from it.
 
 | Property | Type | Required |
 |---|---|---|
@@ -9373,8 +9381,16 @@ Purchase order.
 | `party` | `ref:PartyRef` | yes |
 | `order_date` | `date` | yes |
 | `expected_date` | `date \| null` | no |
+| `warehouse_id` | `id` | yes |
+| `payment_term_id` | `id \| null` | no |
 | `currency_code` | `ccy` | yes |
+| `exchange_rate` | `rate` | yes |
+| `source_note` | `str \| null` | no |
+| `notes` | `text \| null` | no |
+| `internal_note` | `text \| null` | no |
+| `sent_at` | `datetime \| null` | no |
 | `lines` | `[obj]` | yes |
+| `bills` | `[obj]` | no |
 | `total_foreign` | `money \| null` | no |
 | `subtotal` | `money` | yes |
 | `discount_total` | `money` | yes |
@@ -9390,7 +9406,7 @@ Purchase order.
 <a id="schema-lowstockorderrequest"></a>
 #### `LowStockOrderRequest`
 
-Rows to order. Unknown properties are rejected.
+Rows to order: each {product_id, warehouse_id, quantity?}; quantity defaults to the reorder quantity (or what brings stock back to the reorder level). Rows are grouped into one draft PO per preferred supplier and warehouse. Unknown properties are rejected.
 
 | Property | Type | Required |
 |---|---|---|
@@ -9439,10 +9455,19 @@ Sales or purchase return.
 | `source_number` | `str` | yes |
 | `return_date` | `date` | yes |
 | `stock_action` | `str` | yes |
+| `warehouse_id` | `id` | yes |
+| `notes` | `text \| null` | no |
+| `usage` | `str \| null` | no |
+| `apply_to_document_id` | `id \| null` | no |
+| `posted_at` | `datetime \| null` | no |
+| `cancel_reason` | `str \| null` | no |
 | `lines` | `[obj]` | yes |
 | `total` | `money` | yes |
 | `note_id` | `id \| null` | no |
 | `note_number` | `str \| null` | no |
+| `note_status` | `str \| null` | no |
+| `created_at` | `datetime \| null` | no |
+| `created_by` | `ref:UserRef \| null` | no |
 | `version` | `int` | yes |
 
 <a id="schema-noteinput"></a>
@@ -9489,8 +9514,20 @@ Credit or debit note.
 | `reason` | `str` | yes |
 | `amount` | `money` | yes |
 | `usage` | `str` | yes |
+| `source_document_id` | `id \| null` | no |
+| `source_number` | `str \| null` | no |
+| `return_id` | `id \| null` | no |
+| `return_number` | `str \| null` | no |
+| `apply_to_document_id` | `id \| null` | no |
+| `refund` | `obj \| null` | no |
+| `allocations` | `[ref:Allocation]` | no |
+| `posted_at` | `datetime \| null` | no |
+| `cancel_reason` | `str \| null` | no |
 | `effects` | `[obj]` | no |
 | `journal` | `[ref:PostingLine]` | no |
+| `amount_in_words` | `str \| null` | no |
+| `created_at` | `datetime \| null` | no |
+| `created_by` | `ref:UserRef \| null` | no |
 | `version` | `int` | yes |
 
 <a id="schema-allocationcreate"></a>
@@ -11111,8 +11148,8 @@ View permission `sales.create`. **Loads:** [`GET /sales-returns`](#getsalesretur
 | # | Action | Calls | Permission | Body → data | Success | Business errors to handle |
 |---|---|---|---|---|---|---|
 | 1 | Cancel | ui:discard changes (L13 unsaved-changes dialog when dirty) | — | — | — | — |
-| 2 | Save draft | [`POST /sales-returns`](#postsalesreturns) \| [`PUT /sales-returns/{id}`](#putsalesreturnsid) | `sales.create`, `sales.edit` | [`ReturnInput`](#schema-returninput) → [`Return`](#schema-return) | 200, 201 | `duplicate`, `foreign_document`, `return_qty_exceeds` |
-| 3 | Save return and create credit note | [`POST /sales-returns`](#postsalesreturns) \| [`PUT /sales-returns/{id}`](#putsalesreturnsid) → [`POST /sales-returns/{id}/post`](#postsalesreturnsidpost) → nav:E9 | `sales.create`, `sales.edit` | [`ReturnInput`](#schema-returninput) → [`Return`](#schema-return)<br>— → [`Return`](#schema-return) | 200, 201 | `already_posted`, `duplicate`, `foreign_document`, `period_locked`, `return_qty_exceeds`, `unbalanced_entry` |
+| 2 | Save draft | [`POST /sales-returns`](#postsalesreturns) \| [`PUT /sales-returns/{id}`](#putsalesreturnsid) | `sales.create`, `sales.edit` | [`ReturnInput`](#schema-returninput) → [`Return`](#schema-return) | 200, 201 | `duplicate`, `foreign_document`, `inactive_reference`, `not_draft`, `return_qty_exceeds` |
+| 3 | Save return and create credit note | [`POST /sales-returns`](#postsalesreturns) \| [`PUT /sales-returns/{id}`](#putsalesreturnsid) → [`POST /sales-returns/{id}/post`](#postsalesreturnsidpost) → nav:E9 | `sales.create`, `sales.edit` | [`ReturnInput`](#schema-returninput) → [`Return`](#schema-return)<br>— → [`Return`](#schema-return) | 200, 201 | `already_posted`, `duplicate`, `foreign_document`, `inactive_reference`, `insufficient_stock`, `not_draft`, `period_locked`, `return_qty_exceeds`, `unbalanced_entry` |
 
 <a id="actions-e9"></a>
 #### E9 · Credit note
@@ -11123,7 +11160,7 @@ View permission `sales.create`. **Loads:** [`GET /credit-notes/{id}`](#getcredit
 |---|---|---|---|---|---|---|
 | 1 | Back | nav:* | — | — | — | — |
 | 2 | Print | [`GET /credit-notes/{id}/pdf`](#getcreditnotesidpdf) | `sales.view` | — | 200 | — |
-| 3 | Post credit note | [`POST /credit-notes`](#postcreditnotes) \| [`PUT /credit-notes/{id}`](#putcreditnotesid) → dlg:L6 → [`POST /credit-notes/{id}/post`](#postcreditnotesidpost) | `sales.create`, `sales.edit` | [`NoteInput`](#schema-noteinput) → [`Note`](#schema-note)<br>— → [`Note`](#schema-note) | 200, 201 | `allocation_exceeds_balance`, `already_posted`, `period_locked`, `unbalanced_entry` |
+| 3 | Post credit note | [`POST /credit-notes`](#postcreditnotes) \| [`PUT /credit-notes/{id}`](#putcreditnotesid) → dlg:L6 → [`POST /credit-notes/{id}/post`](#postcreditnotesidpost) | `sales.create`, `sales.edit` | [`NoteInput`](#schema-noteinput) → [`Note`](#schema-note)<br>— → [`Note`](#schema-note) | 200, 201 | `allocation_exceeds_balance`, `already_posted`, `foreign_document`, `inactive_reference`, `not_draft`, `period_locked`, `unbalanced_entry` |
 
 <a id="actions-e10"></a>
 #### E10 · Sales quotation
@@ -11132,10 +11169,10 @@ View permission `sales.create`. **Loads:** [`GET /products`](#getproducts), [`GE
 
 | # | Action | Calls | Permission | Body → data | Success | Business errors to handle |
 |---|---|---|---|---|---|---|
-| 1 | Save draft | [`POST /quotations`](#postquotations) \| [`PUT /quotations/{id}`](#putquotationsid) | `sales.create`, `sales.edit` | [`QuotationInput`](#schema-quotationinput) → [`Quotation`](#schema-quotation) | 200, 201 | `duplicate` |
+| 1 | Save draft | [`POST /quotations`](#postquotations) \| [`PUT /quotations/{id}`](#putquotationsid) | `sales.create`, `sales.edit` | [`QuotationInput`](#schema-quotationinput) → [`Quotation`](#schema-quotation) | 200, 201 | `duplicate`, `inactive_reference`, `invalid_transition` |
 | 2 | Preview | [`GET /quotations/{id}/pdf`](#getquotationsidpdf) | `sales.view` | — | 200 | — |
-| 3 | Send quotation | [`POST /quotations/{id}/send`](#postquotationsidsend) | `sales.edit` | [`EmailRequest`](#schema-emailrequest) → [`Quotation`](#schema-quotation) | 200 | — |
-| 4 | Convert to invoice (accepted) | [`POST /quotations/{id}/convert`](#postquotationsidconvert) → nav:E6 | `sales.create` | — → [`SalesInvoice`](#schema-salesinvoice) | 201 | — |
+| 3 | Send quotation | [`POST /quotations/{id}/send`](#postquotationsidsend) | `sales.edit` | [`EmailRequest`](#schema-emailrequest) → [`Quotation`](#schema-quotation) | 200 | `invalid_transition` |
+| 4 | Convert to invoice (accepted) | [`POST /quotations/{id}/convert`](#postquotationsidconvert) → nav:E6 | `sales.create` | — → [`SalesInvoice`](#schema-salesinvoice) | 201 | `already_converted`, `inactive_reference`, `invalid_transition`, `period_locked` |
 
 <a id="actions-e11"></a>
 #### E11 · Sales report
@@ -11166,8 +11203,8 @@ View permission `sales.view`. **Loads:** [`GET /quotations`](#getquotations), [`
 |---|---|---|---|---|---|---|
 | 1 | New quotation | nav:E10 | — | — | — | — |
 | 2 | Open | nav:E10 | — | — | — | — |
-| 3 | Mark accepted / declined / expired (row) | [`POST /quotations/{id}/status`](#postquotationsidstatus) | `sales.edit` | [`StatusChange`](#schema-statuschange) → [`Quotation`](#schema-quotation) | 200 | — |
-| 4 | Convert to invoice (row, accepted) | [`POST /quotations/{id}/convert`](#postquotationsidconvert) → nav:E6 | `sales.create` | — → [`SalesInvoice`](#schema-salesinvoice) | 201 | — |
+| 3 | Mark accepted / declined / expired (row) | [`POST /quotations/{id}/status`](#postquotationsidstatus) | `sales.edit` | [`StatusChange`](#schema-statuschange) → [`Quotation`](#schema-quotation) | 200 | `invalid_transition` |
+| 4 | Convert to invoice (row, accepted) | [`POST /quotations/{id}/convert`](#postquotationsidconvert) → nav:E6 | `sales.create` | — → [`SalesInvoice`](#schema-salesinvoice) | 201 | `already_converted`, `inactive_reference`, `invalid_transition`, `period_locked` |
 | 5 | Print (row) | [`GET /quotations/{id}/pdf`](#getquotationsidpdf) → ui:print | `sales.view` | — | 200 | — |
 | 6 | Delete draft (row) | dlg:L7 → [`DELETE /quotations/{id}`](#deletequotationsid) | `sales.delete` | — → — | 204 | `duplicate`, `not_draft` |
 | 7 | Export | export:[`GET /quotations`](#getquotations) | `reports.export` | [`ExportJobCreate`](#schema-exportjobcreate) → [`ExportJob`](#schema-exportjob) | 200, 202 | — |
@@ -11299,8 +11336,8 @@ View permission `purchases.create`. **Loads:** [`GET /purchase-returns`](#getpur
 
 | # | Action | Calls | Permission | Body → data | Success | Business errors to handle |
 |---|---|---|---|---|---|---|
-| 1 | Save draft | [`POST /purchase-returns`](#postpurchasereturns) \| [`PUT /purchase-returns/{id}`](#putpurchasereturnsid) | `purchases.create`, `purchases.edit` | [`ReturnInput`](#schema-returninput) → [`Return`](#schema-return) | 200, 201 | `foreign_document`, `return_qty_exceeds` |
-| 2 | Save return and create debit note | [`POST /purchase-returns`](#postpurchasereturns) \| [`PUT /purchase-returns/{id}`](#putpurchasereturnsid) → [`POST /purchase-returns/{id}/post`](#postpurchasereturnsidpost) → nav:F7 | `purchases.create`, `purchases.edit` | [`ReturnInput`](#schema-returninput) → [`Return`](#schema-return)<br>— → [`Return`](#schema-return) | 200, 201 | `allocation_exceeds_balance`, `already_posted`, `foreign_document`, `insufficient_stock`, `period_locked`, `return_qty_exceeds`, `unbalanced_entry` |
+| 1 | Save draft | [`POST /purchase-returns`](#postpurchasereturns) \| [`PUT /purchase-returns/{id}`](#putpurchasereturnsid) | `purchases.create`, `purchases.edit` | [`ReturnInput`](#schema-returninput) → [`Return`](#schema-return) | 200, 201 | `foreign_document`, `inactive_reference`, `not_draft`, `return_qty_exceeds` |
+| 2 | Save return and create debit note | [`POST /purchase-returns`](#postpurchasereturns) \| [`PUT /purchase-returns/{id}`](#putpurchasereturnsid) → [`POST /purchase-returns/{id}/post`](#postpurchasereturnsidpost) → nav:F7 | `purchases.create`, `purchases.edit` | [`ReturnInput`](#schema-returninput) → [`Return`](#schema-return)<br>— → [`Return`](#schema-return) | 200, 201 | `allocation_exceeds_balance`, `already_posted`, `foreign_document`, `inactive_reference`, `insufficient_stock`, `not_draft`, `period_locked`, `return_qty_exceeds`, `unbalanced_entry` |
 
 <a id="actions-f7"></a>
 #### F7 · Debit note
@@ -11311,7 +11348,7 @@ View permission `purchases.create`. **Loads:** [`GET /debit-notes/{id}`](#getdeb
 |---|---|---|---|---|---|---|
 | 1 | Back | nav:* | — | — | — | — |
 | 2 | Print | [`GET /debit-notes/{id}/pdf`](#getdebitnotesidpdf) | `purchases.view` | — | 200 | — |
-| 3 | Post debit note | [`POST /debit-notes`](#postdebitnotes) \| [`PUT /debit-notes/{id}`](#putdebitnotesid) → dlg:L6 → [`POST /debit-notes/{id}/post`](#postdebitnotesidpost) | `purchases.create`, `purchases.edit` | [`NoteInput`](#schema-noteinput) → [`Note`](#schema-note)<br>— → [`Note`](#schema-note) | 200, 201 | `allocation_exceeds_balance`, `already_posted`, `created_from_return`, `period_locked`, `unbalanced_entry` |
+| 3 | Post debit note | [`POST /debit-notes`](#postdebitnotes) \| [`PUT /debit-notes/{id}`](#putdebitnotesid) → dlg:L6 → [`POST /debit-notes/{id}/post`](#postdebitnotesidpost) | `purchases.create`, `purchases.edit` | [`NoteInput`](#schema-noteinput) → [`Note`](#schema-note)<br>— → [`Note`](#schema-note) | 200, 201 | `allocation_exceeds_balance`, `already_posted`, `created_from_return`, `foreign_document`, `inactive_reference`, `not_draft`, `period_locked`, `unbalanced_entry` |
 
 <a id="actions-f8"></a>
 #### F8 · Purchase order
@@ -11320,9 +11357,9 @@ View permission `purchases.create`. **Loads:** [`GET /products`](#getproducts), 
 
 | # | Action | Calls | Permission | Body → data | Success | Business errors to handle |
 |---|---|---|---|---|---|---|
-| 1 | Save draft | [`POST /purchase-orders`](#postpurchaseorders) \| [`PUT /purchase-orders/{id}`](#putpurchaseordersid) | `purchases.create`, `purchases.edit` | [`PurchaseOrderInput`](#schema-purchaseorderinput) → [`PurchaseOrder`](#schema-purchaseorder) | 200, 201 | `duplicate` |
-| 2 | Send order | [`POST /purchase-orders/{id}/send`](#postpurchaseordersidsend) | `purchases.edit` | [`EmailRequest`](#schema-emailrequest) → [`PurchaseOrder`](#schema-purchaseorder) | 200 | — |
-| 3 | Convert to bill | [`POST /purchase-orders/{id}/convert`](#postpurchaseordersidconvert) → nav:F3 | `purchases.create` | — → [`PurchaseBill`](#schema-purchasebill) | 201 | — |
+| 1 | Save draft | [`POST /purchase-orders`](#postpurchaseorders) \| [`PUT /purchase-orders/{id}`](#putpurchaseordersid) | `purchases.create`, `purchases.edit` | [`PurchaseOrderInput`](#schema-purchaseorderinput) → [`PurchaseOrder`](#schema-purchaseorder) | 200, 201 | `duplicate`, `inactive_reference`, `invalid_transition` |
+| 2 | Send order | [`POST /purchase-orders/{id}/send`](#postpurchaseordersidsend) | `purchases.edit` | [`EmailRequest`](#schema-emailrequest) → [`PurchaseOrder`](#schema-purchaseorder) | 200 | `invalid_transition` |
+| 3 | Convert to bill | [`POST /purchase-orders/{id}/convert`](#postpurchaseordersidconvert) → nav:F3 | `purchases.create` | — → [`PurchaseBill`](#schema-purchasebill) | 201 | `inactive_reference`, `invalid_transition`, `period_locked` |
 | 4 | Create LC | nav:M3 | — | — | — | — |
 
 <a id="actions-f9"></a>
@@ -11354,8 +11391,8 @@ View permission `purchases.view`. **Loads:** [`GET /purchase-orders`](#getpurcha
 |---|---|---|---|---|---|---|
 | 1 | New purchase order | nav:F8 | — | — | — | — |
 | 2 | Open | nav:F8 | — | — | — | — |
-| 3 | Convert to bill (row) | [`POST /purchase-orders/{id}/convert`](#postpurchaseordersidconvert) → nav:F3 | `purchases.create` | — → [`PurchaseBill`](#schema-purchasebill) | 201 | — |
-| 4 | Close or cancel (row) | dlg:L6 → [`POST /purchase-orders/{id}/status`](#postpurchaseordersidstatus) | `purchases.edit` | [`StatusChange`](#schema-statuschange) → [`PurchaseOrder`](#schema-purchaseorder) | 200 | — |
+| 3 | Convert to bill (row) | [`POST /purchase-orders/{id}/convert`](#postpurchaseordersidconvert) → nav:F3 | `purchases.create` | — → [`PurchaseBill`](#schema-purchasebill) | 201 | `inactive_reference`, `invalid_transition`, `period_locked` |
+| 4 | Close or cancel (row) | dlg:L6 → [`POST /purchase-orders/{id}/status`](#postpurchaseordersidstatus) | `purchases.edit` | [`StatusChange`](#schema-statuschange) → [`PurchaseOrder`](#schema-purchaseorder) | 200 | `invalid_transition` |
 | 5 | Print (row) | [`GET /purchase-orders/{id}/pdf`](#getpurchaseordersidpdf) → ui:print | `purchases.view` | — | 200 | — |
 | 6 | Delete draft (row) | dlg:L7 → [`DELETE /purchase-orders/{id}`](#deletepurchaseordersid) | `purchases.delete` | — → — | 204 | `duplicate`, `not_draft` |
 | 7 | Export | export:[`GET /purchase-orders`](#getpurchaseorders) | `reports.export` | [`ExportJobCreate`](#schema-exportjobcreate) → [`ExportJob`](#schema-exportjob) | 200, 202 | — |
@@ -11384,7 +11421,7 @@ View permission `purchases.view`. **Loads:** [`GET /purchase-returns`](#getpurch
 | 3 | Open | nav:F6 \| nav:F7 | — | — | — | — |
 | 4 | Print debit note (row) | [`GET /debit-notes/{id}/pdf`](#getdebitnotesidpdf) → ui:print | `purchases.view` | — | 200 | — |
 | 5 | Delete draft (row) | dlg:L7 → [`DELETE /purchase-returns/{id}`](#deletepurchasereturnsid) \| dlg:L7 → [`DELETE /debit-notes/{id}`](#deletedebitnotesid) | `purchases.delete` | — → — | 204 | `duplicate`, `not_draft` |
-| 6 | Cancel posted (row, dialog) | dlg:L6 → [`POST /purchase-returns/{id}/cancel`](#postpurchasereturnsidcancel) \| dlg:L6 → [`POST /debit-notes/{id}/cancel`](#postdebitnotesidcancel) | `purchases.edit` | [`ReasonRequest`](#schema-reasonrequest) → [`Return`](#schema-return)<br>[`ReasonRequest`](#schema-reasonrequest) → [`Note`](#schema-note) | 200 | `allocation_exceeds_balance`, `already_posted`, `already_reversed`, `created_from_return`, `invalid_transition`, `period_locked`, `use_document_cancel` |
+| 6 | Cancel posted (row, dialog) | dlg:L6 → [`POST /purchase-returns/{id}/cancel`](#postpurchasereturnsidcancel) \| dlg:L6 → [`POST /debit-notes/{id}/cancel`](#postdebitnotesidcancel) | `purchases.edit` | [`ReasonRequest`](#schema-reasonrequest) → [`Return`](#schema-return)<br>[`ReasonRequest`](#schema-reasonrequest) → [`Note`](#schema-note) | 200 | `allocation_exceeds_balance`, `already_posted`, `already_reversed`, `created_from_return`, `insufficient_stock`, `invalid_transition`, `period_locked`, `use_document_cancel` |
 | 7 | Export | export:[`GET /purchase-returns`](#getpurchasereturns) \| export:[`GET /debit-notes`](#getdebitnotes) | `reports.export` | [`ExportJobCreate`](#schema-exportjobcreate) → [`ExportJob`](#schema-exportjob) | 200, 202 | — |
 
 <a id="actions-pur-dlgpay"></a>
@@ -12478,6 +12515,11 @@ View permission `lc.create`. **Loads:** nothing of its own (host page data).
 | POST /supplier-payments | Declares 422 `backdated_confirmation_required` (BR-053; the payment voucher asks for confirmation like any voucher) (P8.1-BE-01, 26 Oct 2026). Additive. |
 | Financial reports (DEC-13 / R-25) | TB, P&L, balance sheet, cash flow, general ledger and the aging reports need the new `reports.financial` (Owner, Finance manager, Accountant; owner decision 25 Oct 2026); Sales staff and Viewer keep `reports.view` for operational reports. H1 and J1 no longer list them as loads (H1 loads `/accounting/overview`; J1 only links to the reports) (P9.0-SETUP-01, 27 Oct 2026). Dashboard money widgets follow in P14. |
 | GET /reports/trial-balance | Adds the `branch_id` filter, like the P&L (P9.1-BE-01, 27 Oct 2026). Additive. |
+| Quotation endpoints | New 409 `already_converted` (TC-SAL-014) on convert; 409 `invalid_transition` declared on PUT, send, status and convert; 422 `inactive_reference` on create/PUT/convert (P10.1-BE-01, 28 Oct 2026). Additive. |
+| Quotation schema, PartyInput | Quotation returns what E10 edits (warehouse_id, payment_term_id, notes, internal_note, sent_at) and converted_invoice_number; PartyInput takes `status` active\|prospect on create so E10 can quote a prospect, who becomes active when converted (P10.1-BE-01, 28 Oct 2026). Additive. |
+| Purchase order endpoints | PurchaseOrder returns warehouse_id, payment_term_id, exchange_rate, source_note, notes, internal_note, sent_at and the bills made from it; 409 `invalid_transition` declared on PUT, send, status and convert (P10.2-BE-01, 28 Oct 2026). Additive. |
+| Returns and notes | Return adds warehouse_id, notes, usage, apply_to_document_id, posted_at, cancel_reason, note_status and audit fields; Note adds its source invoice/bill and return, apply_to_document_id, refund, allocations, posted_at, cancel_reason and amount in words; not_draft / foreign_document / insufficient_stock / invalid_transition declared where they occur (P10.3-BE, 28 Oct 2026). Additive. |
+| Purchase returns and debit notes | not_draft / foreign_document / return_qty_exceeds / insufficient_stock / invalid_transition declared where they occur; descriptions state how lines are valued and how manual debit notes post (P10.4-BE, 28 Oct 2026). Additive. |
 | Dashboard lenses A2–A8 | Load only `GET /dashboard/lenses/{lens}`; the overlapping report and list endpoints were removed from their page lists. |
 
 ### 12.5 Overlaps kept on purpose
