@@ -120,6 +120,18 @@ class AuthenticationTest extends TestCase
             ->postJson('/api/v1/auth/refresh'), 401, 'refresh_token_invalid');
     }
 
+    public function test_a_failed_refresh_clears_only_a_cookie_that_was_sent(): void
+    {
+        // Without a cookie (the sign-in page's restore attempt) the answer must not delete the cookie a login sets meanwhile
+        $none = $this->withHeaders(self::CSRF)->postJson('/api/v1/auth/refresh');
+        $this->assertProblem($none, 401, 'refresh_token_invalid');
+        $this->assertNull($this->refreshCookie($none));
+        // A bad cookie is cleared
+        $bad = $this->withUnencryptedCookie('pl_rt', 'bogus')->withHeaders(self::CSRF)->postJson('/api/v1/auth/refresh');
+        $this->assertProblem($bad, 401, 'refresh_token_invalid');
+        $this->assertNotNull($this->refreshCookie($bad));
+    }
+
     public function test_logout_works_with_an_expired_access_token_and_kills_the_session(): void
     {
         $this->makeUser('rafiq@meghna.example');

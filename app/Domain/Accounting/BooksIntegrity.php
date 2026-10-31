@@ -153,11 +153,18 @@ final class BooksIntegrity
     }
 
     /** Each inventory ledger's posted balance = the stock value of the warehouses that post to it (06 §11.1). */
+    /**
+     * Each inventory ledger = the stock of its warehouses. Stock dispatched between two warehouses that share the ledger
+     * and not yet received posted no entry (06 §11.4), so it still counts on the ledger's side.
+     */
     private function inventoryLedgers(int $c): array
     {
         $rows = DB::select("SELECT l.id, l.code,
                 (SELECT COALESCE(SUM(jl.debit - jl.credit), 0) FROM journal_lines jl WHERE jl.ledger_id = l.id AND jl.is_posted = 1) AS ledger_balance,
-                (SELECT COALESCE(SUM(b.total_value), 0) FROM stock_balances b JOIN warehouses w ON w.id = b.warehouse_id WHERE w.inventory_ledger_id = l.id) AS stock_value
+                (SELECT COALESCE(SUM(b.total_value), 0) FROM stock_balances b JOIN warehouses w ON w.id = b.warehouse_id WHERE w.inventory_ledger_id = l.id)
+                + (SELECT COALESCE(SUM(m.value_out), 0) FROM stock_movements m JOIN stock_transfers t ON t.id = m.source_id AND m.source_type = 'stock_transfers'
+                    JOIN warehouses wf ON wf.id = t.from_warehouse_id JOIN warehouses wt ON wt.id = t.to_warehouse_id
+                    WHERE m.movement_type = 'transfer_out' AND t.status = 'dispatched' AND wf.inventory_ledger_id = l.id AND wt.inventory_ledger_id = l.id) AS stock_value
             FROM ledgers l WHERE l.company_id = ? AND l.ledger_kind = 'inventory'", [$c]);
 
         return array_values(array_map(fn ($r) => "{$r->code}: ledger {$r->ledger_balance}, stock {$r->stock_value}",

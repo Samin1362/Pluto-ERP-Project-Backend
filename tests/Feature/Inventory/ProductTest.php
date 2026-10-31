@@ -117,8 +117,8 @@ class ProductTest extends TestCase
             $this->assertProblem($this->req('POST', '/api/v1/products', $this->oil(['income_ledger_id' => $this->ids['cash']])), 422, 'validation_failed')->json('errors.income_ledger_id'));
         $this->assertSame(['Choose an active expense account'],
             $this->assertProblem($this->req('POST', '/api/v1/products', $this->oil(['expense_ledger_id' => $this->ids['sales']])), 422, 'validation_failed')->json('errors.expense_ledger_id'));
-        $this->assertSame(['Opening stock can be entered once stock posting is live (phase 4); use 0 for now'], $this->assertProblem($this->req('POST', '/api/v1/products',
-            $this->oil(['warehouses' => [['warehouse_id' => $this->ids['tej'], 'opening_qty' => '18', 'opening_unit_cost' => '845']]])), 422, 'validation_failed')->json('errors')['warehouses.0.opening_qty']);
+        $this->assertSame(['Enter the cost per unit of the opening stock'], $this->assertProblem($this->req('POST', '/api/v1/products',
+            $this->oil(['warehouses' => [['warehouse_id' => $this->ids['tej'], 'opening_qty' => '18']]])), 422, 'validation_failed')->json('errors')['warehouses.0.opening_unit_cost']);
         $this->assertProblem($this->req('POST', '/api/v1/products', $this->oil(['warehouses' => [['warehouse_id' => $this->ids['tej']], ['warehouse_id' => $this->ids['tej']]]])), 422, 'validation_failed');
         $this->assertProblem($this->req('POST', '/api/v1/products', $this->oil(['warehouses' => [['warehouse_id' => $this->ids['tej'], 'bin' => 'A1']]])), 422, 'validation_failed');
         $this->assertProblem($this->req('POST', '/api/v1/products', $this->oil(['on_hand' => '10'])), 422, 'validation_failed');

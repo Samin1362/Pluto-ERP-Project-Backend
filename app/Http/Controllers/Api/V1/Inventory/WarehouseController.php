@@ -7,8 +7,11 @@ use App\Domain\Inventory\WarehouseService;
 use App\Http\Controllers\Concerns\ReadsIfMatch;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Inventory\WarehouseRequest;
+use App\Http\Requests\Inventory\WarehouseStockRequest;
+use App\Http\Resources\StockLevelResource;
 use App\Http\Resources\WarehouseResource;
 use App\Models\Warehouse;
+use App\Queries\ProductStockQuery;
 use App\Support\CurrentCompany;
 use App\Support\Problem\ApiProblem;
 use Illuminate\Http\JsonResponse;
@@ -16,8 +19,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 /**
- * GET/POST /warehouses, GET/PATCH /warehouses/{id} (D7/D8, backlog P3.1-BE-04). GET /warehouses/{id}/stock comes
- * with P11. Stock figures stay 0 until purchase bills post (P4).
+ * GET/POST /warehouses, GET/PATCH /warehouses/{id} (D7/D8, backlog P3.1-BE-04) and GET /warehouses/{id}/stock (D8,
+ * P11.1-BE-01).
  */
 class WarehouseController extends Controller
 {
@@ -59,6 +62,19 @@ class WarehouseController extends Controller
         $updated = $this->warehouses->update(Warehouse::findOrFail($id), $request->validated(), $this->ifMatchVersion($request));
 
         return $this->respond($request, $updated);
+    }
+
+    /** GET /warehouses/{id}/stock (D8; backlog P11.1-BE-01): the products stocked there; values only with inventory.view_costs (BR-052). */
+    public function stock(WarehouseStockRequest $request, int $id, ProductStockQuery $query): JsonResponse
+    {
+        $warehouse = Warehouse::findOrFail($id);
+        $page = $query->forWarehouse($warehouse->id, $request->validated());
+        $costs = $this->permissions->allows($this->current->membership(), 'inventory.view_costs');
+
+        return response()->json([
+            'data' => array_map(fn ($l) => (new StockLevelResource($l, $costs))->resolve($request), $page->items()),
+            'meta' => ['current_page' => $page->currentPage(), 'per_page' => $page->perPage(), 'total' => $page->total(), 'last_page' => $page->lastPage()],
+        ]);
     }
 
     private function respond(Request $request, Warehouse $warehouse, int $status = 200): JsonResponse

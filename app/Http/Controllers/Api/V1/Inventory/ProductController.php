@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\Api\V1\Inventory;
 
 use App\Domain\Access\PermissionResolver;
+use App\Domain\Inventory\ProductImportService;
 use App\Domain\Inventory\ProductService;
 use App\Http\Controllers\Concerns\ReadsIfMatch;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Inventory\ProductImportRequest;
 use App\Http\Requests\Inventory\ProductListRequest;
 use App\Http\Requests\Inventory\ProductRequest;
 use App\Http\Resources\ProductResource;
@@ -60,6 +62,12 @@ class ProductController extends Controller
     public function store(ProductRequest $request): JsonResponse
     {
         return $this->respond($request, $this->products->create($request->validated()), 201);
+    }
+
+    /** POST /products/import (D1; C-05): dry_run=true checks the file; otherwise all rows are created, or none (ImportResult). */
+    public function import(ProductImportRequest $request, ProductImportService $imports): JsonResponse
+    {
+        return response()->json(['data' => $imports->import($request->file('file'), $request->dryRun())]);
     }
 
     public function update(ProductRequest $request, int $id): JsonResponse

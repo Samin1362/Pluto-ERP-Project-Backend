@@ -488,7 +488,7 @@ The journal debits the supplier ৳ 46,88,640 (an advance until the import bill 
 | 241 | `GET` | [`/api/v1/reconciliations/{id}`](#getreconciliationsid) | Reconciliation with statement lines, suggestions and difference | `banking.reconcile` | 200 |
 | 242 | `POST` | [`/api/v1/reconciliations/{id}/lines/{lineId}/match`](#postreconciliationsidlineslineidmatch) | Match a statement line to a book line | `banking.reconcile` | 200 |
 | 243 | `POST` | [`/api/v1/reconciliations/{id}/lines/{lineId}/create-entry`](#postreconciliationsidlineslineidcreateentry) | Create the missing receipt or bank-charge voucher and match it | `banking.reconcile` | 200 |
-| 244 | `POST` | [`/api/v1/reconciliations/{id}/lines/pair`](#postreconciliationsidlinespair) | Mark two offsetting statement lines as a pair | `banking.reconcile` | 200 |
+| 244 | `POST` | [`/api/v1/reconciliations/{id}/lines/pair`](#postreconciliationsidlinespair) | Mark offsetting statement lines (summing to zero) as a pair; a single line is marked ignored (no book effect) | `banking.reconcile` | 200 |
 | 245 | `POST` | [`/api/v1/reconciliations/{id}/lines/{lineId}/undo`](#postreconciliationsidlineslineidundo) | Undo a match, pair or ignore | `banking.reconcile` | 200 |
 | 246 | `POST` | [`/api/v1/reconciliations/{id}/accept-suggestions`](#postreconciliationsidacceptsuggestions) | Accept every same-amount, same-date suggestion | `banking.reconcile` | 200 |
 | 247 | `POST` | [`/api/v1/reconciliations/{id}/finish`](#postreconciliationsidfinish) | Finish (all lines handled and difference zero) | `banking.reconcile` | 200 |
@@ -575,7 +575,7 @@ Last run: 24 rules, **24 passed, 0 failed**; 6 negative tests, 6 detected. Offic
 | A09 | Collections use the paginated envelope {data[], meta} | 47 | ✅ pass |
 | A10 | Every error code exists in the catalogue, has its HTTP status documented on the operation, and every catalogue code is reachable | 71 | ✅ pass |
 | A11 | Request-only schemas reject unknown properties (additionalProperties: false) | 90 | ✅ pass |
-| A12 | Money, quantity, cost and rate fields are decimal strings (never JSON numbers) | 203 | ✅ pass |
+| A12 | Money, quantity, cost and rate fields are decimal strings (never JSON numbers) | 204 | ✅ pass |
 | A13 | PUT/PATCH on a versioned table requires If-Match, and If-Match is only required where a version exists | 39 | ✅ pass |
 | A14 | Request fields are stored: each maps to a column (or is declared virtual) with a compatible length, enum values and nullability | 378 | ✅ pass |
 | A15 | Response enum fields have exactly the values the database allows | 29 | ✅ pass |
@@ -5991,7 +5991,7 @@ Create the missing receipt or bank-charge voucher and match it.
 <a id="postreconciliationsidlinespair"></a>
 #### `POST /api/v1/reconciliations/{id}/lines/pair`
 
-Mark two offsetting statement lines as a pair.
+Mark offsetting statement lines (summing to zero) as a pair; a single line is marked ignored (no book effect).
 
 | | |
 |---|---|
@@ -8971,6 +8971,12 @@ Stock adjustment. net_value and posting_preview are omitted without inventory.vi
 | `net_value` | `money \| null` | no |
 | `journal_entry_id` | `id \| null` | no |
 | `posting_preview` | `[ref:PostingLine]` | no |
+| `warehouse_name` | `str \| null` | no |
+| `notes` | `text \| null` | no |
+| `line_count` | `int \| null` | no |
+| `posted_at` | `datetime \| null` | no |
+| `created_at` | `datetime \| null` | no |
+| `created_by` | `ref:UserRef \| null` | no |
 | `version` | `int` | yes |
 
 <a id="schema-countsheetpreview"></a>
@@ -9069,6 +9075,17 @@ Stock transfer. value_at_cost is omitted without inventory.view_costs (BR-052).
 | `lines` | `[obj]` | yes |
 | `total_units` | `qty` | yes |
 | `value_at_cost` | `money \| null` | no |
+| `from_warehouse_name` | `str \| null` | no |
+| `to_warehouse_name` | `str \| null` | no |
+| `vehicle` | `str \| null` | no |
+| `driver` | `str \| null` | no |
+| `notes` | `text \| null` | no |
+| `line_count` | `int \| null` | no |
+| `transit_loss_value` | `money \| null` | no |
+| `dispatch_entry_id` | `id \| null` | no |
+| `receive_entry_id` | `id \| null` | no |
+| `created_at` | `datetime \| null` | no |
+| `created_by` | `ref:UserRef \| null` | no |
 | `version` | `int` | yes |
 
 <a id="schema-salesinvoiceinput"></a>
@@ -9808,6 +9825,11 @@ Recorded cash count.
 | `note` | `str \| null` | no |
 | `status` | `enum:recorded\|adjusted\|reversed` | yes |
 | `adjustment_entry_id` | `id \| null` | no |
+| `money_account_name` | `str \| null` | no |
+| `adjustment_number` | `str \| null` | no |
+| `adjustment_status` | `str \| null` | no |
+| `approval_request_id` | `id \| null` | no |
+| `denominations` | `[obj]` | no |
 
 <a id="schema-statementimport"></a>
 #### `StatementImport`
@@ -9862,6 +9884,9 @@ Reconciliation workspace.
 | `status` | `enum:in_progress\|finished` | yes |
 | `lines` | `[ref:StatementLine]` | yes |
 | `version` | `int` | yes |
+| `money_account_name` | `str \| null` | no |
+| `unhandled_count` | `int \| null` | no |
+| `book_entries` | `[obj]` | no |
 
 <a id="schema-statementline"></a>
 #### `StatementLine`
@@ -12520,6 +12545,8 @@ View permission `lc.create`. **Loads:** nothing of its own (host page data).
 | Purchase order endpoints | PurchaseOrder returns warehouse_id, payment_term_id, exchange_rate, source_note, notes, internal_note, sent_at and the bills made from it; 409 `invalid_transition` declared on PUT, send, status and convert (P10.2-BE-01, 28 Oct 2026). Additive. |
 | Returns and notes | Return adds warehouse_id, notes, usage, apply_to_document_id, posted_at, cancel_reason, note_status and audit fields; Note adds its source invoice/bill and return, apply_to_document_id, refund, allocations, posted_at, cancel_reason and amount in words; not_draft / foreign_document / insufficient_stock / invalid_transition declared where they occur (P10.3-BE, 28 Oct 2026). Additive. |
 | Purchase returns and debit notes | not_draft / foreign_document / return_qty_exceeds / insufficient_stock / invalid_transition declared where they occur; descriptions state how lines are valued and how manual debit notes post (P10.4-BE, 28 Oct 2026). Additive. |
+| Stock adjustments and transfers | StockAdjustment returns warehouse_name, notes, line_count, posted_at and audit fields; StockTransfer returns both warehouse names, vehicle, driver, notes, line_count, transit_loss_value (costs only), its entries and audit fields, so D10/D11 can show and edit what they saved (P11.1-BE-02/03, 31 Oct 2026). Additive. |
+| Cash counts and reconciliation | CashCount returns the account name, denominations and its adjustment's number, status and approval request (G2 shows where an adjustment stands); Reconciliation returns the account name, unhandled_count and book_entries (posted book lines not yet matched, G10's right pane); POST …/lines/pair with one line marks it ignored (P12.1-BE-03/05, 31 Oct 2026). Additive. |
 | Dashboard lenses A2–A8 | Load only `GET /dashboard/lenses/{lens}`; the overlapping report and list endpoints were removed from their page lists. |
 
 ### 12.5 Overlaps kept on purpose

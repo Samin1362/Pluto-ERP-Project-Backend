@@ -9,11 +9,16 @@ use App\Http\Controllers\Api\V1\Accounting\VoucherController;
 use App\Http\Controllers\Api\V1\Approvals\ApprovalController;
 use App\Http\Controllers\Api\V1\Approvals\NotificationController;
 use App\Http\Controllers\Api\V1\Auth\AuthController;
+use App\Http\Controllers\Api\V1\Banking\BankingController;
+use App\Http\Controllers\Api\V1\Banking\CashCountController;
 use App\Http\Controllers\Api\V1\Banking\MoneyAccountController;
+use App\Http\Controllers\Api\V1\Banking\ReconciliationController;
 use App\Http\Controllers\Api\V1\Inventory\ProductCategoryController;
 use App\Http\Controllers\Api\V1\Inventory\ProductController;
+use App\Http\Controllers\Api\V1\Inventory\StockAdjustmentController;
 use App\Http\Controllers\Api\V1\Inventory\StockGroupController;
 use App\Http\Controllers\Api\V1\Inventory\StockMovementController;
+use App\Http\Controllers\Api\V1\Inventory\StockTransferController;
 use App\Http\Controllers\Api\V1\Inventory\UnitController;
 use App\Http\Controllers\Api\V1\Inventory\WarehouseController;
 use App\Http\Controllers\Api\V1\Me\TwoFactorController;
@@ -27,6 +32,7 @@ use App\Http\Controllers\Api\V1\Purchases\PurchaseBillController;
 use App\Http\Controllers\Api\V1\Purchases\PurchaseOrderController;
 use App\Http\Controllers\Api\V1\Purchases\PurchaseReturnController;
 use App\Http\Controllers\Api\V1\Reports\FinancialReportController;
+use App\Http\Controllers\Api\V1\Reports\InventoryReportController;
 use App\Http\Controllers\Api\V1\Reports\TradeReportController;
 use App\Http\Controllers\Api\V1\Sales\CreditNoteController;
 use App\Http\Controllers\Api\V1\Sales\QuotationController;
@@ -134,8 +140,26 @@ Route::middleware(['jwt', 'throttle:api-user'])->group(function () {
         Route::post('warehouses', [WarehouseController::class, 'store'])->middleware(['perm:inventory.create', 'idempotent']);
         Route::get('warehouses/{id}', [WarehouseController::class, 'show'])->whereNumber('id')->middleware('perm:inventory.view');
         Route::patch('warehouses/{id}', [WarehouseController::class, 'update'])->whereNumber('id')->middleware('perm:inventory.edit');
+        Route::get('warehouses/{id}/stock', [WarehouseController::class, 'stock'])->whereNumber('id')->middleware('perm:inventory.view');
+        Route::get('stock-adjustments', [StockAdjustmentController::class, 'index'])->middleware('perm:inventory.view');
+        Route::post('stock-adjustments', [StockAdjustmentController::class, 'store'])->middleware(['perm:inventory.create', 'idempotent']);
+        Route::post('stock-adjustments/count-sheet', [StockAdjustmentController::class, 'countSheet'])->middleware('perm:inventory.create');
+        Route::get('stock-adjustments/{id}', [StockAdjustmentController::class, 'show'])->whereNumber('id')->middleware('perm:inventory.view');
+        Route::patch('stock-adjustments/{id}', [StockAdjustmentController::class, 'update'])->whereNumber('id')->middleware('perm:inventory.edit');
+        Route::delete('stock-adjustments/{id}', [StockAdjustmentController::class, 'destroy'])->whereNumber('id')->middleware('perm:inventory.delete');
+        Route::post('stock-adjustments/{id}/post', [StockAdjustmentController::class, 'post'])->whereNumber('id')->middleware(['perm:inventory.create', 'idempotent']);
+        Route::post('stock-adjustments/{id}/reverse', [StockAdjustmentController::class, 'reverse'])->whereNumber('id')->middleware(['perm:inventory.approve', 'idempotent']);
+        Route::get('stock-transfers', [StockTransferController::class, 'index'])->middleware('perm:inventory.view');
+        Route::post('stock-transfers', [StockTransferController::class, 'store'])->middleware(['perm:inventory.create', 'idempotent']);
+        Route::get('stock-transfers/{id}', [StockTransferController::class, 'show'])->whereNumber('id')->middleware('perm:inventory.view');
+        Route::patch('stock-transfers/{id}', [StockTransferController::class, 'update'])->whereNumber('id')->middleware('perm:inventory.edit');
+        Route::delete('stock-transfers/{id}', [StockTransferController::class, 'destroy'])->whereNumber('id')->middleware('perm:inventory.delete');
+        Route::post('stock-transfers/{id}/dispatch', [StockTransferController::class, 'send'])->whereNumber('id')->middleware(['perm:inventory.create', 'idempotent']);
+        Route::post('stock-transfers/{id}/receive', [StockTransferController::class, 'receive'])->whereNumber('id')->middleware(['perm:inventory.create', 'idempotent']);
+        Route::post('stock-transfers/{id}/cancel', [StockTransferController::class, 'cancel'])->whereNumber('id')->middleware(['perm:inventory.edit', 'idempotent']);
         Route::get('products', [ProductController::class, 'index'])->middleware('perm:inventory.view');
         Route::post('products', [ProductController::class, 'store'])->middleware(['perm:inventory.create', 'idempotent']);
+        Route::post('products/import', [ProductController::class, 'import'])->middleware(['perm:inventory.create', 'idempotent']);
         Route::delete('products/{id}', [ProductController::class, 'destroy'])->whereNumber('id')->middleware('perm:inventory.delete');
         Route::get('products/{id}', [ProductController::class, 'show'])->whereNumber('id')->middleware('perm:inventory.view');
         Route::patch('products/{id}', [ProductController::class, 'update'])->whereNumber('id')->middleware('perm:inventory.edit');
@@ -186,6 +210,20 @@ Route::middleware(['jwt', 'throttle:api-user'])->group(function () {
         Route::post('money-accounts', [MoneyAccountController::class, 'store'])->middleware(['perm:banking.create', 'idempotent']);
         Route::get('money-accounts/{id}', [MoneyAccountController::class, 'show'])->whereNumber('id')->middleware('perm:banking.view');
         Route::patch('money-accounts/{id}', [MoneyAccountController::class, 'update'])->whereNumber('id')->middleware('perm:banking.edit');
+        Route::get('money-accounts/{id}/book', [BankingController::class, 'book'])->whereNumber('id')->middleware('perm:banking.view');
+        Route::get('banking/overview', [BankingController::class, 'overview'])->middleware('perm:banking.view');
+        Route::get('money-transactions', [BankingController::class, 'transactions'])->middleware('perm:banking.view');
+        Route::post('cash-counts', [CashCountController::class, 'store'])->middleware(['perm:banking.create', 'idempotent']);
+        Route::post('cash-counts/{id}/reverse', [CashCountController::class, 'reverse'])->whereNumber('id')->middleware(['perm:banking.approve', 'idempotent']);
+        Route::post('bank-statement-imports', [ReconciliationController::class, 'import'])->middleware(['perm:banking.reconcile', 'idempotent']);
+        Route::post('reconciliations', [ReconciliationController::class, 'start'])->middleware('perm:banking.reconcile');
+        Route::get('reconciliations/{id}', [ReconciliationController::class, 'show'])->whereNumber('id')->middleware('perm:banking.reconcile');
+        Route::post('reconciliations/{id}/lines/pair', [ReconciliationController::class, 'pair'])->whereNumber('id')->middleware('perm:banking.reconcile');
+        Route::post('reconciliations/{id}/lines/{lineId}/match', [ReconciliationController::class, 'match'])->whereNumber(['id', 'lineId'])->middleware('perm:banking.reconcile');
+        Route::post('reconciliations/{id}/lines/{lineId}/create-entry', [ReconciliationController::class, 'createEntry'])->whereNumber(['id', 'lineId'])->middleware(['perm:banking.reconcile', 'idempotent']);
+        Route::post('reconciliations/{id}/lines/{lineId}/undo', [ReconciliationController::class, 'undo'])->whereNumber(['id', 'lineId'])->middleware('perm:banking.reconcile');
+        Route::post('reconciliations/{id}/accept-suggestions', [ReconciliationController::class, 'acceptSuggestions'])->whereNumber('id')->middleware('perm:banking.reconcile');
+        Route::post('reconciliations/{id}/finish', [ReconciliationController::class, 'finish'])->whereNumber('id')->middleware('perm:banking.reconcile');
 
         // Allocations (P6.1, R-08): permission follows the party (sales.* or purchases.*), checked in the controller.
         Route::post('allocations', [AllocationController::class, 'store'])->middleware('idempotent');
@@ -251,6 +289,9 @@ Route::middleware(['jwt', 'throttle:api-user'])->group(function () {
         Route::get('reports/sales-returns', [TradeReportController::class, 'salesReturns'])->name('reports.sales-returns')->middleware('perm:reports.view');
         Route::get('reports/purchases', [TradeReportController::class, 'purchases'])->name('reports.purchases')->middleware('perm:reports.view');
         Route::get('reports/purchase-returns', [TradeReportController::class, 'purchaseReturns'])->name('reports.purchase-returns')->middleware('perm:reports.view');
+        Route::get('reports/inventory/summary', [InventoryReportController::class, 'summary'])->name('reports.inventory.summary')->middleware('perm:inventory.view');
+        Route::get('reports/inventory/low-stock', [InventoryReportController::class, 'lowStock'])->name('reports.inventory.low-stock')->middleware('perm:inventory.view');
+        Route::get('reports/inventory/valuation', [InventoryReportController::class, 'valuation'])->name('reports.inventory.valuation')->middleware('perm:inventory.view_costs');
         // Financial statements (P9.1): reports.financial (DEC-13); format=xlsx|pdf|csv also needs reports.export.
         foreach (['trial-balance' => 'trialBalance', 'profit-and-loss' => 'profitAndLoss', 'balance-sheet' => 'balanceSheet', 'cash-flow' => 'cashFlow',
             'general-ledger' => 'generalLedger', 'receivables-aging' => 'receivablesAging', 'payables-aging' => 'payablesAging'] as $path => $method) {

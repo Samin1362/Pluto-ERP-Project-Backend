@@ -339,6 +339,11 @@ export interface CashCount {
   note?: string | null
   status: 'recorded' | 'adjusted' | 'reversed'
   adjustment_entry_id?: number | null
+  money_account_name?: string | null
+  adjustment_number?: string | null
+  adjustment_status?: string | null
+  approval_request_id?: number | null
+  denominations?: Array<Record<string, unknown>>
 }
 
 /** Cash count. */
@@ -1759,6 +1764,9 @@ export interface Reconciliation {
   status: 'in_progress' | 'finished'
   lines: Array<StatementLine>
   version: number
+  money_account_name?: string | null
+  unhandled_count?: number | null
+  book_entries?: Array<Record<string, unknown>>
 }
 
 /** Start a reconciliation. */
@@ -2098,6 +2106,12 @@ export interface StockAdjustment {
   net_value?: Decimal | null
   journal_entry_id?: number | null
   posting_preview?: Array<PostingLine>
+  warehouse_name?: string | null
+  notes?: string | null
+  line_count?: number | null
+  posted_at?: string | null
+  created_at?: string | null
+  created_by?: UserRef | null
   version: number
 }
 
@@ -2153,6 +2167,17 @@ export interface StockTransfer {
   lines: Array<Record<string, unknown>>
   total_units: Decimal
   value_at_cost?: Decimal | null
+  from_warehouse_name?: string | null
+  to_warehouse_name?: string | null
+  vehicle?: string | null
+  driver?: string | null
+  notes?: string | null
+  line_count?: number | null
+  transit_loss_value?: Decimal | null
+  dispatch_entry_id?: number | null
+  receive_entry_id?: number | null
+  created_at?: string | null
+  created_by?: UserRef | null
   version: number
 }
 

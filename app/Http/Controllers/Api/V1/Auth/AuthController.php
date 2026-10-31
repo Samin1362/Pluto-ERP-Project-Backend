@@ -52,10 +52,13 @@ class AuthController extends Controller
         if (! $this->trustedCookieRequest($request)) {
             throw new ApiProblem('refresh_token_invalid', 'Refresh must come from the Pluto app.');
         }
+        $raw = $request->cookie(config('pluto.refresh.cookie'));
         try {
-            $r = $this->auth->refresh($request->cookie(config('pluto.refresh.cookie')), (string) $request->ip(), $request->userAgent());
+            $r = $this->auth->refresh($raw, (string) $request->ip(), $request->userAgent());
         } catch (ApiProblem $e) {
-            throw new ApiProblem($e->errorCode, $e->detail, headers: ['Set-Cookie' => (string) $this->cookie('', true)]);
+            // Clear only the cookie that was sent: a cookieless refresh still in flight while the user signs in must not
+            // delete the fresh cookie the login response just set.
+            throw new ApiProblem($e->errorCode, $e->detail, headers: $raw ? ['Set-Cookie' => (string) $this->cookie('', true)] : []);
         }
 
         return response()->json(['data' => $r['tokens']])->withCookie($this->cookie($r['refresh']))->header('Cache-Control', 'no-store');

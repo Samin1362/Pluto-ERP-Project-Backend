@@ -164,7 +164,8 @@ s("WarehouseInput", "Create or edit a warehouse.", code="str:20!", name="str:120
 s("StockAdjustmentInput", "Draft adjustment.", adjustment_date="date!", warehouse_id="id!", reason="enum:count_difference|damaged|expired|theft_or_loss|free_samples!", notes="text?", lines="[ref:AdjustmentLineInput]!")
 s("AdjustmentLineInput", "Counted quantity.", product_id="id!", counted_qty="qty!")
 s("StockAdjustment", "Stock adjustment. net_value and posting_preview are omitted without inventory.view_costs (BR-052).", id="id!", number="str!", adjustment_date="date!", warehouse_id="id!", reason="str!", status="enum:draft|posted|reversed!", lines="[obj]!", net_value="money?",
-  journal_entry_id="id?", posting_preview="[ref:PostingLine]", version="int!")
+  journal_entry_id="id?", posting_preview="[ref:PostingLine]", warehouse_name="str?", notes="text?", line_count="int?", posted_at="datetime?", created_at="datetime?",
+  created_by="ref:UserRef?", version="int!")
 s("CountSheetPreview", "Parsed count sheet.", lines="[obj]!", unknown_codes="[str]")
 s("ProductImport", "multipart/form-data: `file` (CSV or XLSX, max 10 MB, columns per the import template) and `dry_run` query flag.", file="str!")
 s("ImportResult", "Outcome of an import: per-row errors on dry run, created ids on commit.", dry_run="bool!", rows="int!", valid_rows="int!", created_ids="[id]", errors="[ref:ImportRowError]!")
@@ -173,7 +174,8 @@ s("StockTransferInput", "Draft transfer.", from_warehouse_id="id!", to_warehouse
 s("TransferLineInput", "Quantity to move.", product_id="id!", quantity="qty!")
 s("TransferReceive", "Received quantities (default = dispatched).", received_date="date!", lines="[ref:TransferLineInput]")
 s("StockTransfer", "Stock transfer. value_at_cost is omitted without inventory.view_costs (BR-052).", id="id!", number="str!", from_warehouse_id="id!", to_warehouse_id="id!", status="enum:draft|dispatched|received|cancelled!", dispatch_date="date?",
-  received_date="date?", lines="[obj]!", total_units="qty!", value_at_cost="money?", version="int!")
+  received_date="date?", lines="[obj]!", total_units="qty!", value_at_cost="money?", from_warehouse_name="str?", to_warehouse_name="str?", vehicle="str?", driver="str?",
+  notes="text?", line_count="int?", transit_loss_value="money?", dispatch_entry_id="id?", receive_entry_id="id?", created_at="datetime?", created_by="ref:UserRef?", version="int!")
 
 # ---------------------------------------------------------------- sales & purchases documents
 s("SalesInvoiceInput", "Create or replace a draft invoice. Prices are optional; defaults come from the price tier.", party_id="id!", invoice_date="date!", due_date="date?", payment_term_id="id?",
@@ -246,12 +248,14 @@ s("MoneyTransaction", "Cash/bank movement row.", date="date!", voucher_id="id!",
 s("CashCountInput", "Cash count.", money_account_id="id!", counted_at="datetime!", denominations="[ref:Denomination]!", note="str:255?")
 s("Denomination", "Note or coin count.", denomination="money!", count="int!")
 s("CashCount", "Recorded cash count.", id="id!", money_account_id="id!", counted_at="datetime!", counted_by="ref:UserRef!", book_balance="money!", counted_total="money!", difference="money!",
-  note="str?", status="enum:recorded|adjusted|reversed!", adjustment_entry_id="id?")
+  note="str?", status="enum:recorded|adjusted|reversed!", adjustment_entry_id="id?", money_account_name="str?", adjustment_number="str?", adjustment_status="str?",
+  approval_request_id="id?", denominations="[obj]")
 s("StatementImport", "multipart: file, money_account_id, column mapping.", file="str!", money_account_id="id!", mapping="obj?")
 s("StatementImportResult", "Imported statement.", id="id!", line_count="int!", period_from="date!", period_to="date!", duplicates_skipped="int!")
 s("ReconciliationStart", "Start a reconciliation.", money_account_id="id!", statement_date="date!", statement_balance="money!")
 s("Reconciliation", "Reconciliation workspace.", id="id!", money_account_id="id!", statement_date="date!", statement_balance="money!", book_balance="money!", difference="money!",
-  matched_count="int!", line_count="int!", status="enum:in_progress|finished!", lines="[ref:StatementLine]!", version="int!")
+  matched_count="int!", line_count="int!", status="enum:in_progress|finished!", lines="[ref:StatementLine]!", version="int!", money_account_name="str?",
+  unhandled_count="int?", book_entries="[obj]")
 s("StatementLine", "Statement line with match state.", id="id!", txn_date="date!", description="str!", bank_reference="str?", amount="money!",
   status="enum:unmatched|matched|created|paired|ignored!", suggestion="obj?", matched="obj?")
 s("MatchRequest", "Match to a book line.", journal_line_id="id!")

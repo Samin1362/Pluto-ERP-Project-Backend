@@ -26104,7 +26104,7 @@ paths:
   /api/v1/reconciliations/{id}/lines/pair:
     post:
       operationId: postReconciliationsIdLinesPair
-      summary: Mark two offsetting statement lines as a pair
+      summary: Mark offsetting statement lines (summing to zero) as a pair; a single line is marked ignored (no book effect)
       tags:
       - Banking
       description: "**Permission:** `banking.reconcile`  \n**Database:** lock: bank_statement_lines; insert: audit_logs; update: bank_statement_lines  \n**Rules:**\
@@ -40108,6 +40108,33 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/PostingLine'
+        warehouse_name:
+          type:
+          - string
+          - 'null'
+        notes:
+          type:
+          - string
+          - 'null'
+          maxLength: 65535
+        line_count:
+          type:
+          - integer
+          - 'null'
+        posted_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        created_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        created_by:
+          oneOf:
+          - $ref: '#/components/schemas/UserRef'
+          - type: 'null'
         version:
           type: integer
       required:
@@ -40382,6 +40409,59 @@ components:
           pattern: ^-?\d{1,16}(\.\d{1,2})?$
           example: '118450.00'
           description: Decimal as string (money)
+        from_warehouse_name:
+          type:
+          - string
+          - 'null'
+        to_warehouse_name:
+          type:
+          - string
+          - 'null'
+        vehicle:
+          type:
+          - string
+          - 'null'
+        driver:
+          type:
+          - string
+          - 'null'
+        notes:
+          type:
+          - string
+          - 'null'
+          maxLength: 65535
+        line_count:
+          type:
+          - integer
+          - 'null'
+        transit_loss_value:
+          type:
+          - string
+          - 'null'
+          pattern: ^-?\d{1,16}(\.\d{1,2})?$
+          example: '118450.00'
+          description: Decimal as string (money)
+        dispatch_entry_id:
+          type:
+          - integer
+          - 'null'
+          format: int64
+          minimum: 1
+        receive_entry_id:
+          type:
+          - integer
+          - 'null'
+          format: int64
+          minimum: 1
+        created_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        created_by:
+          oneOf:
+          - $ref: '#/components/schemas/UserRef'
+          - type: 'null'
         version:
           type: integer
       required:
@@ -42771,6 +42851,29 @@ components:
           - 'null'
           format: int64
           minimum: 1
+        money_account_name:
+          type:
+          - string
+          - 'null'
+        adjustment_number:
+          type:
+          - string
+          - 'null'
+        adjustment_status:
+          type:
+          - string
+          - 'null'
+        approval_request_id:
+          type:
+          - integer
+          - 'null'
+          format: int64
+          minimum: 1
+        denominations:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
       required:
       - id
       - money_account_id
@@ -42889,6 +42992,19 @@ components:
             $ref: '#/components/schemas/StatementLine'
         version:
           type: integer
+        money_account_name:
+          type:
+          - string
+          - 'null'
+        unhandled_count:
+          type:
+          - integer
+          - 'null'
+        book_entries:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
       required:
       - id
       - money_account_id
