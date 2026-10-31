@@ -3,17 +3,21 @@
 namespace App\Domain\Inventory;
 
 use App\Domain\Shared\AuditLogger;
+use App\Domain\Shared\Quantity;
+use App\Domain\Shared\UnitCost;
 use App\Models\Company;
 use App\Models\Product;
 use App\Models\ProductCategory;
 use App\Models\ProductWarehouseSetting;
+use App\Models\Warehouse;
 use App\Support\CurrentCompany;
 use App\Support\Problem\ApiProblem;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Products and services (D2/D3, backlog P3.1-BE-05/06). Quantities and costs are never set here: they change only
- * through stock documents and postings (BR-003, TC-INV-005). Services do not track stock (CF-09).
+ * Products and services (D2/D3, backlog P3.1-BE-05/06). Quantities and costs change only through stock documents and
+ * postings (BR-003, TC-INV-005), and on creation through the opening stock per warehouse (06 §11.2, P11.1-BE-05).
+ * Services do not track stock (CF-09).
  */
 final class ProductService
 {
@@ -24,7 +28,7 @@ final class ProductService
     private const HISTORY = ['stock_movements', 'stock_adjustment_lines', 'stock_transfer_lines', 'purchase_order_lines', 'purchase_bill_lines',
         'purchase_return_lines', 'quotation_lines', 'sales_invoice_lines', 'sales_return_lines', 'landed_cost_allocation_lines'];
 
-    public function __construct(private readonly AuditLogger $audit, private readonly CurrentCompany $current) {}
+    public function __construct(private readonly AuditLogger $audit, private readonly CurrentCompany $current, private readonly OpeningStockService $openings) {}
 
     public function create(array $data): Product
     {
@@ -36,6 +40,11 @@ final class ProductService
             $product->code = $data['code'] ?? $this->nextCode($data['category_id'] ?? null);
             $product->save();
             $this->syncWarehouses($product, $data['warehouses'] ?? []);
+            foreach ($data['warehouses'] ?? [] as $w) {
+                if (Quantity::of($w['opening_qty'] ?? '0')->isPositive()) {
+                    $this->openings->post($product, Warehouse::findOrFail($w['warehouse_id']), Quantity::of($w['opening_qty']), UnitCost::of($w['opening_unit_cost']));
+                }
+            }
             $this->audit->record('created', $product, null, $this->audited($product) + ['warehouses' => $data['warehouses'] ?? []]);
 
             return $product->refresh();
@@ -113,6 +122,11 @@ final class ProductService
         }
         if ($type === 'service' && ! empty($data['warehouses'])) {
             $errors['warehouses'] = ['Services have no stock, so they have no warehouse settings'];
+        }
+        foreach ($data['warehouses'] ?? [] as $i => $w) {
+            if (Quantity::of($w['opening_qty'] ?? '0')->isPositive() && ($w['opening_unit_cost'] ?? null) === null) {
+                $errors["warehouses.{$i}.opening_unit_cost"] = ['Enter the cost per unit of the opening stock'];
+            }
         }
         if ($errors) {
             throw new ApiProblem('validation_failed', errors: $errors);

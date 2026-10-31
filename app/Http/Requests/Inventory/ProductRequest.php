@@ -10,8 +10,8 @@ use Illuminate\Validation\Rule;
  * ProductInput (05 postProducts / patchProductsId, D2/D3, backlog P3.1-BE-05). POST needs kind, name, unit, selling
  * price and income account; PATCH is partial. On-hand quantity and average cost are not fields at all, so a PATCH
  * that sends them is a 422 like any unknown field (TC-INV-005). Ledger natures and service rules are checked by
- * ProductService. Opening stock posts through the posting engine (BR-028), which arrives in P4: until then
- * opening_qty must be 0.
+ * ProductService. Opening stock (opening_qty with opening_unit_cost) is taken only when the item is created (06 §11.2,
+ * BR-028; P11.1-BE-05); afterwards stock changes through stock documents, so a PATCH must send 0.
  */
 class ProductRequest extends StrictRequest
 {
@@ -74,7 +74,7 @@ class ProductRequest extends StrictRequest
             'warehouses.*.warehouse_id' => ['required', 'integer', 'distinct', $exists('warehouses')],
             'warehouses.*.reorder_level' => ['sometimes', 'nullable', 'string', 'regex:'.self::QTY],
             'warehouses.*.reorder_qty' => ['sometimes', 'nullable', 'string', 'regex:'.self::QTY],
-            'warehouses.*.opening_qty' => ['sometimes', 'nullable', 'string', 'regex:/^0+(\.0{1,3})?$/'],
+            'warehouses.*.opening_qty' => ['sometimes', 'nullable', 'string', 'regex:'.($creating ? self::QTY : '/^0+(\.0{1,3})?$/')],
             'warehouses.*.opening_unit_cost' => ['sometimes', 'nullable', 'string', 'regex:'.self::COST],
         ];
     }
@@ -93,7 +93,8 @@ class ProductRequest extends StrictRequest
             'code.regex' => 'Use capital letters, digits and dashes, e.g. OIL-0001',
             'barcode.unique' => 'Another item already uses this barcode',
             'warehouses.*.warehouse_id.distinct' => 'Each warehouse can appear only once',
-            'warehouses.*.opening_qty.regex' => 'Opening stock can be entered once stock posting is live (phase 4); use 0 for now',
+            'warehouses.*.opening_qty.regex' => $this->isMethod('POST') ? 'Enter a quantity with up to 3 decimals'
+                : 'Opening stock is entered when the item is created; use a stock adjustment now',
         ];
     }
 }

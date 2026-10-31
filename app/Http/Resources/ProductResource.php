@@ -45,23 +45,9 @@ class ProductResource extends JsonResource
             $row['last_purchase_cost'] = $this->last_purchase_cost;
         }
         if ($this->levels !== null) {
-            $row['warehouses'] = $tracked ? array_map(fn ($l) => $this->level($l), $this->levels) : [];
+            $row['warehouses'] = $tracked ? array_map(fn ($l) => (new StockLevelResource($l, $this->showCosts))->resolve($request), $this->levels) : [];
         }
 
         return $row + ['is_active' => (bool) $this->is_active, 'version' => (int) $this->lock_version];
-    }
-
-    private function level(object $l): array
-    {
-        $row = [
-            'product_id' => $l->product_id, 'product_code' => $l->product_code, 'product_name' => $l->product_name,
-            'warehouse_id' => $l->warehouse_id, 'warehouse_name' => $l->warehouse_name, 'qty_on_hand' => (string) $l->qty_on_hand,
-            'reorder_level' => (string) $l->reorder_level, 'reorder_qty' => (string) $l->reorder_qty,
-        ];
-        if ($this->showCosts) {
-            $row['value'] = (string) $l->value;
-        }
-
-        return $row + ['status' => $l->status];
     }
 }
