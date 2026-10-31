@@ -43,7 +43,7 @@ final class SalesInvoicePreparer
         $party = Party::findOrFail($in['party_id']);
         $warehouse = Warehouse::findOrFail($in['warehouse_id']);
         $errors = [];
-        if ($party->status !== 'active') {
+        if ($party->status === 'inactive') { // a prospect may be priced (quotations, E10); posting still needs an active customer
             $errors['party_id'] = ["{$party->name} is inactive; reactivate the customer first"];
         }
         if ($warehouse->status === 'inactive') {

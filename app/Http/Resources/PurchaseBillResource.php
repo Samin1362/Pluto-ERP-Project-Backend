@@ -49,6 +49,7 @@ class PurchaseBillResource extends JsonResource
                 'discount_pct' => $l->discount_pct, 'discount_amount' => (string) $l->discount_amount, 'tax_rule_id' => $l->tax_rule_id, 'tax_rate' => $l->tax_rate,
                 'tax_amount' => (string) $l->tax_amount, 'net_amount' => (string) $l->net_amount, 'line_total' => (string) $l->line_total,
                 'purchase_order_line_id' => $l->purchase_order_line_id,
+                'returned_quantity' => (string) $l->returned_quantity,
             ])->all() : [],
             'amount_settled' => (string) $b->amount_settled,
             'balance_due' => (string) $b->balance_due,

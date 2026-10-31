@@ -129,11 +129,19 @@ final class SalesInvoiceService
             'party_id' => $p->party->id,
             'party_snapshot' => ['code' => $p->party->code, 'name' => $p->party->name, 'mobile' => $p->party->mobile, 'address' => $p->party->address],
             'customer_po_ref' => $in['customer_po_ref'] ?? null, 'invoice_date' => $p->invoiceDate->toDateString(), 'due_date' => $p->dueDate->toDateString(),
-            'payment_term_id' => $p->paymentTermId, 'warehouse_id' => $p->warehouse->id, 'quotation_id' => $in['quotation_id'] ?? null,
+            'payment_term_id' => $p->paymentTermId, 'warehouse_id' => $p->warehouse->id, 'quotation_id' => $this->link($invoice, $in, 'quotation_id'),
             'notes' => $in['notes'] ?? null, 'internal_note' => $in['internal_note'] ?? null,
             'subtotal' => $c->subtotal, 'discount_total' => $c->discountTotal, 'tax_total' => $c->taxTotal, 'rounding_adjustment' => $c->rounding,
             'total' => $c->total, 'balance_due' => $c->total,
         ]);
+    }
+
+    /** A link the draft was made from (E10 quotation) stays when an update leaves the field out; only an explicit null clears it. */
+    private function link(SalesInvoice $invoice, array $in, string $key): ?int
+    {
+        $v = array_key_exists($key, $in) ? $in[$key] : $invoice->getAttribute($key);
+
+        return $v === null ? null : (int) $v;
     }
 
     private function saveLines(SalesInvoice $invoice, PreparedInvoice $p): void

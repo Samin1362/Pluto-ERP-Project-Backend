@@ -130,6 +130,12 @@ class QuotationTest extends TestCase
         $this->req('GET', "/api/v1/quotations/{$id}")->assertJsonPath('data.converted_invoice_id', $r->json('data.id'))
             ->assertJsonPath('data.converted_invoice_number', $r->json('data.number'));
 
+        // E6 saves the draft without quotation_id: the link stays (found by the P10 acceptance E2E)
+        $this->req('PUT', '/api/v1/sales-invoices/'.$r->json('data.id'), ['party_id' => $this->karim->id, 'invoice_date' => $this->today(), 'warehouse_id' => $this->wh->id,
+            'lines' => [['product_id' => $this->oil->id, 'quantity' => '10', 'unit_price' => '955.50']]], ['If-Match' => 'W/"'.$r->json('data.version').'"'])->assertOk();
+        $this->assertSame($id, SalesInvoice::find($r->json('data.id'))->quotation_id);
+        $this->req('GET', "/api/v1/quotations/{$id}")->assertJsonPath('data.converted_invoice_id', $r->json('data.id'));
+
         $this->assertProblem($this->req('POST', "/api/v1/quotations/{$id}/convert"), 409, 'already_converted');
         $this->assertProblem($this->req('POST', "/api/v1/quotations/{$id}/status", ['status' => 'declined']), 409, 'invalid_transition');
         $this->assertProblem($this->req('PUT', "/api/v1/quotations/{$id}", $this->body(), ['If-Match' => 'W/"'.$q->lock_version.'"']), 409, 'invalid_transition');

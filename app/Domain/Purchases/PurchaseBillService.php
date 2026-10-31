@@ -103,6 +103,14 @@ final class PurchaseBillService
             errors: ['supplier_bill_no' => ["Already entered as {$existing}"]], extra: ['existing_number' => $existing]);
     }
 
+    /** A link the draft was made from (F8 order, M LC) stays when an update leaves the field out; only an explicit null clears it. */
+    private function link(PurchaseBill $bill, array $in, string $key): ?int
+    {
+        $v = array_key_exists($key, $in) ? $in[$key] : $bill->getAttribute($key);
+
+        return $v === null ? null : (int) $v;
+    }
+
     private function fill(PurchaseBill $bill, PreparedBill $p, array $in): void
     {
         $c = $p->calculation;
@@ -112,7 +120,8 @@ final class PurchaseBillService
             'party_snapshot' => ['code' => $p->party->code, 'name' => $p->party->name, 'mobile' => $p->party->mobile, 'address' => $p->party->address],
             'supplier_bill_no' => $in['supplier_bill_no'], 'bill_date' => $p->billDate->toDateString(), 'due_date' => $p->dueDate->toDateString(),
             'payment_term_id' => $p->paymentTermId, 'warehouse_id' => $p->warehouse->id,
-            'purchase_order_id' => $in['purchase_order_id'] ?? null, 'letter_of_credit_id' => $in['letter_of_credit_id'] ?? null, 'lc_shipment_id' => $in['lc_shipment_id'] ?? null,
+            'purchase_order_id' => $this->link($bill, $in, 'purchase_order_id'), 'letter_of_credit_id' => $this->link($bill, $in, 'letter_of_credit_id'),
+            'lc_shipment_id' => $this->link($bill, $in, 'lc_shipment_id'),
             'currency_code' => $p->currency, 'exchange_rate' => $p->exchangeRate,
             'notes' => $in['notes'] ?? null, 'internal_note' => $in['internal_note'] ?? null, 'receipt_condition_note' => $in['receipt_condition_note'] ?? null,
             // The books are in BDT: total is the base amount; total_foreign keeps the supplier's figure for foreign bills.
