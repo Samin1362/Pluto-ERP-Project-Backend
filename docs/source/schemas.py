@@ -124,7 +124,7 @@ s("ExportJobCreate", "Start an export. export_pack: month-end pack (`period`, `r
 s("PartyInput", "Create or edit a customer or supplier. `mobile` is required when country_code = BD (BR-063, R-33).", party_type="enum:customer|supplier!", name="str:190!", category="enum:business|individual|walk_in|manufacturer|distributor|service_provider?",
   party_group_id="id?", contact_person="str:120?", mobile="str:20?", email="email?", alt_phone="str:20?", address="str:255?", district="str:60?", area="str:80?", country_code="str:2",
   default_currency_code="ccy", payment_term_id="id?", credit_limit="money?", price_tier="enum:standard|wholesale", default_purchase_ledger_id="id?", tax_registration_no="str:40?",
-  port_of_loading="str:120?", notes="text?", opening_balance="money", opening_side="enum:dr|cr", bank_accounts="[ref:PartyBankAccount]")
+  port_of_loading="str:120?", notes="text?", opening_balance="money", opening_side="enum:dr|cr", bank_accounts="[ref:PartyBankAccount]", status="enum:active|prospect")
 s("PartyBankAccount", "Supplier bank details.", id="id?", bank_name="str:120!", branch="str:120?", account_name="str:150?", account_number="str:40!", routing_number="str:20?", swift_code="str:11?", is_default="bool")
 s("Party", "Customer or supplier.", id="id!", party_type="enum:customer|supplier!", code="str!", name="str!", category="str?", group="ref:PartyGroup?", contact_person="str?", mobile="str?", email="email?",
   alt_phone="str?", address="str?", district="str?", area="str?", country_code="str!", default_currency_code="ccy!", payment_term="ref:PaymentTerm?", credit_limit="money?", price_tier="str!",
@@ -190,7 +190,8 @@ s("CalculatedLine", "Calculated line.", line_no="int!", gross="money!", discount
 s("Warning", "Non-blocking warning.", code="enum:CREDIT_LIMIT_EXCEEDED|PARTY_OVERDUE|LOW_STOCK|BACKDATED|BUDGET_NEAR_LIMIT|DUPLICATE_PARTY|INSUFFICIENT_FUNDS|APPROVAL_REQUIRED!", message="str!", line_no="int?")
 s("QuotationInput", "Create or replace a quotation.", party_id="id!", quotation_date="date!", valid_until="date!", warehouse_id="id?", payment_term_id="id?", notes="text?", internal_note="text?", lines="[ref:SalesLineInput]!")
 s("Quotation", "Quotation.", id="id!", number="str!", status="enum:draft|sent|accepted|declined|expired|converted!", party="ref:PartyRef!", quotation_date="date!", valid_until="date!",
-  lines="[ref:SalesLine]!", converted_invoice_id="id?", **TOTALS, **AUDIT)
+  warehouse_id="id?", payment_term_id="id?", notes="text?", internal_note="text?", sent_at="datetime?",
+  lines="[ref:SalesLine]!", converted_invoice_id="id?", converted_invoice_number="str?", **TOTALS, **AUDIT)
 s("PurchaseBillInput", "Create or replace a draft bill. Foreign currency requires exchange_rate.", party_id="id!", supplier_bill_no="str:60!", bill_date="date!", due_date="date?", payment_term_id="id?",
   warehouse_id="id!", purchase_order_id="id?", letter_of_credit_id="id?", lc_shipment_id="id?", currency_code="ccy", exchange_rate="rate", branch_id="id?", notes="text?", internal_note="text?",
   receipt_condition_note="str:255?", lines="[ref:PurchaseLineInput]!")
@@ -200,19 +201,23 @@ s("PurchaseBill", "Purchase bill.", id="id!", number="str!", supplier_bill_no="s
   letter_of_credit_id="id?", lines="[obj]!", amount_settled="money!", balance_due="money!", allocations="[ref:Allocation]", journal="[ref:PostingLine]", posted_at="datetime?", **TOTALS, **AUDIT)
 s("PurchaseOrderInput", "Create or replace a PO.", party_id="id!", order_date="date!", expected_date="date?", warehouse_id="id!", payment_term_id="id?", currency_code="ccy", exchange_rate="rate",
   source_note="str:120?", notes="text?", internal_note="text?", lines="[ref:PurchaseLineInput]!")
-s("PurchaseOrder", "Purchase order.", id="id!", number="str!", status="enum:draft|sent|partly_received|received|closed|cancelled!", party="ref:PartyRef!", order_date="date!", expected_date="date?",
-  currency_code="ccy!", lines="[obj]!", total_foreign="money?", **TOTALS, **AUDIT)
-s("LowStockOrderRequest", "Rows to order.", rows="[obj]!", order_date="date!")
+s("PurchaseOrder", "Purchase order. Lines carry received_quantity and remaining_quantity; bills lists the bills made from it.", id="id!", number="str!", status="enum:draft|sent|partly_received|received|closed|cancelled!", party="ref:PartyRef!", order_date="date!", expected_date="date?",
+  warehouse_id="id!", payment_term_id="id?", currency_code="ccy!", exchange_rate="rate!", source_note="str?", notes="text?", internal_note="text?", sent_at="datetime?",
+  lines="[obj]!", bills="[obj]", total_foreign="money?", **TOTALS, **AUDIT)
+s("LowStockOrderRequest", "Rows to order: each {product_id, warehouse_id, quantity?}; quantity defaults to the reorder quantity (or what brings stock back to the reorder level). Rows are grouped into one draft PO per preferred supplier and warehouse.", rows="[obj]!", order_date="date!")
 s("ReturnInput", "Sales or purchase return. stock_action: restock|write_off (sales), send_back|already_disposed (purchase). `usage` and `apply_to_document_id` decide how the note created on posting is used (R-04).", source_document_id="id!", return_date="date!", warehouse_id="id!",
   stock_action="enum:restock|write_off|send_back|already_disposed!", usage="enum:apply|credit|refund", apply_to_document_id="id?", notes="text?", lines="[ref:ReturnLineInput]!")
 s("ReturnLineInput", "Returned quantity per original line.", source_line_id="id!", quantity="qty!", reason="str:30!")
 s("Return", "Sales or purchase return.", id="id!", number="str!", status="enum:draft|posted|cancelled!", party="ref:PartyRef!", source_document_id="id!", source_number="str!", return_date="date!",
-  stock_action="str!", lines="[obj]!", total="money!", note_id="id?", note_number="str?", version="int!")
+  stock_action="str!", warehouse_id="id!", notes="text?", usage="str?", apply_to_document_id="id?", posted_at="datetime?", cancel_reason="str?",
+  lines="[obj]!", total="money!", note_id="id?", note_number="str?", note_status="str?", created_at="datetime?", created_by="ref:UserRef?", version="int!")
 s("NoteInput", "Credit or debit note. `apply_to_document_id` (required when usage = apply) is the invoice or bill of the same party that the note is allocated to on posting; it is stored only as the resulting bill_allocations row (R-20).", party_id="id!", source_document_id="id?", return_id="id?", note_date="date!", reason="str:30!", amount="money!", usage="enum:apply|credit|refund!",
   apply_to_document_id="id?", refund="ref:RefundInput?")
 s("RefundInput", "Refund details for usage=refund.", money_account_id="id!", method="enum:cash|cheque|bank_transfer|beftn|rtgs|npsb|bkash|nagad|card!", reference="str:60?")
 s("Note", "Credit or debit note.", id="id!", number="str!", kind="enum:credit_note|debit_note!", status="enum:draft|posted|cancelled!", party="ref:PartyRef!", note_date="date!", reason="str!",
-  amount="money!", usage="str!", effects="[obj]", journal="[ref:PostingLine]", version="int!")
+  amount="money!", usage="str!", source_document_id="id?", source_number="str?", return_id="id?", return_number="str?", apply_to_document_id="id?",
+  refund="obj?", allocations="[ref:Allocation]", posted_at="datetime?", cancel_reason="str?", effects="[obj]", journal="[ref:PostingLine]",
+  amount_in_words="str?", created_at="datetime?", created_by="ref:UserRef?", version="int!")
 s("AllocationCreate", "Apply an open settling line to a document of the same party (R-08). journal_line_id is the party-ledger line of a receipt, payment, advance or posted credit/debit note.", journal_line_id="id!", document_type="enum:sales_invoice|purchase_bill!", document_id="id!", amount="money!", allocated_on="date?")
 s("Allocation", "Settlement applied to a document.", id="id!", voucher_id="id!", voucher_number="str!", date="date!", amount="money!", kind="enum:receipt|payment|credit_note|debit_note|advance!", reversed="bool!")
 s("PostingLine", "Journal line preview or actual.", ledger_id="id!", ledger_code="str!", ledger_name="str!", debit="money!", credit="money!")

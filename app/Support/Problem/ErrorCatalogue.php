@@ -10,6 +10,7 @@ final class ErrorCatalogue
 {
     public const CODES = [
         'allocation_exceeds_balance' => [422, 'The allocation is more than the document\'s open balance or the payment'],
+        'already_converted' => [409, 'This quotation or purchase order has already been converted'],
         'already_posted' => [409, 'This document has already been posted'],
         'already_reversed' => [409, 'This entry has already been reversed or cancelled'],
         'approval_required' => [202, 'Above your approval limit: submitted for approval'],

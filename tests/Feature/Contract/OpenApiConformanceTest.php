@@ -302,6 +302,204 @@ class OpenApiConformanceTest extends TestCase
         $this->assertConforms($this->api('POST', "/api/v1/sales-invoices/{$service}/cancel", $t, $c, ['reason' => 'duplicate'], $key()), 'POST', '/sales-invoices/{id}/cancel'); // 409
     }
 
+    public function test_purchase_order_endpoints_match_the_contract(): void
+    {
+        Mail::fake();
+        $t = $this->login('owner@meghna.example');
+        $c = $this->company->id;
+        $key = fn () => ['Idempotency-Key' => (string) Str::uuid()];
+        $supplier = $this->api('POST', '/api/v1/parties', $t, $c, ['party_type' => 'supplier', 'name' => 'Bengal Edible Oils', 'mobile' => '01911222333',
+            'email' => 'sales@bengal.example'], $key())->json('data.id');
+        $wh = $this->api('POST', '/api/v1/warehouses', $t, $c, ['code' => 'WH-1', 'name' => 'Main', 'branch_id' => \DB::table('branches')->where('company_id', $c)->value('id')], $key())->json('data.id');
+        $oil = $this->api('POST', '/api/v1/products', $t, $c, ['item_type' => 'product', 'name' => 'Oil', 'unit_id' => \DB::table('units')->where('company_id', $c)->value('id'),
+            'selling_price' => '940.00', 'income_ledger_id' => \DB::table('ledgers')->where('company_id', $c)->where('code', '4101')->value('id')], $key())->json('data.id');
+        $body = ['party_id' => $supplier, 'order_date' => now('Asia/Dhaka')->toDateString(), 'warehouse_id' => $wh,
+            'lines' => [['product_id' => $oil, 'quantity' => '100', 'unit_cost' => '800.00']]];
+
+        $po = $this->api('POST', '/api/v1/purchase-orders', $t, $c, $body, $key());
+        $this->assertConforms($po, 'POST', '/purchase-orders');
+        $this->assertConforms($this->api('POST', '/api/v1/purchase-orders', $t, $c, ['lines' => []], $key()), 'POST', '/purchase-orders');                     // 422
+        $id = $po->json('data.id');
+        $this->assertConforms($this->api('GET', "/api/v1/purchase-orders/{$id}", $t, $c), 'GET', '/purchase-orders/{id}');
+        $this->assertConforms($this->api('GET', '/api/v1/purchase-orders/999999', $t, $c), 'GET', '/purchase-orders/{id}');                                   // 404
+        $this->assertConforms($this->api('PUT', "/api/v1/purchase-orders/{$id}", $t, $c, $body), 'PUT', '/purchase-orders/{id}');                              // 428
+        $this->assertConforms($this->api('PUT', "/api/v1/purchase-orders/{$id}", $t, $c, $body, ['If-Match' => 'W/"1"']), 'PUT', '/purchase-orders/{id}');
+        $this->assertConforms($this->api('PUT', "/api/v1/purchase-orders/{$id}", $t, $c, $body, ['If-Match' => 'W/"1"']), 'PUT', '/purchase-orders/{id}');     // 409
+        $this->assertConforms($this->api('POST', "/api/v1/purchase-orders/{$id}/send", $t, $c, ['to' => []]), 'POST', '/purchase-orders/{id}/send');
+        $this->assertConforms($this->api('POST', "/api/v1/purchase-orders/{$id}/send", $t, $c, ['to' => ['nope']]), 'POST', '/purchase-orders/{id}/send');      // 422
+        $this->assertConforms($this->api('GET', "/api/v1/purchase-orders/{$id}", $t, $c), 'GET', '/purchase-orders/{id}');                                    // sent_at
+        $this->assertConforms($this->api('GET', '/api/v1/purchase-orders?q=Bengal&status=open&currency=BDT&sort=-total', $t, $c), 'GET', '/purchase-orders');
+        $this->assertConforms($this->api('GET', '/api/v1/purchase-orders?status=posted', $t, $c), 'GET', '/purchase-orders');                                 // 422
+        $bill = $this->api('POST', "/api/v1/purchase-orders/{$id}/convert", $t, $c, [], $key());
+        $this->assertConforms($bill, 'POST', '/purchase-orders/{id}/convert');                                                                                // 201
+        $this->assertConforms($this->api('POST', "/api/v1/purchase-orders/{$id}/convert", $t, $c, [], $key()), 'POST', '/purchase-orders/{id}/convert');        // 409
+        $this->assertConforms($this->api('GET', '/api/v1/purchase-bills/'.$bill->json('data.id'), $t, $c), 'GET', '/purchase-bills/{id}');                  // PO line links
+        $this->assertConforms($this->api('POST', "/api/v1/purchase-orders/{$id}/status", $t, $c, ['status' => 'accepted']), 'POST', '/purchase-orders/{id}/status'); // 422
+        $this->assertConforms($this->api('POST', "/api/v1/purchase-orders/{$id}/status", $t, $c, ['status' => 'closed']), 'POST', '/purchase-orders/{id}/status');
+        $this->assertConforms($this->api('POST', "/api/v1/purchase-orders/{$id}/status", $t, $c, ['status' => 'cancelled']), 'POST', '/purchase-orders/{id}/status'); // 409
+        $this->assertConforms($this->api('DELETE', "/api/v1/purchase-orders/{$id}", $t, $c), 'DELETE', '/purchase-orders/{id}');                              // 409 not_draft
+        $draft = $this->api('POST', '/api/v1/purchase-orders', $t, $c, $body, $key())->json('data.id');
+        $this->assertConforms($this->api('DELETE', "/api/v1/purchase-orders/{$draft}", $t, $c), 'DELETE', '/purchase-orders/{id}');
+        $this->assertConforms($this->api('POST', '/api/v1/purchase-orders/from-low-stock', $t, $c, ['order_date' => now('Asia/Dhaka')->toDateString(),
+            'rows' => [['product_id' => $oil, 'warehouse_id' => $wh]]], $key()), 'POST', '/purchase-orders/from-low-stock');                                   // 201, failed row
+        $this->assertConforms($this->api('POST', '/api/v1/purchase-orders/from-low-stock', $t, $c, ['rows' => []], $key()), 'POST', '/purchase-orders/from-low-stock'); // 422
+        $this->assertConforms($this->api('GET', '/api/v1/purchase-orders', $this->login('store@meghna.example'), $c), 'GET', '/purchase-orders');               // 403
+    }
+
+    public function test_sales_return_and_credit_note_endpoints_match_the_contract(): void
+    {
+        $t = $this->login('owner@meghna.example');
+        $c = $this->company->id;
+        $key = fn () => ['Idempotency-Key' => (string) Str::uuid()];
+        $today = now('Asia/Dhaka')->toDateString();
+        $customer = $this->api('POST', '/api/v1/parties', $t, $c, ['party_type' => 'customer', 'name' => 'Karim Distributors', 'mobile' => '01711458230'], $key())->json('data.id');
+        $wh = $this->api('POST', '/api/v1/warehouses', $t, $c, ['code' => 'WH-1', 'name' => 'Main', 'branch_id' => \DB::table('branches')->where('company_id', $c)->value('id')], $key())->json('data.id');
+        $trip = $this->api('POST', '/api/v1/products', $t, $c, ['item_type' => 'service', 'name' => 'Delivery', 'unit_id' => \DB::table('units')->where('company_id', $c)->value('id'),
+            'selling_price' => '150.00', 'income_ledger_id' => \DB::table('ledgers')->where('company_id', $c)->where('code', '4201')->value('id')], $key())->json('data.id');
+        $inv = $this->api('POST', '/api/v1/sales-invoices', $t, $c, ['party_id' => $customer, 'invoice_date' => $today, 'warehouse_id' => $wh,
+            'lines' => [['product_id' => $trip, 'quantity' => '10']]], $key())->json('data');
+        $this->api('POST', "/api/v1/sales-invoices/{$inv['id']}/post", $t, $c, [], $key());
+        $body = ['source_document_id' => $inv['id'], 'return_date' => $today, 'warehouse_id' => $wh, 'stock_action' => 'write_off',
+            'lines' => [['source_line_id' => $inv['lines'][0]['id'], 'quantity' => '2', 'reason' => 'not_needed']]];
+
+        $r = $this->api('POST', '/api/v1/sales-returns', $t, $c, $body, $key());
+        $this->assertConforms($r, 'POST', '/sales-returns');
+        $this->assertConforms($this->api('POST', '/api/v1/sales-returns', $t, $c, ['lines' => []], $key()), 'POST', '/sales-returns');                          // 422
+        $this->assertConforms($this->api('POST', '/api/v1/sales-returns', $t, $c, ['lines' => [['source_line_id' => $inv['lines'][0]['id'], 'quantity' => '99', 'reason' => 'expired']]] + $body, $key()),
+            'POST', '/sales-returns');                                                                                                                            // 422 return_qty_exceeds
+        $id = $r->json('data.id');
+        $this->assertConforms($this->api('GET', "/api/v1/sales-returns/{$id}", $t, $c), 'GET', '/sales-returns/{id}');
+        $this->assertConforms($this->api('PUT', "/api/v1/sales-returns/{$id}", $t, $c, $body), 'PUT', '/sales-returns/{id}');                                     // 428
+        $this->assertConforms($this->api('PUT', "/api/v1/sales-returns/{$id}", $t, $c, $body, ['If-Match' => 'W/"1"']), 'PUT', '/sales-returns/{id}');
+        $this->assertConforms($this->api('GET', '/api/v1/sales-returns?q=Karim&reason=not_needed', $t, $c), 'GET', '/sales-returns');
+        $this->assertConforms($this->api('POST', "/api/v1/sales-returns/{$id}/cancel", $t, $c, ['reason' => 'x'], $key()), 'POST', '/sales-returns/{id}/cancel'); // 409 draft
+        $this->assertConforms($this->api('POST', "/api/v1/sales-returns/{$id}/post", $t, $c, [], $key()), 'POST', '/sales-returns/{id}/post');
+        $this->assertConforms($this->api('POST', "/api/v1/sales-returns/{$id}/post", $t, $c, [], $key()), 'POST', '/sales-returns/{id}/post');                  // 409
+        $this->assertConforms($this->api('DELETE', "/api/v1/sales-returns/{$id}", $t, $c), 'DELETE', '/sales-returns/{id}');                                      // 409 not_draft
+        $note = \DB::table('credit_notes')->where('sales_return_id', $id)->value('id');
+
+        $this->assertConforms($this->api('GET', "/api/v1/credit-notes/{$note}", $t, $c), 'GET', '/credit-notes/{id}');
+        $this->assertConforms($this->api('GET', '/api/v1/credit-notes?status=draft&usage=apply', $t, $c), 'GET', '/credit-notes');
+        $nb = ['party_id' => $customer, 'note_date' => $today, 'reason' => 'goods_returned', 'amount' => '300.00', 'usage' => 'apply', 'apply_to_document_id' => $inv['id']];
+        $this->assertConforms($this->api('PUT', "/api/v1/credit-notes/{$note}", $t, $c, $nb, ['If-Match' => 'W/"1"']), 'PUT', '/credit-notes/{id}');
+        $this->assertConforms($this->api('POST', "/api/v1/credit-notes/{$note}/post", $t, $c, [], $key()), 'POST', '/credit-notes/{id}/post');
+        $this->assertConforms($this->api('GET', "/api/v1/credit-notes/{$note}", $t, $c), 'GET', '/credit-notes/{id}');                                            // posted, journal
+        $this->assertConforms($this->api('POST', "/api/v1/sales-returns/{$id}/cancel", $t, $c, ['reason' => 'x'], $key()), 'POST', '/sales-returns/{id}/cancel'); // 409 note_applied
+        $this->assertConforms($this->api('POST', "/api/v1/credit-notes/{$note}/cancel", $t, $c, ['reason' => 'wrong'], $key()), 'POST', '/credit-notes/{id}/cancel');
+        $this->assertConforms($this->api('POST', "/api/v1/credit-notes/{$note}/cancel", $t, $c, ['reason' => 'wrong'], $key()), 'POST', '/credit-notes/{id}/cancel'); // 409
+        $this->assertConforms($this->api('POST', "/api/v1/sales-returns/{$id}/cancel", $t, $c, ['reason' => 'x'], $key()), 'POST', '/sales-returns/{id}/cancel');
+        $manual = $this->api('POST', '/api/v1/credit-notes', $t, $c, ['reason' => 'goodwill', 'usage' => 'credit'] + $nb, $key());
+        $this->assertConforms($manual, 'POST', '/credit-notes');
+        $this->assertConforms($this->api('POST', '/api/v1/credit-notes', $t, $c, ['usage' => 'refund'] + $nb, $key()), 'POST', '/credit-notes');                   // 422
+        $big = $this->api('POST', '/api/v1/credit-notes', $t, $c, ['amount' => '99999.00'] + $nb, $key())->json('data.id');
+        $this->assertConforms($this->api('POST', "/api/v1/credit-notes/{$big}/post", $t, $c, [], $key()), 'POST', '/credit-notes/{id}/post');                   // 422 exceeds
+        $this->assertConforms($this->api('DELETE', '/api/v1/credit-notes/'.$manual->json('data.id'), $t, $c), 'DELETE', '/credit-notes/{id}');
+        $this->assertConforms($this->api('GET', '/api/v1/credit-notes', $this->login('store@meghna.example'), $c), 'GET', '/credit-notes');                     // 403
+    }
+
+    public function test_purchase_return_and_debit_note_endpoints_match_the_contract(): void
+    {
+        $t = $this->login('owner@meghna.example');
+        $c = $this->company->id;
+        $key = fn () => ['Idempotency-Key' => (string) Str::uuid()];
+        $today = now('Asia/Dhaka')->toDateString();
+        $supplier = $this->api('POST', '/api/v1/parties', $t, $c, ['party_type' => 'supplier', 'name' => 'Bengal Edible Oils', 'mobile' => '01911222333'], $key())->json('data.id');
+        $wh = $this->api('POST', '/api/v1/warehouses', $t, $c, ['code' => 'WH-1', 'name' => 'Main', 'branch_id' => \DB::table('branches')->where('company_id', $c)->value('id')], $key())->json('data.id');
+        $oil = $this->api('POST', '/api/v1/products', $t, $c, ['item_type' => 'product', 'name' => 'Oil', 'unit_id' => \DB::table('units')->where('company_id', $c)->value('id'),
+            'selling_price' => '940.00', 'income_ledger_id' => \DB::table('ledgers')->where('company_id', $c)->where('code', '4101')->value('id')], $key())->json('data.id');
+        $bill = $this->api('POST', '/api/v1/purchase-bills', $t, $c, ['party_id' => $supplier, 'supplier_bill_no' => 'B-1', 'bill_date' => $today, 'warehouse_id' => $wh,
+            'lines' => [['product_id' => $oil, 'quantity' => '100', 'unit_cost' => '846.00']]], $key())->json('data');
+        $this->api('POST', "/api/v1/purchase-bills/{$bill['id']}/post", $t, $c, [], $key());
+        $body = ['source_document_id' => $bill['id'], 'return_date' => $today, 'warehouse_id' => $wh, 'stock_action' => 'send_back',
+            'lines' => [['source_line_id' => $bill['lines'][0]['id'], 'quantity' => '6', 'reason' => 'leaking']]];
+
+        $r = $this->api('POST', '/api/v1/purchase-returns', $t, $c, $body, $key());
+        $this->assertConforms($r, 'POST', '/purchase-returns');
+        $this->assertConforms($this->api('POST', '/api/v1/purchase-returns', $t, $c, ['lines' => []], $key()), 'POST', '/purchase-returns');                     // 422
+        $id = $r->json('data.id');
+        $this->assertConforms($this->api('GET', "/api/v1/purchase-returns/{$id}", $t, $c), 'GET', '/purchase-returns/{id}');
+        $this->assertConforms($this->api('PUT', "/api/v1/purchase-returns/{$id}", $t, $c, $body, ['If-Match' => 'W/"1"']), 'PUT', '/purchase-returns/{id}');
+        $this->assertConforms($this->api('PUT', "/api/v1/purchase-returns/{$id}", $t, $c, $body, ['If-Match' => 'W/"1"']), 'PUT', '/purchase-returns/{id}');     // 409
+        $this->assertConforms($this->api('GET', '/api/v1/purchase-returns?q=Bengal&reason=leaking', $t, $c), 'GET', '/purchase-returns');
+        $this->assertConforms($this->api('POST', "/api/v1/purchase-returns/{$id}/post", $t, $c, [], $key()), 'POST', '/purchase-returns/{id}/post');
+        $this->assertConforms($this->api('POST', "/api/v1/purchase-returns/{$id}/post", $t, $c, [], $key()), 'POST', '/purchase-returns/{id}/post');             // 409
+        $note = \DB::table('debit_notes')->where('purchase_return_id', $id)->value('id');
+        $this->assertConforms($this->api('GET', "/api/v1/debit-notes/{$note}", $t, $c), 'GET', '/debit-notes/{id}');
+        $this->assertConforms($this->api('POST', "/api/v1/debit-notes/{$note}/post", $t, $c, [], $key()), 'POST', '/debit-notes/{id}/post');                     // 409 created_from_return
+        $this->assertConforms($this->api('POST', "/api/v1/purchase-returns/{$id}/cancel", $t, $c, ['reason' => 'refused'], $key()), 'POST', '/purchase-returns/{id}/cancel');
+        $this->assertConforms($this->api('POST', "/api/v1/purchase-returns/{$id}/cancel", $t, $c, ['reason' => 'refused'], $key()), 'POST', '/purchase-returns/{id}/cancel'); // 409
+        $nb = ['party_id' => $supplier, 'note_date' => $today, 'reason' => 'price_difference', 'amount' => '460.00', 'usage' => 'apply', 'apply_to_document_id' => $bill['id']];
+        $dn = $this->api('POST', '/api/v1/debit-notes', $t, $c, $nb, $key());
+        $this->assertConforms($dn, 'POST', '/debit-notes');
+        $this->assertConforms($this->api('POST', '/api/v1/debit-notes', $t, $c, ['usage' => 'apply', 'apply_to_document_id' => null] + $nb, $key()), 'POST', '/debit-notes'); // 422
+        $this->assertConforms($this->api('PUT', '/api/v1/debit-notes/'.$dn->json('data.id'), $t, $c, $nb, ['If-Match' => 'W/"1"']), 'PUT', '/debit-notes/{id}');
+        $this->assertConforms($this->api('POST', '/api/v1/debit-notes/'.$dn->json('data.id').'/post', $t, $c, [], $key()), 'POST', '/debit-notes/{id}/post');
+        $this->assertConforms($this->api('GET', '/api/v1/debit-notes?status=posted&usage=apply', $t, $c), 'GET', '/debit-notes');
+        $this->assertConforms($this->api('POST', '/api/v1/debit-notes/'.$dn->json('data.id').'/cancel', $t, $c, ['reason' => 'x'], $key()), 'POST', '/debit-notes/{id}/cancel');
+        $draft = $this->api('POST', '/api/v1/debit-notes', $t, $c, ['usage' => 'credit'] + $nb, $key())->json('data.id');
+        $this->assertConforms($this->api('POST', "/api/v1/debit-notes/{$draft}/cancel", $t, $c, ['reason' => 'x'], $key()), 'POST', '/debit-notes/{id}/cancel');     // 409 draft
+        $this->assertConforms($this->api('DELETE', "/api/v1/debit-notes/{$draft}", $t, $c), 'DELETE', '/debit-notes/{id}');
+        $this->assertConforms($this->api('GET', '/api/v1/purchase-returns', $this->login('store@meghna.example'), $c), 'GET', '/purchase-returns');             // 403
+    }
+
+    public function test_trade_report_and_overview_endpoints_match_the_contract(): void
+    {
+        $t = $this->login('owner@meghna.example');
+        $c = $this->company->id;
+        foreach (['/reports/sales', '/reports/sales-returns', '/reports/purchases', '/reports/purchase-returns'] as $path) {
+            $this->assertConforms($this->api('GET', "/api/v1{$path}", $t, $c), 'GET', $path);
+            $this->assertConforms($this->api('GET', "/api/v1{$path}?date_to=2000-01-01&date_from=2020-01-01", $t, $c), 'GET', $path);                 // 422
+        }
+        $this->assertConforms($this->api('GET', '/api/v1/reports/sales?group_by=month', $t, $c), 'GET', '/reports/sales');
+        $this->assertConforms($this->api('GET', '/api/v1/sales/overview?period=last_month', $t, $c), 'GET', '/sales/overview');
+        $this->assertConforms($this->api('GET', '/api/v1/purchases/overview', $t, $c), 'GET', '/purchases/overview');
+        $this->assertConforms($this->api('GET', '/api/v1/purchases/overview?period=decade', $t, $c), 'GET', '/purchases/overview');                    // 422
+        $this->assertConforms($this->api('GET', '/api/v1/reports/sales', $this->login('store@meghna.example'), $c), 'GET', '/reports/sales');      // 403
+    }
+
+    public function test_quotation_endpoints_match_the_contract(): void
+    {
+        Mail::fake();
+        $t = $this->login('owner@meghna.example');
+        $c = $this->company->id;
+        $key = fn () => ['Idempotency-Key' => (string) Str::uuid()];
+        $prospect = $this->api('POST', '/api/v1/parties', $t, $c, ['party_type' => 'customer', 'name' => 'Nilambari Hotel', 'mobile' => '01711000777', 'status' => 'prospect',
+            'email' => 'buy@nilambari.example'], $key());
+        $this->assertConforms($prospect, 'POST', '/parties');
+        $wh = $this->api('POST', '/api/v1/warehouses', $t, $c, ['code' => 'WH-1', 'name' => 'Main', 'branch_id' => \DB::table('branches')->where('company_id', $c)->value('id')], $key())->json('data.id');
+        $oil = $this->api('POST', '/api/v1/products', $t, $c, ['item_type' => 'product', 'name' => 'Oil', 'unit_id' => \DB::table('units')->where('company_id', $c)->value('id'),
+            'selling_price' => '940.00', 'income_ledger_id' => \DB::table('ledgers')->where('company_id', $c)->where('code', '4101')->value('id')], $key())->json('data.id');
+        $today = now('Asia/Dhaka')->toDateString();
+        $body = ['party_id' => $prospect->json('data.id'), 'quotation_date' => $today, 'valid_until' => now('Asia/Dhaka')->addDays(15)->toDateString(), 'warehouse_id' => $wh,
+            'notes' => 'Prices hold 15 days', 'lines' => [['product_id' => $oil, 'quantity' => '24', 'discount_pct' => '2']]];
+
+        $q = $this->api('POST', '/api/v1/quotations', $t, $c, $body, $key());
+        $this->assertConforms($q, 'POST', '/quotations');
+        $this->assertConforms($this->api('POST', '/api/v1/quotations', $t, $c, ['lines' => []], $key()), 'POST', '/quotations');                    // 422
+        $id = $q->json('data.id');
+        $this->assertConforms($this->api('GET', "/api/v1/quotations/{$id}", $t, $c), 'GET', '/quotations/{id}');
+        $this->assertConforms($this->api('GET', '/api/v1/quotations/999999', $t, $c), 'GET', '/quotations/{id}');                                  // 404
+        $this->assertConforms($this->api('PUT', "/api/v1/quotations/{$id}", $t, $c, $body), 'PUT', '/quotations/{id}');                             // 428
+        $this->assertConforms($this->api('PUT', "/api/v1/quotations/{$id}", $t, $c, $body, ['If-Match' => 'W/"1"']), 'PUT', '/quotations/{id}');
+        $this->assertConforms($this->api('PUT', "/api/v1/quotations/{$id}", $t, $c, $body, ['If-Match' => 'W/"1"']), 'PUT', '/quotations/{id}');    // 409
+        $this->assertConforms($this->api('GET', '/api/v1/quotations?q=Nilambari&status=draft&sort=-total&per_page=5', $t, $c), 'GET', '/quotations');
+        $this->assertConforms($this->api('GET', '/api/v1/quotations?status=posted', $t, $c), 'GET', '/quotations');                                // 422
+        $this->assertConforms($this->api('POST', "/api/v1/quotations/{$id}/send", $t, $c, ['to' => []]), 'POST', '/quotations/{id}/send');
+        $this->assertConforms($this->api('POST', "/api/v1/quotations/{$id}/send", $t, $c, ['to' => ['nope']]), 'POST', '/quotations/{id}/send');     // 422
+        $this->assertConforms($this->api('POST', "/api/v1/quotations/{$id}/convert", $t, $c, [], $key()), 'POST', '/quotations/{id}/convert');       // 409 not accepted
+        $this->assertConforms($this->api('POST', "/api/v1/quotations/{$id}/status", $t, $c, ['status' => 'closed']), 'POST', '/quotations/{id}/status'); // 422
+        $this->assertConforms($this->api('POST', "/api/v1/quotations/{$id}/status", $t, $c, ['status' => 'accepted']), 'POST', '/quotations/{id}/status');
+        $this->assertConforms($this->api('POST', "/api/v1/quotations/{$id}/convert", $t, $c, [], $key()), 'POST', '/quotations/{id}/convert');       // 201
+        $this->assertConforms($this->api('POST', "/api/v1/quotations/{$id}/convert", $t, $c, [], $key()), 'POST', '/quotations/{id}/convert');       // 409 already_converted
+        $this->assertConforms($this->api('POST', "/api/v1/quotations/{$id}/status", $t, $c, ['status' => 'declined']), 'POST', '/quotations/{id}/status'); // 409
+        $this->assertConforms($this->api('POST', "/api/v1/quotations/{$id}/send", $t, $c, ['to' => []]), 'POST', '/quotations/{id}/send');           // 409
+        $this->assertConforms($this->api('GET', "/api/v1/quotations/{$id}", $t, $c), 'GET', '/quotations/{id}');                                    // converted
+        $draft = $this->api('POST', '/api/v1/quotations', $t, $c, $body, $key())->json('data.id');
+        $this->assertConforms($this->api('DELETE', "/api/v1/quotations/{$id}", $t, $c), 'DELETE', '/quotations/{id}');                              // 409 not_draft
+        $this->assertConforms($this->api('DELETE', "/api/v1/quotations/{$draft}", $t, $c), 'DELETE', '/quotations/{id}');
+        $this->assertConforms($this->api('GET', '/api/v1/quotations', $this->login('store@meghna.example'), $c), 'GET', '/quotations');                // 403
+    }
+
     public function test_money_account_endpoints_match_the_contract(): void
     {
         $t = $this->login('owner@meghna.example');

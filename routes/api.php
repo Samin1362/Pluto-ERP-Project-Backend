@@ -22,9 +22,16 @@ use App\Http\Controllers\Api\V1\Parties\LookupController;
 use App\Http\Controllers\Api\V1\Parties\PartyAccountController;
 use App\Http\Controllers\Api\V1\Parties\PartyController;
 use App\Http\Controllers\Api\V1\Platform\PlatformLookupController;
+use App\Http\Controllers\Api\V1\Purchases\DebitNoteController;
 use App\Http\Controllers\Api\V1\Purchases\PurchaseBillController;
+use App\Http\Controllers\Api\V1\Purchases\PurchaseOrderController;
+use App\Http\Controllers\Api\V1\Purchases\PurchaseReturnController;
 use App\Http\Controllers\Api\V1\Reports\FinancialReportController;
+use App\Http\Controllers\Api\V1\Reports\TradeReportController;
+use App\Http\Controllers\Api\V1\Sales\CreditNoteController;
+use App\Http\Controllers\Api\V1\Sales\QuotationController;
 use App\Http\Controllers\Api\V1\Sales\SalesInvoiceController;
+use App\Http\Controllers\Api\V1\Sales\SalesReturnController;
 use App\Http\Controllers\Api\V1\Settlements\AllocationController;
 use App\Http\Controllers\Api\V1\Settlements\CustomerReceiptController;
 use App\Http\Controllers\Api\V1\Settlements\SupplierPaymentController;
@@ -145,6 +152,35 @@ Route::middleware(['jwt', 'throttle:api-user'])->group(function () {
         Route::post('purchase-bills/{id}/cancel', [PurchaseBillController::class, 'cancel'])->whereNumber('id')->middleware(['perm:purchases.edit', 'idempotent']);
         Route::delete('purchase-bills/{id}', [PurchaseBillController::class, 'destroy'])->whereNumber('id')->middleware('perm:purchases.delete');
 
+        // Purchase orders (F8, F11, D12; backlog P10.2-BE-01; BR-056: never post)
+        Route::get('purchase-orders', [PurchaseOrderController::class, 'index'])->middleware('perm:purchases.view');
+        Route::post('purchase-orders', [PurchaseOrderController::class, 'store'])->middleware(['perm:purchases.create', 'idempotent']);
+        Route::post('purchase-orders/from-low-stock', [PurchaseOrderController::class, 'fromLowStock'])->middleware(['perm:purchases.create', 'idempotent']);
+        Route::get('purchase-orders/{id}', [PurchaseOrderController::class, 'show'])->whereNumber('id')->middleware('perm:purchases.view');
+        Route::put('purchase-orders/{id}', [PurchaseOrderController::class, 'update'])->whereNumber('id')->middleware('perm:purchases.edit');
+        Route::delete('purchase-orders/{id}', [PurchaseOrderController::class, 'destroy'])->whereNumber('id')->middleware('perm:purchases.delete');
+        Route::post('purchase-orders/{id}/send', [PurchaseOrderController::class, 'send'])->whereNumber('id')->middleware('perm:purchases.edit');
+        Route::post('purchase-orders/{id}/status', [PurchaseOrderController::class, 'status'])->whereNumber('id')->middleware('perm:purchases.edit');
+        Route::post('purchase-orders/{id}/convert', [PurchaseOrderController::class, 'convert'])->whereNumber('id')->middleware(['perm:purchases.create', 'idempotent']);
+        Route::get('purchase-orders/{id}/pdf', [PurchaseOrderController::class, 'pdf'])->whereNumber('id')->middleware('perm:purchases.view');
+
+        // Purchase returns and debit notes (F6, F7, F13; backlog P10.4; 06 §10; R-04)
+        Route::get('purchase-returns', [PurchaseReturnController::class, 'index'])->middleware('perm:purchases.view');
+        Route::post('purchase-returns', [PurchaseReturnController::class, 'store'])->middleware(['perm:purchases.create', 'idempotent']);
+        Route::get('purchase-returns/{id}', [PurchaseReturnController::class, 'show'])->whereNumber('id')->middleware('perm:purchases.view');
+        Route::put('purchase-returns/{id}', [PurchaseReturnController::class, 'update'])->whereNumber('id')->middleware('perm:purchases.edit');
+        Route::delete('purchase-returns/{id}', [PurchaseReturnController::class, 'destroy'])->whereNumber('id')->middleware('perm:purchases.delete');
+        Route::post('purchase-returns/{id}/post', [PurchaseReturnController::class, 'post'])->whereNumber('id')->middleware(['perm:purchases.create', 'idempotent']);
+        Route::post('purchase-returns/{id}/cancel', [PurchaseReturnController::class, 'cancel'])->whereNumber('id')->middleware(['perm:purchases.edit', 'idempotent']);
+        Route::get('debit-notes', [DebitNoteController::class, 'index'])->middleware('perm:purchases.view');
+        Route::post('debit-notes', [DebitNoteController::class, 'store'])->middleware(['perm:purchases.create', 'idempotent']);
+        Route::get('debit-notes/{id}', [DebitNoteController::class, 'show'])->whereNumber('id')->middleware('perm:purchases.view');
+        Route::put('debit-notes/{id}', [DebitNoteController::class, 'update'])->whereNumber('id')->middleware('perm:purchases.edit');
+        Route::delete('debit-notes/{id}', [DebitNoteController::class, 'destroy'])->whereNumber('id')->middleware('perm:purchases.delete');
+        Route::post('debit-notes/{id}/post', [DebitNoteController::class, 'post'])->whereNumber('id')->middleware(['perm:purchases.create', 'idempotent']);
+        Route::post('debit-notes/{id}/cancel', [DebitNoteController::class, 'cancel'])->whereNumber('id')->middleware(['perm:purchases.edit', 'idempotent']);
+        Route::get('debit-notes/{id}/pdf', [DebitNoteController::class, 'pdf'])->whereNumber('id')->middleware('perm:purchases.view');
+
         // Money accounts (P6.1). The list is open to every member (pickers; masked without banking.view).
         Route::get('money-accounts', [MoneyAccountController::class, 'index']);
         Route::post('money-accounts', [MoneyAccountController::class, 'store'])->middleware(['perm:banking.create', 'idempotent']);
@@ -180,6 +216,41 @@ Route::middleware(['jwt', 'throttle:api-user'])->group(function () {
         Route::post('sales-invoices/{id}/send', [SalesInvoiceController::class, 'send'])->whereNumber('id')->middleware(['perm:sales.edit', 'idempotent']);
         Route::patch('sales-invoices/{id}/delivery', [SalesInvoiceController::class, 'delivery'])->whereNumber('id')->middleware('perm:sales.edit');
         Route::delete('sales-invoices/{id}', [SalesInvoiceController::class, 'destroy'])->whereNumber('id')->middleware('perm:sales.delete');
+
+        // Quotations (E10, E13; backlog P10.1-BE-01; BR-056: never post)
+        Route::get('quotations', [QuotationController::class, 'index'])->middleware('perm:sales.view');
+        Route::post('quotations', [QuotationController::class, 'store'])->middleware(['perm:sales.create', 'idempotent']);
+        Route::get('quotations/{id}', [QuotationController::class, 'show'])->whereNumber('id')->middleware('perm:sales.view');
+        Route::put('quotations/{id}', [QuotationController::class, 'update'])->whereNumber('id')->middleware('perm:sales.edit');
+        Route::delete('quotations/{id}', [QuotationController::class, 'destroy'])->whereNumber('id')->middleware('perm:sales.delete');
+        Route::post('quotations/{id}/send', [QuotationController::class, 'send'])->whereNumber('id')->middleware('perm:sales.edit');
+        Route::post('quotations/{id}/status', [QuotationController::class, 'status'])->whereNumber('id')->middleware('perm:sales.edit');
+        Route::post('quotations/{id}/convert', [QuotationController::class, 'convert'])->whereNumber('id')->middleware(['perm:sales.create', 'idempotent']);
+        Route::get('quotations/{id}/pdf', [QuotationController::class, 'pdf'])->whereNumber('id')->middleware('perm:sales.view');
+
+        // Sales returns and credit notes (E8, E9, E15; backlog P10.3; 06 §7)
+        Route::get('sales-returns', [SalesReturnController::class, 'index'])->middleware('perm:sales.view');
+        Route::post('sales-returns', [SalesReturnController::class, 'store'])->middleware(['perm:sales.create', 'idempotent']);
+        Route::get('sales-returns/{id}', [SalesReturnController::class, 'show'])->whereNumber('id')->middleware('perm:sales.view');
+        Route::put('sales-returns/{id}', [SalesReturnController::class, 'update'])->whereNumber('id')->middleware('perm:sales.edit');
+        Route::delete('sales-returns/{id}', [SalesReturnController::class, 'destroy'])->whereNumber('id')->middleware('perm:sales.delete');
+        Route::post('sales-returns/{id}/post', [SalesReturnController::class, 'post'])->whereNumber('id')->middleware(['perm:sales.create', 'idempotent']);
+        Route::post('sales-returns/{id}/cancel', [SalesReturnController::class, 'cancel'])->whereNumber('id')->middleware(['perm:sales.edit', 'idempotent']);
+        Route::get('credit-notes', [CreditNoteController::class, 'index'])->middleware('perm:sales.view');
+        Route::post('credit-notes', [CreditNoteController::class, 'store'])->middleware(['perm:sales.create', 'idempotent']);
+        Route::get('credit-notes/{id}', [CreditNoteController::class, 'show'])->whereNumber('id')->middleware('perm:sales.view');
+        Route::put('credit-notes/{id}', [CreditNoteController::class, 'update'])->whereNumber('id')->middleware('perm:sales.edit');
+        Route::delete('credit-notes/{id}', [CreditNoteController::class, 'destroy'])->whereNumber('id')->middleware('perm:sales.delete');
+        Route::post('credit-notes/{id}/post', [CreditNoteController::class, 'post'])->whereNumber('id')->middleware(['perm:sales.create', 'idempotent']);
+        Route::post('credit-notes/{id}/cancel', [CreditNoteController::class, 'cancel'])->whereNumber('id')->middleware(['perm:sales.edit', 'idempotent']);
+        Route::get('credit-notes/{id}/pdf', [CreditNoteController::class, 'pdf'])->whereNumber('id')->middleware('perm:sales.view');
+        // Trade reports and overviews (E1, E11, E12, F1, F9, F10; backlog P10.5-BE-01). Margin and balances need reports.financial (DEC-13).
+        Route::get('sales/overview', [TradeReportController::class, 'salesOverview'])->name('sales.overview')->middleware('perm:sales.view');
+        Route::get('purchases/overview', [TradeReportController::class, 'purchasesOverview'])->name('purchases.overview')->middleware('perm:purchases.view');
+        Route::get('reports/sales', [TradeReportController::class, 'sales'])->name('reports.sales')->middleware('perm:reports.view');
+        Route::get('reports/sales-returns', [TradeReportController::class, 'salesReturns'])->name('reports.sales-returns')->middleware('perm:reports.view');
+        Route::get('reports/purchases', [TradeReportController::class, 'purchases'])->name('reports.purchases')->middleware('perm:reports.view');
+        Route::get('reports/purchase-returns', [TradeReportController::class, 'purchaseReturns'])->name('reports.purchase-returns')->middleware('perm:reports.view');
         // Financial statements (P9.1): reports.financial (DEC-13); format=xlsx|pdf|csv also needs reports.export.
         foreach (['trial-balance' => 'trialBalance', 'profit-and-loss' => 'profitAndLoss', 'balance-sheet' => 'balanceSheet', 'cash-flow' => 'cashFlow',
             'general-ledger' => 'generalLedger', 'receivables-aging' => 'receivablesAging', 'payables-aging' => 'payablesAging'] as $path => $method) {

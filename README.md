@@ -230,11 +230,11 @@ Samin owns every open decision and collects the client's answers for the busines
 | C6 | Finance manager journal approval limit (docs 15 D8, assumed ৳ 5,00,000) | P7 | **Decided** (25 Oct 2026): no limit |
 | C7 | DEC-13: financial reports and dashboard figures for Sales staff and Viewer | P9 | **Decided** (25 Oct 2026): hidden; `reports.financial` (Owner, Finance manager, Accountant) |
 | C8 | DEC-11: branch-restricted users needed? | P15 | Open (client) |
-| C9 | DEC-04: can one business be both customer and supplier? | P10 | Open (client); today: no |
+| C9 | DEC-04: can one business be both customer and supplier? | P10 | **Decided** (28 Oct 2026): no; a party is a customer or a supplier |
 | C10 | VAT / Mushak requirements | P17 | Open (client + tax adviser) |
 | C11 | DEC-10: do LC charges and payments post to the books in v1? | P16 | Open (client); docs assume yes |
 | C12 | Rate limits for offices sharing one IP | P17 | Open (backend) |
 | C13 | docs 15 D10: `amr` column on `user_sessions` vs a cache entry | P15 | Open (backend) |
 | C14 | Bangla on printed documents (needs a PDF engine with Bangla shaping) | P15 | Open (client); English PDFs until then |
-| C15 | GAP-10: salesperson on invoices and in sales reports | P10 | Open (client); default: dropped |
+| C15 | GAP-10: salesperson on invoices and in sales reports | P10 | **Decided** (28 Oct 2026): dropped; sales reports group by customer, category or month |
 | C16 | Parties summary endpoint (docs 15 D5) | P6 | Open (backend) |

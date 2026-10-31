@@ -91,10 +91,11 @@ final class StockService
     /**
      * Takes back a receipt (cancelled bill, 06 §15) at its original value, as a `reversal` movement. Refuses with
      * insufficient_stock when the warehouse no longer holds the quantity, unless negative stock is allowed (BR-014,
-     * TC-PUR-010). Returns the value actually taken out (R-17 may lower it; the caller posts the difference).
+     * TC-PUR-010). Returns the value actually taken out (R-17 may lower it; the caller posts the difference). A purchase
+     * return (06 §10) uses it with purchase_return_out: the goods leave at the cost they came in at.
      */
     public function reverseIn(Product $product, Warehouse $warehouse, Quantity $qty, Money $origValue, Model $source, CarbonInterface|string $date,
-        ?int $sourceLineId = null, string $errorKey = 'quantity'): Money
+        ?int $sourceLineId = null, string $errorKey = 'quantity', string $movementType = 'reversal'): Money
     {
         $this->assertTracked($product);
         $balance = $this->lock([[$product->id, $warehouse->id]])["{$product->id}:{$warehouse->id}"];
@@ -104,7 +105,7 @@ final class StockService
                 errors: [$errorKey => ["Only {$onHand} on hand in {$warehouse->name}"]], extra: ['shortages' => [$this->shortage($product, $warehouse, $onHand, $qty)]]);
         }
         [$after, $out] = $this->calc->afterReverseIn($onHand, Money::of($balance->total_value), UnitCost::of($balance->avg_unit_cost), $qty, $origValue);
-        $this->write($balance, $after, 'reversal', $date, $source, $sourceLineId,
+        $this->write($balance, $after, $movementType, $date, $source, $sourceLineId,
             in: Quantity::zero(), out: $qty, unitCost: UnitCost::of($out->dividedBy($qty, UnitCost::SCALE)), valueIn: Money::zero(), valueOut: $out);
 
         return $out;

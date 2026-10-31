@@ -16,6 +16,8 @@ use App\Models\CompanySetting;
 use App\Models\Party;
 use App\Models\PaymentTerm;
 use App\Models\Product;
+use App\Models\PurchaseOrder;
+use App\Models\PurchaseOrderLine;
 use App\Models\StockBalance;
 use App\Models\TaxRule;
 use App\Models\Warehouse;
@@ -45,6 +47,7 @@ final class PurchaseBillPreparer
     {
         $party = Party::findOrFail($in['party_id']);
         $warehouse = Warehouse::findOrFail($in['warehouse_id']);
+        $this->assertOrderLinks($in, $party);
         $errors = [];
         if ($party->status !== 'active') {
             $errors['party_id'] = ["{$party->name} is inactive; reactivate the supplier first"];
@@ -100,6 +103,35 @@ final class PurchaseBillPreparer
         [$lines, $effects] = $this->effects($lines, $calc, $warehouse, $party, $due, $balance);
 
         return new PreparedBill($party, $warehouse, $lines, $calc, $currency, $rate, $billDate, $due, $termId, $warnings, $effects, $balance);
+    }
+
+    /**
+     * A bill made from a purchase order (P10.2-BE-01) must be the same supplier's, against an order still expecting
+     * goods, and each linked line must be a line of that order for the same item (422 validation_failed).
+     */
+    private function assertOrderLinks(array $in, Party $party): void
+    {
+        $errors = [];
+        $po = isset($in['purchase_order_id']) ? PurchaseOrder::find($in['purchase_order_id']) : null;
+        if ($po && $po->party_id !== $party->id) {
+            $errors['purchase_order_id'] = ["{$po->number} is another supplier's order"];
+        } elseif ($po && in_array($po->status, ['closed', 'cancelled'], true)) {
+            $errors['purchase_order_id'] = ["{$po->number} is {$po->status}"];
+        }
+        $orderLines = $po ? PurchaseOrderLine::where('purchase_order_id', $po->id)->pluck('product_id', 'id') : collect();
+        foreach ($in['lines'] as $i => $l) {
+            if (empty($l['purchase_order_line_id'])) {
+                continue;
+            }
+            if (! $po || ! $orderLines->has($l['purchase_order_line_id'])) {
+                $errors["lines.{$i}.purchase_order_line_id"] = ['This line is not on the chosen purchase order'];
+            } elseif ((int) $orderLines[$l['purchase_order_line_id']] !== (int) $l['product_id']) {
+                $errors["lines.{$i}.purchase_order_line_id"] = ['The order line is for a different item'];
+            }
+        }
+        if ($errors) {
+            throw new ApiProblem('validation_failed', errors: $errors);
+        }
     }
 
     /** @return array{0: string, 1: Rate} the bill currency (default: the supplier's) and its rate to BDT */

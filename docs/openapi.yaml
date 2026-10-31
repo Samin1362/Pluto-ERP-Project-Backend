@@ -17027,6 +17027,7 @@ paths:
       - duplicate
       - idempotency_in_progress
       - idempotency_key_reused
+      - inactive_reference
       - malformed_json
       - not_a_member
       - permission_denied
@@ -17086,7 +17087,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '422':
-          description: 'Validation or business-rule failure: `idempotency_key_reused`, `validation_failed`'
+          description: 'Validation or business-rule failure: `idempotency_key_reused`, `inactive_reference`, `validation_failed`'
           content:
             application/problem+json:
               schema:
@@ -17230,6 +17231,8 @@ paths:
       - company_maintenance
       - company_required
       - if_match_required
+      - inactive_reference
+      - invalid_transition
       - malformed_json
       - not_a_member
       - not_found
@@ -17298,13 +17301,13 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '409':
-          description: 'Conflict (version mismatch, state not allowed, duplicate): `version_conflict`'
+          description: 'Conflict (version mismatch, state not allowed, duplicate): `invalid_transition`, `version_conflict`'
           content:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/Error'
         '422':
-          description: 'Validation or business-rule failure: `validation_failed`'
+          description: 'Validation or business-rule failure: `inactive_reference`, `validation_failed`'
           content:
             application/problem+json:
               schema:
@@ -17434,7 +17437,8 @@ paths:
       summary: Mark sent and e-mail it
       tags:
       - Sales
-      description: "**Permission:** `sales.edit`  \n**Database:** lock: quotations; insert: audit_logs; update: quotations  \n**Rules:** —"
+      description: "A draft becomes sent; a sent quotation can be sent again. Refused (409) once accepted, declined, expired or converted.\n\n**Permission:** `sales.edit`\
+        \  \n**Database:** lock: quotations; insert: audit_logs; update: quotations  \n**Rules:** —"
       x-permission: sales.edit
       x-business-rules: []
       x-requirements:
@@ -17452,6 +17456,7 @@ paths:
       x-error-codes:
       - company_maintenance
       - company_required
+      - invalid_transition
       - malformed_json
       - not_a_member
       - not_found
@@ -17512,6 +17517,12 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/Error'
+        '409':
+          description: 'Conflict (version mismatch, state not allowed, duplicate): `invalid_transition`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
         '422':
           description: 'Validation or business-rule failure: `validation_failed`'
           content:
@@ -17541,8 +17552,9 @@ paths:
       summary: Convert an accepted quotation into a draft invoice
       tags:
       - Sales
-      description: "**Permission:** `sales.create`  \n**Database:** lock: number_sequences, quotations; insert: audit_logs, idempotency_keys, sales_invoice_lines,\
-        \ sales_invoices; update: number_sequences, quotations  \n**Rules:** BR-056"
+      description: "Copies the lines and prices into a draft invoice dated today (once: a second convert is 409 `already_converted`). A prospect becomes an active\
+        \ customer. The quotation never posts.\n\n**Permission:** `sales.create`  \n**Database:** lock: number_sequences, quotations; insert: audit_logs, idempotency_keys,\
+        \ sales_invoice_lines, sales_invoices; update: number_sequences, quotations  \n**Rules:** BR-056"
       x-permission: sales.create
       x-business-rules:
       - BR-056
@@ -17567,12 +17579,16 @@ paths:
         audit_logs: C
         idempotency_keys: C
       x-error-codes:
+      - already_converted
       - company_maintenance
       - company_required
       - idempotency_in_progress
       - idempotency_key_reused
+      - inactive_reference
+      - invalid_transition
       - not_a_member
       - not_found
+      - period_locked
       - permission_denied
       - server_error
       - token_expired
@@ -17630,13 +17646,13 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '409':
-          description: 'Conflict (version mismatch, state not allowed, duplicate): `idempotency_in_progress`'
+          description: 'Conflict (version mismatch, state not allowed, duplicate): `already_converted`, `idempotency_in_progress`, `invalid_transition`'
           content:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/Error'
         '422':
-          description: 'Validation or business-rule failure: `idempotency_key_reused`'
+          description: 'Validation or business-rule failure: `idempotency_key_reused`, `inactive_reference`, `period_locked`'
           content:
             application/problem+json:
               schema:
@@ -17664,7 +17680,8 @@ paths:
       summary: Set accepted, declined or expired
       tags:
       - Sales
-      description: "**Permission:** `sales.edit`  \n**Database:** lock: quotations; insert: audit_logs; update: quotations  \n**Rules:** —"
+      description: "From draft or sent only; closed and cancelled are purchase-order statuses (422). Converted quotations are final (409).\n\n**Permission:** `sales.edit`\
+        \  \n**Database:** lock: quotations; insert: audit_logs; update: quotations  \n**Rules:** —"
       x-permission: sales.edit
       x-business-rules: []
       x-requirements:
@@ -17682,6 +17699,7 @@ paths:
       x-error-codes:
       - company_maintenance
       - company_required
+      - invalid_transition
       - malformed_json
       - not_a_member
       - not_found
@@ -17738,6 +17756,12 @@ paths:
                 $ref: '#/components/schemas/Error'
         '404':
           description: 'Not found (also for other companies'' records): `not_found`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: 'Conflict (version mismatch, state not allowed, duplicate): `invalid_transition`'
           content:
             application/problem+json:
               schema:
@@ -18014,8 +18038,11 @@ paths:
       summary: Create a draft return against an invoice
       tags:
       - Sales
-      description: "**Permission:** `sales.create`  \n**Database:** insert: audit_logs, idempotency_keys, sales_return_lines, sales_returns; read: number_sequences,\
-        \ sales_invoice_lines  \n**Rules:** BR-022, BR-021, BR-006"
+      description: "Lines are the invoice's lines (source_line_id) with the quantity coming back, at most what is still returnable (BR-022), and a reason (expired,\
+        \ damaged_in_transit, leaking, wrong_item, not_needed). Each line is valued at the invoice's price after discount, with its tax. usage / apply_to_document_id\
+        \ are kept for the credit note created on posting (default: apply to the invoice while it has a balance, else credit).\n\n**Permission:** `sales.create` \
+        \ \n**Database:** insert: audit_logs, idempotency_keys, sales_return_lines, sales_returns; read: number_sequences, sales_invoice_lines  \n**Rules:** BR-022,\
+        \ BR-021, BR-006"
       x-permission: sales.create
       x-business-rules:
       - BR-022
@@ -18047,6 +18074,7 @@ paths:
       - foreign_document
       - idempotency_in_progress
       - idempotency_key_reused
+      - inactive_reference
       - malformed_json
       - not_a_member
       - permission_denied
@@ -18107,7 +18135,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '422':
-          description: 'Validation or business-rule failure: `foreign_document`, `idempotency_key_reused`, `return_qty_exceeds`, `validation_failed`'
+          description: 'Validation or business-rule failure: `foreign_document`, `idempotency_key_reused`, `inactive_reference`, `return_qty_exceeds`, `validation_failed`'
           content:
             application/problem+json:
               schema:
@@ -18253,9 +18281,11 @@ paths:
       x-error-codes:
       - company_maintenance
       - company_required
+      - foreign_document
       - if_match_required
       - malformed_json
       - not_a_member
+      - not_draft
       - not_found
       - permission_denied
       - return_qty_exceeds
@@ -18323,13 +18353,13 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '409':
-          description: 'Conflict (version mismatch, state not allowed, duplicate): `version_conflict`'
+          description: 'Conflict (version mismatch, state not allowed, duplicate): `not_draft`, `version_conflict`'
           content:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/Error'
         '422':
-          description: 'Validation or business-rule failure: `return_qty_exceeds`, `validation_failed`'
+          description: 'Validation or business-rule failure: `foreign_document`, `return_qty_exceeds`, `validation_failed`'
           content:
             application/problem+json:
               schema:
@@ -18459,10 +18489,11 @@ paths:
       summary: Post the return (stock back if restock) and create a draft credit note
       tags:
       - Sales
-      description: "**Permission:** `sales.create`  \n**Database:** lock: number_sequences, sales_returns, stock_balances; insert: audit_logs, credit_notes, idempotency_keys,\
-        \ journal_entries, journal_lines, stock_movements; update: number_sequences, sales_invoice_lines, sales_return_lines, sales_returns, stock_balances  \n**Rules:**\
-        \ BR-022, BR-001, BR-004, BR-009, BR-017  \n**Transaction:** One DB transaction; SELECT ... FOR UPDATE on the document row, number_sequences, stock_balances\
-        \ in a fixed order (sequence -> document -> products by id) to avoid deadlocks."
+      description: "Restock: stock back in at the invoice line's cost (Dr warehouse inventory / Cr COGS). Write-off: no stock and no entry. The invoice lines' returned_quantity\
+        \ grows, and a draft credit note for the return's value is created (E9 posts it).\n\n**Permission:** `sales.create`  \n**Database:** lock: number_sequences,\
+        \ sales_returns, stock_balances; insert: audit_logs, credit_notes, idempotency_keys, journal_entries, journal_lines, stock_movements; update: number_sequences,\
+        \ sales_invoice_lines, sales_return_lines, sales_returns, stock_balances  \n**Rules:** BR-022, BR-001, BR-004, BR-009, BR-017  \n**Transaction:** One DB transaction;\
+        \ SELECT ... FOR UPDATE on the document row, number_sequences, stock_balances in a fixed order (sequence -> document -> products by id) to avoid deadlocks."
       x-permission: sales.create
       x-business-rules:
       - BR-022
@@ -18504,7 +18535,9 @@ paths:
       - company_required
       - idempotency_in_progress
       - idempotency_key_reused
+      - insufficient_stock
       - not_a_member
+      - not_draft
       - not_found
       - period_locked
       - permission_denied
@@ -18561,13 +18594,13 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '409':
-          description: 'Conflict (version mismatch, state not allowed, duplicate): `already_posted`, `idempotency_in_progress`'
+          description: 'Conflict (version mismatch, state not allowed, duplicate): `already_posted`, `idempotency_in_progress`, `not_draft`'
           content:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/Error'
         '422':
-          description: 'Validation or business-rule failure: `idempotency_key_reused`, `period_locked`, `return_qty_exceeds`, `unbalanced_entry`'
+          description: 'Validation or business-rule failure: `idempotency_key_reused`, `insufficient_stock`, `period_locked`, `return_qty_exceeds`, `unbalanced_entry`'
           content:
             application/problem+json:
               schema:
@@ -18595,7 +18628,8 @@ paths:
       summary: 'Cancel a posted return: mirror stock entry; its credit note is cancelled if unapplied'
       tags:
       - Sales
-      description: "**Permission:** `sales.edit`  \n**Database:** lock: number_sequences, sales_returns, stock_balances; insert: audit_logs, credit_notes, idempotency_keys,\
+      description: "A draft credit note is cancelled with it; a posted one is cancelled too unless it was applied or refunded (409 note_applied: cancel the note first).\n\
+        \n**Permission:** `sales.edit`  \n**Database:** lock: number_sequences, sales_returns, stock_balances; insert: audit_logs, credit_notes, idempotency_keys,\
         \ journal_entries, journal_lines, stock_movements; update: journal_entries, number_sequences, sales_invoice_lines, sales_return_lines, sales_returns, stock_balances\
         \  \n**Rules:** BR-003, BR-004, BR-009, BR-024  \n**Transaction:** One DB transaction; SELECT ... FOR UPDATE on the document row, number_sequences, stock_balances\
         \ in a fixed order (sequence -> document -> products by id) to avoid deadlocks."
@@ -18856,9 +18890,11 @@ paths:
       - allocation_exceeds_balance
       - company_maintenance
       - company_required
+      - foreign_document
       - if_match_required
       - malformed_json
       - not_a_member
+      - not_draft
       - not_found
       - permission_denied
       - server_error
@@ -18925,13 +18961,13 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '409':
-          description: 'Conflict (version mismatch, state not allowed, duplicate): `version_conflict`'
+          description: 'Conflict (version mismatch, state not allowed, duplicate): `not_draft`, `version_conflict`'
           content:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/Error'
         '422':
-          description: 'Validation or business-rule failure: `allocation_exceeds_balance`, `validation_failed`'
+          description: 'Validation or business-rule failure: `allocation_exceeds_balance`, `foreign_document`, `validation_failed`'
           content:
             application/problem+json:
               schema:
@@ -19059,7 +19095,9 @@ paths:
       summary: Create a credit note without a return (price correction, goodwill)
       tags:
       - Sales
-      description: "**Permission:** `sales.create`  \n**Database:** insert: audit_logs, credit_notes, idempotency_keys; read: number_sequences  \n**Rules:** —"
+      description: "usage apply needs apply_to_document_id (a posted invoice of the customer); refund needs refund {money_account_id, method}. The note posts Dr sales_returns\
+        \ (and the tax of returned lines) / Cr customer.\n\n**Permission:** `sales.create`  \n**Database:** insert: audit_logs, credit_notes, idempotency_keys; read:\
+        \ number_sequences  \n**Rules:** —"
       x-permission: sales.create
       x-business-rules: []
       x-requirements:
@@ -19080,8 +19118,10 @@ paths:
       x-error-codes:
       - company_maintenance
       - company_required
+      - foreign_document
       - idempotency_in_progress
       - idempotency_key_reused
+      - inactive_reference
       - malformed_json
       - not_a_member
       - permission_denied
@@ -19141,7 +19181,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '422':
-          description: 'Validation or business-rule failure: `idempotency_key_reused`, `validation_failed`'
+          description: 'Validation or business-rule failure: `foreign_document`, `idempotency_key_reused`, `inactive_reference`, `validation_failed`'
           content:
             application/problem+json:
               schema:
@@ -19324,10 +19364,11 @@ paths:
       summary: Post the credit note and apply it per usage
       tags:
       - Sales
-      description: "**Permission:** `sales.create`  \n**Database:** lock: credit_notes, number_sequences, sales_invoices; insert: audit_logs, bill_allocations, idempotency_keys,\
-        \ journal_entries, journal_lines; update: credit_notes, number_sequences, sales_invoices; read: account_mappings  \n**Rules:** BR-023, BR-001, BR-004, BR-009,\
-        \ BR-020  \n**Transaction:** One DB transaction; SELECT ... FOR UPDATE on the document row, number_sequences, stock_balances in a fixed order (sequence ->\
-        \ document -> products by id) to avoid deadlocks."
+      description: "apply: allocated to the invoice (at most its balance, BR-023). credit: stays on the customer ledger as credit. refund: also posts a payment voucher\
+        \ Dr customer / Cr money account.\n\n**Permission:** `sales.create`  \n**Database:** lock: credit_notes, number_sequences, sales_invoices; insert: audit_logs,\
+        \ bill_allocations, idempotency_keys, journal_entries, journal_lines; update: credit_notes, number_sequences, sales_invoices; read: account_mappings  \n**Rules:**\
+        \ BR-023, BR-001, BR-004, BR-009, BR-020  \n**Transaction:** One DB transaction; SELECT ... FOR UPDATE on the document row, number_sequences, stock_balances\
+        \ in a fixed order (sequence -> document -> products by id) to avoid deadlocks."
       x-permission: sales.create
       x-business-rules:
       - BR-023
@@ -19364,9 +19405,11 @@ paths:
       - already_posted
       - company_maintenance
       - company_required
+      - foreign_document
       - idempotency_in_progress
       - idempotency_key_reused
       - not_a_member
+      - not_draft
       - not_found
       - period_locked
       - permission_denied
@@ -19422,13 +19465,13 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '409':
-          description: 'Conflict (version mismatch, state not allowed, duplicate): `already_posted`, `idempotency_in_progress`'
+          description: 'Conflict (version mismatch, state not allowed, duplicate): `already_posted`, `idempotency_in_progress`, `not_draft`'
           content:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/Error'
         '422':
-          description: 'Validation or business-rule failure: `allocation_exceeds_balance`, `idempotency_key_reused`, `period_locked`, `unbalanced_entry`'
+          description: 'Validation or business-rule failure: `allocation_exceeds_balance`, `foreign_document`, `idempotency_key_reused`, `period_locked`, `unbalanced_entry`'
           content:
             application/problem+json:
               schema:
@@ -19456,10 +19499,10 @@ paths:
       summary: Cancel a posted credit note (mirror entry; its allocations are reversed)
       tags:
       - Sales
-      description: "**Permission:** `sales.edit`  \n**Database:** lock: credit_notes, number_sequences, sales_invoices; insert: audit_logs, bill_allocations, idempotency_keys,\
-        \ journal_entries, journal_lines; update: bill_allocations, credit_notes, journal_entries, number_sequences, sales_invoices  \n**Rules:** BR-003, BR-004,\
-        \ BR-009, BR-020  \n**Transaction:** One DB transaction; SELECT ... FOR UPDATE on the document row, number_sequences, stock_balances in a fixed order (sequence\
-        \ -> document -> products by id) to avoid deadlocks."
+      description: "Mirror entry; allocations made from the note are released and a refund voucher is reversed with it.\n\n**Permission:** `sales.edit`  \n**Database:**\
+        \ lock: credit_notes, number_sequences, sales_invoices; insert: audit_logs, bill_allocations, idempotency_keys, journal_entries, journal_lines; update: bill_allocations,\
+        \ credit_notes, journal_entries, number_sequences, sales_invoices  \n**Rules:** BR-003, BR-004, BR-009, BR-020  \n**Transaction:** One DB transaction; SELECT\
+        \ ... FOR UPDATE on the document row, number_sequences, stock_balances in a fixed order (sequence -> document -> products by id) to avoid deadlocks."
       x-permission: sales.edit
       x-business-rules:
       - BR-003
@@ -19497,6 +19540,7 @@ paths:
       - company_required
       - idempotency_in_progress
       - idempotency_key_reused
+      - invalid_transition
       - malformed_json
       - not_a_member
       - not_found
@@ -19562,7 +19606,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '409':
-          description: 'Conflict (version mismatch, state not allowed, duplicate): `already_posted`, `already_reversed`, `idempotency_in_progress`, `use_document_cancel`'
+          description: 'Conflict (version mismatch, state not allowed, duplicate): `already_posted`, `already_reversed`, `idempotency_in_progress`, `invalid_transition`,
+            `use_document_cancel`'
           content:
             application/problem+json:
               schema:
@@ -21486,8 +21531,9 @@ paths:
       summary: Create a purchase order
       tags:
       - Purchases
-      description: "**Permission:** `purchases.create`  \n**Database:** insert: audit_logs, idempotency_keys, purchase_order_lines, purchase_orders; read: number_sequences\
-        \  \n**Rules:** BR-056, BR-006"
+      description: "Lines as PurchaseLineInput (purchase_order_line_id is ignored). The currency is the supplier's unless given; a foreign PO needs exchange_rate\
+        \ (planning rate).\n\n**Permission:** `purchases.create`  \n**Database:** insert: audit_logs, idempotency_keys, purchase_order_lines, purchase_orders; read:\
+        \ number_sequences  \n**Rules:** BR-056, BR-006"
       x-permission: purchases.create
       x-business-rules:
       - BR-056
@@ -21514,6 +21560,7 @@ paths:
       - duplicate
       - idempotency_in_progress
       - idempotency_key_reused
+      - inactive_reference
       - malformed_json
       - not_a_member
       - permission_denied
@@ -21573,7 +21620,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '422':
-          description: 'Validation or business-rule failure: `idempotency_key_reused`, `validation_failed`'
+          description: 'Validation or business-rule failure: `idempotency_key_reused`, `inactive_reference`, `validation_failed`'
           content:
             application/problem+json:
               schema:
@@ -21814,8 +21861,8 @@ paths:
       summary: Replace a draft or sent order
       tags:
       - Purchases
-      description: "**Permission:** `purchases.edit`  \n**Database:** insert: audit_logs, purchase_order_lines; update: purchase_orders; delete: purchase_order_lines\
-        \  \n**Rules:** —"
+      description: "Only while draft or sent (nothing received yet).\n\n**Permission:** `purchases.edit`  \n**Database:** insert: audit_logs, purchase_order_lines;\
+        \ update: purchase_orders; delete: purchase_order_lines  \n**Rules:** —"
       x-permission: purchases.edit
       x-business-rules: []
       x-requirements:
@@ -21835,6 +21882,8 @@ paths:
       - company_maintenance
       - company_required
       - if_match_required
+      - inactive_reference
+      - invalid_transition
       - malformed_json
       - not_a_member
       - not_found
@@ -21903,13 +21952,13 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '409':
-          description: 'Conflict (version mismatch, state not allowed, duplicate): `version_conflict`'
+          description: 'Conflict (version mismatch, state not allowed, duplicate): `invalid_transition`, `version_conflict`'
           content:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/Error'
         '422':
-          description: 'Validation or business-rule failure: `validation_failed`'
+          description: 'Validation or business-rule failure: `inactive_reference`, `validation_failed`'
           content:
             application/problem+json:
               schema:
@@ -22039,7 +22088,8 @@ paths:
       summary: Mark sent and e-mail it
       tags:
       - Purchases
-      description: "**Permission:** `purchases.edit`  \n**Database:** lock: purchase_orders; insert: audit_logs; update: purchase_orders  \n**Rules:** —"
+      description: "A draft becomes sent; a sent order can be sent again. Refused (409) once goods arrived, closed or cancelled.\n\n**Permission:** `purchases.edit`\
+        \  \n**Database:** lock: purchase_orders; insert: audit_logs; update: purchase_orders  \n**Rules:** —"
       x-permission: purchases.edit
       x-business-rules: []
       x-requirements:
@@ -22056,6 +22106,7 @@ paths:
       x-error-codes:
       - company_maintenance
       - company_required
+      - invalid_transition
       - malformed_json
       - not_a_member
       - not_found
@@ -22116,6 +22167,12 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/Error'
+        '409':
+          description: 'Conflict (version mismatch, state not allowed, duplicate): `invalid_transition`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
         '422':
           description: 'Validation or business-rule failure: `validation_failed`'
           content:
@@ -22145,8 +22202,11 @@ paths:
       summary: Create a draft bill from remaining quantities
       tags:
       - Purchases
-      description: "**Permission:** `purchases.create`  \n**Database:** lock: number_sequences, purchase_orders; insert: audit_logs, idempotency_keys, purchase_bill_lines,\
-        \ purchase_bills; update: number_sequences, purchase_orders; read: purchase_order_lines  \n**Rules:** BR-056"
+      description: "A draft bill dated today for each line's remaining quantity (ordered − received), linked by purchase_order_line_id; supplier_bill_no starts as\
+        \ the PO number (change it to the supplier's before posting). Posting the bill adds to received_quantity and moves the order to partly_received / received;\
+        \ cancelling the bill takes it back. 409 when nothing remains or the order is closed or cancelled.\n\n**Permission:** `purchases.create`  \n**Database:**\
+        \ lock: number_sequences, purchase_orders; insert: audit_logs, idempotency_keys, purchase_bill_lines, purchase_bills; update: number_sequences, purchase_orders;\
+        \ read: purchase_order_lines  \n**Rules:** BR-056"
       x-permission: purchases.create
       x-business-rules:
       - BR-056
@@ -22177,8 +22237,11 @@ paths:
       - company_required
       - idempotency_in_progress
       - idempotency_key_reused
+      - inactive_reference
+      - invalid_transition
       - not_a_member
       - not_found
+      - period_locked
       - permission_denied
       - server_error
       - token_expired
@@ -22236,13 +22299,13 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '409':
-          description: 'Conflict (version mismatch, state not allowed, duplicate): `idempotency_in_progress`'
+          description: 'Conflict (version mismatch, state not allowed, duplicate): `idempotency_in_progress`, `invalid_transition`'
           content:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/Error'
         '422':
-          description: 'Validation or business-rule failure: `idempotency_key_reused`'
+          description: 'Validation or business-rule failure: `idempotency_key_reused`, `inactive_reference`, `period_locked`'
           content:
             application/problem+json:
               schema:
@@ -22270,7 +22333,9 @@ paths:
       summary: Close or cancel an order
       tags:
       - Purchases
-      description: "**Permission:** `purchases.edit`  \n**Database:** lock: purchase_orders; insert: audit_logs; update: purchase_orders  \n**Rules:** —"
+      description: "closed: stop expecting the rest (from sent, partly_received or received). cancelled: only before anything is received (draft or sent). accepted/declined/expired\
+        \ are quotation statuses (422).\n\n**Permission:** `purchases.edit`  \n**Database:** lock: purchase_orders; insert: audit_logs; update: purchase_orders  \n\
+        **Rules:** —"
       x-permission: purchases.edit
       x-business-rules: []
       x-requirements:
@@ -22288,6 +22353,7 @@ paths:
       x-error-codes:
       - company_maintenance
       - company_required
+      - invalid_transition
       - malformed_json
       - not_a_member
       - not_found
@@ -22344,6 +22410,12 @@ paths:
                 $ref: '#/components/schemas/Error'
         '404':
           description: 'Not found (also for other companies'' records): `not_found`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: 'Conflict (version mismatch, state not allowed, duplicate): `invalid_transition`'
           content:
             application/problem+json:
               schema:
@@ -22611,8 +22683,10 @@ paths:
       summary: Create a draft purchase return
       tags:
       - Purchases
-      description: "**Permission:** `purchases.create`  \n**Database:** insert: audit_logs, idempotency_keys, purchase_return_lines, purchase_returns; read: number_sequences,\
-        \ purchase_bill_lines  \n**Rules:** BR-022, BR-021"
+      description: "Lines are the bill's lines (source_line_id) with the quantity going back, at most what is still returnable (BR-022), and a reason (leaking, broken,\
+        \ short_supply, stale_stock, torn_packs, quality_claim). Valued at the cost the goods came in at (BDT), plus the recoverable tax on them. stock_action send_back\
+        \ (stock out) or already_disposed (no stock moves).\n\n**Permission:** `purchases.create`  \n**Database:** insert: audit_logs, idempotency_keys, purchase_return_lines,\
+        \ purchase_returns; read: number_sequences, purchase_bill_lines  \n**Rules:** BR-022, BR-021"
       x-permission: purchases.create
       x-business-rules:
       - BR-022
@@ -22642,6 +22716,7 @@ paths:
       - foreign_document
       - idempotency_in_progress
       - idempotency_key_reused
+      - inactive_reference
       - malformed_json
       - not_a_member
       - permission_denied
@@ -22702,7 +22777,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '422':
-          description: 'Validation or business-rule failure: `foreign_document`, `idempotency_key_reused`, `return_qty_exceeds`, `validation_failed`'
+          description: 'Validation or business-rule failure: `foreign_document`, `idempotency_key_reused`, `inactive_reference`, `return_qty_exceeds`, `validation_failed`'
           content:
             application/problem+json:
               schema:
@@ -22847,11 +22922,14 @@ paths:
       x-error-codes:
       - company_maintenance
       - company_required
+      - foreign_document
       - if_match_required
       - malformed_json
       - not_a_member
+      - not_draft
       - not_found
       - permission_denied
+      - return_qty_exceeds
       - server_error
       - token_expired
       - token_invalid
@@ -22916,13 +22994,13 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '409':
-          description: 'Conflict (version mismatch, state not allowed, duplicate): `version_conflict`'
+          description: 'Conflict (version mismatch, state not allowed, duplicate): `not_draft`, `version_conflict`'
           content:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/Error'
         '422':
-          description: 'Validation or business-rule failure: `validation_failed`'
+          description: 'Validation or business-rule failure: `foreign_document`, `return_qty_exceeds`, `validation_failed`'
           content:
             application/problem+json:
               schema:
@@ -23106,10 +23184,12 @@ paths:
       - already_posted
       - company_maintenance
       - company_required
+      - foreign_document
       - idempotency_in_progress
       - idempotency_key_reused
       - insufficient_stock
       - not_a_member
+      - not_draft
       - not_found
       - period_locked
       - permission_denied
@@ -23166,14 +23246,14 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '409':
-          description: 'Conflict (version mismatch, state not allowed, duplicate): `already_posted`, `idempotency_in_progress`'
+          description: 'Conflict (version mismatch, state not allowed, duplicate): `already_posted`, `idempotency_in_progress`, `not_draft`'
           content:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/Error'
         '422':
-          description: 'Validation or business-rule failure: `allocation_exceeds_balance`, `idempotency_key_reused`, `insufficient_stock`, `period_locked`, `return_qty_exceeds`,
-            `unbalanced_entry`'
+          description: 'Validation or business-rule failure: `allocation_exceeds_balance`, `foreign_document`, `idempotency_key_reused`, `insufficient_stock`, `period_locked`,
+            `return_qty_exceeds`, `unbalanced_entry`'
           content:
             application/problem+json:
               schema:
@@ -23249,6 +23329,7 @@ paths:
       - company_required
       - idempotency_in_progress
       - idempotency_key_reused
+      - insufficient_stock
       - invalid_transition
       - malformed_json
       - not_a_member
@@ -23322,7 +23403,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '422':
-          description: 'Validation or business-rule failure: `idempotency_key_reused`, `period_locked`, `validation_failed`'
+          description: 'Validation or business-rule failure: `idempotency_key_reused`, `insufficient_stock`, `period_locked`, `validation_failed`'
           content:
             application/problem+json:
               schema:
@@ -23461,9 +23542,12 @@ paths:
       x-error-codes:
       - company_maintenance
       - company_required
+      - created_from_return
+      - foreign_document
       - if_match_required
       - malformed_json
       - not_a_member
+      - not_draft
       - not_found
       - permission_denied
       - server_error
@@ -23530,13 +23614,13 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '409':
-          description: 'Conflict (version mismatch, state not allowed, duplicate): `version_conflict`'
+          description: 'Conflict (version mismatch, state not allowed, duplicate): `created_from_return`, `not_draft`, `version_conflict`'
           content:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/Error'
         '422':
-          description: 'Validation or business-rule failure: `validation_failed`'
+          description: 'Validation or business-rule failure: `foreign_document`, `validation_failed`'
           content:
             application/problem+json:
               schema:
@@ -23664,7 +23748,9 @@ paths:
       summary: Create a debit note without a return (price difference, quality claim)
       tags:
       - Purchases
-      description: "**Permission:** `purchases.create`  \n**Database:** insert: audit_logs, debit_notes, idempotency_keys; read: number_sequences  \n**Rules:** —"
+      description: "Price difference, short supply or quality claim: posts Dr supplier / Cr purchase returns (purchase_returns_non_stock). usage apply needs apply_to_document_id\
+        \ (a posted bill of the supplier). refund leaves the credit with the supplier until the money is received.\n\n**Permission:** `purchases.create`  \n**Database:**\
+        \ insert: audit_logs, debit_notes, idempotency_keys; read: number_sequences  \n**Rules:** —"
       x-permission: purchases.create
       x-business-rules: []
       x-requirements:
@@ -23684,8 +23770,10 @@ paths:
       x-error-codes:
       - company_maintenance
       - company_required
+      - foreign_document
       - idempotency_in_progress
       - idempotency_key_reused
+      - inactive_reference
       - malformed_json
       - not_a_member
       - permission_denied
@@ -23745,7 +23833,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '422':
-          description: 'Validation or business-rule failure: `idempotency_key_reused`, `validation_failed`'
+          description: 'Validation or business-rule failure: `foreign_document`, `idempotency_key_reused`, `inactive_reference`, `validation_failed`'
           content:
             application/problem+json:
               schema:
@@ -23967,9 +24055,11 @@ paths:
       - company_maintenance
       - company_required
       - created_from_return
+      - foreign_document
       - idempotency_in_progress
       - idempotency_key_reused
       - not_a_member
+      - not_draft
       - not_found
       - period_locked
       - permission_denied
@@ -24025,13 +24115,13 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '409':
-          description: 'Conflict (version mismatch, state not allowed, duplicate): `already_posted`, `created_from_return`, `idempotency_in_progress`'
+          description: 'Conflict (version mismatch, state not allowed, duplicate): `already_posted`, `created_from_return`, `idempotency_in_progress`, `not_draft`'
           content:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/Error'
         '422':
-          description: 'Validation or business-rule failure: `allocation_exceeds_balance`, `idempotency_key_reused`, `period_locked`, `unbalanced_entry`'
+          description: 'Validation or business-rule failure: `allocation_exceeds_balance`, `foreign_document`, `idempotency_key_reused`, `period_locked`, `unbalanced_entry`'
           content:
             application/problem+json:
               schema:
@@ -24101,6 +24191,7 @@ paths:
       - created_from_return
       - idempotency_in_progress
       - idempotency_key_reused
+      - invalid_transition
       - malformed_json
       - not_a_member
       - not_found
@@ -24167,7 +24258,7 @@ paths:
                 $ref: '#/components/schemas/Error'
         '409':
           description: 'Conflict (version mismatch, state not allowed, duplicate): `already_posted`, `already_reversed`, `created_from_return`, `idempotency_in_progress`,
-            `use_document_cancel`'
+            `invalid_transition`, `use_document_cancel`'
           content:
             application/problem+json:
               schema:
@@ -36345,6 +36436,7 @@ components:
           type: string
           enum:
           - allocation_exceeds_balance
+          - already_converted
           - already_posted
           - already_reversed
           - approval_required
@@ -38815,6 +38907,11 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/PartyBankAccount'
+        status:
+          type: string
+          enum:
+          - active
+          - prospect
       required:
       - party_type
       - name
@@ -40085,6 +40182,7 @@ components:
           type: string
           enum:
           - allocation_exceeds_balance
+          - already_converted
           - already_posted
           - already_reversed
           - approval_required
@@ -40870,6 +40968,33 @@ components:
         valid_until:
           type: string
           format: date
+        warehouse_id:
+          type:
+          - integer
+          - 'null'
+          format: int64
+          minimum: 1
+        payment_term_id:
+          type:
+          - integer
+          - 'null'
+          format: int64
+          minimum: 1
+        notes:
+          type:
+          - string
+          - 'null'
+          maxLength: 65535
+        internal_note:
+          type:
+          - string
+          - 'null'
+          maxLength: 65535
+        sent_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
         lines:
           type: array
           items:
@@ -40880,6 +41005,10 @@ components:
           - 'null'
           format: int64
           minimum: 1
+        converted_invoice_number:
+          type:
+          - string
+          - 'null'
         subtotal:
           type: string
           pattern: ^-?\d{1,16}(\.\d{1,2})?$
@@ -41292,7 +41421,7 @@ components:
       additionalProperties: false
     PurchaseOrder:
       type: object
-      description: Purchase order.
+      description: Purchase order. Lines carry received_quantity and remaining_quantity; bills lists the bills made from it.
       properties:
         id:
           type: integer
@@ -41319,11 +41448,50 @@ components:
           - string
           - 'null'
           format: date
+        warehouse_id:
+          type: integer
+          format: int64
+          minimum: 1
+        payment_term_id:
+          type:
+          - integer
+          - 'null'
+          format: int64
+          minimum: 1
         currency_code:
           type: string
           pattern: ^[A-Z]{3}$
           example: BDT
+        exchange_rate:
+          type: string
+          pattern: ^\d{1,12}(\.\d{1,6})?$
+          example: '121.500000'
+          description: Decimal as string (rate)
+        source_note:
+          type:
+          - string
+          - 'null'
+        notes:
+          type:
+          - string
+          - 'null'
+          maxLength: 65535
+        internal_note:
+          type:
+          - string
+          - 'null'
+          maxLength: 65535
+        sent_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
         lines:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        bills:
           type: array
           items:
             type: object
@@ -41380,7 +41548,9 @@ components:
       - status
       - party
       - order_date
+      - warehouse_id
       - currency_code
+      - exchange_rate
       - lines
       - subtotal
       - discount_total
@@ -41393,7 +41563,8 @@ components:
       - version
     LowStockOrderRequest:
       type: object
-      description: Rows to order.
+      description: 'Rows to order: each {product_id, warehouse_id, quantity?}; quantity defaults to the reorder quantity (or what brings stock back to the reorder
+        level). Rows are grouped into one draft PO per preferred supplier and warehouse.'
       properties:
         rows:
           type: array
@@ -41508,6 +41679,34 @@ components:
           format: date
         stock_action:
           type: string
+        warehouse_id:
+          type: integer
+          format: int64
+          minimum: 1
+        notes:
+          type:
+          - string
+          - 'null'
+          maxLength: 65535
+        usage:
+          type:
+          - string
+          - 'null'
+        apply_to_document_id:
+          type:
+          - integer
+          - 'null'
+          format: int64
+          minimum: 1
+        posted_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        cancel_reason:
+          type:
+          - string
+          - 'null'
         lines:
           type: array
           items:
@@ -41528,6 +41727,19 @@ components:
           type:
           - string
           - 'null'
+        note_status:
+          type:
+          - string
+          - 'null'
+        created_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        created_by:
+          oneOf:
+          - $ref: '#/components/schemas/UserRef'
+          - type: 'null'
         version:
           type: integer
       required:
@@ -41539,6 +41751,7 @@ components:
       - source_number
       - return_date
       - stock_action
+      - warehouse_id
       - lines
       - total
       - version
@@ -41661,6 +41874,50 @@ components:
           description: Decimal as string (money)
         usage:
           type: string
+        source_document_id:
+          type:
+          - integer
+          - 'null'
+          format: int64
+          minimum: 1
+        source_number:
+          type:
+          - string
+          - 'null'
+        return_id:
+          type:
+          - integer
+          - 'null'
+          format: int64
+          minimum: 1
+        return_number:
+          type:
+          - string
+          - 'null'
+        apply_to_document_id:
+          type:
+          - integer
+          - 'null'
+          format: int64
+          minimum: 1
+        refund:
+          type:
+          - object
+          - 'null'
+          additionalProperties: true
+        allocations:
+          type: array
+          items:
+            $ref: '#/components/schemas/Allocation'
+        posted_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        cancel_reason:
+          type:
+          - string
+          - 'null'
         effects:
           type: array
           items:
@@ -41670,6 +41927,19 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/PostingLine'
+        amount_in_words:
+          type:
+          - string
+          - 'null'
+        created_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        created_by:
+          oneOf:
+          - $ref: '#/components/schemas/UserRef'
+          - type: 'null'
         version:
           type: integer
       required:
