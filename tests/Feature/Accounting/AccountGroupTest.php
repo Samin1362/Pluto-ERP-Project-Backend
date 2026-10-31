@@ -77,7 +77,7 @@ class AccountGroupTest extends TestCase
     {
         $this->postEntries();
         $r = $this->req('GET', '/api/v1/account-groups')->assertOk();
-        $r->assertJsonPath('data.as_of', CarbonImmutable::now()->toDateString())->assertJsonPath('data.total_debit', '50000.00')
+        $r->assertJsonPath('data.as_of', CarbonImmutable::now('Asia/Dhaka')->toDateString())->assertJsonPath('data.total_debit', '50000.00')
             ->assertJsonPath('data.total_credit', '50000.00')->assertJsonPath('data.balanced', true);
         $this->assertSame(['1', '2', '3', '4', '5', '6'], array_column($r->json('data.nodes'), 'code'));
         $n = $this->flatten($r->json('data.nodes'));

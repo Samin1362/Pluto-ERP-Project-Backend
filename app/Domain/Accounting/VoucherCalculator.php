@@ -28,8 +28,15 @@ final class VoucherCalculator
 {
     public const TYPES = ['journal', 'payment', 'receipt', 'contra'];
 
+    /** Income and expense vouchers (I3/I6, POST /ie-entries; P13.1-BE-03) are calculated as a receipt / payment. */
+    public const AS_CASH = ['expense' => 'payment', 'income' => 'receipt'];
+
+    /** Every voucher type a user enters (and may post, reverse or delete as a draft). */
+    public const ALL_TYPES = [...self::TYPES, 'expense', 'income'];
+
     /** Voucher types that need approval above the role's limit (BR-007), and the limit column and approve permission. */
-    public const APPROVAL = ['journal' => ['journal_approval_limit', 'accounting.approve'], 'payment' => ['payment_approval_limit', 'banking.approve']];
+    public const APPROVAL = ['journal' => ['journal_approval_limit', 'accounting.approve'], 'payment' => ['payment_approval_limit', 'banking.approve'],
+        'expense' => ['payment_approval_limit', 'banking.approve']];
 
     public function __construct(private readonly AccountMapper $mapper) {}
 
@@ -40,7 +47,8 @@ final class VoucherCalculator
      */
     public function calculate(array $in, ?CompanyUser $membership): array
     {
-        $type = $in['entry_type'];
+        $approvalType = $in['entry_type'];
+        $type = self::AS_CASH[$approvalType] ?? $approvalType;
         $ledgers = Ledger::whereIn('id', collect($in['lines'] ?? [])->pluck('ledger_id')->filter()->all())->get()->keyBy('id');
         $errors = [];
         foreach ($in['lines'] ?? [] as $i => $l) {
@@ -68,7 +76,7 @@ final class VoucherCalculator
         $cr = Money::sum(array_column($lines, 'credit'));
         $amount = $dr;
         $warnings = [...$this->funds($lines), ...$this->backdated($in['date'])];
-        [$needs, $limit] = $this->approval($type, $amount, $membership);
+        [$needs, $limit] = $this->approval($approvalType, $amount, $membership);
         if ($needs) {
             $warnings[] = ['code' => 'APPROVAL_REQUIRED', 'message' => "Above your approval limit of {$limit}: it will wait for approval before it posts"];
         }

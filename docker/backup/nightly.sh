@@ -1,7 +1,7 @@
 #!/bin/sh
 # Nightly MySQL backup inside the live stack (backlog P0.4-BE-04). Runs in the `backup` service, so the host
 # needs no cron (macOS blocks cron from ~/Desktop; Windows has none). Same file names and 14-day retention as
-# scripts/backup.sh. BACKUP_AT=HHMM in TZ (default 0200 Asia/Dhaka); BACKUP_NOW=1 runs once at start.
+# scripts/backup.sh, including the attachments (the app's storage volume, mounted read-only at /storage). BACKUP_AT=HHMM in TZ (default 0200 Asia/Dhaka); BACKUP_NOW=1 runs once at start.
 set -u
 DB="${DB_DATABASE:-pluto}"
 AT="${BACKUP_AT:-0200}"
@@ -14,6 +14,14 @@ backup() {
     mv "$file.part" "$file"
     find /backups -name "${DB}-*.sql.gz" -mtime +14 -delete
     echo "$(date '+%F %T %Z') backup written: $file ($(du -h "$file" | cut -f1))"
+    files="/backups/${DB}-files-$(date +%Y%m%d-%H%M%S).tar.gz"
+    if [ -d /storage/app/private ] && tar -czf "$files.part" -C /storage/app private && mv "$files.part" "$files"; then
+      find /backups -name "${DB}-files-*.tar.gz" -mtime +14 -delete
+      echo "$(date '+%F %T %Z') attachments written: $files"
+    else
+      rm -f "$files.part"
+      echo "$(date '+%F %T %Z') ATTACHMENT BACKUP SKIPPED OR FAILED" >&2
+    fi
   else
     rm -f "$file.part"
     echo "$(date '+%F %T %Z') BACKUP FAILED" >&2

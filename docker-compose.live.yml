@@ -43,6 +43,7 @@ services:
     volumes:
       - ./docker/backup/nightly.sh:/nightly.sh:ro
       - ./backups:/backups
+      - live-storage:/storage:ro   # attachments under app/private (P13.1-BE-01)
     depends_on:
       mysql:
         condition: service_healthy

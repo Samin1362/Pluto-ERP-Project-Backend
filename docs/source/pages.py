@@ -426,7 +426,7 @@ page("I10", "Recurring entries (NEW)", "IncExp", "List", "banking.view", "Recurr
      table={"cols": ["Kind", "Description", "Frequency", "Next run", "Done / ends", "Status"], "filters": ["kind", "active"], "search": False},
      rules=["BR-048"], deps=["I3", "I6"], fr=["FR-066"], note="GAP-25")
 for code, name, kind in [("I8", "Income report", "income"), ("I9", "Expense report", "expense")]:
-    page(code, name, "IncExp", "Report", "reports.view", f"{kind.title()} by category and month (or quarter).", "Date range, branch, by month/quarter; tiles; statement table.",
+    page(code, name, "IncExp", "Report", "reports.financial", f"{kind.title()} by category and month (or quarter). Profit-and-loss figures: reports.financial (DEC-13).", "Date range, branch, by month/quarter; tiles; statement table.",
          actions=["Print", "Export"], table={"cols": ["Category", "Ledger", "Jul..Oct (৳)", "Total (৳)", "Share"], "filters": ["date", "branch"], "search": False}, deps=["J1"], fr=["FR-068"], artboard=f"{'Inc' if kind == 'income' else 'Exp'}-Report.dc.html")
 
 # ======================================================================= H · Accounting

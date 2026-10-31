@@ -30,7 +30,7 @@ use Illuminate\Support\Facades\DB;
  */
 final class VoucherService
 {
-    public const NUMBER_SERIES = ['journal' => 'journal', 'payment' => 'payment', 'receipt' => 'receipt', 'contra' => 'contra'];
+    public const NUMBER_SERIES = ['journal' => 'journal', 'payment' => 'payment', 'receipt' => 'receipt', 'contra' => 'contra', 'expense' => 'expense', 'income' => 'income'];
 
     public function __construct(
         private readonly VoucherCalculator $calculator,
@@ -43,7 +43,7 @@ final class VoucherService
     ) {}
 
     /** @return array{0: JournalEntry, 1: bool} the voucher, and whether it went for approval instead of posting */
-    public function create(array $in, CompanyUser $membership): array
+    public function create(array $in, ?CompanyUser $membership): array
     {
         return DB::transaction(function () use ($in, $membership) {
             $calc = $this->calculator->calculate($in, $membership);
@@ -195,9 +195,10 @@ final class VoucherService
             $p = $in['payment'];
             $party = isset($p['party_id']) ? Party::find($p['party_id']) : $this->partyOfLines($calc['lines']);
             $partyAmount = $party ? Money::sum(array_map(fn ($l) => (int) $l['ledger_id'] === (int) $party->ledger_id ? $l['debit']->plus($l['credit']) : Money::zero(), $calc['lines'])) : Money::zero();
-            $gross = $in['entry_type'] === 'receipt' ? $calc['total_credit'] : $calc['total_debit']->minus($calc['charge']);
+            $cashType = VoucherCalculator::AS_CASH[$in['entry_type']] ?? $in['entry_type'];
+            $gross = $cashType === 'receipt' ? $calc['total_credit'] : $calc['total_debit']->minus($calc['charge']);
             DB::table('payment_details')->insert(['company_id' => $entry->company_id, 'journal_entry_id' => $entry->id,
-                'direction' => ['payment' => 'out', 'receipt' => 'in', 'contra' => 'transfer'][$in['entry_type']], 'party_id' => $party?->id,
+                'direction' => ['payment' => 'out', 'receipt' => 'in', 'contra' => 'transfer'][$cashType], 'party_id' => $party?->id,
                 'payee_text' => $p['payee_text'] ?? null, 'money_account_id' => $calc['account']->id, 'counter_money_account_id' => $calc['counter']?->id,
                 'method' => $p['method'], 'cheque_number' => $p['cheque_number'] ?? null, 'cheque_date' => $p['cheque_date'] ?? null, 'drawn_on' => $p['drawn_on'] ?? null,
                 'transaction_reference' => $p['transaction_reference'] ?? null, 'amount' => (string) $gross, 'bank_charge' => (string) $calc['charge'],
@@ -207,7 +208,7 @@ final class VoucherService
     }
 
     /** Runs the requested action on a freshly saved draft. */
-    private function act(JournalEntry $entry, array $in, array $calc, CompanyUser $membership): array
+    private function act(JournalEntry $entry, array $in, array $calc, ?CompanyUser $membership): array
     {
         return match ($in['action']) {
             'draft' => [$entry->refresh(), false],
@@ -304,7 +305,7 @@ final class VoucherService
     private function lockVoucher(int $id): JournalEntry
     {
         $entry = JournalEntry::whereKey($id)->lockForUpdate()->firstOrFail();
-        if (! in_array($entry->entry_type, VoucherCalculator::TYPES, true) || $entry->source_type !== null) {
+        if (! in_array($entry->entry_type, VoucherCalculator::ALL_TYPES, true) || $entry->source_type !== null) {
             throw new ApiProblem('not_draft', "{$entry->voucher_number} was made by a document; change it through that document.");
         }
 

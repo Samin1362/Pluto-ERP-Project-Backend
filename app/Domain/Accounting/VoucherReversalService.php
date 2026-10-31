@@ -32,7 +32,7 @@ final class VoucherReversalService
     {
         return DB::transaction(function () use ($entry, $date, $reason) {
             $entry = JournalEntry::with('lines')->whereKey($entry->id)->lockForUpdate()->firstOrFail();
-            if ($entry->source_type !== null || ! in_array($entry->entry_type, VoucherCalculator::TYPES, true)) {
+            if ($entry->source_type !== null || ! in_array($entry->entry_type, VoucherCalculator::ALL_TYPES, true)) {
                 throw new ApiProblem('use_document_cancel', "{$entry->voucher_number} was made by a document; cancel that document instead.");
             }
             if ($entry->status === 'reversed' || JournalEntry::where('reverses_entry_id', $entry->id)->exists()) {

@@ -110,7 +110,7 @@ s("ApprovalRequest", "Approval request.", id="id!", document_type="str!", docume
   status="enum:pending|approved|rejected|cancelled!", requested_by="ref:UserRef!", requested_at="datetime!", decided_by="ref:UserRef?", decided_at="datetime?", comment="str?", facts="obj?")
 s("ApprovalDecision", "Approve or reject. Comment required to reject.", comment="str:500?")
 s("Attachment", "Uploaded file.", id="id!", original_name="str!", mime_type="str!", size_bytes="int!", uploaded_by="ref:UserRef!", created_at="datetime!")
-s("AttachmentUpload", "multipart: file, attachable_type, attachable_id.", file="str!", attachable_type="enum:sales_invoice|purchase_bill|voucher|lc_document|letter_of_credit|stock_adjustment|party!", attachable_id="id!")
+s("AttachmentUpload", "multipart: file, attachable_type, attachable_id. attachable_id may be left out only for a voucher still being written (I3/I6): the file is pending until POST /ie-entries links it through attachment_ids; unlinked files are removed after a day.", file="str!", attachable_type="enum:sales_invoice|purchase_bill|voucher|lc_document|letter_of_credit|stock_adjustment|party!", attachable_id="id?")
 s("AuditLog", "Audit entry.", id="id!", action="str!", user="ref:UserRef?", old_values="obj?", new_values="obj?", ip_address="str?", created_at="datetime!")
 s("DashboardSummary", "A1 payload.", period="obj!", kpis="[ref:Kpi]!", revenue_vs_expenses="[obj]!", cash_position="[obj]!", money_owed="obj!", upcoming_payments="[obj]!", recent_transactions="[obj]!", inventory_alerts="[obj]!", banners="[obj]")
 s("Kpi", "Stat tile.", key="str!", label="str!", value="money!", delta_pct="pct?", trend="[money]", foot="str?")
@@ -270,7 +270,7 @@ s("IeEntryInput", "Quick income or expense.", kind="enum:income|expense!", amoun
 s("RecurrenceInput", "Repeat settings.", frequency="enum:weekly|monthly|quarterly|yearly!", next_run_on="date!", ends_type="enum:never|after_count|on_date!", ends_after_count="int?", ends_on="date?")
 s("IeEntry", "Line on a category ledger.", journal_line_id="id!", voucher_id="id!", voucher_number="str!", date="date!", description="str!", category="str!", account="str!", method="str?",
   amount="money!", has_receipt="bool!")
-s("RecurringTemplate", "Recurring entry.", id="id!", kind="str!", frequency="str!", next_run_on="date!", ends_type="str!", occurrences_done="int!", is_active="bool!", payload="obj!", version="int!")
+s("RecurringTemplate", "Recurring entry.", id="id!", kind="str!", frequency="str!", next_run_on="date!", ends_type="str!", ends_after_count="int?", ends_on="date?", occurrences_done="int!", is_active="bool!", payload="obj!", description="str!", last_entry_id="id?", version="int!")
 s("RecurringTemplateInput", "Edit a recurring entry.", frequency="enum:weekly|monthly|quarterly|yearly", next_run_on="date", ends_type="enum:never|after_count|on_date", ends_after_count="int?", ends_on="date?", is_active="bool")
 
 # ---------------------------------------------------------------- accounting

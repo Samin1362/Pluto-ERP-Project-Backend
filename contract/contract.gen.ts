@@ -239,11 +239,11 @@ export interface Attachment {
   created_at: string
 }
 
-/** multipart: file, attachable_type, attachable_id. */
+/** multipart: file, attachable_type, attachable_id. attachable_id may be left out only for a voucher still being written (I3/I6): the file is pending until POST /ie-entries links it through attachment_ids; unlinked files are removed after a day. */
 export interface AttachmentUpload {
   file: string
   attachable_type: 'sales_invoice' | 'purchase_bill' | 'voucher' | 'lc_document' | 'letter_of_credit' | 'stock_adjustment' | 'party'
-  attachable_id: number
+  attachable_id?: number | null
 }
 
 /** Audit entry. */
@@ -1797,9 +1797,13 @@ export interface RecurringTemplate {
   frequency: string
   next_run_on: string
   ends_type: string
+  ends_after_count?: number | null
+  ends_on?: string | null
   occurrences_done: number
   is_active: boolean
   payload: Record<string, unknown>
+  description: string
+  last_entry_id?: number | null
   version: number
 }
 

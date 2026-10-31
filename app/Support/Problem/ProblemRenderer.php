@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Exceptions\ThrottleRequestsException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Exceptions\InvalidSignatureException;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
@@ -52,6 +53,7 @@ final class ProblemRenderer
             $e instanceof ValidationException => self::validation($e),
             $e instanceof AuthenticationException => ['unauthenticated', null, [], [], [], 401],
             $e instanceof AuthorizationException => ['permission_denied', null, [], [], [], 403],
+            $e instanceof InvalidSignatureException => ['permission_denied', 'This download link has expired or is not valid; open the file again.', [], [], [], 403],
             $e instanceof ModelNotFoundException, $e instanceof NotFoundHttpException => ['not_found', null, [], [], [], 404],
             $e instanceof ThrottleRequestsException => ['rate_limited', null, [], [], self::retryAfter($e), 429],
             $e instanceof MethodNotAllowedHttpException => ['not_found', 'This method is not supported on this resource', [], [], [], 404],
