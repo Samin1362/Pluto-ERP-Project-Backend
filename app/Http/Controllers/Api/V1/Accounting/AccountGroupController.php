@@ -10,6 +10,7 @@ use App\Http\Requests\Accounting\AccountTreeRequest;
 use App\Models\AccountGroup;
 use App\Queries\AccountTreeQuery;
 use App\Support\CurrentCompany;
+use Carbon\CarbonImmutable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -24,7 +25,7 @@ class AccountGroupController extends Controller
     {
         $f = $request->validated();
 
-        return response()->json(['data' => $this->query->tree($this->current->id(), $f['as_of'] ?? now()->toDateString(),
+        return response()->json(['data' => $this->query->tree($this->current->id(), $f['as_of'] ?? CarbonImmutable::now('Asia/Dhaka')->toDateString(),
             ($f['with_ledgers'] ?? 'true') === 'true', ($f['zero'] ?? 'true') === 'true')]);
     }
 
@@ -50,7 +51,7 @@ class AccountGroupController extends Controller
 
     private function respond(int $id, int $status = 200): JsonResponse
     {
-        $group = $this->query->group($this->current->id(), $id, now()->toDateString());
+        $group = $this->query->group($this->current->id(), $id, CarbonImmutable::now('Asia/Dhaka')->toDateString());
 
         return response()->json(['data' => $group], $status)->setEtag((string) $group['version'], true);
     }
