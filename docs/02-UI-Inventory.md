@@ -73,7 +73,7 @@
 | [E2](#page-e2) | Sales invoice list | Sales | List | `sales.view` | 5 | Trade.dc.html (E2) |
 | [E3](#page-e3) | Create sales invoice | Sales | Form | `sales.create` | 10 | Sal-Create.dc.html |
 | [E4](#page-e4) | Invoice preview | Sales | Print | `sales.view` | 3 | Sal-Preview.dc.html |
-| [E5](#page-e5) | Invoice details | Sales | Detail | `sales.view` | 14 | Sal-Details.dc.html |
+| [E5](#page-e5) | Invoice details | Sales | Detail | `sales.view` | 15 | Sal-Details.dc.html |
 | [E6](#page-e6) | Edit draft invoice | Sales | Form | `sales.edit` | 5 | Sal-Edit.dc.html |
 | [E7](#page-e7) | Customer payment | Sales | Form | `sales.create` | 6 | Sal-Payment.dc.html |
 | [E8](#page-e8) | Sales return | Sales | Form | `sales.create` | 5 | Sal-Return.dc.html |
@@ -90,7 +90,7 @@
 | [F1](#page-f1) | Purchase overview | Purchases | Overview | `purchases.view` | 3 | Pur-Overview.dc.html |
 | [F2](#page-f2) | Purchase bill list | Purchases | List | `purchases.view` | 3 | Pur-List.dc.html |
 | [F3](#page-f3) | Create purchase bill | Purchases | Form | `purchases.create` | 12 | Pur-Create.dc.html |
-| [F4](#page-f4) | Purchase bill details | Purchases | Detail | `purchases.view` | 9 | Pur-Details.dc.html |
+| [F4](#page-f4) | Purchase bill details | Purchases | Detail | `purchases.view` | 10 | Pur-Details.dc.html |
 | [F5](#page-f5) | Supplier payment | Purchases | Form | `purchases.create` | 6 | Pur-Payment.dc.html |
 | [F6](#page-f6) | Purchase return | Purchases | Form | `purchases.create` | 5 | Pur-Return.dc.html |
 | [F7](#page-f7) | Debit note | Purchases | Form | `purchases.create` | 5 | Pur-Debit.dc.html |
@@ -102,7 +102,7 @@
 | [F13](#page-f13) | Returns and debit notes (NEW) | Purchases | List | `purchases.view` | 9 | — |
 | [Pur-DlgPay](#page-pur-dlgpay) | Dialog · Confirm supplier payment | Purchases | Dialog | `purchases.create` | 1 | Pur-DlgPay.dc.html |
 | [G1](#page-g1) | Cash and bank overview | Banking | Overview | `banking.view` | 3 | Banking.dc.html (G1) |
-| [G2](#page-g2) | Cash account details | Banking | Detail | `banking.view` | 4 | Bnk-Cash.dc.html |
+| [G2](#page-g2) | Cash account details | Banking | Detail | `banking.view` | 5 | Bnk-Cash.dc.html |
 | [G3](#page-g3) | Bank account list | Banking | List | `banking.view` | 2 | Bnk-Banks.dc.html |
 | [G4](#page-g4) | Add bank account | Banking | Form | `banking.create` | 1 | Bnk-AddBank.dc.html |
 | [G5](#page-g5) | Bank account details | Banking | Detail | `banking.view` | 5 | Bnk-Bank.dc.html |
@@ -122,8 +122,8 @@
 | [I6](#page-i6) | Add expense | IncExp | Form | `banking.create` | 6 | Exp-Add.dc.html, Exp-AddErr.dc.html |
 | [I7](#page-i7) | Expense categories and budgets | IncExp | List | `banking.view` | 4 | Exp-Cats.dc.html |
 | [I10](#page-i10) | Recurring entries (NEW) | IncExp | List | `banking.view` | 2 | — |
-| [I8](#page-i8) | Income report | IncExp | Report | `reports.view` | 1 | Inc-Report.dc.html |
-| [I9](#page-i9) | Expense report | IncExp | Report | `reports.view` | 1 | Exp-Report.dc.html |
+| [I8](#page-i8) | Income report | IncExp | Report | `reports.financial` | 1 | Inc-Report.dc.html |
+| [I9](#page-i9) | Expense report | IncExp | Report | `reports.financial` | 1 | Exp-Report.dc.html |
 | [H1](#page-h1) | Accounting overview | Accounting | Overview | `accounting.view` | 3 | Accounting.dc.html (H1) |
 | [H2](#page-h2) | Chart of accounts | Accounting | Tree | `accounting.view` | 4 | Acc-COA.dc.html |
 | [H3](#page-h3) | Account group details | Accounting | Detail | `accounting.view` | 4 | Acc-Group.dc.html |
@@ -136,7 +136,7 @@
 | [H10](#page-h10) | Payment voucher | Accounting | Voucher | `accounting.create` | 7 | Acc-Payment.dc.html |
 | [H11](#page-h11) | Receipt voucher | Accounting | Voucher | `accounting.create` | 6 | Acc-Receipt.dc.html |
 | [H12](#page-h12) | Contra voucher | Accounting | Voucher | `accounting.create` | 6 | Acc-Contra.dc.html |
-| [H13](#page-h13) | Voucher details | Accounting | Detail | `accounting.view` | 9 | Acc-Voucher.dc.html |
+| [H13](#page-h13) | Voucher details | Accounting | Detail | `accounting.view` | 10 | Acc-Voucher.dc.html |
 | [Acc-DlgReverse](#page-acc-dlgreverse) | Dialog · Reverse voucher | Accounting | Dialog | `accounting.create` | 1 | Acc-DlgReverse.dc.html |
 | [H14](#page-h14) | Printable voucher | Accounting | Print | `accounting.view` | 2 | Acc-Print.dc.html |
 | [H15](#page-h15) | Trial balance | Reports | Statement | `reports.financial` | 1 | Rpt-TB.dc.html |
@@ -145,7 +145,7 @@
 | [H18](#page-h18) | Cash flow statement | Reports | Statement | `reports.financial` | 1 | Rpt-CF.dc.html |
 | [H19](#page-h19) | General ledger | Reports | Statement | `reports.financial` | 1 | Rpt-GL.dc.html |
 | [K16](#page-k16) | Accounting defaults (NEW: GAP-01) | Accounting | Settings | `settings.edit` | 4 | — |
-| [J1](#page-j1) | Reports centre | Reports | Hub | `reports.view` | 7 | Statements.dc.html (J1) |
+| [J1](#page-j1) | Reports centre | Reports | Hub | `reports.view` | 5 | Statements.dc.html (J1) |
 | [J6](#page-j6) | Receivables aging | Reports | Report | `reports.financial` | 2 | Rpt-AR.dc.html |
 | [J7](#page-j7) | Payables aging | Reports | Report | `reports.financial` | 2 | Rpt-AP.dc.html |
 | [K1](#page-k1) | Company profile | Settings | Detail | `settings.view` | 4 | Settings.dc.html (K1) |
@@ -1234,7 +1234,7 @@ Each entry follows the 13 points of the brief: (1) purpose · (2) components and
 6. **Table:** columns #, Item, Code, Qty, Price (৳), Disc, Amount (৳); server-side pagination and sorting.
 7. **Validation and rules:** BR-024: Cancelling a posted invoice or bill requires a reason, posts a cancellation entry that reverses the original journal and stock, and turns its allocated payments into advances.
 8. **Roles allowed:** `sales.view` → Owner, Finance manager, Accountant, Sales staff, Viewer. Actions additionally check their own permission (see endpoints).
-9. **APIs:** [`POST /attachments`](05-API-Specification.md#postattachments), [`GET /attachments/{id}/url`](05-API-Specification.md#getattachmentsidurl), [`GET /audit-logs`](05-API-Specification.md#getauditlogs), [`GET /parties/{id}/open-documents`](05-API-Specification.md#getpartiesidopendocuments), [`POST /sales-invoices/calculate`](05-API-Specification.md#postsalesinvoicescalculate), [`GET /sales-invoices/{id}`](05-API-Specification.md#getsalesinvoicesid), [`PATCH /sales-invoices/{id}/delivery`](05-API-Specification.md#patchsalesinvoicesiddelivery), [`POST /sales-invoices/{id}/cancel`](05-API-Specification.md#postsalesinvoicesidcancel), [`GET /sales-invoices/{id}/pdf`](05-API-Specification.md#getsalesinvoicesidpdf), [`POST /sales-invoices/{id}/send`](05-API-Specification.md#postsalesinvoicesidsend), [`POST /customer-receipts`](05-API-Specification.md#postcustomerreceipts), [`POST /allocations`](05-API-Specification.md#postallocations), [`DELETE /allocations/{id}`](05-API-Specification.md#deleteallocationsid), [`POST /credit-notes`](05-API-Specification.md#postcreditnotes)
+9. **APIs:** [`POST /attachments`](05-API-Specification.md#postattachments), [`GET /attachments`](05-API-Specification.md#getattachments), [`GET /attachments/{id}/url`](05-API-Specification.md#getattachmentsidurl), [`GET /audit-logs`](05-API-Specification.md#getauditlogs), [`GET /parties/{id}/open-documents`](05-API-Specification.md#getpartiesidopendocuments), [`POST /sales-invoices/calculate`](05-API-Specification.md#postsalesinvoicescalculate), [`GET /sales-invoices/{id}`](05-API-Specification.md#getsalesinvoicesid), [`PATCH /sales-invoices/{id}/delivery`](05-API-Specification.md#patchsalesinvoicesiddelivery), [`POST /sales-invoices/{id}/cancel`](05-API-Specification.md#postsalesinvoicesidcancel), [`GET /sales-invoices/{id}/pdf`](05-API-Specification.md#getsalesinvoicesidpdf), [`POST /sales-invoices/{id}/send`](05-API-Specification.md#postsalesinvoicesidsend), [`POST /customer-receipts`](05-API-Specification.md#postcustomerreceipts), [`POST /allocations`](05-API-Specification.md#postallocations), [`DELETE /allocations/{id}`](05-API-Specification.md#deleteallocationsid), [`POST /credit-notes`](05-API-Specification.md#postcreditnotes)
 10. **Entities:** `attachments`, `audit_logs`, `bill_allocations`, `company_settings`, `credit_notes`, `debit_notes`, `journal_entries`, `journal_lines`, `money_accounts`, `number_sequences`, `parties`, `payment_details`, `products`, `purchase_bills`, `sales_invoice_lines`, `sales_invoices`, `stock_balances`, `stock_movements`, `tax_rules`, `users`
 11. **Workflows:** — · FR: FR-042
 12. **States:** Loading: skeleton strip and tabs. Not found: 404 page (L15). Error per card with Retry. Success toasts after actions.
@@ -1594,7 +1594,7 @@ Each entry follows the 13 points of the brief: (1) purpose · (2) components and
 6. **Tables:** —
 7. **Validation and rules:** BR-024: Cancelling a posted invoice or bill requires a reason, posts a cancellation entry that reverses the original journal and stock, and turns its allocated payments into advances.
 8. **Roles allowed:** `purchases.view` → Owner, Finance manager, Accountant, Store keeper, Viewer. Actions additionally check their own permission (see endpoints).
-9. **APIs:** [`POST /attachments`](05-API-Specification.md#postattachments), [`GET /attachments/{id}/url`](05-API-Specification.md#getattachmentsidurl), [`GET /audit-logs`](05-API-Specification.md#getauditlogs), [`GET /parties/{id}/open-documents`](05-API-Specification.md#getpartiesidopendocuments), [`POST /allocations`](05-API-Specification.md#postallocations), [`DELETE /allocations/{id}`](05-API-Specification.md#deleteallocationsid), [`GET /purchase-bills/{id}`](05-API-Specification.md#getpurchasebillsid), [`POST /purchase-bills/{id}/cancel`](05-API-Specification.md#postpurchasebillsidcancel), [`POST /supplier-payments`](05-API-Specification.md#postsupplierpayments)
+9. **APIs:** [`POST /attachments`](05-API-Specification.md#postattachments), [`GET /attachments`](05-API-Specification.md#getattachments), [`GET /attachments/{id}/url`](05-API-Specification.md#getattachmentsidurl), [`GET /audit-logs`](05-API-Specification.md#getauditlogs), [`GET /parties/{id}/open-documents`](05-API-Specification.md#getpartiesidopendocuments), [`POST /allocations`](05-API-Specification.md#postallocations), [`DELETE /allocations/{id}`](05-API-Specification.md#deleteallocationsid), [`GET /purchase-bills/{id}`](05-API-Specification.md#getpurchasebillsid), [`POST /purchase-bills/{id}/cancel`](05-API-Specification.md#postpurchasebillsidcancel), [`POST /supplier-payments`](05-API-Specification.md#postsupplierpayments)
 10. **Entities:** `approval_requests`, `attachments`, `audit_logs`, `bill_allocations`, `credit_notes`, `debit_notes`, `journal_entries`, `journal_lines`, `money_accounts`, `number_sequences`, `payment_details`, `purchase_bill_lines`, `purchase_bills`, `roles`, `sales_invoices`, `stock_balances`, `stock_movements`, `users`
 11. **Workflows:** — · FR: FR-051
 12. **States:** Loading: skeleton strip and tabs. Not found: 404 page (L15). Error per card with Retry. Success toasts after actions.
@@ -1839,8 +1839,8 @@ Each entry follows the 13 points of the brief: (1) purpose · (2) components and
 6. **Tables:** —
 7. **Validation and rules:** BR-058: A cash-count difference posts to the cash short/over ledger and requires approval.
 8. **Roles allowed:** `banking.view` → Owner, Finance manager, Accountant, Viewer. Actions additionally check their own permission (see endpoints).
-9. **APIs:** [`GET /money-accounts/{id}`](05-API-Specification.md#getmoneyaccountsid), [`GET /money-accounts/{id}/book`](05-API-Specification.md#getmoneyaccountsidbook), [`POST /cash-counts`](05-API-Specification.md#postcashcounts), [`POST /cash-counts/{id}/reverse`](05-API-Specification.md#postcashcountsidreverse)
-10. **Entities:** `approval_requests`, `audit_logs`, `bank_statement_imports`, `cash_count_denominations`, `cash_counts`, `journal_entries`, `journal_lines`, `money_accounts`, `number_sequences`, `payment_details`
+9. **APIs:** [`GET /attachments`](05-API-Specification.md#getattachments), [`GET /money-accounts/{id}`](05-API-Specification.md#getmoneyaccountsid), [`GET /money-accounts/{id}/book`](05-API-Specification.md#getmoneyaccountsidbook), [`POST /cash-counts`](05-API-Specification.md#postcashcounts), [`POST /cash-counts/{id}/reverse`](05-API-Specification.md#postcashcountsidreverse)
+10. **Entities:** `approval_requests`, `attachments`, `audit_logs`, `bank_statement_imports`, `cash_count_denominations`, `cash_counts`, `journal_entries`, `journal_lines`, `money_accounts`, `number_sequences`, `payment_details`
 11. **Workflows:** — · FR: FR-060, FR-065
 12. **States:** Loading: skeleton strip and tabs. Not found: 404 page (L15). Error per card with Retry. Success toasts after actions.
 13. **Depends on:** [G11](#page-g11)
@@ -2291,13 +2291,13 @@ Each entry follows the 13 points of the brief: (1) purpose · (2) components and
 <a id="page-i8"></a>
 #### I8 · Income report
 
-1. **Purpose:** Income by category and month (or quarter).
+1. **Purpose:** Income by category and month (or quarter). Profit-and-loss figures: reports.financial (DEC-13).
 2. **Components and layout:** Date range, branch, by month/quarter; tiles; statement table. _Source: Inc-Report.dc.html._
 3–4. **Inputs:** none (read-only page; filters listed below)
 5. **Actions → API** ([full map](05-API-Specification.md#actions-i8)): Print → ui:browser print of the loaded view (print stylesheet)<br>Export → export:GET /reports/income
 6. **Table:** columns Category, Ledger, Jul..Oct (৳), Total (৳), Share; filters date, branch; server-side pagination and sorting.
 7. **Validation and rules:** Standard server validation (422).
-8. **Roles allowed:** `reports.view` → Owner, Finance manager, Accountant, Sales staff, Viewer. Actions additionally check their own permission (see endpoints).
+8. **Roles allowed:** `reports.financial` → Owner, Finance manager, Accountant. Actions additionally check their own permission (see endpoints).
 9. **APIs:** [`GET /reports/income`](05-API-Specification.md#getreportsincome)
 10. **Entities:** `ie_categories`, `journal_lines`
 11. **Workflows:** — · FR: FR-068
@@ -2307,13 +2307,13 @@ Each entry follows the 13 points of the brief: (1) purpose · (2) components and
 <a id="page-i9"></a>
 #### I9 · Expense report
 
-1. **Purpose:** Expense by category and month (or quarter).
+1. **Purpose:** Expense by category and month (or quarter). Profit-and-loss figures: reports.financial (DEC-13).
 2. **Components and layout:** Date range, branch, by month/quarter; tiles; statement table. _Source: Exp-Report.dc.html._
 3–4. **Inputs:** none (read-only page; filters listed below)
 5. **Actions → API** ([full map](05-API-Specification.md#actions-i9)): Print → ui:browser print of the loaded view (print stylesheet)<br>Export → export:GET /reports/expenses
 6. **Table:** columns Category, Ledger, Jul..Oct (৳), Total (৳), Share; filters date, branch; server-side pagination and sorting.
 7. **Validation and rules:** Standard server validation (422).
-8. **Roles allowed:** `reports.view` → Owner, Finance manager, Accountant, Sales staff, Viewer. Actions additionally check their own permission (see endpoints).
+8. **Roles allowed:** `reports.financial` → Owner, Finance manager, Accountant. Actions additionally check their own permission (see endpoints).
 9. **APIs:** [`GET /reports/expenses`](05-API-Specification.md#getreportsexpenses)
 10. **Entities:** `ie_categories`, `journal_lines`
 11. **Workflows:** — · FR: FR-068
@@ -2596,7 +2596,7 @@ Each entry follows the 13 points of the brief: (1) purpose · (2) components and
 6. **Tables:** —
 7. **Validation and rules:** BR-003: Posted journal entries, documents and stock movements are immutable; corrections are made only by reversal, cancellation or a credit/debit note. Non-financial fields (delivery challan, vehicle, delivered time, internal note, attachments) may still be updated after posting, and every change is audited.<br>BR-025: Only drafts can be deleted; a posted document can only be cancelled or reversed.
 8. **Roles allowed:** `accounting.view` → Owner, Finance manager, Accountant, Viewer. Actions additionally check their own permission (see endpoints).
-9. **APIs:** [`GET /approvals/{id}`](05-API-Specification.md#getapprovalsid), [`POST /approvals/{id}/approve`](05-API-Specification.md#postapprovalsidapprove), [`POST /approvals/{id}/reject`](05-API-Specification.md#postapprovalsidreject), [`POST /attachments`](05-API-Specification.md#postattachments), [`GET /audit-logs`](05-API-Specification.md#getauditlogs), [`GET /vouchers/{id}`](05-API-Specification.md#getvouchersid), [`DELETE /vouchers/{id}`](05-API-Specification.md#deletevouchersid), [`POST /vouchers/{id}/reverse`](05-API-Specification.md#postvouchersidreverse), [`GET /vouchers/{id}/pdf`](05-API-Specification.md#getvouchersidpdf)
+9. **APIs:** [`GET /approvals/{id}`](05-API-Specification.md#getapprovalsid), [`POST /approvals/{id}/approve`](05-API-Specification.md#postapprovalsidapprove), [`POST /approvals/{id}/reject`](05-API-Specification.md#postapprovalsidreject), [`POST /attachments`](05-API-Specification.md#postattachments), [`GET /attachments`](05-API-Specification.md#getattachments), [`GET /audit-logs`](05-API-Specification.md#getauditlogs), [`GET /vouchers/{id}`](05-API-Specification.md#getvouchersid), [`DELETE /vouchers/{id}`](05-API-Specification.md#deletevouchersid), [`POST /vouchers/{id}/reverse`](05-API-Specification.md#postvouchersidreverse), [`GET /vouchers/{id}/pdf`](05-API-Specification.md#getvouchersidpdf)
 10. **Entities:** `accounting_periods`, `approval_requests`, `attachments`, `audit_logs`, `bill_allocations`, `companies`, `journal_entries`, `journal_lines`, `notifications`, `number_sequences`, `payment_details`, `users`
 11. **Workflows:** — · FR: FR-074, FR-014
 12. **States:** Loading: skeleton strip and tabs. Not found: 404 page (L15). Error per card with Retry. Success toasts after actions.
@@ -2786,7 +2786,7 @@ Each entry follows the 13 points of the brief: (1) purpose · (2) components and
 6. **Tables:** —
 7. **Validation and rules:** Standard server validation (422).
 8. **Roles allowed:** `reports.view` → Owner, Finance manager, Accountant, Sales staff, Viewer. Actions additionally check their own permission (see endpoints).
-9. **APIs:** [`POST /export-jobs`](05-API-Specification.md#postexportjobs), [`GET /export-jobs/{id}`](05-API-Specification.md#getexportjobsid), [`GET /reports/inventory/valuation`](05-API-Specification.md#getreportsinventoryvaluation), [`GET /reports/sales`](05-API-Specification.md#getreportssales), [`GET /reports/purchases`](05-API-Specification.md#getreportspurchases), [`GET /reports/income`](05-API-Specification.md#getreportsincome), [`GET /reports/expenses`](05-API-Specification.md#getreportsexpenses)
+9. **APIs:** [`POST /export-jobs`](05-API-Specification.md#postexportjobs), [`GET /export-jobs/{id}`](05-API-Specification.md#getexportjobsid), [`GET /reports/inventory/valuation`](05-API-Specification.md#getreportsinventoryvaluation), [`GET /reports/sales`](05-API-Specification.md#getreportssales), [`GET /reports/purchases`](05-API-Specification.md#getreportspurchases)
 10. **Entities:** `export_jobs`, `ie_categories`, `journal_lines`, `parties`, `product_categories`, `products`, `purchase_bill_lines`, `purchase_bills`, `purchase_returns`, `sales_invoice_lines`, `sales_invoices`, `sales_returns`, `stock_groups`, `stock_movements`
 11. **Workflows:** — · FR: FR-076
 12. **States:** Search with no-match state.

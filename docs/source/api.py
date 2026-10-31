@@ -153,6 +153,8 @@ E("POST", "/attachments", "Upload a file to a record (multipart)", "auth.self", 
   ["E5", "F4", "G6", "G7", "I3", "I6", "I2", "I5", "M4", "H13"], rules=["BR-051"], req="AttachmentUpload", resp="Attachment", idem=True, tag=T,
   fr=["FR-066"], desc="Caller needs edit permission on the target record; 10 MB limit; content-type sniffed.", codes=[201, 413, 415, 422],
   perm_map={'any': '<module>.edit of the record the file belongs to (create for a draft)'}, errors=['file_type_not_allowed', 'file_too_large'])
+E("GET", "/attachments", "Files of one record (Attachments tab)", "auth.self", ["attachments"], ["E5", "F4", "G2", "H13"], params=["attachable_type", "attachable_id"],
+  resp="Page<Attachment>", tag=T, fr=["FR-066"], perm_map={'any': '<module>.view of the record named by attachable_type/attachable_id'})
 E("GET", "/attachments/{id}/url", "Short-lived signed download URL (5 minutes)", "auth.self", ["attachments"], ["E5", "F4", "I5", "M4"],
   resp="SignedUrl", tag=T, fr=["FR-066"], perm_map={'any': '<module>.view of the record named by type/id (e.g. sales.view for a sales_invoice)'})
 E("DELETE", "/attachments/{id}", "Remove an attachment (not from posted vouchers in locked periods)", "auth.self", ["attachments", "audit_logs"],
@@ -446,7 +448,7 @@ E("GET", "/ie-entries", "Income or expense lines on category ledgers (any vouche
 E("POST", "/ie-entries", "Record an income or expense (creates INC/EXP voucher; optional recurrence)", "banking.create",
   ["journal_entries", "journal_lines", "payment_details", "ie_categories", "money_accounts", "recurring_templates", "number_sequences", "approval_requests"], ["I3", "I6"],
   rules=["BR-054", "BR-031", "BR-048", "BR-004", "BR-001", "BR-007"], req="IeEntryInput", idem=True, resp="Voucher", tx=TXP, tag=T, fr=["FR-066"], codes=[201, 202, 422])
-E("GET", "/recurring-templates", "Recurring entries", "banking.view", ["recurring_templates"], ['I5', 'I2', 'I10'], resp="Page<RecurringTemplate>",
+E("GET", "/recurring-templates", "Recurring entries", "banking.view", ["recurring_templates"], ['I5', 'I2', 'I10'], params=["page", "per_page", "kind", "active"], resp="Page<RecurringTemplate>",
   tag=T, fr=["FR-066"])
 E("PATCH", "/recurring-templates/{id}", "Pause, edit or end a recurring entry", "banking.edit", ["recurring_templates"], ['I5', 'I10'],
   req="RecurringTemplateInput", resp="RecurringTemplate", tag=T, fr=["FR-066"], ifmatch=True, rules=['BR-048', 'BR-049'])
@@ -508,8 +510,8 @@ for path, name, pg, extra in [("trial-balance", "Trial balance", ["H15"], ["as_o
       ["journal_lines", "journal_entries", "ledgers", "account_groups"] + (["sales_invoices", "purchase_bills", "parties"] if "aging" in path else []), pg, rules=["BR-005", "BR-001"],
       params=extra + ["format"], resp="ReportData", tag=T, fr=["FR-076"], codes=[200, 202, 422], desc="Reads posted lines only. `format=xlsx|pdf|csv` requires reports.export and returns the file; when the export exceeds 5,000 rows the answer is 202 with an ExportJob to poll.")
 for path, name, pg in [("sales", "Sales report", ["E11", "J1"]), ("sales-returns", "Sales return report", ["E12"]), ("purchases", "Purchase report", ["F9", "J1"]), ("purchase-returns", "Purchase return report", ["F10"]),
-                       ("income", "Income report", ["I8", "J1"]), ("expenses", "Expense report", ["I9", "J1"])]:
-    E("GET", f"/reports/{path}", name, "reports.view", ["sales_invoices", "sales_invoice_lines", "sales_returns", "purchase_bills", "purchase_bill_lines", "purchase_returns", "journal_lines", "ie_categories", "product_categories", "parties"][:10] if "sales" in path or "purch" in path else ["journal_lines", "ie_categories"],
+                       ("income", "Income report", ["I8"]), ("expenses", "Expense report", ["I9"])]:
+    E("GET", f"/reports/{path}", name, "reports.financial" if path in ("income", "expenses") else "reports.view", ["sales_invoices", "sales_invoice_lines", "sales_returns", "purchase_bills", "purchase_bill_lines", "purchase_returns", "journal_lines", "ie_categories", "product_categories", "parties"][:10] if "sales" in path or "purch" in path else ["journal_lines", "ie_categories"],
       pg, params=DATEQ + ["group_by", "branch_id", "party_id", "reason", "format"], resp="ReportData", codes=[200, 202, 422], desc="`format=xlsx|pdf|csv` requires reports.export (202 + ExportJob above 5,000 rows).", tag=T, fr=["FR-047" if "sales" in path else "FR-055" if "purch" in path else "FR-068"])
 
 # ---------------------------------------------------------------- LC

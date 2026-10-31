@@ -8,9 +8,11 @@ use App\Http\Controllers\Api\V1\Accounting\LedgerController;
 use App\Http\Controllers\Api\V1\Accounting\VoucherController;
 use App\Http\Controllers\Api\V1\Approvals\ApprovalController;
 use App\Http\Controllers\Api\V1\Approvals\NotificationController;
+use App\Http\Controllers\Api\V1\Attachments\AttachmentController;
 use App\Http\Controllers\Api\V1\Auth\AuthController;
 use App\Http\Controllers\Api\V1\Banking\BankingController;
 use App\Http\Controllers\Api\V1\Banking\CashCountController;
+use App\Http\Controllers\Api\V1\Banking\IncomeExpenseController;
 use App\Http\Controllers\Api\V1\Banking\MoneyAccountController;
 use App\Http\Controllers\Api\V1\Banking\ReconciliationController;
 use App\Http\Controllers\Api\V1\Inventory\ProductCategoryController;
@@ -297,5 +299,25 @@ Route::middleware(['jwt', 'throttle:api-user'])->group(function () {
             'general-ledger' => 'generalLedger', 'receivables-aging' => 'receivablesAging', 'payables-aging' => 'payablesAging'] as $path => $method) {
             Route::get("reports/{$path}", [FinancialReportController::class, $method])->name("reports.{$path}")->middleware('perm:reports.financial');
         }
+
+        // Attachments (P13.1-BE-01): permission follows the record the file belongs to, checked in AttachmentService.
+        Route::get('attachments', [AttachmentController::class, 'index']);
+        Route::post('attachments', [AttachmentController::class, 'store'])->middleware('idempotent');
+        Route::get('attachments/{id}/url', [AttachmentController::class, 'url'])->whereNumber('id');
+        Route::delete('attachments/{id}', [AttachmentController::class, 'destroy'])->whereNumber('id');
+        // Income and expenses (I1–I10; P13.1-BE-02..05). The reports are profit-and-loss figures: reports.financial (DEC-13).
+        Route::get('ie-categories', [IncomeExpenseController::class, 'categories'])->middleware('perm:banking.view');
+        Route::post('ie-categories', [IncomeExpenseController::class, 'storeCategory'])->middleware(['perm:banking.create', 'idempotent']);
+        Route::patch('ie-categories/{id}', [IncomeExpenseController::class, 'updateCategory'])->whereNumber('id')->middleware('perm:banking.edit');
+        Route::get('ie-entries', [IncomeExpenseController::class, 'entries'])->middleware('perm:banking.view');
+        Route::post('ie-entries', [IncomeExpenseController::class, 'storeEntry'])->middleware(['perm:banking.create', 'idempotent']);
+        Route::get('recurring-templates', [IncomeExpenseController::class, 'templates'])->middleware('perm:banking.view');
+        Route::patch('recurring-templates/{id}', [IncomeExpenseController::class, 'updateTemplate'])->whereNumber('id')->middleware('perm:banking.edit');
+        Route::get('income-expenses/overview', [IncomeExpenseController::class, 'overview'])->middleware('perm:banking.view');
+        Route::get('reports/income', [IncomeExpenseController::class, 'incomeReport'])->name('reports.income')->middleware('perm:reports.financial');
+        Route::get('reports/expenses', [IncomeExpenseController::class, 'expenseReport'])->name('reports.expenses')->middleware('perm:reports.financial');
     });
 });
+
+// A file behind a 5-minute signed link from GET /attachments/{id}/url (relative signature, so it works through the proxy).
+Route::get('attachments/{id}/file', [AttachmentController::class, 'file'])->whereNumber('id')->name('attachments.file')->middleware('signed:relative');

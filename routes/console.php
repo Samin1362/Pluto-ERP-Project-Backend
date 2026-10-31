@@ -13,3 +13,6 @@ Schedule::command('pluto:integrity')->dailyAt('02:00')->timezone('Asia/Dhaka')->
 
 // Open the next financial year 30 days before the current one ends (R-05, 06 §16; P7.1-BE-07).
 Schedule::command('pluto:open-next-year')->dailyAt('01:30')->timezone('Asia/Dhaka')->withoutOverlapping();
+
+// Recurring income and expenses become drafts on their date, never posted (BR-048; P13.1-BE-04).
+Schedule::command('pluto:recurring:run')->dailyAt('06:00')->timezone('Asia/Dhaka')->withoutOverlapping();

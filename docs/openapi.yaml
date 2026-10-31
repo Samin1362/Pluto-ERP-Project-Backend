@@ -6234,6 +6234,112 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/Error'
+    get:
+      operationId: getAttachments
+      summary: Files of one record (Attachments tab)
+      tags:
+      - Platform
+      description: "**Permission:** contextual — any → `<module>.view of the record named by attachable_type/attachable_id`  \n**Database:** read: attachments  \n\
+        **Rules:** —"
+      x-permission: auth.self
+      x-business-rules: []
+      x-requirements:
+      - FR-066
+      x-pages:
+      - E5
+      - F4
+      - G2
+      - H13
+      x-page-actions: []
+      x-tables:
+      - attachments
+      x-db-operations:
+        attachments: R
+      x-error-codes:
+      - company_maintenance
+      - company_required
+      - not_a_member
+      - permission_denied
+      - server_error
+      - token_expired
+      - token_invalid
+      - unauthenticated
+      - validation_failed
+      x-permission-mode: contextual
+      x-permission-map:
+        any: <module>.view of the record named by attachable_type/attachable_id
+      parameters:
+      - name: attachable_type
+        in: query
+        required: false
+        schema:
+          type: string
+        description: attachable type
+      - name: attachable_id
+        in: query
+        required: false
+        schema:
+          type: string
+        description: attachable id
+      - $ref: '#/components/parameters/CompanyHeader'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                - meta
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Attachment'
+                  meta:
+                    $ref: '#/components/schemas/PageMeta'
+        '400':
+          description: 'Malformed request: `company_required`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: 'Not authenticated: `token_expired`, `token_invalid`, `unauthenticated`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: 'Validation or business-rule failure: `validation_failed`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: 'Company temporarily unavailable (restore in progress): `company_maintenance`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+              description: Seconds to wait
+        default:
+          description: Unexpected error (`server_error`)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
   /api/v1/attachments/{id}/url:
     get:
       operationId: getAttachmentsIdUrl
@@ -27166,7 +27272,37 @@ paths:
       - token_expired
       - token_invalid
       - unauthenticated
+      - validation_failed
       parameters:
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+        description: Page number
+      - name: per_page
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 25
+        description: Rows per page (max 100)
+      - name: kind
+        in: query
+        required: false
+        schema:
+          type: string
+        description: kind
+      - name: active
+        in: query
+        required: false
+        schema:
+          type: string
+        description: active
       - $ref: '#/components/parameters/CompanyHeader'
       responses:
         '200':
@@ -27199,6 +27335,12 @@ paths:
                 $ref: '#/components/schemas/Error'
         '403':
           description: 'Not permitted: `not_a_member`, `permission_denied`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: 'Validation or business-rule failure: `validation_failed`'
           content:
             application/problem+json:
               schema:
@@ -32016,15 +32158,14 @@ paths:
       summary: Income report
       tags:
       - Reports
-      description: "`format=xlsx|pdf|csv` requires reports.export (202 + ExportJob above 5,000 rows).\n\n**Permission:** `reports.view`  \n**Database:** read: ie_categories,\
-        \ journal_lines  \n**Rules:** —"
-      x-permission: reports.view
+      description: "`format=xlsx|pdf|csv` requires reports.export (202 + ExportJob above 5,000 rows).\n\n**Permission:** `reports.financial`  \n**Database:** read:\
+        \ ie_categories, journal_lines  \n**Rules:** —"
+      x-permission: reports.financial
       x-business-rules: []
       x-requirements:
       - FR-068
       x-pages:
       - I8
-      - J1
       x-page-actions:
       - 'I8: Export'
       x-tables:
@@ -32184,15 +32325,14 @@ paths:
       summary: Expense report
       tags:
       - Reports
-      description: "`format=xlsx|pdf|csv` requires reports.export (202 + ExportJob above 5,000 rows).\n\n**Permission:** `reports.view`  \n**Database:** read: ie_categories,\
-        \ journal_lines  \n**Rules:** —"
-      x-permission: reports.view
+      description: "`format=xlsx|pdf|csv` requires reports.export (202 + ExportJob above 5,000 rows).\n\n**Permission:** `reports.financial`  \n**Database:** read:\
+        \ ie_categories, journal_lines  \n**Rules:** —"
+      x-permission: reports.financial
       x-business-rules: []
       x-requirements:
       - FR-068
       x-pages:
       - I9
-      - J1
       x-page-actions:
       - 'I9: Export'
       x-tables:
@@ -38470,7 +38610,8 @@ components:
       - created_at
     AttachmentUpload:
       type: object
-      description: 'multipart: file, attachable_type, attachable_id.'
+      description: 'multipart: file, attachable_type, attachable_id. attachable_id may be left out only for a voucher still being written (I3/I6): the file is pending
+        until POST /ie-entries links it through attachment_ids; unlinked files are removed after a day.'
       properties:
         file:
           type: string
@@ -38485,13 +38626,14 @@ components:
           - stock_adjustment
           - party
         attachable_id:
-          type: integer
+          type:
+          - integer
+          - 'null'
           format: int64
           minimum: 1
       required:
       - file
       - attachable_type
-      - attachable_id
       additionalProperties: false
     AuditLog:
       type: object
@@ -43397,6 +43539,15 @@ components:
           format: date
         ends_type:
           type: string
+        ends_after_count:
+          type:
+          - integer
+          - 'null'
+        ends_on:
+          type:
+          - string
+          - 'null'
+          format: date
         occurrences_done:
           type: integer
         is_active:
@@ -43404,6 +43555,14 @@ components:
         payload:
           type: object
           additionalProperties: true
+        description:
+          type: string
+        last_entry_id:
+          type:
+          - integer
+          - 'null'
+          format: int64
+          minimum: 1
         version:
           type: integer
       required:
@@ -43415,6 +43574,7 @@ components:
       - occurrences_done
       - is_active
       - payload
+      - description
       - version
     RecurringTemplateInput:
       type: object

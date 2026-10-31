@@ -445,6 +445,49 @@ class OpenApiConformanceTest extends TestCase
         $this->assertConforms($this->api('POST', "/api/v1/reconciliations/{$id}/finish", $t, $c, [], $key()), 'POST', '/reconciliations/{id}/finish');
     }
 
+    public function test_attachment_and_income_expense_endpoints_match_the_contract(): void
+    {
+        $t = $this->login('owner@meghna.example');
+        $c = $this->company->id;
+        $key = fn () => ['Idempotency-Key' => (string) Str::uuid()];
+        $today = now('Asia/Dhaka')->toDateString();
+        Storage::fake('local');
+        $bank = $this->api('POST', '/api/v1/money-accounts', $t, $c, ['account_type' => 'bank', 'bank_name' => 'Sonali Bank', 'account_name' => 'Meghna', 'account_number' => '0012345678',
+            'opening_balance' => '90000.00'], $key())->json('data');
+        $cat = $this->api('POST', '/api/v1/ie-categories', $t, $c, ['kind' => 'expense', 'name' => 'Fuel', 'create_ledger' => true, 'monthly_budget' => '5000.00'], $key());
+        $this->assertConforms($cat, 'POST', '/ie-categories');
+        $this->assertConforms($this->api('POST', '/api/v1/ie-categories', $t, $c, ['kind' => 'expense'], $key()), 'POST', '/ie-categories');                 // 422
+        $this->assertConforms($this->api('PATCH', '/api/v1/ie-categories/'.$cat->json('data.id'), $t, $c, ['kind' => 'expense', 'name' => 'Fuel and oil']), 'PATCH', '/ie-categories/{id}');
+        $this->assertConforms($this->api('GET', '/api/v1/ie-categories?kind=expense&period=this_year', $t, $c), 'GET', '/ie-categories');
+
+        $up = fn (array $data) => $this->call('POST', '/api/v1/attachments', $data, [], ['file' => UploadedFile::fake()->createWithContent('r.pdf', "%PDF-1.4\n%%EOF")],
+            $this->transformHeadersToServerVars(['Authorization' => "Bearer {$t}", 'X-Company-Id' => (string) $c, 'Accept' => 'application/json'] + $key()));
+        $pending = $up(['attachable_type' => 'voucher']);
+        $this->assertConforms($pending, 'POST', '/attachments');
+        $entry = $this->api('POST', '/api/v1/ie-entries', $t, $c, ['kind' => 'expense', 'amount' => '1200.00', 'date' => $today, 'category_id' => $cat->json('data.id'),
+            'money_account_id' => $bank['id'], 'method' => 'cash', 'attachment_ids' => [$pending->json('data.id')],
+            'recurrence' => ['frequency' => 'monthly', 'next_run_on' => now('Asia/Dhaka')->addMonthNoOverflow()->toDateString(), 'ends_type' => 'never']], $key());
+        $this->assertConforms($entry, 'POST', '/ie-entries');
+        $this->assertConforms($this->api('POST', '/api/v1/ie-entries', $t, $c, ['kind' => 'expense', 'amount' => '0'], $key()), 'POST', '/ie-entries');          // 422
+        $v = $entry->json('data.id');
+        $this->assertConforms($up(['attachable_type' => 'voucher', 'attachable_id' => (string) $v]), 'POST', '/attachments');
+        $this->assertConforms($this->api('GET', "/api/v1/attachments?attachable_type=voucher&attachable_id={$v}", $t, $c), 'GET', '/attachments');
+        $this->assertConforms($this->api('GET', '/api/v1/attachments/'.$pending->json('data.id').'/url', $t, $c), 'GET', '/attachments/{id}/url');
+        $this->assertConforms($this->api('GET', '/api/v1/attachments/999999/url', $t, $c), 'GET', '/attachments/{id}/url');                                    // 404
+        $this->assertConforms($this->api('DELETE', '/api/v1/attachments/'.$pending->json('data.id'), $t, $c), 'DELETE', '/attachments/{id}');
+        $this->assertConforms($this->api('GET', '/api/v1/ie-entries?kind=expense&missing_receipt=false&sort=-amount', $t, $c), 'GET', '/ie-entries');
+        $templates = $this->api('GET', '/api/v1/recurring-templates?kind=expense', $t, $c);
+        $this->assertConforms($templates, 'GET', '/recurring-templates');
+        $tid = $templates->json('data.0.id');
+        $this->assertConforms($this->api('PATCH', "/api/v1/recurring-templates/{$tid}", $t, $c, ['is_active' => false], ['If-Match' => 'W/"1"']), 'PATCH', '/recurring-templates/{id}');
+        $this->assertConforms($this->api('PATCH', "/api/v1/recurring-templates/{$tid}", $t, $c, ['is_active' => true], ['If-Match' => 'W/"1"']), 'PATCH', '/recurring-templates/{id}'); // 409
+        $this->assertConforms($this->api('GET', '/api/v1/income-expenses/overview?kind=expense&period=this_month', $t, $c), 'GET', '/income-expenses/overview');
+        foreach (['income', 'expenses'] as $path) {
+            $this->assertConforms($this->api('GET', "/api/v1/reports/{$path}?group_by=quarter", $t, $c), 'GET', "/reports/{$path}");
+            $this->assertConforms($this->api('GET', "/api/v1/reports/{$path}?colour=red", $t, $c), 'GET', "/reports/{$path}");                                   // 422
+        }
+    }
+
     public function test_stock_adjustment_endpoints_match_the_contract(): void
     {
         $t = $this->login('owner@meghna.example');
