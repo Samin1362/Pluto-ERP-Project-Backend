@@ -772,6 +772,8 @@ export interface LcCharge {
   allocated: boolean
   journal_entry_id?: number | null
   reference?: string | null
+  tax_rule_id?: number | null
+  posting_status?: string | null
   version: number
 }
 
@@ -789,6 +791,7 @@ export interface LcChargeInput {
   reference?: string | null
   lc_shipment_id?: number | null
   lc_amendment_id?: number | null
+  tax_rule_id?: number | null
 }
 
 /** Close an LC. */
@@ -2403,7 +2406,7 @@ export interface WarehouseInput {
 
 /** Non-blocking warning. */
 export interface Warning {
-  code: 'CREDIT_LIMIT_EXCEEDED' | 'PARTY_OVERDUE' | 'LOW_STOCK' | 'BACKDATED' | 'BUDGET_NEAR_LIMIT' | 'DUPLICATE_PARTY' | 'INSUFFICIENT_FUNDS' | 'APPROVAL_REQUIRED'
+  code: 'CREDIT_LIMIT_EXCEEDED' | 'PARTY_OVERDUE' | 'LOW_STOCK' | 'BACKDATED' | 'BUDGET_NEAR_LIMIT' | 'DUPLICATE_PARTY' | 'INSUFFICIENT_FUNDS' | 'APPROVAL_REQUIRED' | 'LC_EXPIRING' | 'LC_DOCUMENTS_MISSING' | 'LC_UNPAID_CHARGES' | 'NOTHING_TO_ALLOCATE'
   message: string
   line_no?: number | null
 }

@@ -9,19 +9,19 @@
   {
    "id": "V02",
    "title": "Every FK references an existing primary or unique key",
-   "checked": 385,
+   "checked": 386,
    "failures": []
   },
   {
    "id": "V03",
    "title": "FK column type equals referenced column type exactly (incl. UNSIGNED, CHAR length)",
-   "checked": 385,
+   "checked": 386,
    "failures": []
   },
   {
    "id": "V04",
    "title": "ON DELETE SET NULL only on nullable columns; self-references nullable",
-   "checked": 385,
+   "checked": 386,
    "failures": []
   },
   {
@@ -45,25 +45,25 @@
   {
    "id": "V08",
    "title": "Identifiers ≤ 64 chars; FK and CHECK names unique schema-wide; index names unique per table",
-   "checked": 2353,
+   "checked": 2358,
    "failures": []
   },
   {
    "id": "V09",
    "title": "Every FK column is the leftmost column of an index (no implicit InnoDB index)",
-   "checked": 385,
+   "checked": 386,
    "failures": []
   },
   {
    "id": "V10",
    "title": "No redundant index (left prefix of another key)",
-   "checked": 330,
+   "checked": 331,
    "failures": []
   },
   {
    "id": "V11",
    "title": "Index key length ≤ 3072 bytes (utf8mb4, DYNAMIC rows); no TEXT/JSON keys",
-   "checked": 497,
+   "checked": 498,
    "failures": []
   },
   {
@@ -75,7 +75,7 @@
   {
    "id": "V13",
    "title": "Decimal precision by class: money (18,2), quantity (18,3), unit cost (18,4), FX rate (18,6), percent (7,4); no FLOAT/DOUBLE",
-   "checked": 151,
+   "checked": 153,
    "failures": []
   },
   {
@@ -87,7 +87,7 @@
   {
    "id": "V15",
    "title": "Defaults are valid for their type; enum defaults and values fit",
-   "checked": 229,
+   "checked": 230,
    "failures": []
   },
   {
@@ -105,13 +105,13 @@
   {
    "id": "V18",
    "title": "Financial and append-only tables (26) are never changed by a delete elsewhere: no SET NULL; CASCADE only from their own header",
-   "checked": 166,
+   "checked": 167,
    "failures": []
   },
   {
    "id": "V19",
    "title": "ON UPDATE RESTRICT on every FK (surrogate keys are immutable)",
-   "checked": 385,
+   "checked": 386,
    "failures": []
   },
   {
@@ -147,14 +147,14 @@
  ],
  "summary": {
   "tables": 83,
-  "columns": 1323,
-  "fks": 385,
+  "columns": 1326,
+  "fks": 386,
   "uniques": 84,
-  "indexes": 330,
+  "indexes": 331,
   "checks": 148,
   "levels": 11,
   "decimal_inventory": {
-   "DECIMAL(18,2)": 97,
+   "DECIMAL(18,2)": 99,
    "DECIMAL(18,3)": 25,
    "DECIMAL(18,4)": 11,
    "DECIMAL(18,6)": 5,

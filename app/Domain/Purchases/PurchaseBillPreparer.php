@@ -7,12 +7,14 @@ use App\Domain\Documents\CalcLine;
 use App\Domain\Documents\CalcOptions;
 use App\Domain\Documents\DocumentCalculator;
 use App\Domain\Inventory\AverageCostCalculator;
+use App\Domain\Lc\LcPostingService;
 use App\Domain\Shared\Money;
 use App\Domain\Shared\Quantity;
 use App\Domain\Shared\Rate;
 use App\Domain\Shared\Taka;
 use App\Domain\Shared\UnitCost;
 use App\Models\CompanySetting;
+use App\Models\LetterOfCredit;
 use App\Models\Party;
 use App\Models\PaymentTerm;
 use App\Models\Product;
@@ -137,6 +139,27 @@ final class PurchaseBillPreparer
     /** @return array{0: string, 1: Rate} the bill currency (default: the supplier's) and its rate to BDT */
     private function currency(array $in, Party $party): array
     {
+        // Import mode (F3; 06 §12.5; P16.1-BE-07): an LC bill is in the LC's currency at the rate of the LC's payments
+        // (weighted by foreign amount), or the planning rate while nothing is paid; the user may enter another rate.
+        if (! empty($in['letter_of_credit_id'])) {
+            $lc = LetterOfCredit::find($in['letter_of_credit_id']);
+            $errors = [];
+            if (! $lc || $lc->party_id !== $party->id) {
+                $errors['letter_of_credit_id'] = ['This LC is for another supplier'];
+            } elseif (in_array($lc->status, ['draft', 'awaiting_bank', 'cancelled'], true)) {
+                $errors['letter_of_credit_id'] = ["{$lc->lc_number} is not opened yet"];
+            }
+            if ($lc && ! empty($in['lc_shipment_id']) && ! DB::table('lc_shipments')->where('id', $in['lc_shipment_id'])->where('letter_of_credit_id', $lc->id)->exists()) {
+                $errors['lc_shipment_id'] = ['This lot belongs to another LC'];
+            }
+            if ($errors) {
+                throw new ApiProblem('validation_failed', errors: $errors);
+            }
+            $in['currency_code'] ??= $lc->currency_code;
+            if (($in['currency_code'] ?? 'BDT') !== 'BDT' && empty($in['exchange_rate'])) {
+                $in['exchange_rate'] = LcPostingService::billRate($lc);
+            }
+        }
         $currency = $in['currency_code'] ?? ($party->default_currency_code ?: 'BDT');
         if ($currency === 'BDT') {
             if (isset($in['exchange_rate']) && ! Rate::of($in['exchange_rate'])->isEqualTo(1)) {

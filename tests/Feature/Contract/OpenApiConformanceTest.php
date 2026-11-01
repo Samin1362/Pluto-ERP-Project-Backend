@@ -980,6 +980,92 @@ class OpenApiConformanceTest extends TestCase
         }
     }
 
+    public function test_letter_of_credit_endpoints_match_the_contract(): void
+    {
+        $t = $this->login('owner@meghna.example');
+        $c = $this->company->id;
+        $key = fn () => ['Idempotency-Key' => (string) Str::uuid()];
+        $today = now('Asia/Dhaka')->toDateString();
+        $supplier = $this->api('POST', '/api/v1/parties', $t, $c, ['party_type' => 'supplier', 'name' => 'Straits Edible Oils', 'mobile' => '01711000801'], $key())->json('data.id');
+        $wh = $this->api('POST', '/api/v1/warehouses', $t, $c, ['code' => 'WH-1', 'name' => 'Main', 'branch_id' => \DB::table('branches')->where('company_id', $c)->value('id')], $key())->json('data.id');
+        $oil = $this->api('POST', '/api/v1/products', $t, $c, ['item_type' => 'product', 'name' => 'Oil', 'unit_id' => \DB::table('units')->where('company_id', $c)->value('id'),
+            'selling_price' => '300.00', 'income_ledger_id' => \DB::table('ledgers')->where('company_id', $c)->where('code', '4101')->value('id')], $key())->json('data.id');
+        $bank = $this->api('POST', '/api/v1/money-accounts', $t, $c, ['account_type' => 'bank', 'bank_name' => 'Sonali Bank', 'account_name' => 'Meghna', 'account_number' => '0012345678',
+            'opening_balance' => '10000000.00'], $key())->json('data.id');
+
+        $tpl = $this->api('POST', '/api/v1/lc-document-templates', $t, $c, ['name' => 'Edible oil', 'items' => [['name' => 'Bill of lading', 'provided_by' => 'Supplier']]]);
+        $this->assertConforms($tpl, 'POST', '/lc-document-templates');
+        $this->assertConforms($this->api('PUT', '/api/v1/lc-document-templates/'.$tpl->json('data.id'), $t, $c, ['name' => 'Edible oils', 'items' => [['name' => 'Bill of lading', 'provided_by' => 'Supplier']]],
+            ['If-Match' => 'W/"1"']), 'PUT', '/lc-document-templates/{id}');
+        $this->assertConforms($this->api('GET', '/api/v1/lc-document-templates', $t, $c), 'GET', '/lc-document-templates');
+        $body = ['party_id' => $supplier, 'goods_description' => 'Crude palm oil', 'quantity' => '20000', 'quantity_unit' => 'kg', 'tenor' => 'sight', 'incoterm' => 'CFR Chattogram',
+            'currency_code' => 'USD', 'amount' => '38400.00', 'tolerance_pct' => '5', 'planning_rate' => '121.50', 'margin_pct' => '20', 'margin_account_id' => $bank,
+            'issuing_bank_account_id' => $bank, 'expiry_date' => now('Asia/Dhaka')->addDays(60)->toDateString(), 'document_template_id' => $tpl->json('data.id'), 'shipment' => ['mode' => 'sea']];
+        $lc = $this->api('POST', '/api/v1/letters-of-credit', $t, $c, $body, $key());
+        $this->assertConforms($lc, 'POST', '/letters-of-credit');
+        $this->assertConforms($this->api('POST', '/api/v1/letters-of-credit', $t, $c, ['amount' => 'x'], $key()), 'POST', '/letters-of-credit');            // 422
+        $id = $lc->json('data.id');
+        unset($body['document_template_id'], $body['shipment']);
+        $this->assertConforms($this->api('PUT', "/api/v1/letters-of-credit/{$id}", $t, $c, $body), 'PUT', '/letters-of-credit/{id}');                          // 428
+        $this->assertConforms($this->api('PUT', "/api/v1/letters-of-credit/{$id}", $t, $c, ['goods_description' => '20,000 kg crude palm oil'] + $body, ['If-Match' => 'W/"1"']), 'PUT', '/letters-of-credit/{id}');
+        $this->assertConforms($this->api('POST', "/api/v1/letters-of-credit/{$id}/transition", $t, $c, ['action' => 'submit'], ['If-Match' => 'W/"2"']), 'POST', '/letters-of-credit/{id}/transition');
+        $this->assertConforms($this->api('POST', "/api/v1/letters-of-credit/{$id}/transition", $t, $c, ['action' => 'submit'], ['If-Match' => 'W/"3"']), 'POST', '/letters-of-credit/{id}/transition'); // 409
+        $this->api('POST', "/api/v1/letters-of-credit/{$id}/transition", $t, $c, ['action' => 'mark_opened', 'bank_reference' => 'SBL/1', 'date' => $today], ['If-Match' => 'W/"3"'])->assertOk();
+        $this->assertConforms($this->api('GET', "/api/v1/letters-of-credit/{$id}", $t, $c), 'GET', '/letters-of-credit/{id}');
+        $this->assertConforms($this->api('GET', '/api/v1/letters-of-credit/999999', $t, $c), 'GET', '/letters-of-credit/{id}');                                // 404
+        $this->assertConforms($this->api('GET', '/api/v1/letters-of-credit?group=active', $t, $c), 'GET', '/letters-of-credit');
+        $this->assertConforms($this->api('GET', '/api/v1/lc/overview', $t, $c), 'GET', '/lc/overview');
+
+        $docs = $this->api('GET', "/api/v1/letters-of-credit/{$id}/documents", $t, $c);
+        $this->assertConforms($docs, 'GET', '/letters-of-credit/{id}/documents');
+        $this->assertConforms($this->api('POST', "/api/v1/letters-of-credit/{$id}/documents", $t, $c, ['name' => 'Packing list', 'provided_by' => 'Supplier']), 'POST', '/letters-of-credit/{id}/documents');
+        $this->assertConforms($this->api('PATCH', '/api/v1/lc-documents/'.$docs->json('data.0.id'), $t, $c, ['status' => 'received'], ['If-Match' => 'W/"1"']), 'PATCH', '/lc-documents/{id}');
+        $this->assertConforms($this->api('GET', '/api/v1/lc-documents/matrix', $t, $c), 'GET', '/lc-documents/matrix');
+        $lot = $this->api('POST', "/api/v1/letters-of-credit/{$id}/shipments", $t, $c, ['status' => 'not_shipped']);
+        $this->assertConforms($lot, 'POST', '/letters-of-credit/{id}/shipments');
+        $this->assertConforms($this->api('PATCH', '/api/v1/lc-shipments/'.$lot->json('data.id'), $t, $c, ['status' => 'at_sea', 'shipped_on' => $today], ['If-Match' => 'W/"1"']), 'PATCH', '/lc-shipments/{id}');
+        $am = $this->api('POST', "/api/v1/letters-of-credit/{$id}/amendments", $t, $c, ['requested_on' => $today, 'status' => 'requested',
+            'changes' => [['field_key' => 'expiry_date', 'new_value' => now('Asia/Dhaka')->addDays(90)->toDateString()]]], $key());
+        $this->assertConforms($am, 'POST', '/letters-of-credit/{id}/amendments');
+        $this->assertConforms($this->api('PATCH', '/api/v1/lc-amendments/'.$am->json('data.id'), $t, $c, ['status' => 'issued', 'date' => $today], ['If-Match' => 'W/"1"']), 'PATCH', '/lc-amendments/{id}');
+        $this->assertConforms($this->api('GET', '/api/v1/lc-amendments', $t, $c), 'GET', '/lc-amendments');
+
+        $charge = $this->api('POST', '/api/v1/lc-charges', $t, $c, ['letter_of_credit_id' => $id, 'charge_type' => 'cf_agent_fee', 'charge_date' => $today, 'amount' => '240000.00',
+            'status' => 'unpaid', 'payee_party_id' => $supplier], $key());
+        $this->assertConforms($charge, 'POST', '/lc-charges');
+        $this->assertConforms($this->api('POST', '/api/v1/lc-charges', $t, $c, ['letter_of_credit_id' => $id], $key()), 'POST', '/lc-charges');               // 422
+        $this->assertConforms($this->api('POST', '/api/v1/lc-charges/'.$charge->json('data.id').'/pay', $t, $c, ['paid_from_account_id' => $bank, 'date' => $today], $key()), 'POST', '/lc-charges/{id}/pay');
+        $fee = $this->api('POST', '/api/v1/lc-charges', $t, $c, ['letter_of_credit_id' => $id, 'charge_type' => 'swift_postage', 'charge_date' => $today, 'amount' => '500.00',
+            'status' => 'paid', 'paid_from_account_id' => $bank], $key());
+        $this->assertConforms($this->api('POST', '/api/v1/lc-charges/'.$fee->json('data.id').'/reverse', $t, $c, ['reason' => 'Refunded'], $key()), 'POST', '/lc-charges/{id}/reverse');
+        $this->assertConforms($this->api('GET', "/api/v1/lc-charges?letter_of_credit_id={$id}", $t, $c), 'GET', '/lc-charges');
+
+        $pay = $this->api('POST', "/api/v1/letters-of-credit/{$id}/payments", $t, $c, ['payment_date' => $today, 'amount_foreign' => '38400.00', 'bank_rate' => '122.10', 'money_account_id' => $bank], $key());
+        $this->assertConforms($pay, 'POST', '/letters-of-credit/{id}/payments');
+        $this->assertConforms($this->api('POST', "/api/v1/letters-of-credit/{$id}/payments", $t, $c, ['payment_date' => $today, 'amount_foreign' => '99999.00', 'bank_rate' => '122.10',
+            'money_account_id' => $bank], $key()), 'POST', '/letters-of-credit/{id}/payments');                                                               // 422 tolerance
+        $this->assertConforms($this->api('GET', "/api/v1/letters-of-credit/{$id}/payments", $t, $c), 'GET', '/letters-of-credit/{id}/payments');
+        $bill = $this->api('POST', '/api/v1/purchase-bills', $t, $c, ['party_id' => $supplier, 'supplier_bill_no' => 'CI-1', 'bill_date' => $today, 'warehouse_id' => $wh, 'letter_of_credit_id' => $id,
+            'lines' => [['product_id' => $oil, 'quantity' => '20000', 'unit_cost' => '1.92']]], $key())->json('data.id');
+        $this->api('POST', "/api/v1/purchase-bills/{$bill}/post", $t, $c, [], $key())->assertOk();
+        $lcBody = ['purchase_bill_id' => $bill, 'allocation_date' => $today];
+        $this->assertConforms($this->api('POST', "/api/v1/letters-of-credit/{$id}/landed-cost/preview", $t, $c, $lcBody), 'POST', '/letters-of-credit/{id}/landed-cost/preview');
+        $alloc = $this->api('POST', "/api/v1/letters-of-credit/{$id}/landed-cost", $t, $c, $lcBody, $key());
+        $this->assertConforms($alloc, 'POST', '/letters-of-credit/{id}/landed-cost');
+        $this->assertConforms($this->api('GET', "/api/v1/letters-of-credit/{$id}/cost-summary", $t, $c), 'GET', '/letters-of-credit/{id}/cost-summary');
+        $this->assertConforms($this->api('POST', "/api/v1/letters-of-credit/{$id}/close", $t, $c, [], $key()), 'POST', '/letters-of-credit/{id}/close');      // 422 documents pending
+        $this->assertConforms($this->api('POST', '/api/v1/landed-cost-allocations/'.$alloc->json('data.id').'/reverse', $t, $c, ['reason' => 'Wrong bill'], $key()),
+            'POST', '/landed-cost-allocations/{id}/reverse');
+        $this->assertConforms($this->api('POST', '/api/v1/lc-payments/'.$pay->json('data.id').'/reverse', $t, $c, ['reason' => 'Wrong'], $key()), 'POST', '/lc-payments/{id}/reverse');
+        foreach (['register', 'cost'] as $r) {
+            $this->assertConforms($this->api('GET', "/api/v1/reports/lc/{$r}", $t, $c), 'GET', '/reports/lc/{report}');
+        }
+        $draft = $this->api('POST', '/api/v1/letters-of-credit', $t, $c, ['party_id' => $supplier, 'goods_description' => 'x', 'tenor' => 'sight', 'incoterm' => 'FOB', 'currency_code' => 'USD',
+            'amount' => '1.00', 'planning_rate' => '121.50'], $key())->json('data.id');
+        $this->assertConforms($this->api('DELETE', "/api/v1/letters-of-credit/{$id}", $t, $c), 'DELETE', '/letters-of-credit/{id}');                            // 409
+        $this->assertConforms($this->api('DELETE', "/api/v1/letters-of-credit/{$draft}", $t, $c), 'DELETE', '/letters-of-credit/{id}');
+    }
+
     public function test_the_validator_rejects_bodies_that_break_the_contract(): void
     {
         $t = $this->login('owner@meghna.example');

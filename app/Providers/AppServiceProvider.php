@@ -3,11 +3,16 @@
 namespace App\Providers;
 
 use App\Models\AccountGroup;
+use App\Models\BillAllocation;
 use App\Models\CashCount;
 use App\Models\CreditNote;
 use App\Models\DebitNote;
 use App\Models\FiscalYear;
+use App\Models\LandedCostAllocation;
+use App\Models\LcCharge;
+use App\Models\LcPayment;
 use App\Models\Ledger;
+use App\Models\LetterOfCredit;
 use App\Models\MoneyAccount;
 use App\Models\Party;
 use App\Models\Product;
@@ -38,7 +43,9 @@ class AppServiceProvider extends ServiceProvider
         // BooksIntegrity relies on it). Models not listed keep their class name.
         Relation::morphMap(['account_groups' => AccountGroup::class, 'ledgers' => Ledger::class, 'fiscal_years' => FiscalYear::class, 'purchase_bills' => PurchaseBill::class, 'sales_invoices' => SalesInvoice::class, 'sales_returns' => SalesReturn::class, 'credit_notes' => CreditNote::class, 'purchase_returns' => PurchaseReturn::class, 'debit_notes' => DebitNote::class, 'money_accounts' => MoneyAccount::class, 'parties' => Party::class,
             'stock_adjustments' => StockAdjustment::class, 'stock_transfers' => StockTransfer::class, 'products' => Product::class,
-            'cash_counts' => CashCount::class]);
+            'cash_counts' => CashCount::class, 'letters_of_credit' => LetterOfCredit::class, 'lc_charges' => LcCharge::class,
+            'lc_payments' => LcPayment::class, 'landed_cost_allocations' => LandedCostAllocation::class,
+            'bill_allocations' => BillAllocation::class]);
 
         // The `api` guard reads the user that AuthenticateJwt verified; it never accepts a session cookie.
         Auth::viaRequest('pluto-jwt', fn (Request $request) => $request->attributes->get('auth_user'));

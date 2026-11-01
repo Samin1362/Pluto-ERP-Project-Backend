@@ -598,6 +598,8 @@ erDiagram
         bigint purchase_bill_id FK
         decimal amount
         date allocated_on
+        decimal foreign_amount
+        decimal fx_amount
         datetime reversed_at
     }
     branches {
@@ -1657,6 +1659,7 @@ erDiagram
         varchar reference
         bigint journal_entry_id FK
         bigint landed_cost_allocation_id FK
+        bigint tax_rule_id FK
     }
     lc_payments {
         bigint id PK
@@ -1703,6 +1706,9 @@ erDiagram
     purchase_orders {
         bigint id PK
     }
+    tax_rules {
+        bigint id PK
+    }
     warehouses {
         bigint id PK
     }
@@ -1736,6 +1742,7 @@ erDiagram
     purchase_bills |o--o{ lc_payments : "purchase_bill_id"
     purchase_bills ||--o{ landed_cost_allocations : "purchase_bill_id"
     purchase_orders |o--o{ letters_of_credit : "purchase_order_id"
+    tax_rules |o--o{ lc_charges : "tax_rule_id"
     warehouses ||--o{ landed_cost_allocation_lines : "warehouse_id"
 ```
 
@@ -2793,6 +2800,8 @@ Standard columns are listed in each table: `id` (PK), `company_id` (tenant), `lo
 | `purchase_bill_id` | BIGINT UNSIGNED | yes | NULL | FK → `purchase_bills.id` | ON DELETE RESTRICT / ON UPDATE RESTRICT |  |
 | `amount` | DECIMAL(18,2) | no | — | — | — |  |
 | `allocated_on` | DATE | no | — | — | — |  |
+| `foreign_amount` | DECIMAL(18,2) | yes | NULL | — | — | Foreign currency settled (LC payment against an import bill, BR-043) |
+| `fx_amount` | DECIMAL(18,2) | no | 0 | — | — | Taka taken from the settling line beyond `amount` (+ loss, - gain); posted to fx_gain_loss (06 §12.5) |
 | `reversed_at` | DATETIME | yes | NULL | — | — | Set when the settling entry is reversed or the document cancelled |
 | `created_by` | BIGINT UNSIGNED | yes | NULL | FK → `users.id` | ON DELETE RESTRICT / ON UPDATE RESTRICT | User who created the row |
 | `updated_by` | BIGINT UNSIGNED | yes | NULL | FK → `users.id` | ON DELETE RESTRICT / ON UPDATE RESTRICT | User who last changed the row |
@@ -4761,6 +4770,7 @@ Standard columns are listed in each table: `id` (PK), `company_id` (tenant), `lo
 | `reference` | VARCHAR(60) | yes | NULL | — | — |  |
 | `journal_entry_id` | BIGINT UNSIGNED | yes | NULL | FK → `journal_entries.id` · UQ | ON DELETE RESTRICT / ON UPDATE RESTRICT |  |
 | `landed_cost_allocation_id` | BIGINT UNSIGNED | yes | NULL | FK → `landed_cost_allocations.id` | ON DELETE SET NULL / ON UPDATE RESTRICT |  |
+| `tax_rule_id` | BIGINT UNSIGNED | yes | NULL | FK → `tax_rules.id` | ON DELETE RESTRICT / ON UPDATE RESTRICT | Recoverable import tax (VAT/AT): debited to this rule's ledger instead of landed cost (owner decision, 1 Nov 2026) |
 | `lock_version` | INT UNSIGNED | no | 1 | — | — | Optimistic concurrency counter; incremented on every update (If-Match) |
 | `created_by` | BIGINT UNSIGNED | yes | NULL | FK → `users.id` | ON DELETE RESTRICT / ON UPDATE RESTRICT | User who created the row |
 | `updated_by` | BIGINT UNSIGNED | yes | NULL | FK → `users.id` | ON DELETE RESTRICT / ON UPDATE RESTRICT | User who last changed the row |
@@ -4775,6 +4785,7 @@ Standard columns are listed in each table: `id` (PK), `company_id` (tenant), `lo
 - Index (payee_party_id)
 - Index (paid_from_account_id)
 - Index (landed_cost_allocation_id)
+- Index (tax_rule_id)
 - Index (created_by)
 - Index (updated_by)
 - **Check** `amount > 0`
@@ -4791,6 +4802,7 @@ Standard columns are listed in each table: `id` (PK), `company_id` (tenant), `lo
 - `paid_from_account_id` → `money_accounts`: one-to-many (optional)
 - `journal_entry_id` → `journal_entries`: one-to-one (optional)
 - `landed_cost_allocation_id` → `landed_cost_allocations`: one-to-many (optional)
+- `tax_rule_id` → `tax_rules`: one-to-many (optional)
 
 #### `lc_payments`
 
@@ -5061,11 +5073,12 @@ Every foreign key except the uniform `company_id`, `created_by` and `updated_by`
 | 207 | `lc_charges` | `paid_from_account_id` | `money_accounts` | one-to-many (optional) | no | RESTRICT |
 | 208 | `lc_charges` | `journal_entry_id` | `journal_entries` | one-to-one (optional) | no | RESTRICT |
 | 209 | `lc_charges` | `landed_cost_allocation_id` | `landed_cost_allocations` | one-to-many (optional) | no | SET NULL |
-| 210 | `lc_payments` | `letter_of_credit_id` | `letters_of_credit` | one-to-many | yes | RESTRICT |
-| 211 | `lc_payments` | `lc_shipment_id` | `lc_shipments` | one-to-many (optional) | no | RESTRICT |
-| 212 | `lc_payments` | `purchase_bill_id` | `purchase_bills` | one-to-many (optional) | no | RESTRICT |
-| 213 | `lc_payments` | `money_account_id` | `money_accounts` | one-to-many | yes | RESTRICT |
-| 214 | `lc_payments` | `journal_entry_id` | `journal_entries` | one-to-one (optional) | no | RESTRICT |
+| 210 | `lc_charges` | `tax_rule_id` | `tax_rules` | one-to-many (optional) | no | RESTRICT |
+| 211 | `lc_payments` | `letter_of_credit_id` | `letters_of_credit` | one-to-many | yes | RESTRICT |
+| 212 | `lc_payments` | `lc_shipment_id` | `lc_shipments` | one-to-many (optional) | no | RESTRICT |
+| 213 | `lc_payments` | `purchase_bill_id` | `purchase_bills` | one-to-many (optional) | no | RESTRICT |
+| 214 | `lc_payments` | `money_account_id` | `money_accounts` | one-to-many | yes | RESTRICT |
+| 215 | `lc_payments` | `journal_entry_id` | `journal_entries` | one-to-one (optional) | no | RESTRICT |
 
 **Many-to-many relationships** are only ever implemented through junction tables:
 
@@ -5161,7 +5174,7 @@ For each table, the tables it references (must exist first). Self-references are
 | `lc_amendment_changes` | `lc_amendments` | — |
 | `landed_cost_allocations` | `companies`, `journal_entries`, `letters_of_credit`, `purchase_bills`, `users` | — |
 | `landed_cost_allocation_lines` | `landed_cost_allocations`, `products`, `purchase_bill_lines`, `warehouses` | — |
-| `lc_charges` | `companies`, `journal_entries`, `landed_cost_allocations`, `lc_amendments`, `lc_shipments`, `letters_of_credit`, `money_accounts`, `parties`, `users` | — |
+| `lc_charges` | `companies`, `journal_entries`, `landed_cost_allocations`, `lc_amendments`, `lc_shipments`, `letters_of_credit`, `money_accounts`, `parties`, `tax_rules`, `users` | — |
 | `lc_payments` | `companies`, `journal_entries`, `lc_shipments`, `letters_of_credit`, `money_accounts`, `purchase_bills`, `users` | — |
 
 ## 9. Migration order

@@ -28,3 +28,6 @@ Schedule::command('pluto:exports:prune')->hourly()->withoutOverlapping();
 
 // Per-company backups (K15; 11 §6; P15.1-BE-09).
 Schedule::command('pluto:backups:run')->dailyAt('00:30')->timezone('Asia/Dhaka')->withoutOverlapping();
+
+// LCs past their expiry date expire (06 §12.1; P16.1-BE-02).
+Schedule::command('pluto:lc:expire')->dailyAt('07:00')->timezone('Asia/Dhaka')->withoutOverlapping();

@@ -3,6 +3,7 @@
 namespace App\Domain\Settlements;
 
 use App\Domain\Accounting\PeriodGuard;
+use App\Domain\Lc\LcPostingService;
 use App\Domain\Shared\AuditLogger;
 use App\Domain\Shared\Money;
 use App\Models\Party;
@@ -27,7 +28,20 @@ use Illuminate\Support\Facades\DB;
 final class AllocationService
 {
     /** Entry types whose party lines settle documents; everything else on the ledger is a document or its reversal. */
-    public const SETTLING_TYPES = ['receipt', 'payment', 'credit_note', 'debit_note', 'purchase_return', 'opening_balance', 'journal', 'contra'];
+    public const SETTLING_TYPES = ['receipt', 'payment', 'credit_note', 'debit_note', 'purchase_return', 'opening_balance', 'journal', 'contra', 'lc_payment'];
+
+    /** FX entries of LC settlements (06 §12.5) sit on the party ledger but never settle anything themselves. */
+    public const NOT_SETTLING_SOURCE = 'bill_allocations';
+
+    /** What a settling line has given away: the documents' share plus any FX difference (LC payments). */
+    public const USED_SQL = 'SUM(amount + fx_amount)';
+
+    /** Limits a journal_entries query (alias `e`) to entries whose party lines can settle documents. */
+    public static function settlingEntries($query, string $alias = 'e')
+    {
+        return $query->whereIn("{$alias}.entry_type", self::SETTLING_TYPES)
+            ->where(fn ($w) => $w->whereNull("{$alias}.source_type")->orWhere("{$alias}.source_type", '!=', self::NOT_SETTLING_SOURCE));
+    }
 
     public function __construct(private readonly PeriodGuard $periods, private readonly AuditLogger $audit) {}
 
@@ -83,6 +97,7 @@ final class AllocationService
             $this->settle($doc, $amount->negated());
             $entryId = (int) DB::table('journal_lines')->where('id', $a->journal_line_id)->value('journal_entry_id');
             $this->paymentUnapplied($entryId, $amount);
+            $this->undoFx($a);
             $this->audit->record('allocation_removed', $doc, ['allocation_id' => $a->id, 'amount' => (string) $amount], null);
         });
     }
@@ -94,6 +109,7 @@ final class AllocationService
         foreach (DB::table('bill_allocations')->where($col, $doc->id)->whereNull('reversed_at')->lockForUpdate()->get() as $a) {
             DB::table('bill_allocations')->where('id', $a->id)->update(['reversed_at' => now(), 'updated_by' => auth()->id(), 'updated_at' => now()]);
             $this->paymentUnapplied((int) DB::table('journal_lines')->where('id', $a->journal_line_id)->value('journal_entry_id'), Money::of($a->amount));
+            $this->undoFx($a);
         }
         $doc->forceFill(['amount_settled' => Money::zero(), 'payment_status' => 'unpaid']); // saved by the cancelling service
     }
@@ -120,15 +136,16 @@ final class AllocationService
     public function settlingLine(int $id, bool $lock = false): object
     {
         $q = DB::table('journal_lines as l')->join('journal_entries as e', 'e.id', '=', 'l.journal_entry_id')->where('l.id', $id)
-            ->select('l.id', 'l.journal_entry_id', 'l.ledger_id', 'l.debit', 'l.credit', 'e.voucher_number', 'e.entry_type', 'e.entry_date', 'e.status', 'l.is_posted');
+            ->select('l.id', 'l.journal_entry_id', 'l.ledger_id', 'l.debit', 'l.credit', 'e.voucher_number', 'e.entry_type', 'e.entry_date', 'e.status', 'e.source_type', 'l.is_posted');
         $l = ($lock ? $q->lockForUpdate() : $q)->first() ?? throw new ApiProblem('validation_failed', errors: ['journal_line_id' => ['Choose a receipt, payment, note or advance']]);
         $party = Party::withTrashed()->where('ledger_id', $l->ledger_id)->first();
         $side = $party?->party_type === 'customer' ? 'credit' : 'debit';
         $amount = Money::of((string) $l->{$side});
-        if (! $party || ! $l->is_posted || $l->status !== 'posted' || ! in_array($l->entry_type, self::SETTLING_TYPES, true) || ! $amount->isPositive()) {
+        if (! $party || ! $l->is_posted || $l->status !== 'posted' || ! in_array($l->entry_type, self::SETTLING_TYPES, true) || $l->source_type === self::NOT_SETTLING_SOURCE
+            || ! $amount->isPositive()) {
             throw new ApiProblem('validation_failed', errors: ['journal_line_id' => ['This line cannot settle a document; choose a receipt, payment, note or advance of the party']]);
         }
-        $used = Money::of((string) DB::table('bill_allocations')->where('journal_line_id', $l->id)->whereNull('reversed_at')->sum('amount'));
+        $used = Money::of((string) (DB::table('bill_allocations')->where('journal_line_id', $l->id)->whereNull('reversed_at')->selectRaw(self::USED_SQL.' u')->value('u') ?? '0'));
 
         return (object) ['id' => $l->id, 'journal_entry_id' => $l->journal_entry_id, 'ledger_id' => $l->ledger_id, 'number' => $l->voucher_number,
             'kind' => self::kind($l->entry_type), 'date' => (string) $l->entry_date, 'amount' => $amount, 'unapplied' => $amount->minus($used)];
@@ -181,6 +198,14 @@ final class AllocationService
         $balance = $doc->total->minus($settled);
         $doc->forceFill(['amount_settled' => $settled, 'balance_due' => $doc->status === 'posted' ? $balance : Money::zero(),
             'payment_status' => $settled->isZero() ? 'unpaid' : ($balance->isPositive() ? 'part_paid' : 'paid')])->save();
+    }
+
+    /** An LC settlement's exchange difference goes with its allocation (06 §12.5). */
+    private function undoFx(object $a): void
+    {
+        if (isset($a->fx_amount) && ! Money::of((string) $a->fx_amount)->isZero()) {
+            app(LcPostingService::class)->reverseFx((int) $a->id, CarbonImmutable::now('Asia/Dhaka')->toDateString());
+        }
     }
 
     /** Keeps payment_details.unapplied_amount of a receipt/payment in step (no row for notes, advances, openings). */

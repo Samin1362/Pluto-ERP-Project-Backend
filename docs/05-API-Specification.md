@@ -579,7 +579,7 @@ Last run: 24 rules, **24 passed, 0 failed**; 6 negative tests, 6 detected. Offic
 | A11 | Request-only schemas reject unknown properties (additionalProperties: false) | 90 | ✅ pass |
 | A12 | Money, quantity, cost and rate fields are decimal strings (never JSON numbers) | 204 | ✅ pass |
 | A13 | PUT/PATCH on a versioned table requires If-Match, and If-Match is only required where a version exists | 39 | ✅ pass |
-| A14 | Request fields are stored: each maps to a column (or is declared virtual) with a compatible length, enum values and nullability | 378 | ✅ pass |
+| A14 | Request fields are stored: each maps to a column (or is declared virtual) with a compatible length, enum values and nullability | 379 | ✅ pass |
 | A15 | Response enum fields have exactly the values the database allows | 29 | ✅ pass |
 | A16 | Every action of every page maps to API calls, a dialog, navigation or explicit client behaviour, and every target exists | 522 | ✅ pass |
 | A17 | Every data-changing endpoint is triggered by at least one page action (only token refresh is system-driven) | 176 | ✅ pass |
@@ -7264,7 +7264,7 @@ Add a charge or import expense (posts accrual or payment).
 | **Permission** | `lc.create` — roles: Owner, Finance manager, Accountant |
 | **Path / query params** | — / — |
 | **Request body** | [`LcChargeInput`](#schema-lcchargeinput) |
-| **Validation** | `letter_of_credit_id`* id of a record in this company; `charge_type`* one of margin_deposit/opening_commission/amendment_fee/swift_postage/stamp_documentation/acceptance_commission/discrepancy_fee/marine_insurance/cf_agent_fee/port_handling/customs_duty_taxes/inland_transport/other; `charge_date`* YYYY-MM-DD; `amount`* decimal string, 2 dp; `paid_to` string ≤ 150 (nullable); `payee_party_id` id of a record in this company (nullable); `status`* one of unpaid/paid; `paid_from_account_id` id of a record in this company (nullable); `include_in_landed_cost` boolean; `reference` string ≤ 60 (nullable); `lc_shipment_id` id of a record in this company (nullable); `lc_amendment_id` id of a record in this company (nullable)<br>Unknown fields are rejected (422).<br>BR-044: An LC margin deposit is a refundable asset, never part of landed cost; it is applied to the payment or released at closure. The margin applied to payments may not exceed the margin deposited for that LC.<br>BR-045: LC charges marked for landed cost are held in goods-in-transit and allocated to import bill lines by value (or quantity); the share for quantity already sold goes to cost of goods sold.<br>BR-047: Customs duties and taxes are entered as assessed; Pluto does not calculate them.<br>BR-001: Every posted journal entry balances: total debit = total credit > 0.<br>BR-004: A document or voucher date must fall inside an open accounting period of an open financial year; posting, editing or reversing into a locked period is rejected.<br>BR-031: A payment, transfer or contra cannot take a cash or wallet account below zero, or a bank or cash-credit account below minus its overdraft_limit (zero when not set). |
+| **Validation** | `letter_of_credit_id`* id of a record in this company; `charge_type`* one of margin_deposit/opening_commission/amendment_fee/swift_postage/stamp_documentation/acceptance_commission/discrepancy_fee/marine_insurance/cf_agent_fee/port_handling/customs_duty_taxes/inland_transport/other; `charge_date`* YYYY-MM-DD; `amount`* decimal string, 2 dp; `paid_to` string ≤ 150 (nullable); `payee_party_id` id of a record in this company (nullable); `status`* one of unpaid/paid; `paid_from_account_id` id of a record in this company (nullable); `include_in_landed_cost` boolean; `reference` string ≤ 60 (nullable); `lc_shipment_id` id of a record in this company (nullable); `lc_amendment_id` id of a record in this company (nullable); `tax_rule_id` id of a record in this company (nullable)<br>Unknown fields are rejected (422).<br>BR-044: An LC margin deposit is a refundable asset, never part of landed cost; it is applied to the payment or released at closure. The margin applied to payments may not exceed the margin deposited for that LC.<br>BR-045: LC charges marked for landed cost are held in goods-in-transit and allocated to import bill lines by value (or quantity); the share for quantity already sold goes to cost of goods sold.<br>BR-047: Customs duties and taxes are entered as assessed; Pluto does not calculate them.<br>BR-001: Every posted journal entry balances: total debit = total credit > 0.<br>BR-004: A document or voucher date must fall inside an open accounting period of an open financial year; posting, editing or reversing into a locked period is rejected.<br>BR-031: A payment, transfer or contra cannot take a cash or wallet account below zero, or a bank or cash-credit account below minus its overdraft_limit (zero when not set). |
 | **Success** | 201 `data`: [`LcCharge`](#schema-lccharge) |
 | **Status codes** | 201, 400, 401, 403, 409, 422, 503 |
 | **Error codes** | **`charge_allocated`, `company_maintenance`, `insufficient_funds`, `margin_exceeds_deposit`, `period_locked`, `unbalanced_entry`**; standard: `company_required`, `idempotency_in_progress`, `idempotency_key_reused`, `malformed_json`, `not_a_member`, `permission_denied`, `server_error`, `token_expired`, `token_invalid`, `unauthenticated`, `validation_failed` |
@@ -9290,7 +9290,7 @@ Non-blocking warning.
 
 | Property | Type | Required |
 |---|---|---|
-| `code` | `enum:CREDIT_LIMIT_EXCEEDED\|PARTY_OVERDUE\|LOW_STOCK\|BACKDATED\|BUDGET_NEAR_LIMIT\|DUPLICATE_PARTY\|INSUFFICIENT_FUNDS\|APPROVAL_REQUIRED` | yes |
+| `code` | `enum:CREDIT_LIMIT_EXCEEDED\|PARTY_OVERDUE\|LOW_STOCK\|BACKDATED\|BUDGET_NEAR_LIMIT\|DUPLICATE_PARTY\|INSUFFICIENT_FUNDS\|APPROVAL_REQUIRED\|LC_EXPIRING\|LC_DOCUMENTS_MISSING\|LC_UNPAID_CHARGES\|NOTHING_TO_ALLOCATE` | yes |
 | `message` | `str` | yes |
 | `line_no` | `int \| null` | no |
 
@@ -10525,6 +10525,7 @@ Charge or import expense. Unknown properties are rejected.
 | `reference` | `str:60 \| null` | no |
 | `lc_shipment_id` | `id \| null` | no |
 | `lc_amendment_id` | `id \| null` | no |
+| `tax_rule_id` | `id \| null` | no |
 
 <a id="schema-chargepayment"></a>
 #### `ChargePayment`
@@ -10557,6 +10558,8 @@ LC charge.
 | `allocated` | `bool` | yes |
 | `journal_entry_id` | `id \| null` | no |
 | `reference` | `str \| null` | no |
+| `tax_rule_id` | `id \| null` | no |
+| `posting_status` | `str \| null` | no |
 | `version` | `int` | yes |
 
 <a id="schema-lcpaymentinput"></a>
@@ -12606,6 +12609,7 @@ View permission `lc.create`. **Loads:** nothing of its own (host page data).
 | Stock adjustments and transfers | StockAdjustment returns warehouse_name, notes, line_count, posted_at and audit fields; StockTransfer returns both warehouse names, vehicle, driver, notes, line_count, transit_loss_value (costs only), its entries and audit fields, so D10/D11 can show and edit what they saved (P11.1-BE-02/03, 31 Oct 2026). Additive. |
 | Cash counts and reconciliation | CashCount returns the account name, denominations and its adjustment's number, status and approval request (G2 shows where an adjustment stands); Reconciliation returns the account name, unhandled_count and book_entries (posted book lines not yet matched, G10's right pane); POST …/lines/pair with one line marks it ignored (P12.1-BE-03/05, 31 Oct 2026). Additive. |
 | Attachments and income/expense (P13) | GET /attachments lists one record's files (Attachments tabs); AttachmentUpload.attachable_id is optional for a voucher still being written (pending file linked by POST /ie-entries attachment_ids, I6 Remove attachment); RecurringTemplate returns ends_after_count, ends_on, description and last_entry_id; GET /recurring-templates takes page, per_page, kind, active; GET /ie-entries meta adds total_amount. Additive (P13.1, 31 Oct 2026). |
+| LC charges and import settlement (P16) | LcChargeInput/LcCharge add tax_rule_id: a recoverable import tax (VAT/AT) charge posts to that rule's ledger instead of landed cost (owner decision 1 Nov 2026, pending tax adviser); LcCharge adds posting_status (reversed charges). Warning codes add LC_EXPIRING, LC_DOCUMENTS_MISSING, LC_UNPAID_CHARGES (LC flags) and NOTHING_TO_ALLOCATE (landed-cost preview); bill_allocations keep foreign_amount and fx_amount so LC payments settle import bills by foreign amount with the FX difference to 6603 (06 §12.5). Additive (P16.0-SETUP-01). |
 | Settings, users and security (P15) | GET /invitations lists the open invitations for K8 (they are not members yet, so GET /users cannot carry them); notification_preferences.send_at keeps the daily summary time of K12. Additive (P15.0-SETUP-01, 1 Nov 2026). |
 | Dashboards and exports (P14) | DashboardSummary adds widget_errors (a widget that failed, ERR-8); ExportJobCreate.kind adds report (one report by operationId); ExportJob adds source, format, file_name and created_at for the download list; LensData adds period (as DashboardSummary); Kpi adds trend_pct (sparkline positions 0–100, so the SPA never scales money) and link (the page the tile opens); lens permissions spelled out per DEC-13 (profit and balance lenses need reports.financial). Additive (P14.0-SETUP-01, 1 Nov 2026). |
 | GET /reports/income, GET /reports/expenses | Need reports.financial instead of reports.view: they are profit-and-loss figures, which owner decision DEC-13 / C7 keeps from Sales staff and Viewer (P13.1-BE-05). |

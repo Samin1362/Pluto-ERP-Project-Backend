@@ -174,8 +174,9 @@ final class PartyAccountQuery
         foreach ($parties as $p) {
             $side = $p->party_type === 'customer' ? 'credit' : 'debit';
             $total = DB::table('journal_lines as l')->join('journal_entries as e', 'e.id', '=', 'l.journal_entry_id')->where('l.ledger_id', $p->ledger_id)->where('l.is_posted', 1)
-                ->where('e.status', 'posted')->whereIn('e.entry_type', AllocationService::SETTLING_TYPES)->where("l.{$side}", '>', 0)->sum("l.{$side}");
-            $used = DB::table('bill_allocations as a')->join('journal_lines as l', 'l.id', '=', 'a.journal_line_id')->where('l.ledger_id', $p->ledger_id)->whereNull('a.reversed_at')->sum('a.amount');
+                ->where('e.status', 'posted')->where(fn ($q) => AllocationService::settlingEntries($q))->where("l.{$side}", '>', 0)->sum("l.{$side}");
+            $used = DB::table('bill_allocations as a')->join('journal_lines as l', 'l.id', '=', 'a.journal_line_id')->where('l.ledger_id', $p->ledger_id)->whereNull('a.reversed_at')
+                ->selectRaw('COALESCE(SUM(a.amount + a.fx_amount), 0) u')->value('u');
             $left = Money::of((string) $total)->minus((string) $used);
             if ($left->isPositive()) {
                 $out[$p->id] = $left;

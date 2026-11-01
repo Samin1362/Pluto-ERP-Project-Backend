@@ -23,6 +23,7 @@ use App\Http\Controllers\Api\V1\Inventory\StockMovementController;
 use App\Http\Controllers\Api\V1\Inventory\StockTransferController;
 use App\Http\Controllers\Api\V1\Inventory\UnitController;
 use App\Http\Controllers\Api\V1\Inventory\WarehouseController;
+use App\Http\Controllers\Api\V1\Lc\LcController;
 use App\Http\Controllers\Api\V1\Me\AccountController;
 use App\Http\Controllers\Api\V1\Me\TwoFactorController;
 use App\Http\Controllers\Api\V1\MeController;
@@ -52,6 +53,7 @@ use App\Http\Controllers\Api\V1\Settlements\AllocationController;
 use App\Http\Controllers\Api\V1\Settlements\CustomerReceiptController;
 use App\Http\Controllers\Api\V1\Settlements\SupplierPaymentController;
 use App\Queries\DashboardLensQuery;
+use App\Queries\LcQuery;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -127,6 +129,40 @@ Route::middleware(['jwt', 'throttle:api-user'])->group(function () {
         Route::get('notifications', [NotificationController::class, 'index']);
         Route::post('notifications/read-all', [NotificationController::class, 'readAll']);
         Route::post('notifications/{id}/read', [NotificationController::class, 'read'])->whereNumber('id');
+        // Letters of credit and landed cost (M1-M8; P16.1). Status and money rules are checked by LcService / LcPostingService.
+        Route::get('lc/overview', [LcController::class, 'overview'])->middleware('perm:lc.view');
+        Route::get('letters-of-credit', [LcController::class, 'index'])->middleware('perm:lc.view');
+        Route::post('letters-of-credit', [LcController::class, 'store'])->middleware(['perm:lc.create', 'idempotent']);
+        Route::get('letters-of-credit/{id}', [LcController::class, 'show'])->whereNumber('id')->middleware('perm:lc.view');
+        Route::put('letters-of-credit/{id}', [LcController::class, 'update'])->whereNumber('id')->middleware('perm:lc.edit');
+        Route::delete('letters-of-credit/{id}', [LcController::class, 'destroy'])->whereNumber('id')->middleware('perm:lc.delete');
+        Route::post('letters-of-credit/{id}/transition', [LcController::class, 'transition'])->whereNumber('id')->middleware('perm:lc.edit');
+        Route::post('letters-of-credit/{id}/close', [LcController::class, 'close'])->whereNumber('id')->middleware(['perm:lc.edit', 'idempotent']);
+        Route::get('letters-of-credit/{id}/pdf', [LcController::class, 'pdf'])->whereNumber('id')->middleware('perm:lc.view');
+        Route::get('letters-of-credit/{id}/documents', [LcController::class, 'documents'])->whereNumber('id')->middleware('perm:lc.view');
+        Route::post('letters-of-credit/{id}/documents', [LcController::class, 'addDocument'])->whereNumber('id')->middleware('perm:lc.edit');
+        Route::patch('lc-documents/{id}', [LcController::class, 'updateDocument'])->whereNumber('id')->middleware('perm:lc.edit');
+        Route::get('lc-documents/matrix', [LcController::class, 'matrix'])->middleware('perm:lc.view');
+        Route::get('lc-document-templates', [LcController::class, 'templates'])->middleware('perm:lc.view');
+        Route::post('lc-document-templates', [LcController::class, 'storeTemplate'])->middleware('perm:lc.create');
+        Route::put('lc-document-templates/{id}', [LcController::class, 'updateTemplate'])->whereNumber('id')->middleware('perm:lc.edit');
+        Route::get('lc-amendments', [LcController::class, 'amendments'])->middleware('perm:lc.view');
+        Route::post('letters-of-credit/{id}/amendments', [LcController::class, 'amend'])->whereNumber('id')->middleware(['perm:lc.edit', 'idempotent']);
+        Route::patch('lc-amendments/{id}', [LcController::class, 'updateAmendment'])->whereNumber('id')->middleware('perm:lc.edit');
+        Route::post('letters-of-credit/{id}/shipments', [LcController::class, 'addShipment'])->whereNumber('id')->middleware('perm:lc.edit');
+        Route::patch('lc-shipments/{id}', [LcController::class, 'updateShipment'])->whereNumber('id')->middleware('perm:lc.edit');
+        Route::get('lc-charges', [LcController::class, 'charges'])->middleware('perm:lc.view');
+        Route::post('lc-charges', [LcController::class, 'addCharge'])->middleware(['perm:lc.create', 'idempotent']);
+        Route::post('lc-charges/{id}/pay', [LcController::class, 'payCharge'])->whereNumber('id')->middleware(['perm:lc.create', 'idempotent']);
+        Route::post('lc-charges/{id}/reverse', [LcController::class, 'reverseCharge'])->whereNumber('id')->middleware(['perm:lc.edit', 'idempotent']);
+        Route::get('letters-of-credit/{id}/payments', [LcController::class, 'payments'])->whereNumber('id')->middleware('perm:lc.view');
+        Route::post('letters-of-credit/{id}/payments', [LcController::class, 'pay'])->whereNumber('id')->middleware(['perm:lc.create', 'idempotent']);
+        Route::post('lc-payments/{id}/reverse', [LcController::class, 'reversePayment'])->whereNumber('id')->middleware(['perm:lc.edit', 'idempotent']);
+        Route::post('letters-of-credit/{id}/landed-cost/preview', [LcController::class, 'landedCostPreview'])->whereNumber('id')->middleware('perm:lc.view');
+        Route::post('letters-of-credit/{id}/landed-cost', [LcController::class, 'landedCost'])->whereNumber('id')->middleware(['perm:lc.create', 'idempotent']);
+        Route::post('landed-cost-allocations/{id}/reverse', [LcController::class, 'reverseAllocation'])->whereNumber('id')->middleware(['perm:lc.edit', 'idempotent']);
+        Route::get('letters-of-credit/{id}/cost-summary', [LcController::class, 'costSummary'])->whereNumber('id')->middleware('perm:lc.view');
+        Route::get('reports/lc/{report}', [LcController::class, 'report'])->whereIn('report', LcQuery::REPORTS)->middleware('perm:lc.view');
         // Settings (K1-K15; P15.1). Owner-only fields and the last Owner are checked by the services.
         Route::get('me/notification-preferences', [AccountController::class, 'notificationPreferences']);
         Route::put('me/notification-preferences', [AccountController::class, 'saveNotificationPreferences']);

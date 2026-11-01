@@ -29,8 +29,8 @@ final class OpenDocumentsQuery
         $side = $party->party_type === 'customer' ? 'credit' : 'debit';
         $credits = DB::table('journal_lines as l')->join('journal_entries as e', 'e.id', '=', 'l.journal_entry_id')
             ->where('l.ledger_id', $party->ledger_id)->where('l.is_posted', 1)->where('e.status', 'posted')->where("l.{$side}", '>', 0)
-            ->whereIn('e.entry_type', AllocationService::SETTLING_TYPES)
-            ->leftJoinSub(DB::table('bill_allocations')->whereNull('reversed_at')->groupBy('journal_line_id')->selectRaw('journal_line_id, SUM(amount) used'), 'a', 'a.journal_line_id', '=', 'l.id')
+            ->where(fn ($q) => AllocationService::settlingEntries($q))
+            ->leftJoinSub(DB::table('bill_allocations')->whereNull('reversed_at')->groupBy('journal_line_id')->selectRaw('journal_line_id, '.AllocationService::USED_SQL.' used'), 'a', 'a.journal_line_id', '=', 'l.id')
             ->orderBy('e.entry_date')->orderBy('l.id')
             ->get(['l.id', 'e.voucher_number', 'e.entry_type', 'e.entry_date', "l.{$side} as amount", DB::raw('COALESCE(a.used, 0) as used')])
             ->map(fn ($c) => ['journal_line_id' => $c->id, 'kind' => AllocationService::kind($c->entry_type), 'number' => $c->voucher_number,

@@ -41242,6 +41242,10 @@ components:
           - DUPLICATE_PARTY
           - INSUFFICIENT_FUNDS
           - APPROVAL_REQUIRED
+          - LC_EXPIRING
+          - LC_DOCUMENTS_MISSING
+          - LC_UNPAID_CHARGES
+          - NOTHING_TO_ALLOCATE
         message:
           type: string
         line_no:
@@ -44950,6 +44954,12 @@ components:
           - 'null'
           format: int64
           minimum: 1
+        tax_rule_id:
+          type:
+          - integer
+          - 'null'
+          format: int64
+          minimum: 1
       required:
       - letter_of_credit_id
       - charge_type
@@ -45023,6 +45033,16 @@ components:
           format: int64
           minimum: 1
         reference:
+          type:
+          - string
+          - 'null'
+        tax_rule_id:
+          type:
+          - integer
+          - 'null'
+          format: int64
+          minimum: 1
+        posting_status:
           type:
           - string
           - 'null'

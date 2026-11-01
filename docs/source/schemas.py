@@ -189,7 +189,7 @@ s("DeliveryUpdate", "Delivery details.", challan_no="str:30?", vehicle_no="str:4
 s("DocumentCalculation", "Server-side totals for an unsaved document.", lines="[ref:CalculatedLine]!", warnings="[ref:Warning]!", party_balance_before="money?", party_balance_after="money?",
   credit_limit="money?", effects="[str]", **TOTALS)
 s("CalculatedLine", "Calculated line.", line_no="int!", gross="money!", discount_amount="money!", tax_amount="money!", line_total="money!", available_qty="qty?")
-s("Warning", "Non-blocking warning.", code="enum:CREDIT_LIMIT_EXCEEDED|PARTY_OVERDUE|LOW_STOCK|BACKDATED|BUDGET_NEAR_LIMIT|DUPLICATE_PARTY|INSUFFICIENT_FUNDS|APPROVAL_REQUIRED!", message="str!", line_no="int?")
+s("Warning", "Non-blocking warning.", code="enum:CREDIT_LIMIT_EXCEEDED|PARTY_OVERDUE|LOW_STOCK|BACKDATED|BUDGET_NEAR_LIMIT|DUPLICATE_PARTY|INSUFFICIENT_FUNDS|APPROVAL_REQUIRED|LC_EXPIRING|LC_DOCUMENTS_MISSING|LC_UNPAID_CHARGES|NOTHING_TO_ALLOCATE!", message="str!", line_no="int?")
 s("QuotationInput", "Create or replace a quotation.", party_id="id!", quotation_date="date!", valid_until="date!", warehouse_id="id?", payment_term_id="id?", notes="text?", internal_note="text?", lines="[ref:SalesLineInput]!")
 s("Quotation", "Quotation.", id="id!", number="str!", status="enum:draft|sent|accepted|declined|expired|converted!", party="ref:PartyRef!", quotation_date="date!", valid_until="date!",
   warehouse_id="id?", payment_term_id="id?", notes="text?", internal_note="text?", sent_at="datetime?",
@@ -314,10 +314,10 @@ s("LcShipmentInput", "Shipment lot.", lot_no="int", status="enum:not_shipped|boo
 s("LcShipment", "Shipment lot.", id="id!", lot_no="int!", status="str!", bl_number="str?", vessel="str?", etd="date?", eta="date?", arrived_on="date?", quantity="qty?", value_foreign="money?", purchase_bill_id="id?", version="int!")
 s("LcChargeInput", "Charge or import expense.", letter_of_credit_id="id!", charge_type="enum:margin_deposit|opening_commission|amendment_fee|swift_postage|stamp_documentation|acceptance_commission|discrepancy_fee|marine_insurance|cf_agent_fee|port_handling|customs_duty_taxes|inland_transport|other!",
   charge_date="date!", amount="money!", paid_to="str:150?", payee_party_id="id?", status="enum:unpaid|paid!", paid_from_account_id="id?", include_in_landed_cost="bool", reference="str:60?",
-  lc_shipment_id="id?", lc_amendment_id="id?")
+  lc_shipment_id="id?", lc_amendment_id="id?", tax_rule_id="id?")
 s("ChargePayment", "Pay a charge.", paid_from_account_id="id!", date="date!", reference="str:60?")
 s("LcCharge", "LC charge.", id="id!", letter_of_credit_id="id!", lc_number="str!", charge_type="str!", charge_date="date!", amount="money!", status="enum:unpaid|paid!", paid_to="str?",
-  include_in_landed_cost="bool!", is_refundable="bool!", allocated="bool!", journal_entry_id="id?", reference="str?", version="int!")
+  include_in_landed_cost="bool!", is_refundable="bool!", allocated="bool!", journal_entry_id="id?", reference="str?", tax_rule_id="id?", posting_status="str?", version="int!")
 s("LcPaymentInput", "Payment at the bank's rate.", payment_kind="enum:sight_payment|usance_acceptance|usance_settlement", payment_date="date!", amount_foreign="money!", bank_rate="rate!", money_account_id="id!", margin_applied="money", lc_shipment_id="id?",
   purchase_bill_id="id?", bank_reference="str:60?", description="str:150?")
 s("LcPayment", "LC payment.", id="id!", payment_kind="enum:sight_payment|usance_acceptance|usance_settlement!", payment_date="date!", amount_foreign="money!", bank_rate="rate!", amount_bdt="money!", margin_applied="money!", fx_difference="money!", journal_entry_id="id?", status="str!")
