@@ -7,6 +7,7 @@ use App\Domain\Accounting\JournalBuilder;
 use App\Domain\Accounting\PeriodGuard;
 use App\Domain\Accounting\PostingService;
 use App\Domain\Inventory\StockService;
+use App\Domain\Lc\LcPostingService;
 use App\Domain\Shared\AuditLogger;
 use App\Domain\Shared\Money;
 use App\Domain\Shared\Quantity;
@@ -96,6 +97,9 @@ final class PurchaseBillPostingService
             $bill->forceFill(['status' => 'posted', 'journal_entry_id' => $entry->id, 'posted_at' => now(), 'posted_by' => Auth::id(), 'balance_due' => $bill->total])->save();
             $this->audit->record('posted', $bill, ['status' => 'draft'], ['status' => 'posted', 'journal_entry_id' => $entry->id, 'total' => (string) $bill->total]);
             $this->orders->billPosted($bill); // TC-PUR-009: the order's received quantities and status
+            if ($bill->letter_of_credit_id) { // import mode: the LC's payments settle the bill by foreign amount (06 §12.5)
+                app(LcPostingService::class)->settleBill($bill);
+            }
 
             return $bill->refresh()->load('lines');
         }, attempts: 2); // a MySQL deadlock (1213) is retried once (09 §9); the fixed lock order should make it rare

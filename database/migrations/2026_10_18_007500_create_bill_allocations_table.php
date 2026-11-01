@@ -30,6 +30,8 @@ return new class extends Migration
             $table->unsignedBigInteger('purchase_bill_id')->nullable();
             $table->decimal('amount', 18, 2);
             $table->date('allocated_on');
+            $table->decimal('foreign_amount', 18, 2)->nullable()->comment('Foreign currency settled (LC payment against an import bill, BR-043)');
+            $table->decimal('fx_amount', 18, 2)->default(0)->comment('Taka taken from the settling line beyond `amount` (+ loss, - gain); posted to fx_gain_loss (06 §12.5)');
             $table->dateTime('reversed_at')->nullable()->comment('Set when the settling entry is reversed or the document cancelled');
             $table->unsignedBigInteger('created_by')->nullable()->comment('User who created the row');
             $table->unsignedBigInteger('updated_by')->nullable()->comment('User who last changed the row');

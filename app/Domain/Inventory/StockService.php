@@ -145,6 +145,22 @@ final class StockService
         return $costs;
     }
 
+    /**
+     * Changes the value of stock already on hand without moving quantity — a `landed_cost` movement (06 §12.7, BR-045):
+     * `$delta` > 0 adds capitalised charges (value_in), < 0 takes them back (value_out, on reversal). The average cost of
+     * the warehouse follows.
+     */
+    public function revalue(Product $product, Warehouse $warehouse, Money $delta, Model $source, CarbonInterface|string $date, ?int $sourceLineId = null): void
+    {
+        $this->assertTracked($product);
+        $balance = $this->lock([[$product->id, $warehouse->id]])["{$product->id}:{$warehouse->id}"];
+        $qty = Quantity::of($balance->qty_on_hand);
+        $value = Money::of($balance->total_value)->plus($delta);
+        $avg = $qty->isPositive() ? UnitCost::of($value->dividedBy($qty, UnitCost::SCALE)) : UnitCost::of($balance->avg_unit_cost);
+        $this->write($balance, new StockPosition($qty, $value, $avg, Money::zero()), 'landed_cost', $date, $source, $sourceLineId,
+            in: Quantity::zero(), out: Quantity::zero(), unitCost: $avg, valueIn: $delta->isPositive() ? $delta : Money::zero(), valueOut: $delta->isNegative() ? $delta->negated() : Money::zero());
+    }
+
     /** After PostingService wrote the entry: the document's movements point at it (the only update a movement gets). */
     public function linkJournal(Model $source, int $journalEntryId): void
     {

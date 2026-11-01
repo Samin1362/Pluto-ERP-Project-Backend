@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Schema;
 /**
  * Table `lc_charges` (LC): migration 82 of 83, dependency level 10.
  * Bank charge or import expense of an LC (opening commission, insurance, C&F, port, duties as assessed, margin deposit, ...).
- * Depends on: companies, journal_entries, landed_cost_allocations, lc_amendments, lc_shipments, letters_of_credit, money_accounts, parties, users.
+ * Depends on: companies, journal_entries, landed_cost_allocations, lc_amendments, lc_shipments, letters_of_credit, money_accounts, parties, tax_rules, users.
  *
  * Generated from docs/source/schema.py by docs/source/build_migrations.py (baseline schema).
  * After the first deployment, never edit this file: add a new migration instead.
@@ -41,6 +41,7 @@ return new class extends Migration
             $table->string('reference', 60)->nullable();
             $table->unsignedBigInteger('journal_entry_id')->nullable();
             $table->unsignedBigInteger('landed_cost_allocation_id')->nullable();
+            $table->unsignedBigInteger('tax_rule_id')->nullable()->comment('Recoverable import tax (VAT/AT): debited to this rule\'s ledger instead of landed cost (owner decision, 1 Nov 2026)');
             $table->unsignedInteger('lock_version')->default(1)->comment('Optimistic concurrency counter; incremented on every update (If-Match)');
             $table->unsignedBigInteger('created_by')->nullable()->comment('User who created the row');
             $table->unsignedBigInteger('updated_by')->nullable()->comment('User who last changed the row');
@@ -55,6 +56,7 @@ return new class extends Migration
             $table->index(['payee_party_id'], 'lc_charges_payee_party_id_index');
             $table->index(['paid_from_account_id'], 'lc_charges_paid_from_account_id_index');
             $table->index(['landed_cost_allocation_id'], 'lc_charges_landed_cost_allocation_id_index');
+            $table->index(['tax_rule_id'], 'lc_charges_tax_rule_id_index');
             $table->index(['created_by'], 'lc_charges_created_by_index');
             $table->index(['updated_by'], 'lc_charges_updated_by_index');
 
@@ -66,6 +68,7 @@ return new class extends Migration
             $table->foreign('paid_from_account_id', 'lc_charges_paid_from_account_id_foreign')->references('id')->on('money_accounts')->restrictOnDelete()->restrictOnUpdate();
             $table->foreign('journal_entry_id', 'lc_charges_journal_entry_id_foreign')->references('id')->on('journal_entries')->restrictOnDelete()->restrictOnUpdate();
             $table->foreign('landed_cost_allocation_id', 'lc_charges_landed_cost_allocation_id_foreign')->references('id')->on('landed_cost_allocations')->nullOnDelete()->restrictOnUpdate();
+            $table->foreign('tax_rule_id', 'lc_charges_tax_rule_id_foreign')->references('id')->on('tax_rules')->restrictOnDelete()->restrictOnUpdate();
             $table->foreign('created_by', 'lc_charges_created_by_foreign')->references('id')->on('users')->restrictOnDelete()->restrictOnUpdate();
             $table->foreign('updated_by', 'lc_charges_updated_by_foreign')->references('id')->on('users')->restrictOnDelete()->restrictOnUpdate();
         });

@@ -14344,6 +14344,22 @@
      "auto_increment": false
     },
     {
+     "name": "foreign_amount",
+     "type": "decimal(18,2)",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "fx_amount",
+     "type": "decimal(18,2)",
+     "nullable": false,
+     "default": "0",
+     "generated": null,
+     "auto_increment": false
+    },
+    {
      "name": "reversed_at",
      "type": "datetime",
      "nullable": true,
@@ -16028,6 +16044,14 @@
      "auto_increment": false
     },
     {
+     "name": "tax_rule_id",
+     "type": "bigint unsigned",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
      "name": "lock_version",
      "type": "int unsigned",
      "nullable": false,
@@ -16099,6 +16123,9 @@
     "lc_charges_landed_cost_allocation_id_index": [
      "landed_cost_allocation_id"
     ],
+    "lc_charges_tax_rule_id_index": [
+     "tax_rule_id"
+    ],
     "lc_charges_created_by_index": [
      "created_by"
     ],
@@ -16161,6 +16188,13 @@
      "references_table": "landed_cost_allocations",
      "references_column": "id",
      "on_delete": "SET NULL",
+     "on_update": "RESTRICT"
+    },
+    "lc_charges_tax_rule_id_foreign": {
+     "column": "tax_rule_id",
+     "references_table": "tax_rules",
+     "references_column": "id",
+     "on_delete": "RESTRICT",
      "on_update": "RESTRICT"
     },
     "lc_charges_created_by_foreign": {
