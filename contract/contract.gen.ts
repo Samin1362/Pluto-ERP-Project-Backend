@@ -498,6 +498,7 @@ export interface DashboardSummary {
   recent_transactions: Array<Record<string, unknown>>
   inventory_alerts: Array<Record<string, unknown>>
   banners?: Array<Record<string, unknown>>
+  widget_errors?: Array<Record<string, unknown>>
 }
 
 /** Delivery details. */
@@ -558,11 +559,15 @@ export interface ExportJob {
   expires_at?: string | null
   finished_at?: string | null
   error?: string | null
+  source?: string | null
+  format?: string | null
+  file_name?: string | null
+  created_at?: string | null
 }
 
-/** Start an export. export_pack: month-end pack (`period`, `reports`). list: any list screen, `source` = the list operationId (e.g. getParties) and `filters` = its query parameters; the caller needs that list's view permission as well. */
+/** Start an export. export_pack: month-end pack (`period` = YYYY-MM, `reports` = report operationIds, e.g. getReportsTrialBalance; default the financial statements). report: one report, `source` = its operationId (e.g. getReportsProfitAndLoss) and `filters` = its query parameters. list: any list screen, `source` = the list operationId (e.g. getParties) and `filters` = its query parameters (every page). The caller needs the source's view permission as well. */
 export interface ExportJobCreate {
-  kind: 'export_pack' | 'list'
+  kind: 'export_pack' | 'report' | 'list'
   format: 'xlsx' | 'pdf' | 'both' | 'csv'
   period?: string | null
   reports?: Array<string>
@@ -698,7 +703,9 @@ export interface Kpi {
   value: Decimal
   delta_pct?: Decimal | null
   trend?: Array<Decimal>
+  trend_pct?: Array<Decimal>
   foot?: string | null
+  link?: string | null
 }
 
 /** Allocation preview or result. */
@@ -972,6 +979,7 @@ export interface LedgerStatement {
 /** A2-A8 payload. */
 export interface LensData {
   lens: 'financial' | 'sales' | 'expenses' | 'receivables' | 'payables' | 'cash' | 'inventory'
+  period?: Record<string, unknown>
   kpis: Array<Kpi>
   series?: Array<Record<string, unknown>>
   table?: ReportData

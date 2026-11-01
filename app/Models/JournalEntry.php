@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Casts\AsMoney;
+use App\Domain\Dashboard\DashboardCache;
 use App\Models\Concerns\BelongsToCompany;
 use App\Models\Concerns\HasLockVersion;
 use App\Models\Concerns\TracksActor;
@@ -26,6 +27,11 @@ class JournalEntry extends Model
         'entry_date' => 'date', 'total_debit' => AsMoney::class, 'total_credit' => AsMoney::class, 'is_system_generated' => 'boolean',
         'submitted_at' => 'datetime', 'approved_at' => 'datetime', 'posted_at' => 'datetime',
     ];
+
+    protected static function booted(): void
+    {
+        static::saved(fn (self $e) => DashboardCache::bump((int) $e->company_id)); // dashboards show a posting at once (P14.1-BE-01)
+    }
 
     public function lines(): HasMany
     {

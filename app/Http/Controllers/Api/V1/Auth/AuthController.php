@@ -44,7 +44,7 @@ class AuthController extends Controller
     private function signedIn(Request $request, array $r): JsonResponse
     {
         return response()->json(['data' => ['status' => 'authenticated'] + $r['tokens'] + ['user' => (new MeResource($r['user']))->resolve($request)]])
-            ->withCookie($this->cookie($r['refresh']))->header('Cache-Control', 'no-store');
+            ->withCookie(self::refreshCookie($r['refresh']))->header('Cache-Control', 'no-store');
     }
 
     public function refresh(Request $request): JsonResponse
@@ -58,10 +58,10 @@ class AuthController extends Controller
         } catch (ApiProblem $e) {
             // Clear only the cookie that was sent: a cookieless refresh still in flight while the user signs in must not
             // delete the fresh cookie the login response just set.
-            throw new ApiProblem($e->errorCode, $e->detail, headers: $raw ? ['Set-Cookie' => (string) $this->cookie('', true)] : []);
+            throw new ApiProblem($e->errorCode, $e->detail, headers: $raw ? ['Set-Cookie' => (string) self::refreshCookie('', true)] : []);
         }
 
-        return response()->json(['data' => $r['tokens']])->withCookie($this->cookie($r['refresh']))->header('Cache-Control', 'no-store');
+        return response()->json(['data' => $r['tokens']])->withCookie(self::refreshCookie($r['refresh']))->header('Cache-Control', 'no-store');
     }
 
     public function logout(Request $request): Response
@@ -70,10 +70,11 @@ class AuthController extends Controller
             $this->auth->logout($request->cookie(config('pluto.refresh.cookie')));
         }
 
-        return response()->noContent()->withCookie($this->cookie('', true));
+        return response()->noContent()->withCookie(self::refreshCookie('', true));
     }
 
-    private function cookie(string $value, bool $forget = false): Cookie
+    /** The `pl_rt` refresh cookie (07 §3.2); also set when an invitation is accepted. */
+    public static function refreshCookie(string $value, bool $forget = false): Cookie
     {
         return Cookie::create(config('pluto.refresh.cookie'), $forget ? null : $value,
             $forget ? 1 : now()->addDays((int) config('pluto.refresh.ttl_days')),

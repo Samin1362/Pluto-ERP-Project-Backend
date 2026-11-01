@@ -15,7 +15,7 @@ backup() {
     find /backups -name "${DB}-*.sql.gz" -mtime +14 -delete
     echo "$(date '+%F %T %Z') backup written: $file ($(du -h "$file" | cut -f1))"
     files="/backups/${DB}-files-$(date +%Y%m%d-%H%M%S).tar.gz"
-    if [ -d /storage/app/private ] && tar -czf "$files.part" -C /storage/app private && mv "$files.part" "$files"; then
+    if [ -d /storage/app/private ] && tar -czf "$files.part" --exclude=private/exports -C /storage/app private && mv "$files.part" "$files"; then
       find /backups -name "${DB}-files-*.tar.gz" -mtime +14 -delete
       echo "$(date '+%F %T %Z') attachments written: $files"
     else

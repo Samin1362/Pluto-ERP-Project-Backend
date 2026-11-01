@@ -95,14 +95,15 @@ final class CompanyProvisioner
 
     public function __construct(private readonly CurrentCompany $current) {}
 
-    public function provision(string $legalName, User $owner, ?CarbonImmutable $today = null): Company
+    /** @param  array{trading_name?: string, business_type?: string, fy_start_month?: int, base_currency_code?: string}  $attrs  (POST /companies, S0) */
+    public function provision(string $legalName, User $owner, ?CarbonImmutable $today = null, array $attrs = []): Company
     {
         $today ??= CarbonImmutable::now('Asia/Dhaka');
 
-        return DB::transaction(function () use ($legalName, $owner, $today) {
+        return DB::transaction(function () use ($legalName, $owner, $today, $attrs) {
             $company = Company::create([
                 'legal_name' => $legalName, 'business_type' => 'private_limited', 'base_currency_code' => 'BDT',
-                'fy_start_month' => 7, 'timezone' => 'Asia/Dhaka', 'status' => 'active',
+                'fy_start_month' => 7, 'timezone' => 'Asia/Dhaka', 'status' => 'active', ...$attrs,
             ]);
             $previous = $this->current->has() ? [$this->current->company(), $this->current->membership()] : null;
             $this->current->set($company, null);

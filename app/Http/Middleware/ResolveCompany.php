@@ -9,6 +9,7 @@ use App\Support\CurrentCompany;
 use App\Support\Problem\ApiProblem;
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
@@ -38,6 +39,10 @@ class ResolveCompany
             ->where('company_id', $company->id)->where('user_id', $user->id)->where('status', 'active')->first() : null;
         if (! $company || ! $membership || $company->status !== 'active') {
             throw new ApiProblem('not_a_member');
+        }
+        // BR-062: while the company is being restored from a backup, its data is answered by nobody.
+        if (Cache::has("company:{$company->id}:restoring")) {
+            throw new ApiProblem('company_maintenance', headers: ['Retry-After' => '30']);
         }
         // 07 §4 step 3: a company that requires 2-step refuses sign-ins made without a code. GET /me
         // (optional mode) still answers so the app can send the user to set it up.

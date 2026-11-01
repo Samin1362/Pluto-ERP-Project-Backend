@@ -114,6 +114,7 @@ E("GET", "/users/{id}", "Member details, recent activity and role permissions", 
 E("PATCH", "/users/{id}", "Change a member's role or branch restriction", "settings.users", ["company_users", "company_user_branches", "audit_logs"], ["K10"], rules=["BR-060", "BR-038"], req="MemberUpdate", resp="Member", ifmatch=True, tag=T, fr=["FR-007"])
 E("POST", "/users/{id}/deactivate", "Deactivate a member (revokes sessions; their pending approvals stay queued)", "settings.users", ["company_users", "user_sessions", "audit_logs"], ["K10"], rules=["BR-061", "BR-060"], resp="Member", tag=T, fr=["FR-008"])
 E("POST", "/users/{id}/reactivate", "Reactivate a member (seat check)", "settings.users", ["company_users"], ["K10"], rules=["BR-059"], resp="Member", tag=T, fr=["FR-008"])
+E("GET", "/invitations", "Open invitations of the company (K8 pending list)", "settings.users", ["user_invitations"], ["K8"], resp="Page<Invitation>", tag=T, fr=["FR-006"])
 E("POST", "/invitations", "Invite someone by e-mail with a role", "settings.users",
   ['user_invitations', 'user_invitation_branches', 'company_users', 'companies', 'branches'], ["K9"], rules=["BR-059"], req="InvitationCreate",
   resp="Invitation", idem=True, tag=T, fr=["FR-006"], codes=[201, 409, 422])
@@ -164,17 +165,18 @@ E("GET", "/audit-logs", "Activity timeline of one record", "auth.self", ["audit_
   desc="Requires view permission on the audited record's module.",
   perm_map={'any': '<module>.view of the record named by type/id (e.g. sales.view for a sales_invoice)'})
 E("GET", "/dashboard", "Main dashboard data for a period", "dashboard.view", ["journal_lines", "ledgers", "sales_invoices", "purchase_bills", "money_accounts", "stock_balances", "product_warehouse_settings", "journal_entries"], ["A1"],
-  params=["period"], resp="DashboardSummary", tag=T, fr=["FR-010"], desc="Cached per company and period for 60 seconds; invalidated by postings.")
+  params=["period"], resp="DashboardSummary", tag=T, fr=["FR-010"], desc="Cached per company and period for 60 seconds; invalidated by postings. `period`: this_month (default), this_quarter, this_year. Profit, cash and balance widgets need reports.financial (DEC-13); other widgets follow their module's view permission. A widget that fails comes back empty with an entry in `widget_errors` (ERR-8).")
 E("GET", "/dashboard/lenses/{lens}", "Dashboard lens data (financial, sales, expenses, receivables, payables, cash, inventory)", "dashboard.view",
   ["journal_lines", "sales_invoices", "purchase_bills", "ie_categories", "money_accounts", "stock_balances", "product_warehouse_settings", "parties"], ["A2", "A3", "A4", "A5", "A6", "A7", "A8"],
   params=["period"], resp="LensData", tag=T, fr=["FR-011"],
-  desc="Each lens also requires the source module's view permission (financial: reports.view; sales: sales.view; expenses and cash: banking.view; receivables/payables: parties.view; inventory: inventory.view); otherwise 403 and the lens tab is hidden.")
+  desc="Each lens also requires the source module's view permission (financial: reports.financial; sales: sales.view; expenses: banking.view; cash: banking.view and reports.financial; receivables/payables: parties.view and reports.financial, DEC-13; inventory: inventory.view, values only with inventory.view_costs); otherwise 403 and the lens tab is hidden. `period`: this_month (default), this_quarter, this_year (financial year to date). Chart points carry `pct` (0–100 of the series maximum) for drawing.")
 E("GET", "/backups", "Backup history and settings", "settings.backup", ["company_backups"], ["K15"], resp="Page<Backup>", tag=T, fr=["FR-087"])
 E("POST", "/backups", "Take a manual backup now (queued)", "settings.backup", ["company_backups"], ["K15"], resp="Backup", idem=True, tag=T, fr=["FR-087"], codes=[202])
 E("GET", "/backups/{id}/download", "Signed URL of a backup file (Owner only: snapshots hold the whole company, R-11)", "settings.restore", ["company_backups", "audit_logs"], ["K15"], resp="SignedUrl", tag=T, fr=["FR-087"])
 E("POST", "/backups/{id}/restore", "Restore the company from a backup (Owner; confirmation text RESTORE)", "settings.restore", ["company_backups", "audit_logs"], ["K15"], rules=["BR-062"],
   req="RestoreRequest", resp="Backup", idem=True, tag=T, fr=["FR-087"], tx="Company placed in maintenance; pre_restore snapshot first; queued job.", codes=[202, 403, 422])
-E("POST", "/export-jobs", "Prepare the month-end export pack or a large report export", "reports.export", ["export_jobs"], ["K15", "J1"], req="ExportJobCreate", resp="ExportJob", idem=True, tag=T, fr=["FR-087", "FR-076"], codes=[202, 422])
+E("POST", "/export-jobs", "Prepare the month-end export pack or a large report export", "reports.export", ["export_jobs"], ["K15", "J1"], req="ExportJobCreate", resp="ExportJob", idem=True, tag=T, fr=["FR-087", "FR-076"], codes=[202, 403, 422, 429],
+  desc="Queued (NFR-006); 30 per minute per user. The file and its signed link expire 24 hours after the job finishes.")
 E("GET", "/export-jobs/{id}", "Export job status and signed download URL when complete", "reports.export", ["export_jobs"], ["K15", "J1"], resp="ExportJob", tag=T, fr=["FR-087"])
 
 # ---------------------------------------------------------------- Parties

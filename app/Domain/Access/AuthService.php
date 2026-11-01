@@ -81,7 +81,7 @@ final class AuthService
     }
 
     /** @param list<string> $amr */
-    private function signIn(User $user, array $amr, string $ip, ?string $userAgent, ?string $deviceLabel): array
+    public function signIn(User $user, array $amr, string $ip, ?string $userAgent, ?string $deviceLabel): array
     {
         $user->last_login_at = now();
         $user->save();

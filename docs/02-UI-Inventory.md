@@ -155,7 +155,7 @@
 | [K5](#page-k5) | Currency and region | Settings | Settings | `settings.edit` | 2 | Settings.dc.html (K5) |
 | [K6](#page-k6) | Tax configuration | Settings | Settings | `settings.view` | 6 | Settings.dc.html (K6) |
 | [K7](#page-k7) | Invoice customization | Settings | Settings | `settings.edit` | 2 | Settings.dc.html (K7) |
-| [K8](#page-k8) | User list | Settings | List | `settings.users` | 2 | Settings.dc.html (K8) |
+| [K8](#page-k8) | User list | Settings | List | `settings.users` | 3 | Settings.dc.html (K8) |
 | [K9](#page-k9) | Invite user | Settings | Dialog | `settings.users` | 2 | Settings.dc.html (K9) |
 | [K10](#page-k10) | User details | Settings | Detail | `settings.users` | 7 | Settings.dc.html (K10) |
 | [K11](#page-k11) | Roles and permissions | Settings | Matrix | `settings.roles` | 6 | Settings.dc.html (K11) |
@@ -3016,7 +3016,7 @@ Each entry follows the 13 points of the brief: (1) purpose · (2) components and
 6. **Tables:** —
 7. **Validation and rules:** BR-059: Active plus invited users cannot exceed the company's seat limit.
 8. **Roles allowed:** `settings.users` → Owner. Actions additionally check their own permission (see endpoints).
-9. **APIs:** [`GET /users`](05-API-Specification.md#getusers), [`DELETE /invitations/{id}`](05-API-Specification.md#deleteinvitationsid)
+9. **APIs:** [`GET /users`](05-API-Specification.md#getusers), [`GET /invitations`](05-API-Specification.md#getinvitations), [`DELETE /invitations/{id}`](05-API-Specification.md#deleteinvitationsid)
 10. **Entities:** `company_users`, `roles`, `user_invitations`, `users`
 11. **Workflows:** — · FR: FR-006
 12. **States:** Loading: skeleton rows matching columns (L10). Empty: first-use empty state with primary action, or 'No matches' with Clear filters (L9). Error: inline banner with Retry; offline banner (L11). Success: toast after bulk actions (L12). 403 page if view permission missing (L14).

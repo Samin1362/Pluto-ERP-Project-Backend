@@ -32,6 +32,7 @@
         <env name="DB_PASSWORD" value="" force="false"/>
         <env name="CACHE_STORE" value="array" force="true"/>
         <env name="QUEUE_CONNECTION" value="sync" force="true"/>
+        <env name="PLUTO_PASSWORD_BREACH_CHECK" value="false" force="true"/>
         <env name="SESSION_DRIVER" value="array" force="true"/>
         <env name="MAIL_MAILER" value="array" force="true"/>
         <!-- Cheaper Argon2id in tests only; production uses 64 MiB / 4 passes (07 §2). -->
@@ -49,6 +50,7 @@
         <server name="DB_DATABASE" value="pluto_test" force="true"/>
         <server name="CACHE_STORE" value="array" force="true"/>
         <server name="QUEUE_CONNECTION" value="sync" force="true"/>
+        <server name="PLUTO_PASSWORD_BREACH_CHECK" value="false" force="true"/>
         <server name="SESSION_DRIVER" value="array" force="true"/>
         <server name="MAIL_MAILER" value="array" force="true"/>
         <server name="ARGON_MEMORY" value="1024" force="true"/>

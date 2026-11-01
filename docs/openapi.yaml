@@ -4321,6 +4321,86 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
   /api/v1/invitations:
+    get:
+      operationId: getInvitations
+      summary: Open invitations of the company (K8 pending list)
+      tags:
+      - Users and roles
+      description: "**Permission:** `settings.users`  \n**Database:** read: user_invitations  \n**Rules:** —"
+      x-permission: settings.users
+      x-business-rules: []
+      x-requirements:
+      - FR-006
+      x-pages:
+      - K8
+      x-page-actions: []
+      x-tables:
+      - user_invitations
+      x-db-operations:
+        user_invitations: R
+      x-error-codes:
+      - company_maintenance
+      - company_required
+      - not_a_member
+      - permission_denied
+      - server_error
+      - token_expired
+      - token_invalid
+      - unauthenticated
+      parameters:
+      - $ref: '#/components/parameters/CompanyHeader'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                - meta
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Invitation'
+                  meta:
+                    $ref: '#/components/schemas/PageMeta'
+        '400':
+          description: 'Malformed request: `company_required`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: 'Not authenticated: `token_expired`, `token_invalid`, `unauthenticated`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: 'Company temporarily unavailable (restore in progress): `company_maintenance`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+              description: Seconds to wait
+        default:
+          description: Unexpected error (`server_error`)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
     post:
       operationId: postInvitations
       summary: Invite someone by e-mail with a role
@@ -6667,8 +6747,10 @@ paths:
       summary: Main dashboard data for a period
       tags:
       - Platform
-      description: "Cached per company and period for 60 seconds; invalidated by postings.\n\n**Permission:** `dashboard.view`  \n**Database:** read: journal_entries,\
-        \ journal_lines, ledgers, money_accounts, product_warehouse_settings, purchase_bills, sales_invoices, stock_balances  \n**Rules:** —"
+      description: "Cached per company and period for 60 seconds; invalidated by postings. `period`: this_month (default), this_quarter, this_year. Profit, cash and\
+        \ balance widgets need reports.financial (DEC-13); other widgets follow their module's view permission. A widget that fails comes back empty with an entry\
+        \ in `widget_errors` (ERR-8).\n\n**Permission:** `dashboard.view`  \n**Database:** read: journal_entries, journal_lines, ledgers, money_accounts, product_warehouse_settings,\
+        \ purchase_bills, sales_invoices, stock_balances  \n**Rules:** —"
       x-permission: dashboard.view
       x-business-rules: []
       x-requirements:
@@ -6776,9 +6858,11 @@ paths:
       summary: Dashboard lens data (financial, sales, expenses, receivables, payables, cash, inventory)
       tags:
       - Platform
-      description: "Each lens also requires the source module's view permission (financial: reports.view; sales: sales.view; expenses and cash: banking.view; receivables/payables:\
-        \ parties.view; inventory: inventory.view); otherwise 403 and the lens tab is hidden.\n\n**Permission:** `dashboard.view`  \n**Database:** read: ie_categories,\
-        \ journal_lines, money_accounts, parties, product_warehouse_settings, purchase_bills, sales_invoices, stock_balances  \n**Rules:** —"
+      description: "Each lens also requires the source module's view permission (financial: reports.financial; sales: sales.view; expenses: banking.view; cash: banking.view\
+        \ and reports.financial; receivables/payables: parties.view and reports.financial, DEC-13; inventory: inventory.view, values only with inventory.view_costs);\
+        \ otherwise 403 and the lens tab is hidden. `period`: this_month (default), this_quarter, this_year (financial year to date). Chart points carry `pct` (0–100\
+        \ of the series maximum) for drawing.\n\n**Permission:** `dashboard.view`  \n**Database:** read: ie_categories, journal_lines, money_accounts, parties, product_warehouse_settings,\
+        \ purchase_bills, sales_invoices, stock_balances  \n**Rules:** —"
       x-permission: dashboard.view
       x-business-rules: []
       x-requirements:
@@ -7296,7 +7380,8 @@ paths:
       summary: Prepare the month-end export pack or a large report export
       tags:
       - Platform
-      description: "**Permission:** `reports.export`  \n**Database:** insert: audit_logs, export_jobs, idempotency_keys  \n**Rules:** —"
+      description: "Queued (NFR-006); 30 per minute per user. The file and its signed link expire 24 hours after the job finishes.\n\n**Permission:** `reports.export`\
+        \  \n**Database:** insert: audit_logs, export_jobs, idempotency_keys  \n**Rules:** —"
       x-permission: reports.export
       x-business-rules: []
       x-requirements:
@@ -7421,6 +7506,17 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/Error'
+        '429':
+          description: Too many requests
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+              description: Seconds to wait
         '503':
           description: 'Company temporarily unavailable (restore in progress): `company_maintenance`'
           content:
@@ -38714,6 +38810,11 @@ components:
           items:
             type: object
             additionalProperties: true
+        widget_errors:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
       required:
       - period
       - kpis
@@ -38750,7 +38851,18 @@ components:
             pattern: ^-?\d{1,16}(\.\d{1,2})?$
             example: '118450.00'
             description: Decimal as string (money)
+        trend_pct:
+          type: array
+          items:
+            type: string
+            pattern: ^\d{1,3}(\.\d{1,4})?$
+            example: '5.0000'
+            description: Decimal as string (pct)
         foot:
+          type:
+          - string
+          - 'null'
+        link:
           type:
           - string
           - 'null'
@@ -38772,6 +38884,9 @@ components:
           - payables
           - cash
           - inventory
+        period:
+          type: object
+          additionalProperties: true
         kpis:
           type: array
           items:
@@ -38879,19 +38994,38 @@ components:
           type:
           - string
           - 'null'
+        source:
+          type:
+          - string
+          - 'null'
+        format:
+          type:
+          - string
+          - 'null'
+        file_name:
+          type:
+          - string
+          - 'null'
+        created_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
       required:
       - id
       - kind
       - status
     ExportJobCreate:
       type: object
-      description: 'Start an export. export_pack: month-end pack (`period`, `reports`). list: any list screen, `source` = the list operationId (e.g. getParties) and
-        `filters` = its query parameters; the caller needs that list''s view permission as well.'
+      description: 'Start an export. export_pack: month-end pack (`period` = YYYY-MM, `reports` = report operationIds, e.g. getReportsTrialBalance; default the financial
+        statements). report: one report, `source` = its operationId (e.g. getReportsProfitAndLoss) and `filters` = its query parameters. list: any list screen, `source`
+        = the list operationId (e.g. getParties) and `filters` = its query parameters (every page). The caller needs the source''s view permission as well.'
       properties:
         kind:
           type: string
           enum:
           - export_pack
+          - report
           - list
         format:
           type: string

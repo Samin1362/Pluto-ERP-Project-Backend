@@ -30,6 +30,10 @@ return [
         'secure' => (bool) env('REFRESH_COOKIE_SECURE', true),
     ],
 
+    // New passwords (NFR-011): at least 10 characters and not in a known breach (haveibeenpwned range API, k-anonymity).
+    // The breach check needs outbound HTTPS; tests and offline installs turn it off.
+    'passwords' => ['breach_check' => (bool) env('PLUTO_PASSWORD_BREACH_CHECK', true), 'reset_minutes' => 60],
+
     'login' => [
         'max_failures_per_source' => 5,     // per (e-mail, IP) in the decay window -> 429 (R-12)
         'source_decay_seconds' => 900,

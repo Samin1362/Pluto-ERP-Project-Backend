@@ -251,6 +251,7 @@ erDiagram
         boolean in_app
         boolean email
         boolean sms
+        varchar send_at
     }
     notifications {
         bigint id PK
@@ -1956,6 +1957,7 @@ Standard columns are listed in each table: `id` (PK), `company_id` (tenant), `lo
 | `in_app` | BOOLEAN | no | 1 | — | — |  |
 | `email` | BOOLEAN | no | 0 | — | — |  |
 | `sms` | BOOLEAN | no | 0 | — | — |  |
+| `send_at` | VARCHAR(5) | yes | NULL | — | — | daily_summary only: HH:MM in Asia/Dhaka (07:30, 08:00 or 09:00; K12) |
 | `created_at` | DATETIME | yes | NULL | — | — | Set by Laravel |
 | `updated_at` | DATETIME | yes | NULL | — | — | Set by Laravel |
 
@@ -2121,7 +2123,7 @@ Standard columns are listed in each table: `id` (PK), `company_id` (tenant), `lo
 |---|---|---|---|---|---|---|
 | `id` | BIGINT UNSIGNED | no | — | PK | — | Primary key, auto-increment |
 | `company_id` | BIGINT UNSIGNED | no | — | FK → `companies.id` | ON DELETE RESTRICT / ON UPDATE RESTRICT | Tenant owner. Every query is scoped by it. |
-| `kind` | VARCHAR(30) | no | — | — | — | enum: export_pack \| report |
+| `kind` | VARCHAR(30) | no | — | — | — | enum: export_pack \| report \| list |
 | `parameters` | JSON | no | — | — | — |  |
 | `status` | VARCHAR(30) | no | 'queued' | — | — | enum: queued \| running \| complete \| failed |
 | `file_path` | VARCHAR(255) | yes | NULL | — | — |  |
@@ -2135,7 +2137,7 @@ Standard columns are listed in each table: `id` (PK), `company_id` (tenant), `lo
 - Index (company_id, status)
 - Index (created_by)
 - Index (updated_by)
-- **Check** `kind IN ('export_pack', 'report')`
+- **Check** `kind IN ('export_pack', 'report', 'list')`
 - **Check** `status IN ('queued', 'running', 'complete', 'failed')`
 
 ### 6.2 Access

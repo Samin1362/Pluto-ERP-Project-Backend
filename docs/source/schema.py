@@ -260,7 +260,8 @@ add(
        c("backup_enabled", BOOL, default="1"), c("backup_retention_days", "SMALLINT UNSIGNED", default="90")],
       uniques=[["company_id"]], version=True),
     T("notification_preferences", "Platform", "Per user, company and event: in-app, e-mail and SMS switches (K12).",
-      [fk("user_id", "users", on_delete="CASCADE"), c("event_key", V(60)), c("in_app", BOOL, default="1"), c("email", BOOL, default="0"), c("sms", BOOL, default="0")],
+      [fk("user_id", "users", on_delete="CASCADE"), c("event_key", V(60)), c("in_app", BOOL, default="1"), c("email", BOOL, default="0"), c("sms", BOOL, default="0"),
+       c("send_at", V(5), null=True, note="daily_summary only: HH:MM in Asia/Dhaka (07:30, 08:00 or 09:00; K12)")],
       uniques=[["company_id", "user_id", "event_key"]], audit_cols=False),
     T("notifications", "Platform", "In-app notification feed (L3) including approval requests.",
       [fk("user_id", "users", on_delete="CASCADE"), c("event_key", V(60)), c("title", V(190)), c("body", V(500), null=True),
@@ -296,7 +297,7 @@ add(
        c("started_at", TS), c("finished_at", TS, null=True), c("expires_at", TS, null=True), c("error", V(500), null=True)],
       indexes=[["company_id", "started_at"]]),
     T("export_jobs", "Platform", "Asynchronous export (month-end pack, report exports).",
-      [enum("kind", ["export_pack", "report"]), c("parameters", JSON), enum("status", ["queued", "running", "complete", "failed"], default="'queued'"),
+      [enum("kind", ["export_pack", "report", "list"]), c("parameters", JSON), enum("status", ["queued", "running", "complete", "failed"], default="'queued'"),
        c("file_path", V(255), null=True), c("finished_at", TS, null=True), c("error", V(500), null=True)],
       indexes=[["company_id", "status"]]),
 )

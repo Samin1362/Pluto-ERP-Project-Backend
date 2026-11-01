@@ -46,5 +46,7 @@ class AppServiceProvider extends ServiceProvider
         // 05 §1 rate limits: auth endpoints 20/min per IP; authenticated calls 120/min per user.
         RateLimiter::for('auth-ip', fn (Request $r) => Limit::perMinute((int) config('pluto.rate_limits.auth_per_ip'))->by('auth:'.$r->ip()));
         RateLimiter::for('api-user', fn (Request $r) => Limit::perMinute((int) config('pluto.rate_limits.api_per_user'))->by('user:'.($r->attributes->get('auth_user')?->id ?? $r->ip())));
+        // Export jobs: 30 a minute per user (P14.1-BE-05).
+        RateLimiter::for('exports', fn (Request $r) => Limit::perMinute(30)->by('exports:'.($r->attributes->get('auth_user')?->id ?? $r->ip())));
     }
 }
