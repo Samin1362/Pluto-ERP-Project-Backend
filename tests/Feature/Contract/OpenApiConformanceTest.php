@@ -488,6 +488,87 @@ class OpenApiConformanceTest extends TestCase
         }
     }
 
+    public function test_dashboard_search_notification_and_export_endpoints_match_the_contract(): void
+    {
+        $t = $this->login('owner@meghna.example');
+        $c = $this->company->id;
+        $key = fn () => ['Idempotency-Key' => (string) Str::uuid()];
+        Storage::fake('local');
+        $this->api('POST', '/api/v1/money-accounts', $t, $c, ['account_type' => 'bank', 'bank_name' => 'Sonali Bank', 'account_name' => 'Meghna', 'account_number' => '0012345678',
+            'opening_balance' => '90000.00'], $key());
+        $this->assertConforms($this->api('GET', '/api/v1/dashboard?period=this_quarter', $t, $c), 'GET', '/dashboard');
+        $this->assertConforms($this->api('GET', '/api/v1/dashboard?period=never', $t, $c), 'GET', '/dashboard');                                                 // 422
+        foreach (['financial', 'sales', 'expenses', 'receivables', 'payables', 'cash', 'inventory'] as $lens) {
+            $this->assertConforms($this->api('GET', "/api/v1/dashboard/lenses/{$lens}", $t, $c), 'GET', '/dashboard/lenses/{lens}');
+        }
+        $this->assertConforms($this->api('GET', '/api/v1/search?q=Meghna', $t, $c), 'GET', '/search');
+        $this->assertConforms($this->api('GET', '/api/v1/search?q=M', $t, $c), 'GET', '/search');                                                              // 422
+        $this->assertConforms($this->api('GET', '/api/v1/notifications?category=alerts&unread=true', $t, $c), 'GET', '/notifications');
+        $job = $this->api('POST', '/api/v1/export-jobs', $t, $c, ['kind' => 'list', 'format' => 'csv', 'source' => 'getMoneyAccounts'], $key());
+        $this->assertConforms($job, 'POST', '/export-jobs');
+        $this->assertConforms($this->api('POST', '/api/v1/export-jobs', $t, $c, ['kind' => 'list', 'format' => 'pdf', 'source' => 'getMoneyAccounts'], $key()), 'POST', '/export-jobs'); // 422
+        $this->assertConforms($this->api('GET', '/api/v1/export-jobs/'.$job->json('data.id'), $t, $c), 'GET', '/export-jobs/{id}');
+        $this->assertConforms($this->api('GET', '/api/v1/export-jobs/999999', $t, $c), 'GET', '/export-jobs/{id}');                                            // 404
+    }
+
+    public function test_settings_users_and_security_endpoints_match_the_contract(): void
+    {
+        $t = $this->login('owner@meghna.example');
+        $c = $this->company->id;
+        $key = fn () => ['Idempotency-Key' => (string) Str::uuid()];
+        Storage::fake('local');
+        Mail::fake();
+        $this->assertConforms($this->api('GET', '/api/v1/me/sessions', $t), 'GET', '/me/sessions');
+        $this->assertConforms($this->api('PUT', '/api/v1/me/preferences', $t, null, ['theme' => 'dark']), 'PUT', '/me/preferences');
+        $this->assertConforms($this->api('GET', '/api/v1/me/preferences', $t), 'GET', '/me/preferences');
+        $this->assertConforms($this->api('GET', '/api/v1/me/notification-preferences', $t, $c), 'GET', '/me/notification-preferences');
+        $this->assertConforms($this->api('PUT', '/api/v1/me/notification-preferences', $t, $c, ['events' => [['event_key' => 'invoice_overdue', 'in_app' => true, 'email' => true]]]),
+            'PUT', '/me/notification-preferences');
+        $this->assertConforms($this->api('PUT', '/api/v1/me/password', $t, null, ['current_password' => 'nope']), 'PUT', '/me/password');                          // 422
+        $this->assertConforms($this->postJson('/api/v1/auth/password/forgot', ['email' => 'owner@meghna.example']), 'POST', '/auth/password/forgot');
+        $this->assertConforms($this->postJson('/api/v1/auth/password/reset', ['token' => 'x', 'email' => 'owner@meghna.example', 'password' => 'Long-Enough-Pass-1',
+            'password_confirmation' => 'Long-Enough-Pass-1']), 'POST', '/auth/password/reset');                                                                        // 422
+        $company = $this->api('GET', '/api/v1/company', $t, $c);
+        $this->assertConforms($company, 'GET', '/company');
+        $this->assertConforms($this->api('PATCH', '/api/v1/company', $t, $c, ['phone' => '01711000000'], ['If-Match' => 'W/"'.$company->json('data.version').'"']), 'PATCH', '/company');
+        $this->assertConforms($this->api('POST', '/api/v1/branches', $t, $c, ['code' => 'CTG', 'name' => 'Chattogram depot'], $key()), 'POST', '/branches');
+        $settings = $this->api('GET', '/api/v1/company/settings', $t, $c);
+        $this->assertConforms($this->api('PATCH', '/api/v1/company/settings', $t, $c, ['invoice_rounding' => 'none'], ['If-Match' => 'W/"'.$settings->json('data.version').'"']), 'PATCH', '/company/settings');
+        $seq = $this->api('GET', '/api/v1/number-sequences', $t, $c);
+        $this->assertConforms($seq, 'GET', '/number-sequences');
+        $this->assertConforms($this->api('PATCH', '/api/v1/number-sequences/'.$seq->json('data.0.id'), $t, $c, ['padding' => 5], ['If-Match' => 'W/"'.$seq->json('data.0.version').'"']),
+            'PATCH', '/number-sequences/{id}');
+        $tax = $this->api('POST', '/api/v1/tax-rules', $t, $c, ['name' => 'VAT 15%', 'rate' => '15', 'applies_to' => 'sales', 'create_ledger' => true], $key());
+        $this->assertConforms($tax, 'POST', '/tax-rules');
+        $this->assertConforms($this->api('PATCH', '/api/v1/tax-rules/'.$tax->json('data.id'), $t, $c, ['is_active' => false], ['If-Match' => 'W/"1"']), 'PATCH', '/tax-rules/{id}');
+        $users = $this->api('GET', '/api/v1/users', $t, $c);
+        $this->assertConforms($users, 'GET', '/users');
+        $this->assertConforms($this->api('GET', '/api/v1/users/'.$users->json('data.0.id'), $t, $c), 'GET', '/users/{id}');
+        $roles = $this->api('GET', '/api/v1/roles', $t, $c);
+        $this->assertConforms($roles, 'GET', '/roles');
+        $viewer = collect($roles->json('data'))->firstWhere('slug', 'viewer');
+        $this->assertConforms($this->api('GET', "/api/v1/roles/{$viewer['id']}", $t, $c), 'GET', '/roles/{id}');
+        $this->assertConforms($this->api('GET', '/api/v1/permissions', $t, $c), 'GET', '/permissions');
+        $role = $this->api('POST', '/api/v1/roles', $t, $c, ['name' => 'Cashier', 'permissions' => ['banking.view'], 'payment_approval_limit' => '1000.00', 'journal_approval_limit' => '0.00'], $key());
+        $this->assertConforms($role, 'POST', '/roles');
+        $this->assertConforms($this->api('PUT', '/api/v1/roles/'.$role->json('data.id'), $t, $c, ['name' => 'Cashier', 'permissions' => [], 'payment_approval_limit' => '1000.00',
+            'journal_approval_limit' => '0.00'], ['If-Match' => 'W/"'.$role->json('data.version').'"']), 'PUT', '/roles/{id}');
+        $this->assertConforms($this->api('DELETE', '/api/v1/roles/'.$role->json('data.id'), $t, $c), 'DELETE', '/roles/{id}');
+        $inv = $this->api('POST', '/api/v1/invitations', $t, $c, ['email' => 'new@meghna.example', 'role_id' => $viewer['id']], $key());
+        $this->assertConforms($inv, 'POST', '/invitations');
+        $this->assertConforms($this->api('GET', '/api/v1/invitations', $t, $c), 'GET', '/invitations');
+        $this->assertConforms($this->api('POST', '/api/v1/invitations/'.$inv->json('data.id').'/resend', $t, $c), 'POST', '/invitations/{id}/resend');
+        $this->assertConforms($this->getJson('/api/v1/invitations/'.str_repeat('a', 48)), 'GET', '/invitations/{token}');                                           // 404
+        $this->assertConforms($this->api('DELETE', '/api/v1/invitations/'.$inv->json('data.id'), $t, $c), 'DELETE', '/invitations/{id}');
+        $backup = $this->api('POST', '/api/v1/backups', $t, $c, [], $key());
+        $this->assertConforms($backup, 'POST', '/backups');
+        $this->assertConforms($this->api('GET', '/api/v1/backups', $t, $c), 'GET', '/backups');
+        $this->assertConforms($this->api('GET', '/api/v1/backups/'.$backup->json('data.id').'/download', $t, $c), 'GET', '/backups/{id}/download');
+        $this->assertConforms($this->api('POST', '/api/v1/backups/'.$backup->json('data.id').'/restore', $t, $c, ['confirmation' => 'no'], $key()), 'POST', '/backups/{id}/restore'); // 422
+        $created = $this->api('POST', '/api/v1/companies', $t, null, ['legal_name' => 'Padma Agro Ltd.', 'business_type' => 'partnership'], $key());
+        $this->assertConforms($created, 'POST', '/companies');
+    }
+
     public function test_stock_adjustment_endpoints_match_the_contract(): void
     {
         $t = $this->login('owner@meghna.example');

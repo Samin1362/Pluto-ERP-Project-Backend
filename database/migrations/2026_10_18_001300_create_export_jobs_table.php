@@ -25,7 +25,7 @@ return new class extends Migration
 
             $table->id()->comment('Primary key, auto-increment');
             $table->unsignedBigInteger('company_id')->comment('Tenant owner. Every query is scoped by it.');
-            $table->string('kind', 30)->comment('One of: export_pack, report');
+            $table->string('kind', 30)->comment('One of: export_pack, report, list');
             $table->json('parameters');
             $table->string('status', 30)->default('queued')->comment('One of: queued, running, complete, failed');
             $table->string('file_path', 255)->nullable();
@@ -49,7 +49,7 @@ return new class extends Migration
         if (in_array(DB::connection()->getDriverName(), ['mysql', 'mariadb'], true)) {
             DB::statement(<<<'SQL'
                 ALTER TABLE `export_jobs`
-                    ADD CONSTRAINT `export_jobs_kind_check` CHECK (`kind` IN ('export_pack', 'report')),
+                    ADD CONSTRAINT `export_jobs_kind_check` CHECK (`kind` IN ('export_pack', 'report', 'list')),
                     ADD CONSTRAINT `export_jobs_status_check` CHECK (`status` IN ('queued', 'running', 'complete', 'failed'))
                 SQL);
         }

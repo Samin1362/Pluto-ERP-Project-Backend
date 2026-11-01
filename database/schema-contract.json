@@ -1941,7 +1941,7 @@
     }
    },
    "check": {
-    "export_jobs_kind_check": "`kind` IN ('export_pack', 'report')",
+    "export_jobs_kind_check": "`kind` IN ('export_pack', 'report', 'list')",
     "export_jobs_status_check": "`status` IN ('queued', 'running', 'complete', 'failed')"
    }
   },
@@ -2437,6 +2437,14 @@
      "type": "tinyint(1)",
      "nullable": false,
      "default": "0",
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "send_at",
+     "type": "varchar(5)",
+     "nullable": true,
+     "default": null,
      "generated": null,
      "auto_increment": false
     },

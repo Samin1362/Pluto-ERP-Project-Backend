@@ -23,12 +23,16 @@ use App\Http\Controllers\Api\V1\Inventory\StockMovementController;
 use App\Http\Controllers\Api\V1\Inventory\StockTransferController;
 use App\Http\Controllers\Api\V1\Inventory\UnitController;
 use App\Http\Controllers\Api\V1\Inventory\WarehouseController;
+use App\Http\Controllers\Api\V1\Me\AccountController;
 use App\Http\Controllers\Api\V1\Me\TwoFactorController;
 use App\Http\Controllers\Api\V1\MeController;
 use App\Http\Controllers\Api\V1\Parties\LookupController;
 use App\Http\Controllers\Api\V1\Parties\PartyAccountController;
 use App\Http\Controllers\Api\V1\Parties\PartyController;
+use App\Http\Controllers\Api\V1\Platform\DashboardController;
+use App\Http\Controllers\Api\V1\Platform\ExportJobController;
 use App\Http\Controllers\Api\V1\Platform\PlatformLookupController;
+use App\Http\Controllers\Api\V1\Platform\SearchController;
 use App\Http\Controllers\Api\V1\Purchases\DebitNoteController;
 use App\Http\Controllers\Api\V1\Purchases\PurchaseBillController;
 use App\Http\Controllers\Api\V1\Purchases\PurchaseOrderController;
@@ -40,9 +44,14 @@ use App\Http\Controllers\Api\V1\Sales\CreditNoteController;
 use App\Http\Controllers\Api\V1\Sales\QuotationController;
 use App\Http\Controllers\Api\V1\Sales\SalesInvoiceController;
 use App\Http\Controllers\Api\V1\Sales\SalesReturnController;
+use App\Http\Controllers\Api\V1\Settings\BackupController;
+use App\Http\Controllers\Api\V1\Settings\CompanyController;
+use App\Http\Controllers\Api\V1\Settings\MemberController;
+use App\Http\Controllers\Api\V1\Settings\RoleController;
 use App\Http\Controllers\Api\V1\Settlements\AllocationController;
 use App\Http\Controllers\Api\V1\Settlements\CustomerReceiptController;
 use App\Http\Controllers\Api\V1\Settlements\SupplierPaymentController;
+use App\Queries\DashboardLensQuery;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -54,6 +63,14 @@ Route::prefix('auth')->middleware('throttle:auth-ip')->group(function () {
     Route::post('two-factor', [AuthController::class, 'twoFactor']);
     Route::post('refresh', [AuthController::class, 'refresh']);
     Route::post('logout', [AuthController::class, 'logout']);
+    // Password reset (S2; P15.1-BE-07): forgot always answers 202 (no enumeration).
+    Route::post('password/forgot', [AccountController::class, 'forgot']);
+    Route::post('password/reset', [AccountController::class, 'reset']);
+});
+// Invitation links (S3; P15.1-BE-05): public, the token is the credential.
+Route::middleware('throttle:auth-ip')->group(function () {
+    Route::get('invitations/{token}', [MemberController::class, 'preview'])->where('token', '[A-Za-z0-9]{20,100}');
+    Route::post('invitations/{token}/accept', [MemberController::class, 'accept'])->where('token', '[A-Za-z0-9]{20,100}');
 });
 
 Route::middleware(['jwt', 'throttle:api-user'])->group(function () {
@@ -61,6 +78,14 @@ Route::middleware(['jwt', 'throttle:api-user'])->group(function () {
     Route::post('me/two-factor', [TwoFactorController::class, 'start']);
     Route::post('me/two-factor/confirm', [TwoFactorController::class, 'confirm']);
     Route::delete('me/two-factor', [TwoFactorController::class, 'destroy']);
+    // Own account (K13, K14; P15.1-BE-07/08) and creating a company (S0; P15.1-BE-01; idempotent per user, R-21).
+    Route::put('me/password', [AccountController::class, 'password']);
+    Route::get('me/sessions', [AccountController::class, 'sessions']);
+    Route::delete('me/sessions/{id}', [AccountController::class, 'revokeSession'])->whereNumber('id');
+    Route::post('me/sessions/revoke-others', [AccountController::class, 'revokeOthers']);
+    Route::get('me/preferences', [AccountController::class, 'preferences']);
+    Route::put('me/preferences', [AccountController::class, 'savePreferences']);
+    Route::post('companies', [CompanyController::class, 'store'])->middleware('idempotent');
 
     Route::middleware('company')->group(function () {
         // Platform lookups for every member (P1.1-BE-01).
@@ -102,6 +127,45 @@ Route::middleware(['jwt', 'throttle:api-user'])->group(function () {
         Route::get('notifications', [NotificationController::class, 'index']);
         Route::post('notifications/read-all', [NotificationController::class, 'readAll']);
         Route::post('notifications/{id}/read', [NotificationController::class, 'read'])->whereNumber('id');
+        // Settings (K1-K15; P15.1). Owner-only fields and the last Owner are checked by the services.
+        Route::get('me/notification-preferences', [AccountController::class, 'notificationPreferences']);
+        Route::put('me/notification-preferences', [AccountController::class, 'saveNotificationPreferences']);
+        Route::get('company', [CompanyController::class, 'show'])->middleware('perm:settings.view');
+        Route::patch('company', [CompanyController::class, 'update'])->middleware('perm:settings.edit');
+        Route::put('company/logo', [CompanyController::class, 'logo'])->middleware('perm:settings.edit');
+        Route::delete('company/logo', [CompanyController::class, 'removeLogo'])->middleware('perm:settings.edit');
+        Route::patch('company/settings', [CompanyController::class, 'updateSettings'])->middleware('perm:settings.edit');
+        Route::post('branches', [CompanyController::class, 'storeBranch'])->middleware(['perm:settings.edit', 'idempotent']);
+        Route::patch('branches/{id}', [CompanyController::class, 'updateBranch'])->whereNumber('id')->middleware('perm:settings.edit');
+        Route::get('number-sequences', [CompanyController::class, 'sequences'])->middleware('perm:settings.view');
+        Route::patch('number-sequences/{id}', [CompanyController::class, 'updateSequence'])->whereNumber('id')->middleware('perm:settings.edit');
+        Route::post('tax-rules', [CompanyController::class, 'storeTaxRule'])->middleware(['perm:settings.edit', 'idempotent']);
+        Route::patch('tax-rules/{id}', [CompanyController::class, 'updateTaxRule'])->whereNumber('id')->middleware('perm:settings.edit');
+        Route::get('users', [MemberController::class, 'index'])->middleware('perm:settings.users');
+        Route::get('users/{id}', [MemberController::class, 'show'])->whereNumber('id')->middleware('perm:settings.users');
+        Route::patch('users/{id}', [MemberController::class, 'update'])->whereNumber('id')->middleware('perm:settings.users');
+        Route::post('users/{id}/deactivate', [MemberController::class, 'deactivate'])->whereNumber('id')->middleware('perm:settings.users');
+        Route::post('users/{id}/reactivate', [MemberController::class, 'reactivate'])->whereNumber('id')->middleware('perm:settings.users');
+        Route::get('invitations', [MemberController::class, 'invitations'])->middleware('perm:settings.users');
+        Route::post('invitations', [MemberController::class, 'invite'])->middleware(['perm:settings.users', 'idempotent']);
+        Route::post('invitations/{id}/resend', [MemberController::class, 'resend'])->whereNumber('id')->middleware('perm:settings.users');
+        Route::delete('invitations/{id}', [MemberController::class, 'revoke'])->whereNumber('id')->middleware('perm:settings.users');
+        Route::get('roles', [RoleController::class, 'index'])->middleware('perm:settings.roles');
+        Route::post('roles', [RoleController::class, 'store'])->middleware(['perm:settings.roles', 'idempotent']);
+        Route::get('roles/{id}', [RoleController::class, 'show'])->whereNumber('id')->middleware('perm:settings.roles');
+        Route::put('roles/{id}', [RoleController::class, 'update'])->whereNumber('id')->middleware('perm:settings.roles');
+        Route::delete('roles/{id}', [RoleController::class, 'destroy'])->whereNumber('id')->middleware('perm:settings.roles');
+        Route::get('permissions', [RoleController::class, 'permissions'])->middleware('perm:settings.roles');
+        Route::get('backups', [BackupController::class, 'index'])->middleware('perm:settings.backup');
+        Route::post('backups', [BackupController::class, 'store'])->middleware(['perm:settings.backup', 'idempotent']);
+        Route::get('backups/{id}/download', [BackupController::class, 'download'])->whereNumber('id')->middleware('perm:settings.restore');
+        Route::post('backups/{id}/restore', [BackupController::class, 'restore'])->whereNumber('id')->middleware(['perm:settings.restore', 'idempotent']);
+        // Dashboards, search and export jobs (P14.1). Money widgets and lenses check reports.financial themselves (DEC-13).
+        Route::get('dashboard', [DashboardController::class, 'index'])->middleware('perm:dashboard.view');
+        Route::get('dashboard/lenses/{lens}', [DashboardController::class, 'lens'])->whereIn('lens', DashboardLensQuery::LENSES)->middleware('perm:dashboard.view');
+        Route::get('search', SearchController::class);
+        Route::post('export-jobs', [ExportJobController::class, 'store'])->middleware(['perm:reports.export', 'throttle:exports', 'idempotent']);
+        Route::get('export-jobs/{id}', [ExportJobController::class, 'show'])->whereNumber('id')->middleware('perm:reports.export');
         // Chart of accounts (P7.1-BE-01).
         Route::get('account-groups', [AccountGroupController::class, 'index'])->middleware('perm:accounting.view');
         Route::post('account-groups', [AccountGroupController::class, 'store'])->middleware('perm:accounting.create');
@@ -321,3 +385,8 @@ Route::middleware(['jwt', 'throttle:api-user'])->group(function () {
 
 // A file behind a 5-minute signed link from GET /attachments/{id}/url (relative signature, so it works through the proxy).
 Route::get('attachments/{id}/file', [AttachmentController::class, 'file'])->whereNumber('id')->name('attachments.file')->middleware('signed:relative');
+// The company logo (1-day signed link in Company.logo_url) and a backup file (5-minute link; Owner) (P15.1-BE-01/09).
+Route::get('company/{id}/logo/file', [CompanyController::class, 'logoFile'])->whereNumber('id')->name('company.logo')->middleware('signed:relative');
+Route::get('backups/{id}/file', [BackupController::class, 'file'])->whereNumber('id')->name('backups.file')->middleware('signed:relative');
+// An export file behind the 24-hour signed link of GET /export-jobs/{id} (P14.1-BE-05).
+Route::get('export-jobs/{id}/file', [ExportJobController::class, 'file'])->whereNumber('id')->name('export-jobs.file')->middleware('signed:relative');

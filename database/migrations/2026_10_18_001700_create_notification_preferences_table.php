@@ -30,6 +30,7 @@ return new class extends Migration
             $table->boolean('in_app')->default(true);
             $table->boolean('email')->default(false);
             $table->boolean('sms')->default(false);
+            $table->string('send_at', 5)->nullable()->comment('daily_summary only: HH:MM in Asia/Dhaka (07:30, 08:00 or 09:00; K12)');
             $table->dateTime('created_at')->nullable()->comment('Set by Laravel');
             $table->dateTime('updated_at')->nullable()->comment('Set by Laravel');
 

@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\DB;
  * ledger: what moved through it is the ledger's journal lines. Direction: a contra (transfer between money accounts) is
  * `transfer`; otherwise money in is a debit on the account, money out a credit.
  */
-final class BankingQuery
+class BankingQuery
 {
     private const TYPE_ORDER = "FIELD(a.account_type, 'cash', 'bank', 'wallet', 'card', 'cash_credit')";
 
