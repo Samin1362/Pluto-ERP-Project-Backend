@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Table `payment_details` (Money): migration 47 of 83, dependency level 5.
+ * Table `payment_details` (Money): migration 47 of 89, dependency level 5.
  * Cash/bank detail of a receipt, payment, contra, income or expense entry (1:1 with journal_entries).
  * Depends on: companies, journal_entries, money_accounts, parties, users.
  *

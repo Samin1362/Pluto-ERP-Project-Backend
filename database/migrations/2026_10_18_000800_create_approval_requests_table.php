@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Table `approval_requests` (Accounting): migration 8 of 83, dependency level 2.
+ * Table `approval_requests` (Accounting): migration 8 of 89, dependency level 2.
  * A document waiting for approval because it is above the role limit (L4 drawer).
  * Depends on: companies, users.
  *

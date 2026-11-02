@@ -189,7 +189,7 @@ s("DeliveryUpdate", "Delivery details.", challan_no="str:30?", vehicle_no="str:4
 s("DocumentCalculation", "Server-side totals for an unsaved document.", lines="[ref:CalculatedLine]!", warnings="[ref:Warning]!", party_balance_before="money?", party_balance_after="money?",
   credit_limit="money?", effects="[str]", **TOTALS)
 s("CalculatedLine", "Calculated line.", line_no="int!", gross="money!", discount_amount="money!", tax_amount="money!", line_total="money!", available_qty="qty?")
-s("Warning", "Non-blocking warning.", code="enum:CREDIT_LIMIT_EXCEEDED|PARTY_OVERDUE|LOW_STOCK|BACKDATED|BUDGET_NEAR_LIMIT|DUPLICATE_PARTY|INSUFFICIENT_FUNDS|APPROVAL_REQUIRED|LC_EXPIRING|LC_DOCUMENTS_MISSING|LC_UNPAID_CHARGES|NOTHING_TO_ALLOCATE!", message="str!", line_no="int?")
+s("Warning", "Non-blocking warning.", code="enum:CREDIT_LIMIT_EXCEEDED|PARTY_OVERDUE|LOW_STOCK|BACKDATED|BUDGET_NEAR_LIMIT|DUPLICATE_PARTY|INSUFFICIENT_FUNDS|APPROVAL_REQUIRED|LC_EXPIRING|LC_DOCUMENTS_MISSING|LC_UNPAID_CHARGES|NOTHING_TO_ALLOCATE|LC_LIMIT_EXCEEDED|LOAN_LIMIT_EXCEEDED|LOAN_DUE!", message="str!", line_no="int?")
 s("QuotationInput", "Create or replace a quotation.", party_id="id!", quotation_date="date!", valid_until="date!", warehouse_id="id?", payment_term_id="id?", notes="text?", internal_note="text?", lines="[ref:SalesLineInput]!")
 s("Quotation", "Quotation.", id="id!", number="str!", status="enum:draft|sent|accepted|declined|expired|converted!", party="ref:PartyRef!", quotation_date="date!", valid_until="date!",
   warehouse_id="id?", payment_term_id="id?", notes="text?", internal_note="text?", sent_at="datetime?",
@@ -318,9 +318,32 @@ s("LcChargeInput", "Charge or import expense.", letter_of_credit_id="id!", charg
 s("ChargePayment", "Pay a charge.", paid_from_account_id="id!", date="date!", reference="str:60?")
 s("LcCharge", "LC charge.", id="id!", letter_of_credit_id="id!", lc_number="str!", charge_type="str!", charge_date="date!", amount="money!", status="enum:unpaid|paid!", paid_to="str?",
   include_in_landed_cost="bool!", is_refundable="bool!", allocated="bool!", journal_entry_id="id?", reference="str?", tax_rule_id="id?", posting_status="str?", version="int!")
-s("LcPaymentInput", "Payment at the bank's rate.", payment_kind="enum:sight_payment|usance_acceptance|usance_settlement", payment_date="date!", amount_foreign="money!", bank_rate="rate!", money_account_id="id!", margin_applied="money", lc_shipment_id="id?",
+s("LcPaymentInput", "Payment at the bank's rate.", payment_kind="enum:sight_payment|usance_acceptance|usance_settlement", payment_date="date!", amount_foreign="money!", bank_rate="rate!", money_account_id="id!", margin_applied="money", financed_by="enum:own|pad|ltr", loan="ref:LcLoanTerms?", lc_shipment_id="id?",
   purchase_bill_id="id?", bank_reference="str:60?", description="str:150?")
-s("LcPayment", "LC payment.", id="id!", payment_kind="enum:sight_payment|usance_acceptance|usance_settlement!", payment_date="date!", amount_foreign="money!", bank_rate="rate!", amount_bdt="money!", margin_applied="money!", fx_difference="money!", journal_entry_id="id?", status="str!")
+s("LcPayment", "LC payment.", id="id!", payment_kind="enum:sight_payment|usance_acceptance|usance_settlement!", payment_date="date!", amount_foreign="money!", bank_rate="rate!", amount_bdt="money!", margin_applied="money!", fx_difference="money!", journal_entry_id="id?", status="str!", financed_by="str!", lc_loan_id="id?")
+s("LcLoanTerms", "Bank finance of an LC payment (PAD/LTR). Omitted fields come from the bank facility.", loan_kind="enum:pad|ltr", interest_rate_pct="pct",
+  day_count="enum:360|365", tenor_days="int", start_date="date?")
+s("BankFacilityInput", "Credit lines a bank grants for imports.", money_account_id="id!", lc_limit="money", loan_limit="money", limit_action="enum:warn|block",
+  interest_rate_pct="pct", day_count="enum:360|365", loan_tenor_days="int", notes="str:255?", is_active="bool")
+s("BankFacility", "Bank facility with live utilisation (planned taka of open LCs, acceptances and loans).", id="id!", money_account_id="id!", bank_name="str!",
+  lc_limit="money!", loan_limit="money!", limit_action="str!", interest_rate_pct="pct!", day_count="str!", loan_tenor_days="int!", notes="str?", is_active="bool!",
+  lc_utilised="money!", lc_available="money?", loans_outstanding="money!", loan_available="money?", acceptances_outstanding="money!", open_lcs="int!", open_loans="int!", version="int!")
+s("LcLoanRepayment", "A repayment of a PAD/LTR loan.", id="id!", repayment_date="date!", principal_amount="money!", interest_amount="money!", accrued_cleared="money!",
+  interest_from="date!", interest_days="int!", money_account_id="id!", reference="str?", status="str!", journal_entry_id="id?")
+s("LcLoan", "PAD/LTR loan with what is owed today.", id="id!", letter_of_credit_id="id!", lc_number="str!", lc_payment_id="id!", loan_number="str!", loan_kind="str!",
+  money_account_id="id!", bank_name="str!", principal="money!", repaid_principal="money!", outstanding_principal="money!", interest_paid="money!", accrued_unpaid="money!",
+  interest_rate_pct="pct!", day_count="str!", start_date="date!", due_date="date!", days_to_due="int?", interest_from="date!", interest_due_today="money!",
+  converted_on="date?", status="str!", notes="str?", repayments="[ref:LcLoanRepayment]", version="int!")
+s("LcLoanRepaymentInput", "Repay a loan: principal now plus the interest due to the date (worked out by the server).", repayment_date="date!", principal_amount="money!",
+  money_account_id="id!", reference="str:60?")
+s("LcLoanInterest", "Interest due on a loan at a date.", as_of="date!", outstanding_principal="money!", interest_from="date!", days="int!", interest_rate_pct="pct!",
+  day_count="str!", interest="money!", accrued_unpaid="money!", total_interest="money!")
+s("LcLoanConvert", "Convert a PAD to an LTR on the agreed terms (no journal; the loan ledger is the same).", converted_on="date!", interest_rate_pct="pct!",
+  tenor_days="int!", notes="str:255?")
+s("FxRate", "Closing rate of one currency.", currency_code="str:3!", rate="rate!")
+s("FxRevaluationRequest", "Revalue open foreign-currency items at closing rates on a date.", revaluation_date="date!", rates="[ref:FxRate]!", note="str:255?")
+s("FxRevaluation", "Revaluation preview or posting.", id="id?", status="enum:preview|posted|reversed!", revaluation_date="date!", reversal_date="date!", rates="obj!",
+  total_difference="money!", lines="[obj]!", journal="[ref:PostingLine]", warnings="[ref:Warning]", created_at="datetime?")
 s("LandedCostRequest", "Allocate capitalised charges to a bill.", purchase_bill_id="id!", allocation_date="date!", method="enum:value|quantity", charge_ids="[id]")
 s("LandedCostAllocation", "Allocation preview or result.", id="id?", status="enum:preview|draft|posted|reversed!", total_amount="money!", lines="[obj]!", journal="[ref:PostingLine]", warnings="[ref:Warning]")
 

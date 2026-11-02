@@ -3,31 +3,31 @@
   {
    "id": "V01",
    "title": "Every table has a primary key",
-   "checked": 83,
+   "checked": 89,
    "failures": []
   },
   {
    "id": "V02",
    "title": "Every FK references an existing primary or unique key",
-   "checked": 386,
+   "checked": 417,
    "failures": []
   },
   {
    "id": "V03",
    "title": "FK column type equals referenced column type exactly (incl. UNSIGNED, CHAR length)",
-   "checked": 386,
+   "checked": 417,
    "failures": []
   },
   {
    "id": "V04",
    "title": "ON DELETE SET NULL only on nullable columns; self-references nullable",
-   "checked": 386,
+   "checked": 417,
    "failures": []
   },
   {
    "id": "V05",
    "title": "No CHECK constraint uses a column whose FK has a CASCADE/SET NULL action (MySQL error 3823)",
-   "checked": 148,
+   "checked": 170,
    "failures": []
   },
   {
@@ -39,43 +39,43 @@
   {
    "id": "V07",
    "title": "CHECK expressions reference only existing, non-AUTO_INCREMENT columns",
-   "checked": 148,
+   "checked": 170,
    "failures": []
   },
   {
    "id": "V08",
    "title": "Identifiers ≤ 64 chars; FK and CHECK names unique schema-wide; index names unique per table",
-   "checked": 2359,
+   "checked": 2546,
    "failures": []
   },
   {
    "id": "V09",
    "title": "Every FK column is the leftmost column of an index (no implicit InnoDB index)",
-   "checked": 386,
+   "checked": 417,
    "failures": []
   },
   {
    "id": "V10",
    "title": "No redundant index (left prefix of another key)",
-   "checked": 332,
+   "checked": 356,
    "failures": []
   },
   {
    "id": "V11",
    "title": "Index key length ≤ 3072 bytes (utf8mb4, DYNAMIC rows); no TEXT/JSON keys",
-   "checked": 499,
+   "checked": 537,
    "failures": []
   },
   {
    "id": "V12",
    "title": "Maximum row size < 65,535 bytes",
-   "checked": 83,
+   "checked": 89,
    "failures": []
   },
   {
    "id": "V13",
    "title": "Decimal precision by class: money (18,2), quantity (18,3), unit cost (18,4), FX rate (18,6), percent (7,4); no FLOAT/DOUBLE",
-   "checked": 153,
+   "checked": 167,
    "failures": []
   },
   {
@@ -87,7 +87,7 @@
   {
    "id": "V15",
    "title": "Defaults are valid for their type; enum defaults and values fit",
-   "checked": 230,
+   "checked": 251,
    "failures": []
   },
   {
@@ -99,37 +99,37 @@
   {
    "id": "V17",
    "title": "Document → journal-entry links are one-to-one (UNIQUE), which blocks double posting",
-   "checked": 16,
+   "checked": 20,
    "failures": []
   },
   {
    "id": "V18",
-   "title": "Financial and append-only tables (26) are never changed by a delete elsewhere: no SET NULL; CASCADE only from their own header",
-   "checked": 167,
+   "title": "Financial and append-only tables (30) are never changed by a delete elsewhere: no SET NULL; CASCADE only from their own header",
+   "checked": 188,
    "failures": []
   },
   {
    "id": "V19",
    "title": "ON UPDATE RESTRICT on every FK (surrogate keys are immutable)",
-   "checked": 386,
+   "checked": 417,
    "failures": []
   },
   {
    "id": "V20",
-   "title": "Dependency graph is acyclic (11 migration levels; self-references created in the same migration)",
-   "checked": 83,
+   "title": "Dependency graph is acyclic (12 migration levels; self-references created in the same migration)",
+   "checked": 89,
    "failures": []
   },
   {
    "id": "V21",
    "title": "Every non-tenant table is global reference data or a dependant (CASCADE) of a tenant or global row",
-   "checked": 20,
+   "checked": 21,
    "failures": []
   },
   {
    "id": "V22",
    "title": "Every tenant table has an index or unique key led by company_id",
-   "checked": 59,
+   "checked": 64,
    "failures": []
   },
   {
@@ -146,19 +146,19 @@
   }
  ],
  "summary": {
-  "tables": 83,
-  "columns": 1326,
-  "fks": 386,
-  "uniques": 84,
-  "indexes": 332,
-  "checks": 148,
-  "levels": 11,
+  "tables": 89,
+  "columns": 1422,
+  "fks": 417,
+  "uniques": 92,
+  "indexes": 356,
+  "checks": 170,
+  "levels": 12,
   "decimal_inventory": {
-   "DECIMAL(18,2)": 99,
+   "DECIMAL(18,2)": 109,
    "DECIMAL(18,3)": 25,
    "DECIMAL(18,4)": 11,
-   "DECIMAL(18,6)": 5,
-   "DECIMAL(7,4)": 13
+   "DECIMAL(18,6)": 7,
+   "DECIMAL(7,4)": 15
   },
   "reserved_cols": [
    "credit_notes.usage",
@@ -185,7 +185,11 @@
    "debit_notes (purchase_return_id) — nullable: purchase_return_id",
    "landed_cost_allocations (journal_entry_id) — nullable: journal_entry_id",
    "lc_charges (journal_entry_id) — nullable: journal_entry_id",
-   "lc_payments (journal_entry_id) — nullable: journal_entry_id"
+   "lc_payments (journal_entry_id) — nullable: journal_entry_id",
+   "lc_loan_repayments (journal_entry_id) — nullable: journal_entry_id",
+   "lc_loan_accruals (journal_entry_id) — nullable: journal_entry_id",
+   "fx_revaluations (journal_entry_id) — nullable: journal_entry_id",
+   "fx_revaluations (reversal_entry_id) — nullable: reversal_entry_id"
   ],
   "financial_tables": [
    "audit_logs",
@@ -194,11 +198,15 @@
    "cash_counts",
    "credit_notes",
    "debit_notes",
+   "fx_revaluation_lines",
+   "fx_revaluations",
    "journal_entries",
    "journal_lines",
    "landed_cost_allocation_lines",
    "landed_cost_allocations",
    "lc_charges",
+   "lc_loan_accruals",
+   "lc_loan_repayments",
    "lc_payments",
    "payment_details",
    "purchase_bill_lines",

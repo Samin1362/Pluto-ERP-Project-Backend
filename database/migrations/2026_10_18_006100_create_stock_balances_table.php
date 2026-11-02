@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Table `stock_balances` (Inventory): migration 61 of 83, dependency level 6.
+ * Table `stock_balances` (Inventory): migration 61 of 89, dependency level 6.
  * Quantity, value and moving weighted average cost per product and warehouse (R-02). Maintained only by stock posting, locked FOR UPDATE. Company valuation = SUM over warehouses.
  * Depends on: companies, products, warehouses.
  *

@@ -118,6 +118,9 @@ BR = {
  "BR-063": "Local party mobile numbers have 11 digits starting 01 (01XXX-XXXXXX); e-mail addresses must be valid when given.",
  "BR-064": "Posting a sales invoice creates: Dr customer (total), Cr each line's income ledger (net), Cr tax ledgers (tax), Cr/Dr rounding; and for stocked lines Dr COGS, Cr warehouse inventory (cost).",
  "BR-065": "A receipt debits the money account and credits the party ledger; a payment debits the party (or expense) ledger and credits the money account; bank charges debit the bank-charges ledger.",
+ "BR-066": "A bank's LC limit counts the planned taka of its open LCs and its open usance acceptances, and its loan limit counts the outstanding PAD/LTR principal; going over warns or is refused as the facility says.",
+ "BR-067": "A PAD/LTR loan accrues interest daily on the outstanding principal at its rate over its day count (360 or 365), from the last repayment or month-end accrual; a repayment pays that interest with the principal and cannot repay more principal than is outstanding.",
+ "BR-068": "A period-end FX revaluation restates open foreign-currency bills and usance acceptances at closing rates, posts the unrealised difference to exchange gain or loss and reverses it the next day.",
 }
 
 # ---------------------------------------------------------------- functional requirements

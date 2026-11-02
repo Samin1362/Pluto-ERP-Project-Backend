@@ -570,8 +570,36 @@ E("POST", "/letters-of-credit/{id}/landed-cost", "Post a landed-cost allocation 
 E("POST", "/landed-cost-allocations/{id}/reverse", "Reverse a landed-cost allocation (inventory/COGS split and landed_cost movements)", "lc.edit", ["landed_cost_allocations", "landed_cost_allocation_lines", "lc_charges", "stock_movements", "stock_balances", "journal_entries", "journal_lines", "number_sequences", "audit_logs"], ["M4", "M7"], rules=["BR-003", "BR-004", "BR-009", "BR-045", "BR-017"], req="ReasonRequest", idem=True, resp="LandedCostAllocation", tx=TXP, tag=T, fr=["FR-098"], codes=[200, 409, 422], added="R-03")
 E("GET", "/letters-of-credit/{id}/pdf", "Printable LC summary", "lc.view", ["letters_of_credit", "lc_documents", "lc_shipments", "lc_charges", "lc_payments", "parties", "companies"], ["M4"], resp="Binary", tag=T, fr=["FR-093"], added="C-01")
 E("GET", "/letters-of-credit/{id}/cost-summary", "Landed cost breakdown and per-unit cost", "lc.view", ["lc_payments", "lc_charges", "landed_cost_allocations", "purchase_bills"], ["M7", "M4"], resp="ReportData", tag=T, fr=["FR-098"])
-E("GET", "/reports/lc/{report}", "LC reports: register, status, outstanding, expiry, docs, amendments, charges, cost", "lc.view",
-  ["letters_of_credit", "lc_payments", "lc_charges", "lc_documents", "lc_amendments", "landed_cost_allocations"], ["M8"], params=DATEQ + ["bank_account_id", "segment", "format"], resp="ReportData", tag="Reports", fr=["FR-099"])
+E("GET", "/bank-facilities", "Bank facilities (LC and loan limits) with live utilisation", "lc.view", ["bank_facilities", "money_accounts", "letters_of_credit", "lc_loans"], ["M1", "M8"],
+  resp="Page<BankFacility>", tag=T, fr=["FR-099"], added="P16 LC finance")
+E("POST", "/bank-facilities", "Set a bank's LC and loan limits and default loan terms", "lc.edit", ["bank_facilities", "money_accounts", "audit_logs"], ["M1", "M8"],
+  rules=["BR-066"], req="BankFacilityInput", resp="BankFacility", tag=T, fr=["FR-099"], codes=[201, 422], added="P16 LC finance")
+E("PUT", "/bank-facilities/{id}", "Change a bank facility", "lc.edit", ["bank_facilities", "audit_logs"], ["M1", "M8"], rules=["BR-066"], req="BankFacilityInput",
+  resp="BankFacility", ifmatch=True, tag=T, fr=["FR-099"], added="P16 LC finance")
+E("GET", "/lc-loans", "PAD/LTR loans (filter by status, bank, LC)", "lc.view", ["lc_loans", "lc_loan_repayments", "letters_of_credit", "money_accounts"], ["M4", "M7"],
+  params=LISTQ + ["status", "bank_account_id", "letter_of_credit_id"], resp="Page<LcLoan>", tag=T, fr=["FR-097"], added="P16 LC finance")
+E("GET", "/lc-loans/{id}", "One loan with its repayments and the interest due today", "lc.view", ["lc_loans", "lc_loan_repayments", "lc_loan_accruals"], ["M4", "M7"],
+  resp="LcLoan", tag=T, fr=["FR-097"], added="P16 LC finance")
+E("GET", "/lc-loans/{id}/interest", "Interest due on a loan at a date (for the repayment dialog)", "lc.view", ["lc_loans", "lc_loan_accruals"], ["M4", "M7"],
+  params=["as_of"], resp="LcLoanInterest", tag=T, fr=["FR-097"], added="P16 LC finance")
+E("POST", "/lc-loans/{id}/repayments", "Repay principal with the interest due to the date", "lc.create",
+  ["lc_loan_repayments", "lc_loans", "lc_loan_accruals", "journal_entries", "journal_lines", "money_accounts", "account_mappings", "number_sequences", "audit_logs"], ["M4", "M7"],
+  rules=["BR-067", "BR-001", "BR-004", "BR-031"], req="LcLoanRepaymentInput", idem=True, resp="LcLoan", tx=TXP, tag=T, fr=["FR-097"], codes=[201, 409, 422], added="P16 LC finance")
+E("POST", "/lc-loans/{id}/convert", "Convert a PAD to an LTR on the agreed terms", "lc.edit", ["lc_loans", "audit_logs"], ["M4", "M7"], rules=["BR-067"], req="LcLoanConvert",
+  resp="LcLoan", ifmatch=True, tag=T, fr=["FR-097"], codes=[200, 409, 422], added="P16 LC finance")
+E("POST", "/lc-loan-repayments/{id}/reverse", "Reverse a loan repayment (mirror entry; principal and interest due again)", "lc.edit",
+  ["lc_loan_repayments", "lc_loans", "lc_loan_accruals", "journal_entries", "journal_lines", "number_sequences", "audit_logs"], ["M4", "M7"],
+  rules=["BR-003", "BR-004", "BR-009"], req="ReasonRequest", idem=True, resp="LcLoan", tx=TXP, tag=T, fr=["FR-097"], codes=[200, 409], added="P16 LC finance")
+E("POST", "/fx-revaluations/preview", "Preview revaluation of open foreign bills and acceptances at closing rates", "accounting.create",
+  ["purchase_bills", "bill_allocations", "lc_payments", "journal_lines", "currencies"], ["M8"], rules=["BR-068"], req="FxRevaluationRequest", resp="FxRevaluation", tag=T, fr=["FR-097"], codes=[200, 422], added="P16 LC finance")
+E("POST", "/fx-revaluations", "Post a revaluation (unrealised gain/loss) and its reversal dated the next day", "accounting.create",
+  ["fx_revaluations", "fx_revaluation_lines", "journal_entries", "journal_lines", "account_mappings", "number_sequences", "audit_logs"], ["M8"],
+  rules=["BR-068", "BR-001", "BR-004"], req="FxRevaluationRequest", idem=True, resp="FxRevaluation", tx=TXP, tag=T, fr=["FR-097"], codes=[201, 422], added="P16 LC finance")
+E("GET", "/fx-revaluations", "Revaluation history", "accounting.view", ["fx_revaluations", "fx_revaluation_lines"], ["M8"], params=LISTQ, resp="Page<FxRevaluation>", tag=T, fr=["FR-097"], added="P16 LC finance")
+E("POST", "/fx-revaluations/{id}/reverse", "Reverse a revaluation (both its entries)", "accounting.edit", ["fx_revaluations", "journal_entries", "journal_lines", "number_sequences", "audit_logs"], ["M8"],
+  rules=["BR-003", "BR-004", "BR-009"], req="ReasonRequest", idem=True, resp="FxRevaluation", tx=TXP, tag=T, fr=["FR-097"], codes=[200, 409], added="P16 LC finance")
+E("GET", "/reports/lc/{report}", "LC reports: register, status, outstanding, expiry, docs, amendments, charges, cost, loans, exposure", "lc.view",
+  ["letters_of_credit", "lc_payments", "lc_charges", "lc_documents", "lc_amendments", "landed_cost_allocations", "lc_loans", "lc_loan_repayments", "bank_facilities"], ["M8"], params=DATEQ + ["bank_account_id", "segment", "format"], resp="ReportData", tag="Reports", fr=["FR-099"])
 
 
 # ---------------------------------------------------------------- contract-review corrections, second pass (18 Oct 2026)

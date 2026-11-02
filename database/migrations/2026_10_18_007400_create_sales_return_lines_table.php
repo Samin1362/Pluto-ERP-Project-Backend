@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Table `sales_return_lines` (Sales): migration 74 of 83, dependency level 8.
+ * Table `sales_return_lines` (Sales): migration 74 of 89, dependency level 8.
  * Returned quantity per original invoice line.
  * Depends on: products, sales_invoice_lines, sales_returns.
  *

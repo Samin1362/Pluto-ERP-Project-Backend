@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Table `cash_count_denominations` (Money): migration 54 of 83, dependency level 6.
+ * Table `cash_count_denominations` (Money): migration 54 of 89, dependency level 6.
  * Note/coin lines of a cash count.
  * Depends on: cash_counts.
  *

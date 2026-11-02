@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Table `sales_returns` (Sales): migration 68 of 83, dependency level 7.
+ * Table `sales_returns` (Sales): migration 68 of 89, dependency level 7.
  * Goods coming back from a customer against an invoice (E8).
  * Depends on: branches, companies, journal_entries, parties, sales_invoices, users, warehouses.
  *

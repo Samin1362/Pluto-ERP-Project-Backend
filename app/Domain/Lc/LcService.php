@@ -117,6 +117,7 @@ final class LcService
             switch ($in['action']) {
                 case 'submit':
                     $this->assertSubmittable($lc);
+                    app(LcFinanceService::class)->checkLcLimit($lc); // BR-066: block -> 422; warn -> the LC_LIMIT_EXCEEDED flag
                     $patch['opening_status'] = 'submitted';
                     break;
                 case 'mark_opened':
@@ -520,6 +521,7 @@ final class LcService
         if ($unpaid > 0) {
             $flags[] = ['code' => 'LC_UNPAID_CHARGES', 'message' => "{$unpaid} charges not paid yet"];
         }
+        array_push($flags, ...app(LcFinanceService::class)->limitFlags($lc));
 
         return $flags;
     }

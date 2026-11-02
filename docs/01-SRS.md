@@ -169,9 +169,9 @@ Approval limits (defaults): Finance manager pays up to ৳ 5,00,000 without appr
 | FR-094 | LC | Users record LC amendments with field-level changes and status. | M5 | 3 |
 | FR-095 | LC | Users maintain document checklists and templates and update document status, with scans attached. | M6 | 7 |
 | FR-096 | LC | Users record shipment lots and milestones inside an LC. | M4 | 2 |
-| FR-097 | LC | Users record LC charges and import expenses, and payments at the bank's rate. | M7, LC-DlgPay, LC-DrawerCharge | 7 |
+| FR-097 | LC | Users record LC charges and import expenses, and payments at the bank's rate. | M7, LC-DlgPay, LC-DrawerCharge | 17 |
 | FR-098 | LC | Users receive LC goods through an import purchase bill and allocate landed cost. | F3, M4, M7 | 5 |
-| FR-099 | LC | Users close an LC, after checks, and view the eight LC reports. | M8, LC-DlgClose | 2 |
+| FR-099 | LC | Users close an LC, after checks, and view the eight LC reports. | M8, LC-DlgClose | 5 |
 
 ## 6. Non-functional requirements
 
@@ -228,15 +228,15 @@ Approval limits (defaults): Finance manager pays up to ৳ 5,00,000 without appr
 
 | ID | Rule | Enforced by (endpoints) | Tests |
 |---|---|---|---|
-| BR-001 | Every posted journal entry balances: total debit = total credit > 0. | 30 | TC-ACC-001, TC-ACC-005, TC-ACC-012, TC-DB-003 |
+| BR-001 | Every posted journal entry balances: total debit = total credit > 0. | 32 | TC-ACC-001, TC-ACC-005, TC-ACC-012, TC-DB-003 |
 | BR-002 | Each journal line carries a debit or a credit greater than zero, never both and never neither. | 2 | TC-ACC-002, TC-ACC-012 |
-| BR-003 | Posted journal entries, documents and stock movements are immutable; corrections are made only by reversal, cancellation or a credit/debit note. Non-financial fields (delivery challan, vehicle, delivered time, internal note, attachments) may still be updated after posting, and every change is audited. | 14 | TC-ACC-003, TC-ACC-007, TC-ACC-008, TC-SAL-018, TC-PUR-011, TC-INV-005, TC-BNK-010, TC-LC-012 |
-| BR-004 | A document or voucher date must fall inside an open accounting period of an open financial year; posting, editing or reversing into a locked period is rejected. | 34 | TC-ACC-004 |
+| BR-003 | Posted journal entries, documents and stock movements are immutable; corrections are made only by reversal, cancellation or a credit/debit note. Non-financial fields (delivery challan, vehicle, delivered time, internal note, attachments) may still be updated after posting, and every change is audited. | 16 | TC-ACC-003, TC-ACC-007, TC-ACC-008, TC-SAL-018, TC-PUR-011, TC-INV-005, TC-BNK-010, TC-LC-012 |
+| BR-004 | A document or voucher date must fall inside an open accounting period of an open financial year; posting, editing or reversing into a locked period is rejected. | 38 | TC-ACC-004 |
 | BR-005 | Drafts, submitted and rejected vouchers never affect ledger balances, stock or reports. | 7 | TC-ACC-006 |
 | BR-006 | Document numbers come from the company's sequence for the document type and FY, are unique, are reserved at first save and are never reused; voiding a draft number is audited. | 20 | TC-ACC-023, TC-SAL-013, TC-DB-002 |
 | BR-007 | A payment or journal voucher whose amount exceeds the submitter's role limit must be approved by a user with the module's approve permission before it posts. | 7 | TC-AUTH-019, TC-ACC-009, TC-PUR-006 |
 | BR-008 | Nobody approves a voucher they submitted (segregation of duties). | 2 | TC-ACC-010 |
-| BR-009 | A document posts at most once: one journal entry per document (unique journal_entry_id); a repeated post request returns the existing result. | 22 | TC-ACC-007, TC-SAL-005, TC-SAL-016, TC-SAL-021, TC-CON-003 |
+| BR-009 | A document posts at most once: one journal entry per document (unique journal_entry_id); a repeated post request returns the existing result. | 24 | TC-ACC-007, TC-SAL-005, TC-SAL-016, TC-SAL-021, TC-CON-003 |
 | BR-010 | Money uses decimal arithmetic only. Line amounts are rounded half-up to 2 decimals; document totals are the sum of rounded lines; the server's calculation is authoritative. | 4 | TC-ACC-019, TC-SAL-002, TC-DB-006, TC-FE-002 |
 | BR-011 | Line gross = quantity x unit price; discount = gross x discount% ; tax = (gross - discount) x tax rate; line total = gross - discount + tax. | 4 | TC-ACC-020, TC-SAL-002 |
 | BR-012 | Invoice rounding (company setting: none, nearest 1, nearest 5 taka) is posted to the mapped rounding ledger. | 2 | TC-ACC-021 |
@@ -258,7 +258,7 @@ Approval limits (defaults): Finance manager pays up to ৳ 5,00,000 without appr
 | BR-028 | Opening balances (parties, ledgers, banks, stock) are posted as opening_balance entries dated the FY start against the opening balance adjustment ledger, and are locked after the first document. | 5 | TC-ACC-014 |
 | BR-029 | A stock adjustment posts the value of the difference: a shortage debits the stock-adjustment ledger and credits inventory; a gain does the opposite. | 2 | TC-INV-002, TC-INV-003 |
 | BR-030 | A stock transfer requires different warehouses and quantity <= available at the source; total value is unchanged; a journal is posted only if the warehouses use different inventory ledgers. | 3 | TC-INV-004, TC-DB-007 |
-| BR-031 | A payment, transfer or contra cannot take a cash or wallet account below zero, or a bank or cash-credit account below minus its overdraft_limit (zero when not set). | 8 | TC-PUR-007, TC-BNK-002 |
+| BR-031 | A payment, transfer or contra cannot take a cash or wallet account below zero, or a bank or cash-credit account below minus its overdraft_limit (zero when not set). | 9 | TC-PUR-007, TC-BNK-002 |
 | BR-032 | A reconciliation finishes only when every statement line is matched, created, paired or ignored and the difference is zero. | 1 | TC-BNK-004, TC-BNK-005 |
 | BR-033 | Periods lock in date order by users with accounting.lock_period; unlocking needs the same permission, a reason, and is audited. | 2 | TC-ACC-015 |
 | BR-034 | A financial year closes only after its end date with every period locked; closing posts a year-end entry moving net profit to retained earnings. | 1 | TC-ACC-016 |
@@ -293,6 +293,9 @@ Approval limits (defaults): Finance manager pays up to ৳ 5,00,000 without appr
 | BR-063 | Local party mobile numbers have 11 digits starting 01 (01XXX-XXXXXX); e-mail addresses must be valid when given. | 2 | TC-NFR-011 |
 | BR-064 | Posting a sales invoice creates: Dr customer (total), Cr each line's income ledger (net), Cr tax ledgers (tax), Cr/Dr rounding; and for stocked lines Dr COGS, Cr warehouse inventory (cost). | 2 | TC-ACC-024, TC-SAL-004 |
 | BR-065 | A receipt debits the money account and credits the party ledger; a payment debits the party (or expense) ledger and credits the money account; bank charges debit the bank-charges ledger. | 5 | TC-SAL-007, TC-BNK-001 |
+| BR-066 | A bank's LC limit counts the planned taka of its open LCs and its open usance acceptances, and its loan limit counts the outstanding PAD/LTR principal; going over warns or is refused as the facility says. | 2 | TC-LC-014 |
+| BR-067 | A PAD/LTR loan accrues interest daily on the outstanding principal at its rate over its day count (360 or 365), from the last repayment or month-end accrual; a repayment pays that interest with the principal and cannot repay more principal than is outstanding. | 2 | TC-LC-015 |
+| BR-068 | A period-end FX revaluation restates open foreign-currency bills and usance acceptances at closing rates, posts the unrealised difference to exchange gain or loss and reverses it the next day. | 2 | TC-LC-016 |
 
 ## 9. Use cases
 

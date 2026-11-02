@@ -66,6 +66,10 @@ E = {
     "exceeds_tolerance": (422, "Payments would exceed the LC amount plus tolerance", ["BR-042"]),
     "margin_exceeds_deposit": (422, "More margin applied than was deposited", ["BR-044"]),
     "charge_allocated": (409, "The charge is part of a posted landed-cost allocation", ["BR-045"]),
+    "lc_limit_exceeded": (422, "The bank's LC limit would be exceeded", ["BR-066"]),
+    "loan_limit_exceeded": (422, "The bank's loan (PAD/LTR) limit would be exceeded", ["BR-066"]),
+    "repayment_exceeds_outstanding": (422, "The principal repaid is more than the loan's outstanding principal", ["BR-067"]),
+    "nothing_to_revalue": (422, "No open foreign-currency items at that date", ["BR-068"]),
     "lc_not_closable": (422, "Unpaid supplier, unpaid charges or missing documents; give an override reason", ["BR-046"]),
     "file_type_not_allowed": (415, "Only JPG, PNG or PDF up to 10 MB", ["BR-051"]),
     "file_too_large": (413, "Files may be up to 10 MB", ["BR-051"]),
@@ -96,4 +100,5 @@ RULE_ERRORS = {
     "BR-049": ["version_conflict"], "BR-050": ["idempotency_key_reused", "idempotency_in_progress"], "BR-051": ["file_type_not_allowed", "file_too_large"],
     "BR-053": ["backdated_confirmation_required"], "BR-059": ["seat_limit_reached"], "BR-060": ["last_owner", "role_in_use", "system_role"],
     "BR-062": ["restore_confirmation_required"], "BR-063": ["invalid_mobile"], "BR-064": ["mapping_missing"], "BR-065": ["mapping_missing"],
+    "BR-066": ["lc_limit_exceeded", "loan_limit_exceeded"], "BR-067": ["repayment_exceeds_outstanding"], "BR-068": ["nothing_to_revalue"],
 }

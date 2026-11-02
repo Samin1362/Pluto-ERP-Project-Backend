@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Table `letters_of_credit` (LC): migration 55 of 83, dependency level 6.
+ * Table `letters_of_credit` (LC): migration 55 of 89, dependency level 6.
  * Import letter of credit (M3/M4). Shipment lots, documents, amendments, charges and payments hang off it.
  * Depends on: branches, companies, currencies, money_accounts, parties, purchase_orders, users.
  *

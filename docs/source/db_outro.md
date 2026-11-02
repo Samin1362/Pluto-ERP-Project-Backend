@@ -91,6 +91,8 @@ It reproduces the designed H2 chart and adds the ledgers needed by posting rules
 | 2205 ✚ | Tax payable | Ledger (tax) | Liability | |
 | 2301 | Bank cash credit | Ledger | Liability | |
 | 2302 ✚ | LC acceptance liability | Ledger | Liability | `lc_acceptance` |
+| 2303 ✚ | PAD/LTR loans (LC) | Ledger | Liability | `lc_loan` |
+| 2304 ✚ | Interest payable | Ledger | Liability | `interest_payable` |
 | 9999 ✚ | Suspense | Ledger (system) | Liability | `suspense` |
 | 22 | Long-term liabilities | Group | Liability | |
 | 3 | Equity | Primary | Equity | |
@@ -118,7 +120,7 @@ It reproduces the designed H2 chart and adds the ledgers needed by posting rules
 | 6198 ✚ | Cash short and over | Ledger (system) | Expense | `cash_short_over` |
 | 62 | Depreciation and finance | Group | Expense | |
 | 6501 | Depreciation | Ledger | Expense | |
-| 6601 | Interest on loans | Ledger | Expense | |
+| 6601 | Interest on loans | Ledger | Expense | `interest_expense` |
 | 6603 ✚ | Exchange gain or loss | Ledger (system) | Expense | `fx_gain_loss` |
 | 6702 | Bank charges | Ledger (system) | Expense | `bank_charges` |
 | 6799 ✚ | Rounding off | Ledger (system) | Expense | `rounding` |

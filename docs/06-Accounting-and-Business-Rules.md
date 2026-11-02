@@ -54,6 +54,9 @@
 | `goods_in_transit` | Asset | LC charges awaiting landed-cost allocation | 1404 |
 | `lc_margin` | Asset | LC margin deposits | 1403 |
 | `lc_acceptance` | Liability | Usance LC acceptance liability | 2302 |
+| `lc_loan` | Liability | PAD/LTR loans the bank made to pay LC suppliers (P16 LC finance) | 2303 |
+| `interest_payable` | Liability | Loan interest accrued at month end, not yet paid (P16 LC finance) | 2304 |
+| `interest_expense` | Expense | Interest on PAD/LTR loans (P16 LC finance) | 6601 |
 | `fx_gain_loss` | Expense (or Income) | Exchange differences | 6603 |
 | `bank_charges` | Expense | Bank fees not capitalised | 6702 |
 | `rounding` | Expense | Invoice/bill rounding | 6799 |
@@ -308,6 +311,25 @@ Checks: supplier foreign balance zero (or LC expired); no unpaid charges; no mis
 
 ### 12.10 LC reports
 Register, active/expired, outstanding commitments (amount − paid at planning rate), upcoming expiry, document completion, amendment history, charges and payments, import cost summary. They read LC tables plus journal lines tagged with `letter_of_credit_id`, so the cost summary always agrees with the ledgers.
+
+### 12.11 Bank facilities and limits (BR-066; P16 LC finance, owner decisions 2 Nov 2026)
+A bank facility belongs to one bank money account: `lc_limit`, `loan_limit` (PAD and LTR together), `limit_action` (`warn` | `block`), and the default loan terms (`interest_rate_pct`, `day_count` 360 | 365, `loan_tenor_days`). A limit of 0 means no limit is set.
+- **LC utilisation** = planned taka (outstanding foreign × planning rate) of the bank's LCs that are awaiting the bank or open (opened, partly shipped, documents presented, payment due) + the bank's open usance acceptances (2302 tagged with its LCs).
+- **Loan utilisation** = outstanding principal of the bank's open PAD/LTR loans.
+- Submitting an LC to the bank, and a financed payment, check the new total. Over the limit: warning `LC_LIMIT_EXCEEDED` / `LOAN_LIMIT_EXCEEDED` (`warn`), or 422 `lc_limit_exceeded` / `loan_limit_exceeded` (`block`). No journal.
+
+### 12.12 PAD/LTR loans (BR-067)
+- **Financed payment** (`financed_by` = `pad` or `ltr`): the bank pays the supplier for the company. Dr supplier (amount_bdt) / Cr `lc_margin` (margin applied) / Cr `lc_loan` (the rest = the loan principal), every line tagged with the LC. The loan record (`lc_loans`) holds the number `<LC number>/L<n>`, the bank, principal, rate, day count, start and due dates (start + tenor). Settlement of the import bill and FX are as §12.5.
+- **Interest** on any day = outstanding principal × rate ÷ 100 × days ÷ day count, rounded to 2 dp, for the days from `interest_from` (start date, then the last repayment or month-end accrual) to that day.
+- **Month-end accrual** (`pluto:loans:accrue`, optional): Dr `interest_expense` / Cr `interest_payable` for the interest to the month end; `interest_from` moves to the next day.
+- **Repayment:** Dr `lc_loan` (principal) / Dr `interest_payable` (accrued, not yet paid) / Dr `interest_expense` (interest since `interest_from`) / Cr money account. The principal may not exceed the outstanding principal (422 `repayment_exceeds_outstanding`); the loan becomes `repaid` at zero. Reversal posts the mirror entry and restores the principal, the accruals cleared and `interest_from`.
+- **PAD → LTR:** a record change on the same loan (new rate, tenor, due date; `converted_on`), audited; no journal because both are the same `lc_loan` liability.
+
+### 12.13 Period-end FX revaluation (BR-068)
+At a revaluation date the user gives a closing rate for each currency. Revalued items:
+- open foreign purchase bills: foreign outstanding = total_foreign − the foreign amounts settled; book rate = the bill's rate; against the supplier's ledger;
+- open usance acceptances: accepted foreign − settled foreign at the acceptance rate; against `lc_acceptance`.
+Difference = foreign outstanding × (closing − book rate), rounded per item; a liability that grew in taka is a loss: Dr `fx_gain_loss` / Cr supplier or `lc_acceptance`, and the reverse for a gain. The whole revaluation is one journal on the revaluation date, and its mirror is posted on the next day, so settlements keep booking realised FX against the original rates (§12.5, §12.6). A revaluation can be reversed as a whole (wrong rates): each of its two entries gets a counter-entry on its own date, so neither date keeps an effect. Revaluation entries never settle bills (their source is the revaluation).
 
 ## 13. Cash, bank, income and expense
 

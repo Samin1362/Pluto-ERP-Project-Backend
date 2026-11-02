@@ -1060,6 +1060,40 @@ class OpenApiConformanceTest extends TestCase
         foreach (['register', 'cost'] as $r) {
             $this->assertConforms($this->api('GET', "/api/v1/reports/lc/{$r}", $t, $c), 'GET', '/reports/lc/{report}');
         }
+
+        // LC finance (P16.4): facilities, FX revaluation of the open bill, a financed payment and its PAD/LTR loan
+        $fac = $this->api('POST', '/api/v1/bank-facilities', $t, $c, ['money_account_id' => $bank, 'lc_limit' => '90000000.00', 'loan_limit' => '90000000.00', 'interest_rate_pct' => '9']);
+        $this->assertConforms($fac, 'POST', '/bank-facilities');
+        $this->assertConforms($this->api('POST', '/api/v1/bank-facilities', $t, $c, ['money_account_id' => $bank]), 'POST', '/bank-facilities');                    // 422 one per bank
+        $this->assertConforms($this->api('PUT', '/api/v1/bank-facilities/'.$fac->json('data.id'), $t, $c, ['money_account_id' => $bank, 'limit_action' => 'block'], ['If-Match' => 'W/"1"']),
+            'PUT', '/bank-facilities/{id}');
+        $this->assertConforms($this->api('GET', '/api/v1/bank-facilities', $t, $c), 'GET', '/bank-facilities');
+        $fx = ['revaluation_date' => $today, 'rates' => [['currency_code' => 'USD', 'rate' => '123.00']]];
+        $this->assertConforms($this->api('POST', '/api/v1/fx-revaluations/preview', $t, $c, $fx), 'POST', '/fx-revaluations/preview');
+        $this->assertConforms($this->api('POST', '/api/v1/fx-revaluations/preview', $t, $c, ['revaluation_date' => $today, 'rates' => [['currency_code' => 'EUR', 'rate' => '1']]]),
+            'POST', '/fx-revaluations/preview');                                                                                                                  // 422 nothing
+        $rv = $this->api('POST', '/api/v1/fx-revaluations', $t, $c, $fx, $key());
+        $this->assertConforms($rv, 'POST', '/fx-revaluations');
+        $this->assertConforms($this->api('GET', '/api/v1/fx-revaluations', $t, $c), 'GET', '/fx-revaluations');
+        $this->assertConforms($this->api('POST', '/api/v1/fx-revaluations/'.$rv->json('data.id').'/reverse', $t, $c, ['reason' => 'Wrong rate'], $key()), 'POST', '/fx-revaluations/{id}/reverse');
+        $fin = $this->api('POST', "/api/v1/letters-of-credit/{$id}/payments", $t, $c, ['payment_date' => $today, 'amount_foreign' => '38400.00', 'bank_rate' => '122.10',
+            'money_account_id' => $bank, 'financed_by' => 'pad', 'loan' => ['tenor_days' => 90]], $key());
+        $this->assertConforms($fin, 'POST', '/letters-of-credit/{id}/payments');
+        $loan = $fin->json('data.lc_loan_id');
+        $this->assertConforms($this->api('GET', '/api/v1/lc-loans?status=open', $t, $c), 'GET', '/lc-loans');
+        $this->assertConforms($this->api('GET', "/api/v1/lc-loans/{$loan}", $t, $c), 'GET', '/lc-loans/{id}');
+        $this->assertConforms($this->api('GET', "/api/v1/lc-loans/{$loan}/interest?as_of={$today}", $t, $c), 'GET', '/lc-loans/{id}/interest');
+        $this->assertConforms($this->api('POST', "/api/v1/lc-loans/{$loan}/convert", $t, $c, ['converted_on' => $today, 'interest_rate_pct' => '10', 'tenor_days' => 180], ['If-Match' => 'W/"1"']),
+            'POST', '/lc-loans/{id}/convert');
+        $rep = $this->api('POST', "/api/v1/lc-loans/{$loan}/repayments", $t, $c, ['repayment_date' => $today, 'principal_amount' => '1000.00', 'money_account_id' => $bank], $key());
+        $this->assertConforms($rep, 'POST', '/lc-loans/{id}/repayments');
+        $this->assertConforms($this->api('POST', "/api/v1/lc-loans/{$loan}/repayments", $t, $c, ['repayment_date' => $today, 'principal_amount' => '99999999.00', 'money_account_id' => $bank], $key()),
+            'POST', '/lc-loans/{id}/repayments');                                                                                                                 // 422 too much
+        $this->assertConforms($this->api('POST', '/api/v1/lc-loan-repayments/'.$rep->json('data.repayments.0.id').'/reverse', $t, $c, ['reason' => 'Wrong'], $key()),
+            'POST', '/lc-loan-repayments/{id}/reverse');
+        foreach (['loans', 'exposure'] as $r) {
+            $this->assertConforms($this->api('GET', "/api/v1/reports/lc/{$r}", $t, $c), 'GET', '/reports/lc/{report}');
+        }
         $draft = $this->api('POST', '/api/v1/letters-of-credit', $t, $c, ['party_id' => $supplier, 'goods_description' => 'x', 'tenor' => 'sight', 'incoterm' => 'FOB', 'currency_code' => 'USD',
             'amount' => '1.00', 'planning_rate' => '121.50'], $key())->json('data.id');
         $this->assertConforms($this->api('DELETE', "/api/v1/letters-of-credit/{$id}", $t, $c), 'DELETE', '/letters-of-credit/{id}');                            // 409

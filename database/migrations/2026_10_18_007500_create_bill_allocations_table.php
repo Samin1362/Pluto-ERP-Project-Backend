@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Table `bill_allocations` (Accounting): migration 75 of 83, dependency level 9.
+ * Table `bill_allocations` (Accounting): migration 75 of 89, dependency level 9.
  * Applies a settlement line (receipt, payment, credit/debit note, advance) to an invoice or bill.
  * Depends on: companies, journal_lines, purchase_bills, sales_invoices, users.
  *

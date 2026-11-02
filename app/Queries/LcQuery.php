@@ -3,8 +3,11 @@
 namespace App\Queries;
 
 use App\Domain\Accounting\AccountMapper;
+use App\Domain\Lc\LcFinanceService;
 use App\Domain\Lc\LcPostingService;
 use App\Domain\Shared\Money;
+use App\Models\BankFacility;
+use App\Models\LcLoan;
 use App\Models\LetterOfCredit;
 use Brick\Math\BigDecimal;
 use Brick\Math\RoundingMode;
@@ -22,7 +25,7 @@ final class LcQuery
     public const GROUPS = ['pipeline' => ['draft', 'awaiting_bank'], 'active' => ['opened', 'partly_shipped', 'documents_presented', 'payment_due'],
         'closed' => ['closed', 'cancelled', 'expired']];
 
-    public const REPORTS = ['register', 'status', 'outstanding', 'expiry', 'documents', 'amendments', 'charges', 'cost'];
+    public const REPORTS = ['register', 'status', 'outstanding', 'expiry', 'documents', 'amendments', 'charges', 'cost', 'loans', 'exposure'];
 
     public function list(array $f): Builder
     {
@@ -89,11 +92,19 @@ final class LcQuery
                 }
             }
         }
+        $openLoans = DB::table('lc_loans')->where('company_id', $c)->where('status', 'open')->get(['id', 'letter_of_credit_id', 'loan_number', 'due_date']);
+        foreach ($openLoans as $loan) {
+            if ($loan->due_date <= CarbonImmutable::parse($today)->addDays(30)->toDateString()) {
+                $deadlines[] = ['lc_id' => $loan->letter_of_credit_id, 'lc_number' => $loan->loan_number, 'kind' => $loan->due_date < $today ? 'Loan overdue' : 'Loan due', 'date' => $loan->due_date, 'url' => "/lc/loans/{$loan->id}"];
+            }
+        }
+        $finance = app(LcFinanceService::class);
+        $loansOutstanding = Money::sum(LcLoan::whereIn('id', $openLoans->pluck('id'))->get()->map(fn ($l) => $finance->outstanding($l))->all());
         usort($deadlines, fn ($a, $b) => $a['date'] <=> $b['date']);
         $byBank = $active->groupBy('bank')->map(fn ($g, $bank) => ['bank' => $bank ?: 'Not chosen', 'count' => $g->count(),
             'planned_bdt' => (string) Money::sum($g->map(fn ($l) => self::planned($l))->all())])->values()->all();
         $recent = DB::table('audit_logs as a')->leftJoin('users as u', 'u.id', '=', 'a.user_id')->where('a.company_id', $c)
-            ->whereIn('a.auditable_type', ['letters_of_credit', 'lc_charges', 'lc_payments', 'lc_documents', 'landed_cost_allocations'])->orderByDesc('a.id')->limit(8)
+            ->whereIn('a.auditable_type', ['letters_of_credit', 'lc_charges', 'lc_payments', 'lc_documents', 'landed_cost_allocations', 'lc_loans', 'bank_facilities'])->orderByDesc('a.id')->limit(8)
             ->get(['a.action', 'a.auditable_type', 'a.auditable_id', 'a.created_at', 'u.name as user'])
             ->map(fn ($a) => ['action' => $a->action, 'type' => $a->auditable_type, 'id' => $a->auditable_id, 'user' => $a->user, 'at' => CarbonImmutable::parse($a->created_at)->toIso8601String()])->all();
         $missingDocs = DB::table('lc_documents as d')->join('letters_of_credit as l', 'l.id', '=', 'd.letter_of_credit_id')->where('l.company_id', $c)
@@ -108,7 +119,8 @@ final class LcQuery
             'totals' => ['active' => $active->count(), 'pipeline' => $lcs->whereIn('status', self::GROUPS['pipeline'])->count(),
                 'active_planned_bdt' => (string) Money::sum($active->map(fn ($l) => self::planned($l))->all()), 'outstanding_bdt' => (string) $outstanding,
                 'margin_held' => $bal($margin), 'goods_in_transit' => $bal($git), 'expiring_15' => $active->filter(fn ($l) => $l->expiry_date && $l->expiry_date <= CarbonImmutable::parse($today)->addDays(15)->toDateString())->count(),
-                'documents_attention' => $missingDocs, 'unpaid_charges' => $unpaid],
+                'documents_attention' => $missingDocs, 'unpaid_charges' => $unpaid, 'loans_open' => $openLoans->count(), 'loans_outstanding' => (string) $loansOutstanding,
+                'loans_due_7' => $openLoans->filter(fn ($l) => $l->due_date <= CarbonImmutable::parse($today)->addDays(7)->toDateString())->count()],
             'checks' => [],
             'meta' => ['pipeline' => collect(['draft', 'awaiting_bank', 'opened', 'partly_shipped', 'documents_presented', 'payment_due', 'expired', 'closed'])
                 ->map(fn ($s) => ['status' => $s, 'count' => $lcs->where('status', $s)->count()])->all(), 'by_bank' => $byBank, 'deadlines' => array_slice($deadlines, 0, 10), 'recent' => $recent],
@@ -252,6 +264,31 @@ final class LcQuery
                 return $base + ['title' => 'Charges and payments', 'basis' => 'Posted LC charges and payments in the period',
                     'columns' => [$col('date', 'Date', 'date'), $col('lc_number', 'LC', 'code'), $col('what', 'What'), $col('status', 'Status'), $col('amount', 'Amount (৳)', 'amount')],
                     'rows' => $rows, 'totals' => ['amount' => (string) Money::sum(array_map(fn ($r) => Money::of($r['amount']), $rows))], 'meta' => null];
+            case 'loans': // P16 LC finance: PAD/LTR loans with what is owed today
+                $finance = app(LcFinanceService::class);
+                $loans = LcLoan::where('company_id', $c)->when($f['bank_account_id'] ?? null, fn ($q, $v) => $q->where('money_account_id', $v))
+                    ->when(($f['segment'] ?? 'open') !== 'all', fn ($q) => $q->where('status', 'open'))->orderBy('due_date')->orderBy('id')->get();
+                $rows = $loans->map(fn ($loan) => ['kind' => 'loan', 'url' => "/lc/loans/{$loan->id}"] + $finance->loanResource($loan, false))->all();
+                $sum = fn (string $k) => (string) Money::sum(array_map(fn ($r) => Money::of($r[$k]), $rows));
+
+                return $base + ['title' => 'PAD/LTR loans', 'basis' => 'Outstanding principal and the interest due today (days from the last interest date × rate ÷ day count)',
+                    'columns' => [$col('loan_number', 'Loan', 'code'), $col('bank_name', 'Bank'), $col('loan_kind', 'Kind'), $col('principal', 'Principal (৳)', 'amount'),
+                        $col('outstanding_principal', 'Outstanding (৳)', 'amount'), $col('interest_rate_pct', 'Rate %', 'qty'), $col('interest_due_today', 'Interest due (৳)', 'amount'),
+                        $col('due_date', 'Due', 'date'), $col('status', 'Status')],
+                    'rows' => $rows, 'totals' => ['principal' => $sum('principal'), 'outstanding_principal' => $sum('outstanding_principal'), 'interest_due_today' => $sum('interest_due_today'),
+                        'count' => count($rows)], 'meta' => ['segment' => $f['segment'] ?? 'open']];
+            case 'exposure': // P16 LC finance: limits, use and room per bank (BR-066)
+                $finance = app(LcFinanceService::class);
+                $rows = BankFacility::where('company_id', $c)->when($f['bank_account_id'] ?? null, fn ($q, $v) => $q->where('money_account_id', $v))->orderBy('id')->get()
+                    ->map(fn ($fa) => ['kind' => 'bank_facility', 'url' => '/lc/banks'] + $finance->facilityResource($fa))->all();
+                $sum = fn (string $k) => (string) Money::sum(array_map(fn ($r) => Money::of($r[$k]), $rows));
+
+                return $base + ['title' => 'Bank exposure', 'basis' => 'LC use = planned taka still to pay on open LCs + open acceptances; loans = outstanding PAD/LTR principal',
+                    'columns' => [$col('bank_name', 'Bank'), $col('lc_limit', 'LC limit (৳)', 'amount'), $col('lc_utilised', 'LC used (৳)', 'amount'), $col('lc_available', 'LC available (৳)', 'amount'),
+                        $col('loan_limit', 'Loan limit (৳)', 'amount'), $col('loans_outstanding', 'Loans (৳)', 'amount'), $col('loan_available', 'Loan available (৳)', 'amount'),
+                        $col('limit_action', 'Over limit')],
+                    'rows' => $rows, 'totals' => ['lc_utilised' => $sum('lc_utilised'), 'loans_outstanding' => $sum('loans_outstanding'), 'acceptances_outstanding' => $sum('acceptances_outstanding')],
+                    'meta' => null];
             default: // cost
                 $list = (clone $lcs)->whereNotIn('l.status', ['draft', 'cancelled'])->orderBy('l.lc_number')->get();
                 $rows = $list->map(function ($l) {

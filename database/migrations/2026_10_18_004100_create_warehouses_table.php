@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Table `warehouses` (Inventory): migration 41 of 83, dependency level 4.
+ * Table `warehouses` (Inventory): migration 41 of 89, dependency level 4.
  * A place that holds stock (godown, depot, outlet, van). Owns its inventory ledger.
  * Depends on: branches, companies, ledgers, users.
  *

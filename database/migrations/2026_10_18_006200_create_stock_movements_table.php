@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Table `stock_movements` (Inventory): migration 62 of 83, dependency level 6.
+ * Table `stock_movements` (Inventory): migration 62 of 89, dependency level 6.
  * Immutable stock ledger: one row per quantity or value change, linked to its source document and journal.
  * Depends on: companies, journal_entries, products, users, warehouses. Self-reference: reverses_movement_id.
  *

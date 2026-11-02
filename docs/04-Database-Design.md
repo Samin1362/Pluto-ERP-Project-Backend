@@ -1678,6 +1678,89 @@ erDiagram
         varchar bank_reference
         varchar status
         bigint journal_entry_id FK
+        varchar financed_by
+    }
+    bank_facilities {
+        bigint id PK
+        bigint company_id FK
+        bigint money_account_id FK
+        decimal lc_limit
+        decimal loan_limit
+        varchar limit_action
+        decimal interest_rate_pct
+        varchar day_count
+        smallint loan_tenor_days
+        varchar notes
+        boolean is_active
+    }
+    lc_loans {
+        bigint id PK
+        bigint company_id FK
+        bigint letter_of_credit_id FK
+        bigint lc_payment_id FK
+        bigint money_account_id FK
+        varchar loan_number
+        varchar loan_kind
+        decimal principal
+        date start_date
+        date due_date
+        decimal interest_rate_pct
+        varchar day_count
+        date interest_from
+        date converted_on
+        varchar status
+        varchar notes
+    }
+    lc_loan_repayments {
+        bigint id PK
+        bigint company_id FK
+        bigint lc_loan_id FK
+        date repayment_date
+        decimal principal_amount
+        decimal interest_amount
+        decimal accrued_cleared
+        date interest_from
+        smallint interest_days
+        bigint money_account_id FK
+        varchar reference
+        varchar status
+        bigint journal_entry_id FK
+    }
+    lc_loan_accruals {
+        bigint id PK
+        bigint company_id FK
+        bigint lc_loan_id FK
+        date accrual_date
+        date interest_from
+        smallint days
+        decimal amount
+        varchar status
+        bigint journal_entry_id FK
+    }
+    fx_revaluations {
+        bigint id PK
+        bigint company_id FK
+        date revaluation_date
+        date reversal_date
+        json rates
+        decimal total_difference
+        varchar status
+        bigint journal_entry_id FK
+        bigint reversal_entry_id FK
+        varchar note
+    }
+    fx_revaluation_lines {
+        bigint id PK
+        bigint fx_revaluation_id FK
+        varchar source
+        bigint purchase_bill_id FK
+        bigint letter_of_credit_id FK
+        bigint party_id FK
+        char currency_code FK
+        decimal foreign_outstanding
+        decimal book_rate
+        decimal closing_rate
+        decimal difference
     }
     branches {
         bigint id PK
@@ -1713,32 +1796,48 @@ erDiagram
         bigint id PK
     }
     branches ||--o{ letters_of_credit : "branch_id"
+    currencies ||--o{ fx_revaluation_lines : "currency_code"
     currencies ||--o{ letters_of_credit : "currency_code"
+    fx_revaluations ||--o{ fx_revaluation_lines : "fx_revaluation_id"
+    journal_entries |o--o| fx_revaluations : "journal_entry_id"
+    journal_entries |o--o| fx_revaluations : "reversal_entry_id"
     journal_entries |o--o| landed_cost_allocations : "journal_entry_id"
     journal_entries |o--o| lc_charges : "journal_entry_id"
+    journal_entries |o--o| lc_loan_accruals : "journal_entry_id"
+    journal_entries |o--o| lc_loan_repayments : "journal_entry_id"
     journal_entries |o--o| lc_payments : "journal_entry_id"
     landed_cost_allocations |o--o{ lc_charges : "landed_cost_allocation_id"
     landed_cost_allocations ||--o{ landed_cost_allocation_lines : "landed_cost_allocation_id"
     lc_amendments |o--o{ lc_charges : "lc_amendment_id"
     lc_amendments ||--o{ lc_amendment_changes : "lc_amendment_id"
     lc_document_templates ||--o{ lc_document_template_items : "lc_document_template_id"
+    lc_loans ||--o{ lc_loan_accruals : "lc_loan_id"
+    lc_loans ||--o{ lc_loan_repayments : "lc_loan_id"
+    lc_payments ||--o| lc_loans : "lc_payment_id"
     lc_shipments |o--o{ lc_charges : "lc_shipment_id"
     lc_shipments |o--o{ lc_documents : "lc_shipment_id"
     lc_shipments |o--o{ lc_payments : "lc_shipment_id"
+    letters_of_credit |o--o{ fx_revaluation_lines : "letter_of_credit_id"
     letters_of_credit ||--o{ landed_cost_allocations : "letter_of_credit_id"
     letters_of_credit ||--o{ lc_amendments : "letter_of_credit_id"
     letters_of_credit ||--o{ lc_charges : "letter_of_credit_id"
     letters_of_credit ||--o{ lc_documents : "letter_of_credit_id"
+    letters_of_credit ||--o{ lc_loans : "letter_of_credit_id"
     letters_of_credit ||--o{ lc_payments : "letter_of_credit_id"
     letters_of_credit ||--o{ lc_shipments : "letter_of_credit_id"
     money_accounts |o--o{ lc_charges : "paid_from_account_id"
     money_accounts |o--o{ letters_of_credit : "issuing_bank_account_id"
     money_accounts |o--o{ letters_of_credit : "margin_account_id"
+    money_accounts ||--o{ bank_facilities : "money_account_id"
+    money_accounts ||--o{ lc_loan_repayments : "money_account_id"
+    money_accounts ||--o{ lc_loans : "money_account_id"
     money_accounts ||--o{ lc_payments : "money_account_id"
+    parties |o--o{ fx_revaluation_lines : "party_id"
     parties |o--o{ lc_charges : "payee_party_id"
     parties ||--o{ letters_of_credit : "party_id"
     products ||--o{ landed_cost_allocation_lines : "product_id"
     purchase_bill_lines ||--o{ landed_cost_allocation_lines : "purchase_bill_line_id"
+    purchase_bills |o--o{ fx_revaluation_lines : "purchase_bill_id"
     purchase_bills |o--o{ lc_payments : "purchase_bill_id"
     purchase_bills ||--o{ landed_cost_allocations : "purchase_bill_id"
     purchase_orders |o--o{ letters_of_credit : "purchase_order_id"
@@ -4829,6 +4928,7 @@ Standard columns are listed in each table: `id` (PK), `company_id` (tenant), `lo
 | `bank_reference` | VARCHAR(60) | yes | NULL | — | — |  |
 | `status` | VARCHAR(30) | no | 'draft' | — | — | enum: draft \| posted \| reversed |
 | `journal_entry_id` | BIGINT UNSIGNED | yes | NULL | FK → `journal_entries.id` · UQ | ON DELETE RESTRICT / ON UPDATE RESTRICT |  |
+| `financed_by` | VARCHAR(30) | no | 'own' | — | — | enum: own \| pad \| ltr. own: from money_account_id; pad/ltr: the bank pays and an lc_loans row records the loan (P16 LC finance) |
 | `lock_version` | INT UNSIGNED | no | 1 | — | — | Optimistic concurrency counter; incremented on every update (If-Match) |
 | `created_by` | BIGINT UNSIGNED | yes | NULL | FK → `users.id` | ON DELETE RESTRICT / ON UPDATE RESTRICT | User who created the row |
 | `updated_by` | BIGINT UNSIGNED | yes | NULL | FK → `users.id` | ON DELETE RESTRICT / ON UPDATE RESTRICT | User who last changed the row |
@@ -4848,6 +4948,7 @@ Standard columns are listed in each table: `id` (PK), `company_id` (tenant), `lo
 - **Check** `margin_applied >= 0`
 - **Check** `payment_kind IN ('sight_payment', 'usance_acceptance', 'usance_settlement')`
 - **Check** `status IN ('draft', 'posted', 'reversed')`
+- **Check** `financed_by IN ('own', 'pad', 'ltr')`
 
 **Relationships:**
 - `letter_of_credit_id` → `letters_of_credit`: one-to-many
@@ -4856,7 +4957,243 @@ Standard columns are listed in each table: `id` (PK), `company_id` (tenant), `lo
 - `money_account_id` → `money_accounts`: one-to-many
 - `journal_entry_id` → `journal_entries`: one-to-one (optional)
 
-_Total: 83 application tables._
+#### `bank_facilities`
+
+**Purpose:** Credit lines a bank grants the company for imports: LC limit and loan (PAD/LTR) limit, with the default loan terms.  
+**Flags:** tenant-scoped, optimistic lock  
+**Primary key:** (id)
+
+| Column | Type | Null | Default | Keys | FK rule | Meaning / rules |
+|---|---|---|---|---|---|---|
+| `id` | BIGINT UNSIGNED | no | — | PK | — | Primary key, auto-increment |
+| `company_id` | BIGINT UNSIGNED | no | — | FK → `companies.id` | ON DELETE RESTRICT / ON UPDATE RESTRICT | Tenant owner. Every query is scoped by it. |
+| `money_account_id` | BIGINT UNSIGNED | no | — | FK → `money_accounts.id` | ON DELETE RESTRICT / ON UPDATE RESTRICT | The bank (a bank-type money account) |
+| `lc_limit` | DECIMAL(18,2) | no | 0 | — | — | 0 = no LC limit set |
+| `loan_limit` | DECIMAL(18,2) | no | 0 | — | — | PAD and LTR together; 0 = no limit set |
+| `limit_action` | VARCHAR(30) | no | 'warn' | — | — | enum: warn \| block. What an LC submit or a financed payment over the limit does |
+| `interest_rate_pct` | DECIMAL(7,4) | no | 0 | — | — | Default annual rate for new loans |
+| `day_count` | VARCHAR(30) | no | '360' | — | — | enum: 360 \| 365 |
+| `loan_tenor_days` | SMALLINT UNSIGNED | no | 90 | — | — |  |
+| `notes` | VARCHAR(255) | yes | NULL | — | — |  |
+| `is_active` | BOOLEAN | no | 1 | — | — |  |
+| `lock_version` | INT UNSIGNED | no | 1 | — | — | Optimistic concurrency counter; incremented on every update (If-Match) |
+| `created_by` | BIGINT UNSIGNED | yes | NULL | FK → `users.id` | ON DELETE RESTRICT / ON UPDATE RESTRICT | User who created the row |
+| `updated_by` | BIGINT UNSIGNED | yes | NULL | FK → `users.id` | ON DELETE RESTRICT / ON UPDATE RESTRICT | User who last changed the row |
+| `created_at` | DATETIME | yes | NULL | — | — | Set by Laravel |
+| `updated_at` | DATETIME | yes | NULL | — | — | Set by Laravel |
+
+- **Unique** (company_id, money_account_id)
+- Index (money_account_id)
+- Index (created_by)
+- Index (updated_by)
+- **Check** `lc_limit >= 0`
+- **Check** `loan_limit >= 0`
+- **Check** `interest_rate_pct >= 0`
+- **Check** `loan_tenor_days > 0`
+- **Check** `limit_action IN ('warn', 'block')`
+- **Check** `day_count IN ('360', '365')`
+
+**Relationships:**
+- `money_account_id` → `money_accounts`: one-to-many
+
+#### `lc_loans`
+
+**Purpose:** PAD or LTR loan: the bank paid the supplier for an LC and the company repays it with interest.  
+**Flags:** tenant-scoped, optimistic lock  
+**Primary key:** (id)
+
+| Column | Type | Null | Default | Keys | FK rule | Meaning / rules |
+|---|---|---|---|---|---|---|
+| `id` | BIGINT UNSIGNED | no | — | PK | — | Primary key, auto-increment |
+| `company_id` | BIGINT UNSIGNED | no | — | FK → `companies.id` | ON DELETE RESTRICT / ON UPDATE RESTRICT | Tenant owner. Every query is scoped by it. |
+| `letter_of_credit_id` | BIGINT UNSIGNED | no | — | FK → `letters_of_credit.id` | ON DELETE RESTRICT / ON UPDATE RESTRICT |  |
+| `lc_payment_id` | BIGINT UNSIGNED | no | — | FK → `lc_payments.id` · UQ | ON DELETE RESTRICT / ON UPDATE RESTRICT | The financed payment |
+| `money_account_id` | BIGINT UNSIGNED | no | — | FK → `money_accounts.id` | ON DELETE RESTRICT / ON UPDATE RESTRICT | The lending bank |
+| `loan_number` | VARCHAR(40) | no | — | — | — | <LC number>/L<n> |
+| `loan_kind` | VARCHAR(30) | no | 'pad' | — | — | enum: pad \| ltr. PAD when the bank pays against documents; converted to LTR on agreed terms |
+| `principal` | DECIMAL(18,2) | no | — | — | — |  |
+| `start_date` | DATE | no | — | — | — |  |
+| `due_date` | DATE | no | — | — | — |  |
+| `interest_rate_pct` | DECIMAL(7,4) | no | — | — | — |  |
+| `day_count` | VARCHAR(30) | no | '360' | — | — | enum: 360 \| 365 |
+| `interest_from` | DATE | no | — | — | — | Interest is due from this date on the outstanding principal (start, then the last repayment or accrual) |
+| `converted_on` | DATE | yes | NULL | — | — |  |
+| `status` | VARCHAR(30) | no | 'open' | — | — | enum: open \| repaid \| reversed |
+| `notes` | VARCHAR(255) | yes | NULL | — | — |  |
+| `lock_version` | INT UNSIGNED | no | 1 | — | — | Optimistic concurrency counter; incremented on every update (If-Match) |
+| `created_by` | BIGINT UNSIGNED | yes | NULL | FK → `users.id` | ON DELETE RESTRICT / ON UPDATE RESTRICT | User who created the row |
+| `updated_by` | BIGINT UNSIGNED | yes | NULL | FK → `users.id` | ON DELETE RESTRICT / ON UPDATE RESTRICT | User who last changed the row |
+| `created_at` | DATETIME | yes | NULL | — | — | Set by Laravel |
+| `updated_at` | DATETIME | yes | NULL | — | — | Set by Laravel |
+
+- **Unique** (company_id, loan_number)
+- **Unique** (lc_payment_id)
+- Index (company_id, status, due_date)
+- Index (letter_of_credit_id)
+- Index (money_account_id)
+- Index (created_by)
+- Index (updated_by)
+- **Check** `principal > 0`
+- **Check** `interest_rate_pct >= 0`
+- **Check** `due_date >= start_date`
+- **Check** `loan_kind IN ('pad', 'ltr')`
+- **Check** `day_count IN ('360', '365')`
+- **Check** `status IN ('open', 'repaid', 'reversed')`
+
+**Relationships:**
+- `letter_of_credit_id` → `letters_of_credit`: one-to-many
+- `lc_payment_id` → `lc_payments`: one-to-one
+- `money_account_id` → `money_accounts`: one-to-many
+
+#### `lc_loan_repayments`
+
+**Purpose:** A repayment of a PAD/LTR loan: principal and the interest due to that date.  
+**Flags:** tenant-scoped, optimistic lock  
+**Primary key:** (id)
+
+| Column | Type | Null | Default | Keys | FK rule | Meaning / rules |
+|---|---|---|---|---|---|---|
+| `id` | BIGINT UNSIGNED | no | — | PK | — | Primary key, auto-increment |
+| `company_id` | BIGINT UNSIGNED | no | — | FK → `companies.id` | ON DELETE RESTRICT / ON UPDATE RESTRICT | Tenant owner. Every query is scoped by it. |
+| `lc_loan_id` | BIGINT UNSIGNED | no | — | FK → `lc_loans.id` | ON DELETE RESTRICT / ON UPDATE RESTRICT |  |
+| `repayment_date` | DATE | no | — | — | — |  |
+| `principal_amount` | DECIMAL(18,2) | no | 0 | — | — |  |
+| `interest_amount` | DECIMAL(18,2) | no | 0 | — | — | Interest for days since interest_from (to 6601) |
+| `accrued_cleared` | DECIMAL(18,2) | no | 0 | — | — | Interest accrued at month ends and paid now (from 2304) |
+| `interest_from` | DATE | no | — | — | — |  |
+| `interest_days` | SMALLINT UNSIGNED | no | 0 | — | — |  |
+| `money_account_id` | BIGINT UNSIGNED | no | — | FK → `money_accounts.id` | ON DELETE RESTRICT / ON UPDATE RESTRICT | Paid from |
+| `reference` | VARCHAR(60) | yes | NULL | — | — |  |
+| `status` | VARCHAR(30) | no | 'posted' | — | — | enum: posted \| reversed |
+| `journal_entry_id` | BIGINT UNSIGNED | yes | NULL | FK → `journal_entries.id` · UQ | ON DELETE RESTRICT / ON UPDATE RESTRICT |  |
+| `lock_version` | INT UNSIGNED | no | 1 | — | — | Optimistic concurrency counter; incremented on every update (If-Match) |
+| `created_by` | BIGINT UNSIGNED | yes | NULL | FK → `users.id` | ON DELETE RESTRICT / ON UPDATE RESTRICT | User who created the row |
+| `updated_by` | BIGINT UNSIGNED | yes | NULL | FK → `users.id` | ON DELETE RESTRICT / ON UPDATE RESTRICT | User who last changed the row |
+| `created_at` | DATETIME | yes | NULL | — | — | Set by Laravel |
+| `updated_at` | DATETIME | yes | NULL | — | — | Set by Laravel |
+
+- **Unique** (journal_entry_id)
+- Index (company_id)
+- Index (lc_loan_id, status)
+- Index (money_account_id)
+- Index (created_by)
+- Index (updated_by)
+- **Check** `principal_amount >= 0`
+- **Check** `interest_amount >= 0`
+- **Check** `accrued_cleared >= 0`
+- **Check** `principal_amount + interest_amount + accrued_cleared > 0`
+- **Check** `status IN ('posted', 'reversed')`
+
+**Relationships:**
+- `lc_loan_id` → `lc_loans`: one-to-many
+- `money_account_id` → `money_accounts`: one-to-many
+- `journal_entry_id` → `journal_entries`: one-to-one (optional)
+
+#### `lc_loan_accruals`
+
+**Purpose:** Month-end interest accrued on an open loan (Dr interest expense / Cr interest payable), cleared by the next repayment.  
+**Flags:** tenant-scoped  
+**Primary key:** (id)
+
+| Column | Type | Null | Default | Keys | FK rule | Meaning / rules |
+|---|---|---|---|---|---|---|
+| `id` | BIGINT UNSIGNED | no | — | PK | — | Primary key, auto-increment |
+| `company_id` | BIGINT UNSIGNED | no | — | FK → `companies.id` | ON DELETE RESTRICT / ON UPDATE RESTRICT | Tenant owner. Every query is scoped by it. |
+| `lc_loan_id` | BIGINT UNSIGNED | no | — | FK → `lc_loans.id` | ON DELETE RESTRICT / ON UPDATE RESTRICT |  |
+| `accrual_date` | DATE | no | — | — | — |  |
+| `interest_from` | DATE | no | — | — | — |  |
+| `days` | SMALLINT UNSIGNED | no | — | — | — |  |
+| `amount` | DECIMAL(18,2) | no | — | — | — |  |
+| `status` | VARCHAR(30) | no | 'posted' | — | — | enum: posted \| paid \| reversed |
+| `journal_entry_id` | BIGINT UNSIGNED | yes | NULL | FK → `journal_entries.id` · UQ | ON DELETE RESTRICT / ON UPDATE RESTRICT |  |
+| `created_by` | BIGINT UNSIGNED | yes | NULL | FK → `users.id` | ON DELETE RESTRICT / ON UPDATE RESTRICT | User who created the row |
+| `updated_by` | BIGINT UNSIGNED | yes | NULL | FK → `users.id` | ON DELETE RESTRICT / ON UPDATE RESTRICT | User who last changed the row |
+| `created_at` | DATETIME | yes | NULL | — | — | Set by Laravel |
+| `updated_at` | DATETIME | yes | NULL | — | — | Set by Laravel |
+
+- **Unique** (lc_loan_id, accrual_date)
+- **Unique** (journal_entry_id)
+- Index (company_id)
+- Index (created_by)
+- Index (updated_by)
+- **Check** `amount >= 0`
+- **Check** `status IN ('posted', 'paid', 'reversed')`
+
+**Relationships:**
+- `lc_loan_id` → `lc_loans`: one-to-many
+- `journal_entry_id` → `journal_entries`: one-to-one (optional)
+
+#### `fx_revaluations`
+
+**Purpose:** Period-end revaluation of open foreign-currency items at closing rates; reversed automatically the next day.  
+**Flags:** tenant-scoped  
+**Primary key:** (id)
+
+| Column | Type | Null | Default | Keys | FK rule | Meaning / rules |
+|---|---|---|---|---|---|---|
+| `id` | BIGINT UNSIGNED | no | — | PK | — | Primary key, auto-increment |
+| `company_id` | BIGINT UNSIGNED | no | — | FK → `companies.id` | ON DELETE RESTRICT / ON UPDATE RESTRICT | Tenant owner. Every query is scoped by it. |
+| `revaluation_date` | DATE | no | — | — | — |  |
+| `reversal_date` | DATE | no | — | — | — |  |
+| `rates` | JSON | no | — | — | — | {currency: closing rate} |
+| `total_difference` | DECIMAL(18,2) | no | — | — | — | Signed: + loss, - gain |
+| `status` | VARCHAR(30) | no | 'posted' | — | — | enum: posted \| reversed |
+| `journal_entry_id` | BIGINT UNSIGNED | yes | NULL | FK → `journal_entries.id` · UQ | ON DELETE RESTRICT / ON UPDATE RESTRICT |  |
+| `reversal_entry_id` | BIGINT UNSIGNED | yes | NULL | FK → `journal_entries.id` · UQ | ON DELETE RESTRICT / ON UPDATE RESTRICT |  |
+| `note` | VARCHAR(255) | yes | NULL | — | — |  |
+| `created_by` | BIGINT UNSIGNED | yes | NULL | FK → `users.id` | ON DELETE RESTRICT / ON UPDATE RESTRICT | User who created the row |
+| `updated_by` | BIGINT UNSIGNED | yes | NULL | FK → `users.id` | ON DELETE RESTRICT / ON UPDATE RESTRICT | User who last changed the row |
+| `created_at` | DATETIME | yes | NULL | — | — | Set by Laravel |
+| `updated_at` | DATETIME | yes | NULL | — | — | Set by Laravel |
+
+- **Unique** (journal_entry_id)
+- **Unique** (reversal_entry_id)
+- Index (company_id, revaluation_date)
+- Index (created_by)
+- Index (updated_by)
+- **Check** `status IN ('posted', 'reversed')`
+
+**Relationships:**
+- `journal_entry_id` → `journal_entries`: one-to-one (optional)
+- `reversal_entry_id` → `journal_entries`: one-to-one (optional)
+
+#### `fx_revaluation_lines`
+
+**Purpose:** One revalued item: an open foreign purchase bill or an open usance acceptance.  
+**Flags:** —  
+**Primary key:** (id)
+
+| Column | Type | Null | Default | Keys | FK rule | Meaning / rules |
+|---|---|---|---|---|---|---|
+| `id` | BIGINT UNSIGNED | no | — | PK | — | Primary key, auto-increment |
+| `fx_revaluation_id` | BIGINT UNSIGNED | no | — | FK → `fx_revaluations.id` | ON DELETE CASCADE / ON UPDATE RESTRICT |  |
+| `source` | VARCHAR(30) | no | — | — | — | enum: purchase_bill \| lc_acceptance |
+| `purchase_bill_id` | BIGINT UNSIGNED | yes | NULL | FK → `purchase_bills.id` | ON DELETE RESTRICT / ON UPDATE RESTRICT |  |
+| `letter_of_credit_id` | BIGINT UNSIGNED | yes | NULL | FK → `letters_of_credit.id` | ON DELETE RESTRICT / ON UPDATE RESTRICT |  |
+| `party_id` | BIGINT UNSIGNED | yes | NULL | FK → `parties.id` | ON DELETE RESTRICT / ON UPDATE RESTRICT |  |
+| `currency_code` | CHAR(3) | no | — | FK → `currencies.code` | ON DELETE RESTRICT / ON UPDATE RESTRICT |  |
+| `foreign_outstanding` | DECIMAL(18,2) | no | — | — | — |  |
+| `book_rate` | DECIMAL(18,6) | no | — | — | — |  |
+| `closing_rate` | DECIMAL(18,6) | no | — | — | — |  |
+| `difference` | DECIMAL(18,2) | no | — | — | — | foreign_outstanding x (closing - book), signed: + loss, - gain |
+| `created_at` | DATETIME | yes | NULL | — | — | Set by Laravel |
+| `updated_at` | DATETIME | yes | NULL | — | — | Set by Laravel |
+
+- Index (fx_revaluation_id)
+- Index (purchase_bill_id)
+- Index (letter_of_credit_id)
+- Index (party_id)
+- Index (currency_code)
+- **Check** `source IN ('purchase_bill', 'lc_acceptance')`
+
+**Relationships:**
+- `fx_revaluation_id` → `fx_revaluations`: one-to-many
+- `purchase_bill_id` → `purchase_bills`: one-to-many (optional)
+- `letter_of_credit_id` → `letters_of_credit`: one-to-many (optional)
+- `party_id` → `parties`: one-to-many (optional)
+- `currency_code` → `currencies`: one-to-many
+
+_Total: 89 application tables._
 
 
 ## 7. Relationship matrix
@@ -5080,6 +5417,22 @@ Every foreign key except the uniform `company_id`, `created_by` and `updated_by`
 | 213 | `lc_payments` | `purchase_bill_id` | `purchase_bills` | one-to-many (optional) | no | RESTRICT |
 | 214 | `lc_payments` | `money_account_id` | `money_accounts` | one-to-many | yes | RESTRICT |
 | 215 | `lc_payments` | `journal_entry_id` | `journal_entries` | one-to-one (optional) | no | RESTRICT |
+| 216 | `bank_facilities` | `money_account_id` | `money_accounts` | one-to-many | yes | RESTRICT |
+| 217 | `lc_loans` | `letter_of_credit_id` | `letters_of_credit` | one-to-many | yes | RESTRICT |
+| 218 | `lc_loans` | `lc_payment_id` | `lc_payments` | one-to-one | yes | RESTRICT |
+| 219 | `lc_loans` | `money_account_id` | `money_accounts` | one-to-many | yes | RESTRICT |
+| 220 | `lc_loan_repayments` | `lc_loan_id` | `lc_loans` | one-to-many | yes | RESTRICT |
+| 221 | `lc_loan_repayments` | `money_account_id` | `money_accounts` | one-to-many | yes | RESTRICT |
+| 222 | `lc_loan_repayments` | `journal_entry_id` | `journal_entries` | one-to-one (optional) | no | RESTRICT |
+| 223 | `lc_loan_accruals` | `lc_loan_id` | `lc_loans` | one-to-many | yes | RESTRICT |
+| 224 | `lc_loan_accruals` | `journal_entry_id` | `journal_entries` | one-to-one (optional) | no | RESTRICT |
+| 225 | `fx_revaluations` | `journal_entry_id` | `journal_entries` | one-to-one (optional) | no | RESTRICT |
+| 226 | `fx_revaluations` | `reversal_entry_id` | `journal_entries` | one-to-one (optional) | no | RESTRICT |
+| 227 | `fx_revaluation_lines` | `fx_revaluation_id` | `fx_revaluations` | one-to-many | yes | CASCADE |
+| 228 | `fx_revaluation_lines` | `purchase_bill_id` | `purchase_bills` | one-to-many (optional) | no | RESTRICT |
+| 229 | `fx_revaluation_lines` | `letter_of_credit_id` | `letters_of_credit` | one-to-many (optional) | no | RESTRICT |
+| 230 | `fx_revaluation_lines` | `party_id` | `parties` | one-to-many (optional) | no | RESTRICT |
+| 231 | `fx_revaluation_lines` | `currency_code` | `currencies` | one-to-many | yes | RESTRICT |
 
 **Many-to-many relationships** are only ever implemented through junction tables:
 
@@ -5177,6 +5530,12 @@ For each table, the tables it references (must exist first). Self-references are
 | `landed_cost_allocation_lines` | `landed_cost_allocations`, `products`, `purchase_bill_lines`, `warehouses` | — |
 | `lc_charges` | `companies`, `journal_entries`, `landed_cost_allocations`, `lc_amendments`, `lc_shipments`, `letters_of_credit`, `money_accounts`, `parties`, `tax_rules`, `users` | — |
 | `lc_payments` | `companies`, `journal_entries`, `lc_shipments`, `letters_of_credit`, `money_accounts`, `purchase_bills`, `users` | — |
+| `bank_facilities` | `companies`, `money_accounts`, `users` | — |
+| `lc_loans` | `companies`, `lc_payments`, `letters_of_credit`, `money_accounts`, `users` | — |
+| `lc_loan_repayments` | `companies`, `journal_entries`, `lc_loans`, `money_accounts`, `users` | — |
+| `lc_loan_accruals` | `companies`, `journal_entries`, `lc_loans`, `users` | — |
+| `fx_revaluations` | `companies`, `journal_entries`, `users` | — |
+| `fx_revaluation_lines` | `currencies`, `fx_revaluations`, `letters_of_credit`, `parties`, `purchase_bills` | — |
 
 ## 9. Migration order
 
@@ -5241,63 +5600,72 @@ Computed by topological sort of section 8, so every referenced table is created 
 
 **Level 5**
 
-42. `bank_reconciliations`
-43. `bank_statement_imports`
-44. `cash_counts`
-45. `company_settings`
-46. `party_bank_accounts`
-47. `payment_details`
-48. `products`
-49. `purchase_orders`
-50. `quotations`
-51. `recurring_templates`
-52. `stock_adjustments`
-53. `stock_transfers`
+42. `bank_facilities`
+43. `bank_reconciliations`
+44. `bank_statement_imports`
+45. `cash_counts`
+46. `company_settings`
+47. `fx_revaluations`
+48. `party_bank_accounts`
+49. `payment_details`
+50. `products`
+51. `purchase_orders`
+52. `quotations`
+53. `recurring_templates`
+54. `stock_adjustments`
+55. `stock_transfers`
 
 **Level 6**
 
-54. `cash_count_denominations`
-55. `letters_of_credit`
-56. `product_warehouse_settings`
-57. `purchase_order_lines`
-58. `quotation_lines`
-59. `sales_invoices`
-60. `stock_adjustment_lines`
-61. `stock_balances`
-62. `stock_movements`
-63. `stock_transfer_lines`
+56. `cash_count_denominations`
+57. `letters_of_credit`
+58. `product_warehouse_settings`
+59. `purchase_order_lines`
+60. `quotation_lines`
+61. `sales_invoices`
+62. `stock_adjustment_lines`
+63. `stock_balances`
+64. `stock_movements`
+65. `stock_transfer_lines`
 
 **Level 7**
 
-64. `journal_lines`
-65. `lc_amendments`
-66. `lc_shipments`
-67. `sales_invoice_lines`
-68. `sales_returns`
+66. `journal_lines`
+67. `lc_amendments`
+68. `lc_shipments`
+69. `sales_invoice_lines`
+70. `sales_returns`
 
 **Level 8**
 
-69. `bank_statement_lines`
-70. `credit_notes`
-71. `lc_amendment_changes`
-72. `lc_documents`
-73. `purchase_bills`
-74. `sales_return_lines`
+71. `bank_statement_lines`
+72. `credit_notes`
+73. `lc_amendment_changes`
+74. `lc_documents`
+75. `purchase_bills`
+76. `sales_return_lines`
 
 **Level 9**
 
-75. `bill_allocations`
-76. `landed_cost_allocations`
-77. `lc_payments`
-78. `purchase_bill_lines`
-79. `purchase_returns`
+77. `bill_allocations`
+78. `fx_revaluation_lines`
+79. `landed_cost_allocations`
+80. `lc_payments`
+81. `purchase_bill_lines`
+82. `purchase_returns`
 
 **Level 10**
 
-80. `debit_notes`
-81. `landed_cost_allocation_lines`
-82. `lc_charges`
-83. `purchase_return_lines`
+83. `debit_notes`
+84. `landed_cost_allocation_lines`
+85. `lc_charges`
+86. `lc_loans`
+87. `purchase_return_lines`
+
+**Level 11**
+
+88. `lc_loan_accruals`
+89. `lc_loan_repayments`
 
 ## 10. Index and uniqueness recommendations
 
@@ -5391,6 +5759,8 @@ It reproduces the designed H2 chart and adds the ledgers needed by posting rules
 | 2205 ✚ | Tax payable | Ledger (tax) | Liability | |
 | 2301 | Bank cash credit | Ledger | Liability | |
 | 2302 ✚ | LC acceptance liability | Ledger | Liability | `lc_acceptance` |
+| 2303 ✚ | PAD/LTR loans (LC) | Ledger | Liability | `lc_loan` |
+| 2304 ✚ | Interest payable | Ledger | Liability | `interest_payable` |
 | 9999 ✚ | Suspense | Ledger (system) | Liability | `suspense` |
 | 22 | Long-term liabilities | Group | Liability | |
 | 3 | Equity | Primary | Equity | |
@@ -5418,7 +5788,7 @@ It reproduces the designed H2 chart and adds the ledgers needed by posting rules
 | 6198 ✚ | Cash short and over | Ledger (system) | Expense | `cash_short_over` |
 | 62 | Depreciation and finance | Group | Expense | |
 | 6501 | Depreciation | Ledger | Expense | |
-| 6601 | Interest on loans | Ledger | Expense | |
+| 6601 | Interest on loans | Ledger | Expense | `interest_expense` |
 | 6603 ✚ | Exchange gain or loss | Ledger (system) | Expense | `fx_gain_loss` |
 | 6702 | Bank charges | Ledger (system) | Expense | `bank_charges` |
 | 6799 ✚ | Rounding off | Ledger (system) | Expense | `rounding` |

@@ -30,8 +30,8 @@ final class AllocationService
     /** Entry types whose party lines settle documents; everything else on the ledger is a document or its reversal. */
     public const SETTLING_TYPES = ['receipt', 'payment', 'credit_note', 'debit_note', 'purchase_return', 'opening_balance', 'journal', 'contra', 'lc_payment'];
 
-    /** FX entries of LC settlements (06 §12.5) sit on the party ledger but never settle anything themselves. */
-    public const NOT_SETTLING_SOURCE = 'bill_allocations';
+    /** FX entries of LC settlements (06 §12.5) and period-end revaluations (§12.13) sit on the party ledger but never settle anything. */
+    public const NOT_SETTLING_SOURCES = ['bill_allocations', 'fx_revaluations'];
 
     /** What a settling line has given away: the documents' share plus any FX difference (LC payments). */
     public const USED_SQL = 'SUM(amount + fx_amount)';
@@ -40,7 +40,7 @@ final class AllocationService
     public static function settlingEntries($query, string $alias = 'e')
     {
         return $query->whereIn("{$alias}.entry_type", self::SETTLING_TYPES)
-            ->where(fn ($w) => $w->whereNull("{$alias}.source_type")->orWhere("{$alias}.source_type", '!=', self::NOT_SETTLING_SOURCE));
+            ->where(fn ($w) => $w->whereNull("{$alias}.source_type")->orWhereNotIn("{$alias}.source_type", self::NOT_SETTLING_SOURCES));
     }
 
     public function __construct(private readonly PeriodGuard $periods, private readonly AuditLogger $audit) {}
@@ -141,7 +141,7 @@ final class AllocationService
         $party = Party::withTrashed()->where('ledger_id', $l->ledger_id)->first();
         $side = $party?->party_type === 'customer' ? 'credit' : 'debit';
         $amount = Money::of((string) $l->{$side});
-        if (! $party || ! $l->is_posted || $l->status !== 'posted' || ! in_array($l->entry_type, self::SETTLING_TYPES, true) || $l->source_type === self::NOT_SETTLING_SOURCE
+        if (! $party || ! $l->is_posted || $l->status !== 'posted' || ! in_array($l->entry_type, self::SETTLING_TYPES, true) || in_array($l->source_type, self::NOT_SETTLING_SOURCES, true)
             || ! $amount->isPositive()) {
             throw new ApiProblem('validation_failed', errors: ['journal_line_id' => ['This line cannot settle a document; choose a receipt, payment, note or advance of the party']]);
         }

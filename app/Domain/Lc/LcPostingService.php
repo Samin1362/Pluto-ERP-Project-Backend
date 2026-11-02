@@ -38,7 +38,8 @@ use Illuminate\Support\Facades\DB;
  *    bank charges; a recoverable import tax Dr its tax rule's ledger (owner decision). Cr the money account when paid,
  *    else the payee supplier or accrued expenses; paying later moves it to the money account.
  *  - Payments: amount_bdt = round(foreign × bank rate, 2) (BR-042); cumulative foreign ≤ amount × (1 + tolerance).
- *    Sight: Dr supplier (an advance until the import bill) / Cr 1403 margin applied / Cr bank. Usance acceptance:
+ *    Sight: Dr supplier (an advance until the import bill) / Cr 1403 margin applied / Cr bank, or Cr 2303 when the bank
+ *    finances it as a PAD/LTR loan (§12.12, LcFinanceService). Usance acceptance:
  *    Dr supplier / Cr 2302; settlement at maturity: Dr 2302 carrying / Cr 1403, bank; difference to 6603.
  *  - Settling an import bill by an LC payment (BR-043): per allocation fx = foreign × (payment rate − bill rate); the
  *    allocation keeps foreign_amount and fx_amount, and the difference posts Dr 6603 / Cr supplier (loss) or the reverse.
@@ -98,7 +99,8 @@ final class LcPostingService
 
         return ['id' => $p->id, 'payment_kind' => $p->payment_kind, 'payment_date' => $p->payment_date?->toDateString(), 'amount_foreign' => (string) $p->amount_foreign,
             'bank_rate' => (string) $p->bank_rate, 'amount_bdt' => (string) $p->amount_bdt, 'margin_applied' => (string) $p->margin_applied,
-            'fx_difference' => (string) $fx, 'journal_entry_id' => $p->journal_entry_id, 'status' => $p->status];
+            'fx_difference' => (string) $fx, 'journal_entry_id' => $p->journal_entry_id, 'status' => $p->status,
+            'financed_by' => (string) ($p->financed_by ?? 'own'), 'lc_loan_id' => DB::table('lc_loans')->where('lc_payment_id', $p->id)->where('status', '!=', 'reversed')->value('id')];
     }
 
     private static function fxOnEntry(?int $entryId): Money
@@ -255,9 +257,21 @@ final class LcPostingService
     }
 
     /** A mirror entry of `$e` dated `$date` (every tag kept, so tagged balances net to zero); `$e` becomes reversed. */
-    private function mirror(JournalEntry $e, string $date, string $narration): JournalEntry
+    public function mirror(JournalEntry $e, string $date, string $narration): JournalEntry
     {
         $e = JournalEntry::with('lines')->whereKey($e->id)->lockForUpdate()->firstOrFail();
+        $b = self::mirrorBuilder($e);
+        $date = max($date, $e->entry_date->toDateString());
+        $reversal = $this->posting->persist($b, null, 'reversal', $date, null, $narration, $e->voucher_number, $e->branch_id, $e->id);
+        $e->forceFill(['status' => 'reversed'])->save();
+
+        return $reversal;
+    }
+
+    /** The lines of `$e` with debits and credits swapped, every tag kept. */
+    public static function mirrorBuilder(JournalEntry $e): JournalBuilder
+    {
+        $e->loadMissing('lines');
         $b = new JournalBuilder;
         foreach ($e->lines as $l) {
             $meta = array_filter(['letter_of_credit_id' => $l->letter_of_credit_id, 'warehouse_id' => $l->warehouse_id, 'tax_rule_id' => $l->tax_rule_id,
@@ -270,11 +284,8 @@ final class LcPostingService
                 $b->debit($l->ledger_id, Money::of((string) $l->credit), $meta);
             }
         }
-        $date = max($date, $e->entry_date->toDateString());
-        $reversal = $this->posting->persist($b, null, 'reversal', $date, null, $narration, $e->voucher_number, $e->branch_id, $e->id);
-        $e->forceFill(['status' => 'reversed'])->save();
 
-        return $reversal;
+        return $b;
     }
 
     // ---------------------------------------------------------------- payments (06 §12.4, §12.6)
@@ -313,13 +324,20 @@ final class LcPostingService
             if ($margin->isGreaterThan($this->tagged($lc->id, 'lc_margin')) || $margin->isGreaterThan($bdt)) {
                 throw new ApiProblem('margin_exceeds_deposit', 'Only ৳ '.$this->tagged($lc->id, 'lc_margin').' margin is held for this LC.', errors: ['margin_applied' => ['More than the margin held or the payment']]);
             }
+            $financedBy = $in['financed_by'] ?? 'own';
+            if ($financedBy !== 'own' && $kind === 'usance_acceptance') {
+                throw new ApiProblem('validation_failed', errors: ['financed_by' => ['An acceptance is not paid yet; finance the settlement at maturity']]);
+            }
+            if ($financedBy !== 'own' && ! $bdt->minus($margin)->isPositive()) {
+                throw new ApiProblem('validation_failed', errors: ['financed_by' => ['The margin covers this payment; nothing is left to finance']]);
+            }
             $party = Party::withTrashed()->findOrFail($lc->party_id);
             $account = $this->accountLedger((int) $in['money_account_id'], 'money_account_id');
             $p = new LcPayment;
             $p->forceFill(['letter_of_credit_id' => $lc->id, 'lc_shipment_id' => $in['lc_shipment_id'] ?? null, 'purchase_bill_id' => $in['purchase_bill_id'] ?? null,
                 'payment_kind' => $kind, 'payment_date' => $in['payment_date'], 'description' => $in['description'] ?? null, 'amount_foreign' => (string) $foreign,
                 'bank_rate' => (string) $rate, 'amount_bdt' => (string) $bdt, 'money_account_id' => $in['money_account_id'], 'margin_applied' => (string) $margin,
-                'bank_reference' => $in['bank_reference'] ?? null, 'status' => 'draft'])->save();
+                'bank_reference' => $in['bank_reference'] ?? null, 'financed_by' => $financedBy, 'status' => 'draft'])->save();
 
             $tag = ['letter_of_credit_id' => $lc->id];
             $foreignMeta = ['foreign_currency_code' => $lc->currency_code, 'foreign_amount' => $foreign, 'exchange_rate' => (string) $rate, 'against_reference' => $lc->lc_number];
@@ -342,15 +360,18 @@ final class LcPostingService
                 if ($margin->isPositive()) {
                     $b->credit($this->mapper->ledgerFor('lc_margin'), $margin, $tag);
                 }
-                if ($bdt->minus($margin)->isPositive()) {
-                    $b->credit($account, $bdt->minus($margin), $tag);
+                if ($bdt->minus($margin)->isPositive()) { // 06 §12.12: a financed payment is the bank's loan, not the company's money
+                    $b->credit($financedBy === 'own' ? $account : $this->mapper->ledgerFor('lc_loan')->id, $bdt->minus($margin), $tag);
                 }
             }
             $label = ['sight_payment' => 'Payment', 'usance_acceptance' => 'Acceptance', 'usance_settlement' => 'Settlement at maturity'][$kind];
             $entry = $this->posting->persist($b, $p, 'lc_payment', $in['payment_date'], null, "{$label} {$lc->lc_number}: {$lc->currency_code} {$foreign} at {$rate}",
                 $in['bank_reference'] ?? $lc->lc_number, $lc->branch_id);
             $p->forceFill(['status' => 'posted', 'journal_entry_id' => $entry->id])->save();
-            $this->audit->record('posted', $p, null, ['kind' => $kind, 'amount_foreign' => (string) $foreign, 'amount_bdt' => (string) $bdt, 'lc' => $lc->lc_number], type: 'lc_payments');
+            $this->audit->record('posted', $p, null, ['kind' => $kind, 'amount_foreign' => (string) $foreign, 'amount_bdt' => (string) $bdt, 'lc' => $lc->lc_number, 'financed_by' => $financedBy], type: 'lc_payments');
+            if ($financedBy !== 'own') {
+                app(LcFinanceService::class)->openLoan($lc, $p, $bdt->minus($margin), $in['loan']['loan_kind'] ?? $financedBy, $in['loan'] ?? []);
+            }
             if ($kind !== 'usance_settlement') {
                 $bills = PurchaseBill::where('letter_of_credit_id', $lc->id)->where('status', 'posted')->where('balance_due', '>', 0)
                     ->when($in['purchase_bill_id'] ?? null, fn ($q, $id) => $q->whereKey($id))->orderBy('bill_date')->orderBy('id')->get();
@@ -388,6 +409,7 @@ final class LcPostingService
             if ($p->payment_kind === 'usance_acceptance' && DB::table('lc_payments')->where('letter_of_credit_id', $lc->id)->where('status', 'posted')->where('payment_kind', 'usance_settlement')->exists()) {
                 throw new ApiProblem('invalid_transition', 'Reverse the settlement at maturity first.');
             }
+            app(LcFinanceService::class)->reverseLoanOf($p, $reason); // refuses while the loan has repayments
             $date = CarbonImmutable::now('Asia/Dhaka')->toDateString();
             $lines = DB::table('journal_lines')->where('journal_entry_id', $p->journal_entry_id)->pluck('id');
             foreach (DB::table('bill_allocations')->whereIn('journal_line_id', $lines)->whereNull('reversed_at')->orderBy('id')->pluck('id') as $allocationId) {
