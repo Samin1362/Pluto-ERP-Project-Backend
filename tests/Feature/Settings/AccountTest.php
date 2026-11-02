@@ -86,6 +86,7 @@ class AccountTest extends TestCase
     public function test_t_c_auth_016_a_reset_link_works_once_and_ends_every_session(): void
     {
         Mail::fake();
+        config(['pluto.rate_limits.auth_per_ip_email' => 50]); // eight credential calls for one e-mail in a second; the limit is tested in AuthenticationTest
         $old = $this->login('owner@meghna.example');
         $this->postJson('/api/v1/auth/password/forgot', ['email' => 'nobody@meghna.example'])->assertStatus(202);
         Mail::assertNothingQueued();

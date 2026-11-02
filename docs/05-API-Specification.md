@@ -25,7 +25,7 @@
 | Permissions | Each endpoint declares `x-permission`. A few are **contextual** (`x-permission-mode: contextual`, `x-permission-map`): vouchers by entry type, approvals by the request's required permission, attachments and audit logs by the owning record's module, allocations by party type (R-09) |
 | Async work | Long work (exports, statement e-mails, backups, restore) returns **202** with a job resource to poll (`GET /export-jobs/{id}`) |
 | Files | Uploads use `multipart/form-data`; downloads go through a short-lived signed URL (5 min) or a streamed `application/pdf` |
-| Rate limits | Auth endpoints: 5/min per IP+e-mail, 20/min per IP. Authenticated: 120/min per user, 30/min for exports. `429` carries `Retry-After` |
+| Rate limits | Credential endpoints (sign-in, 2-step, password reset, invitations): 5/min per IP+e-mail, 20/min per IP. `/auth/refresh` and `/auth/logout`: 60/min per session (refresh cookie), so many users behind one office IP do not share a budget. Authenticated: 120/min per user, 30/min for exports. `429` carries `Retry-After` |
 | Deprecation | `Deprecation` and `Sunset` headers, announced at least 90 days ahead |
 
 ## 2. Authentication summary

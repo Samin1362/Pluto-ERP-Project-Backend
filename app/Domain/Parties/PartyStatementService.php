@@ -2,6 +2,7 @@
 
 namespace App\Domain\Parties;
 
+use App\Domain\Shared\AuditLogger;
 use App\Mail\PartyStatementMail;
 use App\Models\CompanySetting;
 use App\Models\Party;
@@ -63,6 +64,8 @@ final class PartyStatementService
         $id = DB::table('export_jobs')->insertGetId(['company_id' => $company->id, 'kind' => 'report', 'status' => 'complete', 'finished_at' => now(),
             'parameters' => json_encode(['report' => 'party_statements', 'date_from' => $from, 'date_to' => $to, 'include_aging' => $aging, 'sent' => $sent, 'skipped' => $skipped]),
             'created_by' => auth()->id(), 'updated_by' => auth()->id(), 'created_at' => now(), 'updated_at' => now()]);
+        // Statements leave the company by e-mail: who was sent (P17.1-BE-04, TC-NFR-004).
+        app(AuditLogger::class)->record('statements_sent', null, null, ['export_job_id' => $id, 'date_from' => $from, 'date_to' => $to, 'sent' => $sent, 'skipped' => $skipped], type: 'export_jobs');
 
         return ['id' => $id, 'kind' => 'report', 'status' => 'complete', 'download_url' => null, 'expires_at' => null,
             'finished_at' => CarbonImmutable::now()->toIso8601String(), 'error' => $skipped ? 'No e-mail on file for: '.implode(', ', $skipped) : null];

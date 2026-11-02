@@ -19,6 +19,8 @@ final class AuditCoverage
         '#/calculate$#' => 'calculates a document without saving it',
         '#/preview$#' => 'previews without saving',
         '#^/api/v1/notifications(/\{id\})?/read(-all)?$#' => "the user's own read marks",
+        '#^/api/v1/me/two-factor$#' => 'starting enrolment only stores a pending secret; enabling it is audited at confirmation (two_factor_enabled)',
+        '#^/api/v1/me/notification-preferences$#' => "the user's own notification switches, not business data",
     ];
 
     /** Tables whose rows are bookkeeping of the platform, not business data. */

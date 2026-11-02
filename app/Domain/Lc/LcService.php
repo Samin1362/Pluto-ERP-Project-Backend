@@ -247,8 +247,10 @@ final class LcService
         return DB::transaction(function () use ($lcId, $in) {
             $lc = LetterOfCredit::whereKey($lcId)->lockForUpdate()->firstOrFail();
             $this->assertNotFinal($lc);
+            $doc = $this->saveDocument($lc, $in);
+            $this->audit->record('created', $doc, null, $doc->only(['name', 'provided_by', 'copies', 'status']), type: 'lc_documents');
 
-            return $this->saveDocument($lc, $in);
+            return $doc;
         });
     }
 
@@ -336,8 +338,10 @@ final class LcService
         return DB::transaction(function () use ($lcId, $in) {
             $lc = LetterOfCredit::whereKey($lcId)->lockForUpdate()->firstOrFail();
             $this->assertNotFinal($lc);
+            $lot = $this->saveShipment($lc, $in);
+            $this->audit->record('created', $lot, null, $lot->only(['lot_no', 'status', 'bl_number']), type: 'lc_shipments');
 
-            return $this->saveShipment($lc, $in);
+            return $lot;
         });
     }
 
@@ -419,7 +423,9 @@ final class LcService
             throw new ApiProblem('invalid_transition', "Amendment {$a->amendment_no} is {$a->status}; it cannot become {$to}.");
         }
         $patch = ['status' => $to] + ($to === 'issued' ? ['issued_on' => $date] : []) + ($to === 'accepted' ? ['accepted_on' => $date] : []);
+        $from = $a->status;
         $a->forceFill($patch)->save();
+        $this->audit->record($to, $a, ['status' => $from], $patch, type: 'lc_amendments');
         if ($to === 'accepted') {
             $lc = LetterOfCredit::whereKey($a->letter_of_credit_id)->lockForUpdate()->firstOrFail();
             $old = [];
