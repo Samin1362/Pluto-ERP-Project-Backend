@@ -92,7 +92,7 @@ final class LedgerService
             if ($keys !== []) {
                 throw new ApiProblem('has_history', 'Posting rules use this ledger ('.implode(', ', $keys).'); map them to another ledger in Accounting defaults first.');
             }
-            $balance = Money::of((string) DB::table('journal_lines')->where('ledger_id', $ledger->id)->where('is_posted', 1)
+            $balance = Money::of((string) DB::table('journal_lines')->where('company_id', $ledger->company_id)->where('ledger_id', $ledger->id)->where('is_posted', 1)
                 ->selectRaw('CAST(COALESCE(SUM(debit) - SUM(credit), 0) AS DECIMAL(18,2)) b')->value('b'));
             if (! $balance->isZero()) {
                 throw new ApiProblem('has_history', "The ledger still has a balance of {$balance->abs()} ".($balance->isNegative() ? 'Cr' : 'Dr').'; clear it with a journal first.');

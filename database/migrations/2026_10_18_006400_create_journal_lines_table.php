@@ -44,7 +44,7 @@ return new class extends Migration
             $table->dateTime('updated_at')->nullable()->comment('Set by Laravel');
 
             $table->unique(['journal_entry_id', 'line_no'], 'journal_lines_journal_entry_id_line_no_unique');
-            $table->index(['company_id', 'ledger_id', 'is_posted', 'entry_date'], 'journal_lines_company_id_ledger_id_is_posted_entry_date_index');
+            $table->index(['company_id', 'ledger_id', 'is_posted', 'entry_date', 'debit', 'credit'], 'journal_lines_company_id_ledger_id_is_posted_entr_e3dfddfc_index');
             $table->index(['letter_of_credit_id'], 'journal_lines_letter_of_credit_id_index');
             $table->index(['ledger_id'], 'journal_lines_ledger_id_index');
             $table->index(['tax_rule_id'], 'journal_lines_tax_rule_id_index');

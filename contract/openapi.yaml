@@ -1949,6 +1949,93 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/Error'
+  /api/v1/company/{id}/logo/file:
+    get:
+      operationId: getCompanyIdLogoFile
+      summary: The company logo behind its 1-day signed link (Company.logo_url)
+      tags:
+      - Company
+      description: "Reached only through the signed link another endpoint returns (?expires&signature, relative signature so it works through the Vercel proxy); no\
+        \ bearer token. A missing, altered or expired signature answers 403.\n\n**Permission:** public  \n**Database:** read: companies  \n**Rules:** —"
+      x-permission: public
+      x-business-rules: []
+      x-requirements:
+      - FR-080
+      x-pages:
+      - K2
+      x-page-actions: []
+      x-tables:
+      - companies
+      x-db-operations:
+        companies: R
+      x-error-codes:
+      - not_found
+      - rate_limited
+      - server_error
+      - validation_failed
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+          minimum: 1
+      - name: expires
+        in: query
+        required: false
+        schema:
+          type: string
+        description: expires
+      - name: signature
+        in: query
+        required: false
+        schema:
+          type: string
+        description: signature
+      security: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/pdf:
+              schema:
+                $ref: '#/components/schemas/Binary'
+        '403':
+          description: Not permitted
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: 'Not found (also for other companies'' records): `not_found`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: 'Validation or business-rule failure: `validation_failed`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: 'Too many requests: `rate_limited`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+              description: Seconds to wait
+        default:
+          description: Unexpected error (`server_error`)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
   /api/v1/company/settings:
     get:
       operationId: getCompanySettings
@@ -6420,6 +6507,96 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/Error'
+  /api/v1/attachments/{id}/file:
+    get:
+      operationId: getAttachmentsIdFile
+      summary: The file behind a 5-minute signed link (inline)
+      tags:
+      - Platform
+      description: "Reached only through the signed link another endpoint returns (?expires&signature, relative signature so it works through the Vercel proxy); no\
+        \ bearer token. A missing, altered or expired signature answers 403.\n\n**Permission:** public  \n**Database:** read: attachments  \n**Rules:** —"
+      x-permission: public
+      x-business-rules: []
+      x-requirements:
+      - FR-066
+      x-pages:
+      - E5
+      - F4
+      - I5
+      - M4
+      x-page-actions: []
+      x-tables:
+      - attachments
+      x-db-operations:
+        attachments: R
+      x-error-codes:
+      - not_found
+      - rate_limited
+      - server_error
+      - validation_failed
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+          minimum: 1
+      - name: expires
+        in: query
+        required: false
+        schema:
+          type: string
+        description: expires
+      - name: signature
+        in: query
+        required: false
+        schema:
+          type: string
+        description: signature
+      security: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/pdf:
+              schema:
+                $ref: '#/components/schemas/Binary'
+        '403':
+          description: Not permitted
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: 'Not found (also for other companies'' records): `not_found`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: 'Validation or business-rule failure: `validation_failed`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: 'Too many requests: `rate_limited`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+              description: Seconds to wait
+        default:
+          description: Unexpected error (`server_error`)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
   /api/v1/attachments/{id}/url:
     get:
       operationId: getAttachmentsIdUrl
@@ -7254,6 +7431,93 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/Error'
+  /api/v1/backups/{id}/file:
+    get:
+      operationId: getBackupsIdFile
+      summary: The backup file behind the 5-minute link of GET /backups/{id}/download (Owner)
+      tags:
+      - Platform
+      description: "Reached only through the signed link another endpoint returns (?expires&signature, relative signature so it works through the Vercel proxy); no\
+        \ bearer token. A missing, altered or expired signature answers 403.\n\n**Permission:** public  \n**Database:** read: company_backups  \n**Rules:** —"
+      x-permission: public
+      x-business-rules: []
+      x-requirements:
+      - FR-087
+      x-pages:
+      - K15
+      x-page-actions: []
+      x-tables:
+      - company_backups
+      x-db-operations:
+        company_backups: R
+      x-error-codes:
+      - not_found
+      - rate_limited
+      - server_error
+      - validation_failed
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+          minimum: 1
+      - name: expires
+        in: query
+        required: false
+        schema:
+          type: string
+        description: expires
+      - name: signature
+        in: query
+        required: false
+        schema:
+          type: string
+        description: signature
+      security: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/pdf:
+              schema:
+                $ref: '#/components/schemas/Binary'
+        '403':
+          description: Not permitted
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: 'Not found (also for other companies'' records): `not_found`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: 'Validation or business-rule failure: `validation_failed`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: 'Too many requests: `rate_limited`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+              description: Seconds to wait
+        default:
+          description: Unexpected error (`server_error`)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
   /api/v1/backups/{id}/restore:
     post:
       operationId: postBackupsIdRestore
@@ -7660,6 +7924,94 @@ paths:
                 $ref: '#/components/schemas/Error'
         '503':
           description: 'Company temporarily unavailable (restore in progress): `company_maintenance`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+              description: Seconds to wait
+        default:
+          description: Unexpected error (`server_error`)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /api/v1/export-jobs/{id}/file:
+    get:
+      operationId: getExportJobsIdFile
+      summary: The export file behind the 24-hour link of GET /export-jobs/{id}
+      tags:
+      - Platform
+      description: "Reached only through the signed link another endpoint returns (?expires&signature, relative signature so it works through the Vercel proxy); no\
+        \ bearer token. A missing, altered or expired signature answers 403.\n\n**Permission:** public  \n**Database:** read: export_jobs  \n**Rules:** —"
+      x-permission: public
+      x-business-rules: []
+      x-requirements:
+      - FR-087
+      x-pages:
+      - K15
+      - J1
+      x-page-actions: []
+      x-tables:
+      - export_jobs
+      x-db-operations:
+        export_jobs: R
+      x-error-codes:
+      - not_found
+      - rate_limited
+      - server_error
+      - validation_failed
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+          minimum: 1
+      - name: expires
+        in: query
+        required: false
+        schema:
+          type: string
+        description: expires
+      - name: signature
+        in: query
+        required: false
+        schema:
+          type: string
+        description: signature
+      security: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/pdf:
+              schema:
+                $ref: '#/components/schemas/Binary'
+        '403':
+          description: Not permitted
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: 'Not found (also for other companies'' records): `not_found`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: 'Validation or business-rule failure: `validation_failed`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: 'Too many requests: `rate_limited`'
           content:
             application/problem+json:
               schema:

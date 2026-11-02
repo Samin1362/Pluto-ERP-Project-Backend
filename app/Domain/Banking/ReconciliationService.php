@@ -77,6 +77,7 @@ final class ReconciliationService
                 throw new ApiProblem('validation_failed', errors: ['journal_line_id' => ["The amounts differ: the statement shows {$line->amount}, the book {$book['amount']}"]]);
             }
             $line->forceFill(['status' => 'matched', 'matched_journal_line_id' => $journalLineId, 'matched_by' => auth()->id(), 'matched_at' => now()])->save();
+            $this->audit->record('line_matched', $rec, ['line_id' => $line->id, 'status' => 'unmatched'], ['line_id' => $line->id, 'status' => 'matched', 'journal_line_id' => $journalLineId]);
         });
     }
 
@@ -112,6 +113,7 @@ final class ReconciliationService
             $lines = collect($lineIds)->map(fn ($id) => $this->line($rec, (int) $id, 'unmatched'));
             if ($lines->count() === 1) {
                 $lines->first()->forceFill(['status' => 'ignored', 'matched_by' => auth()->id(), 'matched_at' => now()])->save();
+                $this->audit->record('line_ignored', $rec, ['line_id' => $lines->first()->id, 'status' => 'unmatched'], ['line_id' => $lines->first()->id, 'status' => 'ignored']);
 
                 return;
             }
@@ -123,6 +125,7 @@ final class ReconciliationService
             foreach ($lines as $l) {
                 $l->forceFill(['status' => 'paired', 'paired_line_id' => $first, 'matched_by' => auth()->id(), 'matched_at' => now()])->save();
             }
+            $this->audit->record('lines_paired', $rec, null, ['line_ids' => $lines->pluck('id')->all()]);
         });
     }
 
@@ -133,17 +136,24 @@ final class ReconciliationService
             $line = $this->line($rec, $lineId);
             $group = $line->status === 'paired'
                 ? BankStatementLine::where('bank_reconciliation_id', $rec->id)->where('paired_line_id', $line->paired_line_id)->get() : collect([$line]);
+            $before = $group->map(fn ($l) => ['line_id' => $l->id, 'status' => $l->status, 'journal_line_id' => $l->matched_journal_line_id])->all();
             foreach ($group as $l) {
                 $l->forceFill(['status' => 'unmatched', 'matched_journal_line_id' => null, 'paired_line_id' => null, 'matched_by' => null, 'matched_at' => null])->save();
             }
+            $this->audit->record('line_unmatched', $rec, ['lines' => $before], ['line_ids' => $group->pluck('id')->all(), 'status' => 'unmatched']);
         });
     }
 
     public function acceptSuggestions(BankReconciliation $rec): BankReconciliation
     {
         return $this->change($rec, function ($rec) {
+            $matched = [];
             foreach ($this->suggestions($rec) as $lineId => $s) {
                 BankStatementLine::whereKey($lineId)->update(['status' => 'matched', 'matched_journal_line_id' => $s['journal_line_id'], 'matched_by' => auth()->id(), 'matched_at' => now()]);
+                $matched[] = ['line_id' => $lineId, 'journal_line_id' => $s['journal_line_id']];
+            }
+            if ($matched !== []) {
+                $this->audit->record('suggestions_accepted', $rec, null, ['matched' => $matched]);
             }
         });
     }
@@ -227,7 +237,7 @@ final class ReconciliationService
     public function refresh(BankReconciliation $rec): void
     {
         $account = MoneyAccount::findOrFail($rec->money_account_id);
-        $book = Money::of((string) DB::table('journal_lines')->where('ledger_id', $account->ledger_id)->where('is_posted', 1)
+        $book = Money::of((string) DB::table('journal_lines')->where('company_id', $account->company_id)->where('ledger_id', $account->ledger_id)->where('is_posted', 1)
             ->where('entry_date', '<=', $rec->statement_date->toDateString())->selectRaw('COALESCE(SUM(debit) - SUM(credit), 0) b')->value('b'));
         $uncleared = Money::sum($this->uncleared($rec)->map(fn ($b) => Money::of($b['amount'])));
         $rec->forceFill(['book_balance' => $book, 'difference' => Money::of((string) $rec->statement_balance)->minus($book->minus($uncleared))])->save();

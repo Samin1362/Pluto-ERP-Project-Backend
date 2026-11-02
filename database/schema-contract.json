@@ -5260,10 +5260,14 @@
     ]
    },
    "index": {
-    "journal_entries_company_id_entry_date_status_index": [
+    "journal_entries_company_id_status_entry_date_index": [
      "company_id",
-     "entry_date",
-     "status"
+     "status",
+     "entry_date"
+    ],
+    "journal_entries_company_id_entry_date_index": [
+     "company_id",
+     "entry_date"
     ],
     "journal_entries_company_id_entry_type_status_index": [
      "company_id",
@@ -11791,11 +11795,13 @@
     ]
    },
    "index": {
-    "journal_lines_company_id_ledger_id_is_posted_entry_date_index": [
+    "journal_lines_company_id_ledger_id_is_posted_entr_e3dfddfc_index": [
      "company_id",
      "ledger_id",
      "is_posted",
-     "entry_date"
+     "entry_date",
+     "debit",
+     "credit"
     ],
     "journal_lines_letter_of_credit_id_index": [
      "letter_of_credit_id"

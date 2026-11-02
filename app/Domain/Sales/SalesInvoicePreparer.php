@@ -137,7 +137,7 @@ final class SalesInvoicePreparer
     /** What the customer owes now: debit − credit of its ledger's posted lines. */
     private function receivableBalance(Party $party): Money
     {
-        return Money::of((string) DB::table('journal_lines')->where('ledger_id', $party->ledger_id)->where('is_posted', 1)
+        return Money::of((string) DB::table('journal_lines')->where('company_id', $party->company_id)->where('ledger_id', $party->ledger_id)->where('is_posted', 1)
             ->selectRaw('CAST(COALESCE(SUM(debit) - SUM(credit), 0) AS DECIMAL(18,2)) b')->value('b'));
     }
 

@@ -56,6 +56,9 @@ services:
       - --default-time-zone=+00:00
       # Lets the app user create the posting immutability triggers (P4.1) while binary logging is on.
       - --log-bin-trust-function-creators=1
+      # InnoDB keeps the journals' indexes in memory (P17.1-BE-02: at 1 M lines they are ~0.5 GB; the 128 MB default
+      # sent every report to disk). About half the host's RAM on a dedicated server; set it in .env / .env.live.
+      - --innodb-buffer-pool-size=${MYSQL_BUFFER_POOL_SIZE:-1G}
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?set MYSQL_ROOT_PASSWORD in .env}
       MYSQL_DATABASE: ${DB_DATABASE:-pluto}
@@ -114,6 +117,8 @@ services:
       APP_CONFIG_CACHE: /tmp/e2e-config.php
       APP_ROUTES_CACHE: /tmp/e2e-routes.php
       AUTH_RATE_LIMIT_PER_IP: "600"
+      AUTH_RATE_LIMIT_PER_IP_EMAIL: "600"
+      AUTH_RATE_LIMIT_PER_SESSION: "600"
       API_RATE_LIMIT_PER_USER: "6000"
       PLUTO_ALLOWED_ORIGINS: http://localhost:4173
     healthcheck:

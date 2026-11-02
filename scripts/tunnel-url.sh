@@ -16,7 +16,14 @@ url_from() {
 }
 
 url=""
-[ -f .env.live ] && url="$(url_from docker compose -p pluto-erp-live --env-file .env.live -f docker-compose.yml -f docker-compose.live.yml --profile live)"
+# Named tunnel (P17.1-BE-01): the address is fixed, not in the logs.
+live_get() { ENV_FILE=.env.live env_get "$1"; }
+if [ -f .env.live ] && [ -n "$(live_get TUNNEL_TOKEN)" ]; then
+  host="$(live_get PUBLIC_API_HOST)"
+  [ -n "$host" ] || die "TUNNEL_TOKEN is set but PUBLIC_API_HOST is empty in .env.live (e.g. api.example.com)."
+  echo "https://${host}"; exit 0
+fi
+[ -f .env.live ] && url="$(url_from docker compose -p pluto-erp-live --env-file .env.live -f docker-compose.yml -f docker-compose.live.yml --profile live --profile quick-tunnel)"
 [ -n "$url" ] || url="$(url_from docker compose --profile live)"
 [ -n "$url" ] || die "No tunnel URL found. Is cloudflared running? (./scripts/live.sh up, then ./scripts/live.sh logs cloudflared)"
 echo "$url"

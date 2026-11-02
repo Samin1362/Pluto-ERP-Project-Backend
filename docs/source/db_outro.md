@@ -5,8 +5,8 @@ The per-table indexes are listed in section 6. The reasoning behind them:
 
 | Access path (screen) | Index | Why |
 |---|---|---|
-| Ledger detail, GL, trial balance, statements (H7, H15–H19) | `journal_lines (company_id, ledger_id, is_posted, entry_date)` | Range scan of one ledger's posted lines by date; TB = GROUP BY ledger over the same index |
-| Voucher list, day book (H8, J1) | `journal_entries (company_id, entry_date, status)`, `(company_id, entry_type, status)` | Filter by date range, type tab and status |
+| Ledger detail, GL, trial balance, statements (H7, H15–H19) | `journal_lines (company_id, ledger_id, is_posted, entry_date, debit, credit)` | Range scan of one ledger's posted lines by date; TB = GROUP BY ledger over the same index. Debit and credit make it covering: balances never touch the table rows (measured at 1 M lines, P17.1-BE-02) |
+| Voucher list, day book, drafts (H8, J1, H15) | `journal_entries (company_id, status, entry_date)`, `(company_id, entry_date)`, `(company_id, entry_type, status)` | Status first: drafts up to a date read only the drafts; `(company_id, entry_date)` (+ the implicit id) serves date ranges and the list's date-then-id order without a sort |
 | Invoice/bill lists by tab (E2, F2) | `sales_invoices (company_id, status, due_date)`, `(company_id, invoice_date)` | Overdue = posted, unpaid, due_date < today |
 | Party open documents (B4, E7 allocation) | `sales_invoices (party_id, payment_status)` | Oldest-first allocation list |
 | Aging (A5, A6, J6, J7, B7, C7) | Same as above + `bill_allocations (sales_invoice_id)` | Balance per document |

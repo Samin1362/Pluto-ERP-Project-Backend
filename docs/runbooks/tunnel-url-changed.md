@@ -25,4 +25,4 @@ Post the new URL in the team chat ("Live backend moved to …").
 
 ## Notes
 - `./scripts/deploy.sh` does **not** restart `cloudflared`, so normal releases keep the URL. `./scripts/live.sh down` does.
-- Later (P17, decision C2): a domain with a named Cloudflare tunnel gives a fixed URL and retires this runbook. A small host script that detects a change and calls the Vercel API is an optional stop-gap.
+- Only for the quick tunnel (empty `TUNNEL_TOKEN` in `.env.live`). Once the owner has a domain, switch to the named tunnel with [named-tunnel.md](named-tunnel.md) (P17.1-BE-01): the address is then fixed and this runbook is retired.

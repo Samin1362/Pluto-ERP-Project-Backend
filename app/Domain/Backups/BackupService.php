@@ -86,6 +86,7 @@ final class BackupService
         $retention = (int) (DB::table('company_settings')->where('company_id', $c)->value('backup_retention_days') ?: 30);
         $id = DB::table('company_backups')->insertGetId(['company_id' => $c, 'kind' => $kind, 'status' => 'running', 'started_at' => now(),
             'expires_at' => now()->addDays($retention), 'created_by' => $userId, 'updated_by' => $userId, 'created_at' => now(), 'updated_at' => now()]);
+        $this->audit->record('backup_started', null, null, ['backup_id' => $id, 'kind' => $kind], userId: $userId, type: 'company_backups');
         $path = "backups/company/{$c}/".now()->format('Ymd-His')."-{$kind}-".Str::lower(Str::random(6)).'.json.gz';
         try {
             $data = ['format' => 1, 'company_id' => $c, 'taken_at' => now()->toIso8601String(), 'company' => (array) DB::table('companies')->find($c), 'tables' => []];

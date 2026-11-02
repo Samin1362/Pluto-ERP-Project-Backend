@@ -50,8 +50,22 @@ class AppServiceProvider extends ServiceProvider
         // The `api` guard reads the user that AuthenticateJwt verified; it never accepts a session cookie.
         Auth::viaRequest('pluto-jwt', fn (Request $request) => $request->attributes->get('auth_user'));
 
-        // 05 §1 rate limits: auth endpoints 20/min per IP; authenticated calls 120/min per user.
-        RateLimiter::for('auth-ip', fn (Request $r) => Limit::perMinute((int) config('pluto.rate_limits.auth_per_ip'))->by('auth:'.$r->ip()));
+        // 05 §1 rate limits. Credential endpoints (sign-in, 2-step, password reset, invitations): 5/min per IP + e-mail and
+        // 20/min per IP. Refresh and sign-out carry the session's own cookie, so they count per session (60/min), not per
+        // IP: an office of many users behind one public IP no longer shares one budget for page loads (15 §6, P17.1-BE-03).
+        RateLimiter::for('auth-ip', function (Request $r) {
+            if ($r->is('api/v1/auth/refresh', 'api/v1/auth/logout')) {
+                $session = (string) $r->cookie('pl_rt', '');
+
+                return Limit::perMinute((int) config('pluto.rate_limits.auth_per_session'))->by('auth-session:'.($session !== '' ? hash('sha256', $session) : $r->ip()));
+            }
+            $email = strtolower(trim((string) $r->input('email', '')));
+
+            return array_filter([
+                $email !== '' ? Limit::perMinute((int) config('pluto.rate_limits.auth_per_ip_email'))->by('auth-email:'.$r->ip().'|'.$email) : null,
+                Limit::perMinute((int) config('pluto.rate_limits.auth_per_ip'))->by('auth:'.$r->ip()),
+            ]);
+        });
         RateLimiter::for('api-user', fn (Request $r) => Limit::perMinute((int) config('pluto.rate_limits.api_per_user'))->by('user:'.($r->attributes->get('auth_user')?->id ?? $r->ip())));
         // Export jobs: 30 a minute per user (P14.1-BE-05).
         RateLimiter::for('exports', fn (Request $r) => Limit::perMinute(30)->by('exports:'.($r->attributes->get('auth_user')?->id ?? $r->ip())));

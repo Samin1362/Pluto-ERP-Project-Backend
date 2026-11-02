@@ -26,8 +26,11 @@ RUN php -r 'exit(defined("PASSWORD_ARGON2ID") ? 0 : 1);'
 
 COPY --from=composer /usr/bin/composer /usr/bin/composer
 COPY docker/php/conf.d/app.ini /usr/local/etc/php/conf.d/zz-app.ini
-# Keep the container environment (env_file in compose) visible to PHP-FPM workers.
-RUN printf '[www]\nclear_env = no\n' > /usr/local/etc/php-fpm.d/zz-app.conf
+# Keep the container environment (env_file in compose) visible to PHP-FPM workers. Worker pool (P17.1-BE-02): the image
+# default of 5 workers queued requests at 50 users (p95 3 s at 17 req/s). Size it per host with PHP_FPM_MAX_CHILDREN
+# (about the RAM left for PHP / 60 MB); the defaults suit a 4 GB machine.
+ENV PHP_FPM_MAX_CHILDREN=16 PHP_FPM_START_SERVERS=4 PHP_FPM_MIN_SPARE=2 PHP_FPM_MAX_SPARE=8
+RUN printf '[www]\nclear_env = no\npm = dynamic\npm.max_children = ${PHP_FPM_MAX_CHILDREN}\npm.start_servers = ${PHP_FPM_START_SERVERS}\npm.min_spare_servers = ${PHP_FPM_MIN_SPARE}\npm.max_spare_servers = ${PHP_FPM_MAX_SPARE}\npm.max_requests = 1000\n' > /usr/local/etc/php-fpm.d/zz-app.conf
 
 # Files written to mounted volumes belong to the developer: match their uid/gid (macOS gid 20 clashes, hence -o).
 ARG UID=1000

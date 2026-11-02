@@ -45,7 +45,7 @@
   {
    "id": "V08",
    "title": "Identifiers ≤ 64 chars; FK and CHECK names unique schema-wide; index names unique per table",
-   "checked": 2358,
+   "checked": 2359,
    "failures": []
   },
   {
@@ -57,13 +57,13 @@
   {
    "id": "V10",
    "title": "No redundant index (left prefix of another key)",
-   "checked": 331,
+   "checked": 332,
    "failures": []
   },
   {
    "id": "V11",
    "title": "Index key length ≤ 3072 bytes (utf8mb4, DYNAMIC rows); no TEXT/JSON keys",
-   "checked": 498,
+   "checked": 499,
    "failures": []
   },
   {
@@ -150,7 +150,7 @@
   "columns": 1326,
   "fks": 386,
   "uniques": 84,
-  "indexes": 331,
+  "indexes": 332,
   "checks": 148,
   "levels": 11,
   "decimal_inventory": {
@@ -216,6 +216,7 @@
    "stock_transfers"
   ],
   "hashed_names": [
+   "journal_lines_company_id_ledger_id_is_posted_entr_e3dfddfc_index",
    "stock_movements_company_id_product_id_warehouse_i_5584895c_index"
   ]
  }

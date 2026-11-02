@@ -31,3 +31,6 @@ Schedule::command('pluto:backups:run')->dailyAt('00:30')->timezone('Asia/Dhaka')
 
 // LCs past their expiry date expire (06 §12.1; P16.1-BE-02).
 Schedule::command('pluto:lc:expire')->dailyAt('07:00')->timezone('Asia/Dhaka')->withoutOverlapping();
+
+// Operations check (P17.1-BE-06): the 02:00 nightly backup is there and fresh, no failed jobs; e-mails PLUTO_ALERT_EMAIL otherwise.
+Schedule::command('pluto:ops:check')->dailyAt('08:00')->timezone('Asia/Dhaka')->withoutOverlapping();

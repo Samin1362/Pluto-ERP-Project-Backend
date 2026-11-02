@@ -29,7 +29,9 @@ random_secret() { LC_ALL=C tr -dc 'A-Za-z0-9' < /dev/urandom | head -c "${1:-24}
 
 dc() {
   if [ "$LIVE" = "1" ]; then
-    docker compose -p pluto-erp-live --env-file .env.live -f docker-compose.yml -f docker-compose.live.yml --profile live "$@"
+    # Named tunnel when .env.live has a TUNNEL_TOKEN, else the quick tunnel (P17.1-BE-01).
+    local tunnel=quick-tunnel; [ -n "$(env_get TUNNEL_TOKEN)" ] && tunnel=named-tunnel
+    docker compose -p pluto-erp-live --env-file .env.live -f docker-compose.yml -f docker-compose.live.yml --profile live --profile "$tunnel" "$@"
   else
     docker compose "$@"
   fi

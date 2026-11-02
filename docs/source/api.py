@@ -82,6 +82,8 @@ E("GET", "/company", "Active company profile and locations", "settings.view", ["
 E("PATCH", "/company", "Edit company identity and contact", "settings.edit", ["companies", "audit_logs"], ["K2"], req="CompanyUpdate", resp="Company", tag=T, fr=["FR-080"], ifmatch=True)
 E("PUT", "/company/logo", "Upload or replace the logo (PNG/SVG)", "settings.edit", ["companies"], ["K2"], req="FileUpload", resp="Company", tag=T,
   fr=["FR-080"], rules=["BR-051"], ifmatch=True)
+E("GET", "/company/{id}/logo/file", "The company logo behind its 1-day signed link (Company.logo_url)", "public", ["companies"], ["K2"], params=["expires", "signature"],
+  resp="Binary", tag=T, fr=["FR-080"], codes=[200, 403, 404], desc="Reached only through the signed link another endpoint returns (?expires&signature, relative signature so it works through the Vercel proxy); no bearer token. A missing, altered or expired signature answers 403.")
 E("DELETE", "/company/logo", "Remove the logo", "settings.edit", ["companies"], ["K2"], tag=T, fr=["FR-080"], codes=[204])
 E("GET", "/company/settings", "Preferences, controls, currency display, tax display, invoice design, security and backup settings", "auth.self", ["company_settings"],
   ["K3", "K5", "K6", "K7", "K14", "K15", "S0"], resp="CompanySettings", tag=T, fr=["FR-081", "FR-083", "FR-085"], desc="Readable by every member (formatting depends on it); fields restricted by permission are omitted.")
@@ -156,6 +158,8 @@ E("POST", "/attachments", "Upload a file to a record (multipart)", "auth.self", 
   perm_map={'any': '<module>.edit of the record the file belongs to (create for a draft)'}, errors=['file_type_not_allowed', 'file_too_large'])
 E("GET", "/attachments", "Files of one record (Attachments tab)", "auth.self", ["attachments"], ["E5", "F4", "G2", "H13"], params=["attachable_type", "attachable_id"],
   resp="Page<Attachment>", tag=T, fr=["FR-066"], perm_map={'any': '<module>.view of the record named by attachable_type/attachable_id'})
+E("GET", "/attachments/{id}/file", "The file behind a 5-minute signed link (inline)", "public", ["attachments"], ["E5", "F4", "I5", "M4"], params=["expires", "signature"],
+  resp="Binary", tag=T, fr=["FR-066"], codes=[200, 403, 404], desc="Reached only through the signed link another endpoint returns (?expires&signature, relative signature so it works through the Vercel proxy); no bearer token. A missing, altered or expired signature answers 403.")
 E("GET", "/attachments/{id}/url", "Short-lived signed download URL (5 minutes)", "auth.self", ["attachments"], ["E5", "F4", "I5", "M4"],
   resp="SignedUrl", tag=T, fr=["FR-066"], perm_map={'any': '<module>.view of the record named by type/id (e.g. sales.view for a sales_invoice)'})
 E("DELETE", "/attachments/{id}", "Remove an attachment (not from posted vouchers in locked periods)", "auth.self", ["attachments", "audit_logs"],
@@ -173,11 +177,16 @@ E("GET", "/dashboard/lenses/{lens}", "Dashboard lens data (financial, sales, exp
 E("GET", "/backups", "Backup history and settings", "settings.backup", ["company_backups"], ["K15"], resp="Page<Backup>", tag=T, fr=["FR-087"])
 E("POST", "/backups", "Take a manual backup now (queued)", "settings.backup", ["company_backups"], ["K15"], resp="Backup", idem=True, tag=T, fr=["FR-087"], codes=[202])
 E("GET", "/backups/{id}/download", "Signed URL of a backup file (Owner only: snapshots hold the whole company, R-11)", "settings.restore", ["company_backups", "audit_logs"], ["K15"], resp="SignedUrl", tag=T, fr=["FR-087"])
+E("GET", "/backups/{id}/file", "The backup file behind the 5-minute link of GET /backups/{id}/download (Owner)", "public", ["company_backups"], ["K15"], params=["expires", "signature"],
+  resp="Binary", tag=T, fr=["FR-087"], codes=[200, 403, 404], desc="Reached only through the signed link another endpoint returns (?expires&signature, relative signature so it works through the Vercel proxy); no bearer token. A missing, altered or expired signature answers 403.")
 E("POST", "/backups/{id}/restore", "Restore the company from a backup (Owner; confirmation text RESTORE)", "settings.restore", ["company_backups", "audit_logs"], ["K15"], rules=["BR-062"],
   req="RestoreRequest", resp="Backup", idem=True, tag=T, fr=["FR-087"], tx="Company placed in maintenance; pre_restore snapshot first; queued job.", codes=[202, 403, 422])
 E("POST", "/export-jobs", "Prepare the month-end export pack or a large report export", "reports.export", ["export_jobs"], ["K15", "J1"], req="ExportJobCreate", resp="ExportJob", idem=True, tag=T, fr=["FR-087", "FR-076"], codes=[202, 403, 422, 429],
   desc="Queued (NFR-006); 30 per minute per user. The file and its signed link expire 24 hours after the job finishes.")
 E("GET", "/export-jobs/{id}", "Export job status and signed download URL when complete", "reports.export", ["export_jobs"], ["K15", "J1"], resp="ExportJob", tag=T, fr=["FR-087"])
+
+E("GET", "/export-jobs/{id}/file", "The export file behind the 24-hour link of GET /export-jobs/{id}", "public", ["export_jobs"], ["K15", "J1"], params=["expires", "signature"],
+  resp="Binary", tag=T, fr=["FR-087"], codes=[200, 403, 404], desc="Reached only through the signed link another endpoint returns (?expires&signature, relative signature so it works through the Vercel proxy); no bearer token. A missing, altered or expired signature answers 403.")
 
 # ---------------------------------------------------------------- Parties
 T = "Parties"

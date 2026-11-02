@@ -1,0 +1,4 @@
+code,name,group,opening_balance,opening_side
+1501,,,350000.00,dr
+3101,,,1500000.00,cr
+2401,Term loan - Sonali Bank,21,750000.00,cr

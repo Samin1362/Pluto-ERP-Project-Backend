@@ -8,6 +8,7 @@ use App\Http\Middleware\Idempotency;
 use App\Http\Middleware\RequestId;
 use App\Http\Middleware\RequirePermission;
 use App\Http\Middleware\ResolveCompany;
+use App\Http\Middleware\SecurityHeaders;
 use App\Http\Middleware\TrustPlutoProxy;
 use App\Support\Problem\ApiProblem;
 use App\Support\Problem\ProblemRenderer;
@@ -15,6 +16,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Support\Facades\Route;
+use Sentry\Laravel\Integration;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -32,6 +34,8 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         // Our own proxy (Vercel -> tunnel) is identified by a shared secret, never by IP (backlog P0.3-BE-02).
         $middleware->prepend(TrustPlutoProxy::class);
+        // Security headers on every answer (P17.1-BE-03).
+        $middleware->append(SecurityHeaders::class);
         // 07 §4 order: request id and JSON handling first, then authentication, company, permission.
         $middleware->api(prepend: [RequestId::class, ForceJsonApi::class, AcceptXIfMatch::class]);
         $middleware->alias([
@@ -47,4 +51,6 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->shouldRenderJsonWhen(fn ($request) => $request->is('api/*') || $request->expectsJson());
         $exceptions->render(fn (Throwable $e, $request) => $request->is('api/*') ? ProblemRenderer::render($e, $request) : null);
         $exceptions->dontReport([ApiProblem::class]);
+        // Unexpected errors to Sentry when SENTRY_LARAVEL_DSN is set (P17.1-BE-06); ApiProblem answers are expected and not sent.
+        Integration::handles($exceptions);
     })->create();

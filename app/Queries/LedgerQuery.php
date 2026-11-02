@@ -47,7 +47,7 @@ final class LedgerQuery
         if (! $fy) {
             return null;
         }
-        $lines = DB::table('journal_lines')->where('ledger_id', $ledgerId)->where('is_posted', 1);
+        $lines = DB::table('journal_lines')->where('company_id', $this->current->id())->where('ledger_id', $ledgerId)->where('is_posted', 1); // covering index (P17.1-BE-02)
         $opening = Money::of((string) (clone $lines)->where('entry_date', '<', $fy->start_date)->selectRaw('CAST(COALESCE(SUM(debit) - SUM(credit), 0) AS DECIMAL(18,2)) b')->value('b'));
         $year = (clone $lines)->whereBetween('entry_date', [$fy->start_date, $fy->end_date])
             ->selectRaw('CAST(COALESCE(SUM(debit), 0) AS DECIMAL(18,2)) dr, CAST(COALESCE(SUM(credit), 0) AS DECIMAL(18,2)) cr, COUNT(*) n')->first();
@@ -100,16 +100,17 @@ final class LedgerQuery
         $q = Ledger::query()->select('ledgers.*')
             ->join('account_groups', 'account_groups.id', '=', 'ledgers.account_group_id')
             ->addSelect(['account_groups.nature as group_nature', 'account_groups.normal_balance as group_normal_balance'])
-            ->selectSub(DB::table('journal_lines')->selectRaw('COUNT(*) > 0')
-                ->whereColumn('journal_lines.ledger_id', 'ledgers.id')->where('journal_lines.company_id', $cid), 'has_entries');
+            // EXISTS stops at the first line (COUNT read them all). P17.1-BE-02.
+            ->selectRaw('EXISTS (SELECT 1 FROM journal_lines jl WHERE jl.company_id = ? AND jl.ledger_id = ledgers.id) AS has_entries', [$cid]);
         if ($withBalances) {
-            $q->selectSub(DB::table('journal_lines')->selectRaw('CAST(COALESCE(SUM(debit) - SUM(credit), 0) AS DECIMAL(18,2))')
-                ->whereColumn('journal_lines.ledger_id', 'ledgers.id')->where('journal_lines.company_id', $cid)
-                ->where('journal_lines.is_posted', true), 'balance_net');
-            $q->selectSub(DB::table('journal_lines')->join('journal_entries', 'journal_entries.id', '=', 'journal_lines.journal_entry_id')
-                ->selectRaw('CAST(COALESCE(SUM(journal_lines.debit) - SUM(journal_lines.credit), 0) AS DECIMAL(18,2))')
-                ->whereColumn('journal_lines.ledger_id', 'ledgers.id')->where('journal_lines.company_id', $cid)
-                ->where('journal_entries.entry_type', 'opening_balance')->where('journal_entries.status', 'posted'), 'opening_net');
+            // Index-only on journal_lines (company_id, ledger_id, is_posted, entry_date, debit, credit).
+            $q->selectRaw('(SELECT CAST(COALESCE(SUM(jl.debit) - SUM(jl.credit), 0) AS DECIMAL(18,2)) FROM journal_lines jl
+                WHERE jl.company_id = ? AND jl.ledger_id = ledgers.id AND jl.is_posted = 1) AS balance_net', [$cid]);
+            // Starts from the few posted opening entries, then their lines on this ledger (joining every line of the
+            // ledger to its entry was ~1 M row reads per page at volume).
+            $q->selectRaw("(SELECT CAST(COALESCE(SUM(jl.debit) - SUM(jl.credit), 0) AS DECIMAL(18,2)) FROM journal_entries je
+                STRAIGHT_JOIN journal_lines jl ON jl.journal_entry_id = je.id
+                WHERE je.company_id = ? AND je.entry_type = 'opening_balance' AND je.status = 'posted' AND jl.ledger_id = ledgers.id) AS opening_net", [$cid]);
         }
 
         return $q;

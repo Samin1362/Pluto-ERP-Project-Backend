@@ -41,10 +41,13 @@ return [
         'account_lock_seconds' => 3600,
     ],
 
-    // 05 §1: requests per minute per IP to /auth/* (login, two-factor, refresh, logout). Every page load refreshes,
-    // so an office behind one public IP shares this budget (open item in 15 §6).
+    // 05 §1: requests per minute per IP to the credential endpoints (sign-in, 2-step, password reset, invitations).
     'rate_limits' => [
         'auth_per_ip' => (int) env('AUTH_RATE_LIMIT_PER_IP', 20),
+        // 05 §1: sign-in attempts per minute for one e-mail from one IP (with the per-account lockout, BR-061)
+        'auth_per_ip_email' => (int) env('AUTH_RATE_LIMIT_PER_IP_EMAIL', 5),
+        // refresh and sign-out per minute per session (refresh cookie), not per IP (P17.1-BE-03; 15 §6)
+        'auth_per_session' => (int) env('AUTH_RATE_LIMIT_PER_SESSION', 60),
         // 05 §1: authenticated calls per minute per user
         'api_per_user' => (int) env('API_RATE_LIMIT_PER_USER', 120),
     ],
@@ -66,4 +69,10 @@ return [
     'allowed_origins' => array_values(array_filter(array_map('trim', explode(',', (string) env('PLUTO_ALLOWED_ORIGINS', env('APP_URL', '')))))),
     // Comma-separated patterns where `*` matches part of one DNS label, e.g. Vercel preview URLs (backlog P0.3-BE-01).
     'allowed_origin_patterns' => array_values(array_filter(array_map('trim', explode(',', (string) env('PLUTO_ALLOWED_ORIGIN_PATTERNS', ''))))),
+    // Daily operations check (pluto:ops:check, P17.1-BE-06): the host's nightly backup folder (mounted read-only in the
+    // live scheduler) and who is told when it fails. Empty values switch that part off.
+    'ops' => [
+        'backup_dir' => (string) env('PLUTO_BACKUP_DIR', ''),
+        'alert_email' => (string) env('PLUTO_ALERT_EMAIL', ''),
+    ],
 ];

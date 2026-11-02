@@ -26,7 +26,8 @@ make lint / make fix   # Laravel Pint
 make docs              # regenerate docs, contract and generated code, then validate
 make sh                # shell in the app container (php artisan …)
 ```
-Live stack (host machine only): `./scripts/live.sh`, `./scripts/deploy.sh`, `./scripts/tunnel-url.sh`; runbook `docs/runbooks/tunnel-url-changed.md`.
+Live stack (host machine only): `./scripts/live.sh`, `./scripts/deploy.sh`, `./scripts/tunnel-url.sh`; runbooks in `docs/runbooks/` (tunnel-url-changed, named-tunnel, monitoring, opening-data-import, uat-and-go-live).
+Go-live tools (P17): `pluto:import:opening <type> <csv> --dry-run` (templates in `docs/import-templates/`), `pluto:ops:check` (backup + failed jobs alert), `pluto:perf:seed` + `tests/perf/` (k6; disposable databases only).
 
 ## Backend recipe
 ### 4.1 Layering (NFR-060)

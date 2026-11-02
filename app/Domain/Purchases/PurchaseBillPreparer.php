@@ -178,7 +178,7 @@ final class PurchaseBillPreparer
     /** What the supplier is owed now: credit − debit of its ledger's posted lines. */
     private function payableBalance(Party $party): Money
     {
-        return Money::of((string) DB::table('journal_lines')->where('ledger_id', $party->ledger_id)->where('is_posted', 1)
+        return Money::of((string) DB::table('journal_lines')->where('company_id', $party->company_id)->where('ledger_id', $party->ledger_id)->where('is_posted', 1)
             ->selectRaw('CAST(COALESCE(SUM(credit) - SUM(debit), 0) AS DECIMAL(18,2)) b')->value('b'));
     }
 

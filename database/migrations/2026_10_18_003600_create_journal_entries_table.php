@@ -55,7 +55,8 @@ return new class extends Migration
 
             $table->unique(['company_id', 'voucher_number'], 'journal_entries_company_id_voucher_number_unique');
             $table->unique(['reverses_entry_id'], 'journal_entries_reverses_entry_id_unique');
-            $table->index(['company_id', 'entry_date', 'status'], 'journal_entries_company_id_entry_date_status_index');
+            $table->index(['company_id', 'status', 'entry_date'], 'journal_entries_company_id_status_entry_date_index');
+            $table->index(['company_id', 'entry_date'], 'journal_entries_company_id_entry_date_index');
             $table->index(['company_id', 'entry_type', 'status'], 'journal_entries_company_id_entry_type_status_index');
             $table->index(['company_id', 'source_type', 'source_id'], 'journal_entries_company_id_source_type_source_id_index');
             $table->index(['branch_id'], 'journal_entries_branch_id_index');
