@@ -39,10 +39,12 @@ export type ErrorCode =
   | 'invalid_mobile'
   | 'invalid_transition'
   | 'last_owner'
+  | 'lc_limit_exceeded'
   | 'lc_not_closable'
   | 'lc_submit_incomplete'
   | 'ledger_locked'
   | 'lines_unhandled'
+  | 'loan_limit_exceeded'
   | 'lock_out_of_order'
   | 'malformed_json'
   | 'mapping_missing'
@@ -52,12 +54,14 @@ export type ErrorCode =
   | 'not_draft'
   | 'not_found'
   | 'note_applied'
+  | 'nothing_to_revalue'
   | 'period_locked'
   | 'permission_denied'
   | 'purpose_required'
   | 'rate_limited'
   | 'refresh_reuse_detected'
   | 'refresh_token_invalid'
+  | 'repayment_exceeds_outstanding'
   | 'restore_confirmation_required'
   | 'return_qty_exceeds'
   | 'role_in_use'
@@ -266,6 +270,42 @@ export interface Backup {
   started_at: string
   finished_at?: string | null
   created_by?: UserRef | null
+}
+
+/** Bank facility with live utilisation (planned taka of open LCs, acceptances and loans). */
+export interface BankFacility {
+  id: number
+  money_account_id: number
+  bank_name: string
+  lc_limit: Decimal
+  loan_limit: Decimal
+  limit_action: string
+  interest_rate_pct: Decimal
+  day_count: string
+  loan_tenor_days: number
+  notes?: string | null
+  is_active: boolean
+  lc_utilised: Decimal
+  lc_available?: Decimal | null
+  loans_outstanding: Decimal
+  loan_available?: Decimal | null
+  acceptances_outstanding: Decimal
+  open_lcs: number
+  open_loans: number
+  version: number
+}
+
+/** Credit lines a bank grants for imports. */
+export interface BankFacilityInput {
+  money_account_id: number
+  lc_limit?: Decimal
+  loan_limit?: Decimal
+  limit_action?: 'warn' | 'block'
+  interest_rate_pct?: Decimal
+  day_count?: '360' | '365'
+  loan_tenor_days?: number
+  notes?: string | null
+  is_active?: boolean
 }
 
 /** Location. */
@@ -595,6 +635,33 @@ export interface ForgotPasswordRequest {
   email: string
 }
 
+/** Closing rate of one currency. */
+export interface FxRate {
+  currency_code: string
+  rate: Decimal
+}
+
+/** Revaluation preview or posting. */
+export interface FxRevaluation {
+  id?: number | null
+  status: 'preview' | 'posted' | 'reversed'
+  revaluation_date: string
+  reversal_date: string
+  rates: Record<string, unknown>
+  total_difference: Decimal
+  lines: Array<Record<string, unknown>>
+  journal?: Array<PostingLine>
+  warnings?: Array<Warning>
+  created_at?: string | null
+}
+
+/** Revalue open foreign-currency items at closing rates on a date. */
+export interface FxRevaluationRequest {
+  revaluation_date: string
+  rates: Array<FxRate>
+  note?: string | null
+}
+
 /** Income or expense category. */
 export interface IeCategory {
   id: number
@@ -844,6 +911,88 @@ export interface LcDocumentTemplateInput {
   items: Array<Record<string, unknown>>
 }
 
+/** PAD/LTR loan with what is owed today. */
+export interface LcLoan {
+  id: number
+  letter_of_credit_id: number
+  lc_number: string
+  lc_payment_id: number
+  loan_number: string
+  loan_kind: string
+  money_account_id: number
+  bank_name: string
+  principal: Decimal
+  repaid_principal: Decimal
+  outstanding_principal: Decimal
+  interest_paid: Decimal
+  accrued_unpaid: Decimal
+  interest_rate_pct: Decimal
+  day_count: string
+  start_date: string
+  due_date: string
+  days_to_due?: number | null
+  interest_from: string
+  interest_due_today: Decimal
+  converted_on?: string | null
+  status: string
+  notes?: string | null
+  repayments?: Array<LcLoanRepayment>
+  version: number
+}
+
+/** Convert a PAD to an LTR on the agreed terms (no journal; the loan ledger is the same). */
+export interface LcLoanConvert {
+  converted_on: string
+  interest_rate_pct: Decimal
+  tenor_days: number
+  notes?: string | null
+}
+
+/** Interest due on a loan at a date. */
+export interface LcLoanInterest {
+  as_of: string
+  outstanding_principal: Decimal
+  interest_from: string
+  days: number
+  interest_rate_pct: Decimal
+  day_count: string
+  interest: Decimal
+  accrued_unpaid: Decimal
+  total_interest: Decimal
+}
+
+/** A repayment of a PAD/LTR loan. */
+export interface LcLoanRepayment {
+  id: number
+  repayment_date: string
+  principal_amount: Decimal
+  interest_amount: Decimal
+  accrued_cleared: Decimal
+  interest_from: string
+  interest_days: number
+  money_account_id: number
+  reference?: string | null
+  status: string
+  journal_entry_id?: number | null
+}
+
+/** Repay a loan: principal now plus the interest due to the date (worked out by the server). */
+export interface LcLoanRepaymentInput {
+  repayment_date: string
+  principal_amount: Decimal
+  money_account_id: number
+  reference?: string | null
+}
+
+/** Bank finance of an LC payment (PAD/LTR). Omitted fields come from the bank facility. */
+export interface LcLoanTerms {
+  loan_kind?: 'pad' | 'ltr'
+  interest_rate_pct?: Decimal
+  day_count?: '360' | '365'
+  tenor_days?: number
+  start_date?: string | null
+}
+
 /** LC payment. */
 export interface LcPayment {
   id: number
@@ -856,6 +1005,8 @@ export interface LcPayment {
   fx_difference: Decimal
   journal_entry_id?: number | null
   status: string
+  financed_by: string
+  lc_loan_id?: number | null
 }
 
 /** Payment at the bank's rate. */
@@ -866,6 +1017,8 @@ export interface LcPaymentInput {
   bank_rate: Decimal
   money_account_id: number
   margin_applied?: Decimal
+  financed_by?: 'own' | 'pad' | 'ltr'
+  loan?: LcLoanTerms | null
   lc_shipment_id?: number | null
   purchase_bill_id?: number | null
   bank_reference?: string | null
@@ -2406,7 +2559,7 @@ export interface WarehouseInput {
 
 /** Non-blocking warning. */
 export interface Warning {
-  code: 'CREDIT_LIMIT_EXCEEDED' | 'PARTY_OVERDUE' | 'LOW_STOCK' | 'BACKDATED' | 'BUDGET_NEAR_LIMIT' | 'DUPLICATE_PARTY' | 'INSUFFICIENT_FUNDS' | 'APPROVAL_REQUIRED' | 'LC_EXPIRING' | 'LC_DOCUMENTS_MISSING' | 'LC_UNPAID_CHARGES' | 'NOTHING_TO_ALLOCATE'
+  code: 'CREDIT_LIMIT_EXCEEDED' | 'PARTY_OVERDUE' | 'LOW_STOCK' | 'BACKDATED' | 'BUDGET_NEAR_LIMIT' | 'DUPLICATE_PARTY' | 'INSUFFICIENT_FUNDS' | 'APPROVAL_REQUIRED' | 'LC_EXPIRING' | 'LC_DOCUMENTS_MISSING' | 'LC_UNPAID_CHARGES' | 'NOTHING_TO_ALLOCATE' | 'LC_LIMIT_EXCEEDED' | 'LOAN_LIMIT_EXCEEDED' | 'LOAN_DUE'
   message: string
   line_no?: number | null
 }

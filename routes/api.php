@@ -24,6 +24,7 @@ use App\Http\Controllers\Api\V1\Inventory\StockTransferController;
 use App\Http\Controllers\Api\V1\Inventory\UnitController;
 use App\Http\Controllers\Api\V1\Inventory\WarehouseController;
 use App\Http\Controllers\Api\V1\Lc\LcController;
+use App\Http\Controllers\Api\V1\Lc\LcFinanceController;
 use App\Http\Controllers\Api\V1\Me\AccountController;
 use App\Http\Controllers\Api\V1\Me\TwoFactorController;
 use App\Http\Controllers\Api\V1\MeController;
@@ -163,6 +164,20 @@ Route::middleware(['jwt', 'throttle:api-user'])->group(function () {
         Route::post('landed-cost-allocations/{id}/reverse', [LcController::class, 'reverseAllocation'])->whereNumber('id')->middleware(['perm:lc.edit', 'idempotent']);
         Route::get('letters-of-credit/{id}/cost-summary', [LcController::class, 'costSummary'])->whereNumber('id')->middleware('perm:lc.view');
         Route::get('reports/lc/{report}', [LcController::class, 'report'])->whereIn('report', LcQuery::REPORTS)->middleware('perm:lc.view');
+        // LC finance inside the LC portal (P16 LC finance): bank limits, PAD/LTR loans, FX revaluation.
+        Route::get('bank-facilities', [LcFinanceController::class, 'facilities'])->middleware('perm:lc.view');
+        Route::post('bank-facilities', [LcFinanceController::class, 'storeFacility'])->middleware('perm:lc.edit');
+        Route::put('bank-facilities/{id}', [LcFinanceController::class, 'updateFacility'])->whereNumber('id')->middleware('perm:lc.edit');
+        Route::get('lc-loans', [LcFinanceController::class, 'loans'])->middleware('perm:lc.view');
+        Route::get('lc-loans/{id}', [LcFinanceController::class, 'showLoan'])->whereNumber('id')->middleware('perm:lc.view');
+        Route::get('lc-loans/{id}/interest', [LcFinanceController::class, 'interest'])->whereNumber('id')->middleware('perm:lc.view');
+        Route::post('lc-loans/{id}/repayments', [LcFinanceController::class, 'repay'])->whereNumber('id')->middleware(['perm:lc.create', 'idempotent']);
+        Route::post('lc-loans/{id}/convert', [LcFinanceController::class, 'convert'])->whereNumber('id')->middleware('perm:lc.edit');
+        Route::post('lc-loan-repayments/{id}/reverse', [LcFinanceController::class, 'reverseRepayment'])->whereNumber('id')->middleware(['perm:lc.edit', 'idempotent']);
+        Route::post('fx-revaluations/preview', [LcFinanceController::class, 'previewRevaluation'])->middleware('perm:accounting.create');
+        Route::post('fx-revaluations', [LcFinanceController::class, 'revalue'])->middleware(['perm:accounting.create', 'idempotent']);
+        Route::get('fx-revaluations', [LcFinanceController::class, 'revaluations'])->middleware('perm:accounting.view');
+        Route::post('fx-revaluations/{id}/reverse', [LcFinanceController::class, 'reverseRevaluation'])->whereNumber('id')->middleware(['perm:accounting.edit', 'idempotent']);
         // Settings (K1-K15; P15.1). Owner-only fields and the last Owner are checked by the services.
         Route::get('me/notification-preferences', [AccountController::class, 'notificationPreferences']);
         Route::put('me/notification-preferences', [AccountController::class, 'saveNotificationPreferences']);

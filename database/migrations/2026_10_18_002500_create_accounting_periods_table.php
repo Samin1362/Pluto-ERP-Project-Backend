@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Table `accounting_periods` (Accounting): migration 25 of 83, dependency level 3.
+ * Table `accounting_periods` (Accounting): migration 25 of 89, dependency level 3.
  * Monthly posting period. Locked periods reject new, edited or reversed entries dated inside them.
  * Depends on: companies, fiscal_years, users.
  *

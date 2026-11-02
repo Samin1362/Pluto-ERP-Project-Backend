@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Table `stock_transfers` (Inventory): migration 53 of 83, dependency level 5.
+ * Table `stock_transfers` (Inventory): migration 53 of 89, dependency level 5.
  * Move quantity between warehouses: Draft > Dispatched > Received (D11).
  * Depends on: companies, journal_entries, users, warehouses.
  *

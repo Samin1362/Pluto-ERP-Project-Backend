@@ -232,9 +232,18 @@ def main():
     out_contract, sql = {}, ["-- Pluto ERP: reference MySQL 8.0 DDL, generated from docs/source/schema.py.",
                              "-- Equivalent to running backend/database/migrations in order. For review and CI diffing; deploy with `php artisan migrate`.",
                              "SET NAMES utf8mb4;", ""]
+    # Released file names never change (a renamed migration would run again on a database that already has the table):
+    # tables in migration_names.json keep their file; tables added later get numbers after the highest released one,
+    # in dependency order (they may reference released tables, never the other way round). P16.4-BE-01 (LC finance).
+    released = json.load(open(os.path.join(HERE, "migration_names.json")))
+    last = max(int(f.split("_")[3]) for f in released.values())
+    new_tables = [n for n in order if n not in released]
+    for k, name in enumerate(new_tables, 1):
+        released[name] = f"{DATE_PREFIX}_{last + k * 100:06d}_create_{name}_table.php"
+    order = sorted(order, key=lambda n: released[n])
     for seq, name in enumerate(order, 1):
         t = TB[name]
-        fname = f"{DATE_PREFIX}_{seq * 100:06d}_create_{name}_table.php"
+        fname = released[name]
         open(os.path.join(MIG, fname), "w").write(migration(t, seq, level_of[name], len(order)))
         out_contract[name] = contract(t, seq, level_of[name], fname)
         sql.append(f"-- {seq}. {name} (level {level_of[name]})")

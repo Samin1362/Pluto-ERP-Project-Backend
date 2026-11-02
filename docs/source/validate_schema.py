@@ -169,7 +169,7 @@ rule("V13", "Maximum row size < 65,535 bytes", len(TB), f)
 
 # V14 decimal precision classes
 def expected_decimal(name):
-    if name in ("exchange_rate", "bank_rate", "planning_rate"):
+    if name in ("exchange_rate", "bank_rate", "planning_rate", "book_rate", "closing_rate"):
         return S.RATE
     if name.endswith("_pct") or name in ("rate", "tax_rate", "warn_at_percent"):
         return S.PCT

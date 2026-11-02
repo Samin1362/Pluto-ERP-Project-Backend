@@ -14808,6 +14808,14 @@
      "auto_increment": false
     },
     {
+     "name": "financed_by",
+     "type": "varchar(30)",
+     "nullable": false,
+     "default": "own",
+     "generated": null,
+     "auto_increment": false
+    },
+    {
      "name": "lock_version",
      "type": "int unsigned",
      "nullable": false,
@@ -14940,6 +14948,7 @@
    "check": {
     "lc_payments_payment_kind_check": "`payment_kind` IN ('sight_payment', 'usance_acceptance', 'usance_settlement')",
     "lc_payments_status_check": "`status` IN ('draft', 'posted', 'reversed')",
+    "lc_payments_financed_by_check": "`financed_by` IN ('own', 'pad', 'ltr')",
     "lc_payments_rule1_check": "`amount_foreign` > 0",
     "lc_payments_rule2_check": "`bank_rate` > 0",
     "lc_payments_rule3_check": "`margin_applied` >= 0"
@@ -16364,6 +16373,1220 @@
    "check": {
     "purchase_return_lines_reason_check": "`reason` IN ('leaking', 'broken', 'short_supply', 'stale_stock', 'torn_packs', 'quality_claim')",
     "purchase_return_lines_rule1_check": "`quantity` > 0"
+   }
+  },
+  "bank_facilities": {
+   "seq": 84,
+   "level": 5,
+   "migration": "2026_10_18_008400_create_bank_facilities_table.php",
+   "module": "LC",
+   "columns": [
+    {
+     "name": "id",
+     "type": "bigint unsigned",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": true
+    },
+    {
+     "name": "company_id",
+     "type": "bigint unsigned",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "money_account_id",
+     "type": "bigint unsigned",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "lc_limit",
+     "type": "decimal(18,2)",
+     "nullable": false,
+     "default": "0",
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "loan_limit",
+     "type": "decimal(18,2)",
+     "nullable": false,
+     "default": "0",
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "limit_action",
+     "type": "varchar(30)",
+     "nullable": false,
+     "default": "warn",
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "interest_rate_pct",
+     "type": "decimal(7,4)",
+     "nullable": false,
+     "default": "0",
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "day_count",
+     "type": "varchar(30)",
+     "nullable": false,
+     "default": "360",
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "loan_tenor_days",
+     "type": "smallint unsigned",
+     "nullable": false,
+     "default": "90",
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "notes",
+     "type": "varchar(255)",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "is_active",
+     "type": "tinyint(1)",
+     "nullable": false,
+     "default": "1",
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "lock_version",
+     "type": "int unsigned",
+     "nullable": false,
+     "default": "1",
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "created_by",
+     "type": "bigint unsigned",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "updated_by",
+     "type": "bigint unsigned",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "created_at",
+     "type": "datetime",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "updated_at",
+     "type": "datetime",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    }
+   ],
+   "primary": [
+    "id"
+   ],
+   "unique": {
+    "bank_facilities_company_id_money_account_id_unique": [
+     "company_id",
+     "money_account_id"
+    ]
+   },
+   "index": {
+    "bank_facilities_money_account_id_index": [
+     "money_account_id"
+    ],
+    "bank_facilities_created_by_index": [
+     "created_by"
+    ],
+    "bank_facilities_updated_by_index": [
+     "updated_by"
+    ]
+   },
+   "foreign": {
+    "bank_facilities_company_id_foreign": {
+     "column": "company_id",
+     "references_table": "companies",
+     "references_column": "id",
+     "on_delete": "RESTRICT",
+     "on_update": "RESTRICT"
+    },
+    "bank_facilities_money_account_id_foreign": {
+     "column": "money_account_id",
+     "references_table": "money_accounts",
+     "references_column": "id",
+     "on_delete": "RESTRICT",
+     "on_update": "RESTRICT"
+    },
+    "bank_facilities_created_by_foreign": {
+     "column": "created_by",
+     "references_table": "users",
+     "references_column": "id",
+     "on_delete": "RESTRICT",
+     "on_update": "RESTRICT"
+    },
+    "bank_facilities_updated_by_foreign": {
+     "column": "updated_by",
+     "references_table": "users",
+     "references_column": "id",
+     "on_delete": "RESTRICT",
+     "on_update": "RESTRICT"
+    }
+   },
+   "check": {
+    "bank_facilities_limit_action_check": "`limit_action` IN ('warn', 'block')",
+    "bank_facilities_day_count_check": "`day_count` IN ('360', '365')",
+    "bank_facilities_rule1_check": "`lc_limit` >= 0",
+    "bank_facilities_rule2_check": "`loan_limit` >= 0",
+    "bank_facilities_rule3_check": "`interest_rate_pct` >= 0",
+    "bank_facilities_rule4_check": "`loan_tenor_days` > 0"
+   }
+  },
+  "fx_revaluations": {
+   "seq": 85,
+   "level": 5,
+   "migration": "2026_10_18_008500_create_fx_revaluations_table.php",
+   "module": "LC",
+   "columns": [
+    {
+     "name": "id",
+     "type": "bigint unsigned",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": true
+    },
+    {
+     "name": "company_id",
+     "type": "bigint unsigned",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "revaluation_date",
+     "type": "date",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "reversal_date",
+     "type": "date",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "rates",
+     "type": "json",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "total_difference",
+     "type": "decimal(18,2)",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "status",
+     "type": "varchar(30)",
+     "nullable": false,
+     "default": "posted",
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "journal_entry_id",
+     "type": "bigint unsigned",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "reversal_entry_id",
+     "type": "bigint unsigned",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "note",
+     "type": "varchar(255)",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "created_by",
+     "type": "bigint unsigned",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "updated_by",
+     "type": "bigint unsigned",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "created_at",
+     "type": "datetime",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "updated_at",
+     "type": "datetime",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    }
+   ],
+   "primary": [
+    "id"
+   ],
+   "unique": {
+    "fx_revaluations_journal_entry_id_unique": [
+     "journal_entry_id"
+    ],
+    "fx_revaluations_reversal_entry_id_unique": [
+     "reversal_entry_id"
+    ]
+   },
+   "index": {
+    "fx_revaluations_company_id_revaluation_date_index": [
+     "company_id",
+     "revaluation_date"
+    ],
+    "fx_revaluations_created_by_index": [
+     "created_by"
+    ],
+    "fx_revaluations_updated_by_index": [
+     "updated_by"
+    ]
+   },
+   "foreign": {
+    "fx_revaluations_company_id_foreign": {
+     "column": "company_id",
+     "references_table": "companies",
+     "references_column": "id",
+     "on_delete": "RESTRICT",
+     "on_update": "RESTRICT"
+    },
+    "fx_revaluations_journal_entry_id_foreign": {
+     "column": "journal_entry_id",
+     "references_table": "journal_entries",
+     "references_column": "id",
+     "on_delete": "RESTRICT",
+     "on_update": "RESTRICT"
+    },
+    "fx_revaluations_reversal_entry_id_foreign": {
+     "column": "reversal_entry_id",
+     "references_table": "journal_entries",
+     "references_column": "id",
+     "on_delete": "RESTRICT",
+     "on_update": "RESTRICT"
+    },
+    "fx_revaluations_created_by_foreign": {
+     "column": "created_by",
+     "references_table": "users",
+     "references_column": "id",
+     "on_delete": "RESTRICT",
+     "on_update": "RESTRICT"
+    },
+    "fx_revaluations_updated_by_foreign": {
+     "column": "updated_by",
+     "references_table": "users",
+     "references_column": "id",
+     "on_delete": "RESTRICT",
+     "on_update": "RESTRICT"
+    }
+   },
+   "check": {
+    "fx_revaluations_status_check": "`status` IN ('posted', 'reversed')"
+   }
+  },
+  "fx_revaluation_lines": {
+   "seq": 86,
+   "level": 9,
+   "migration": "2026_10_18_008600_create_fx_revaluation_lines_table.php",
+   "module": "LC",
+   "columns": [
+    {
+     "name": "id",
+     "type": "bigint unsigned",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": true
+    },
+    {
+     "name": "fx_revaluation_id",
+     "type": "bigint unsigned",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "source",
+     "type": "varchar(30)",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "purchase_bill_id",
+     "type": "bigint unsigned",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "letter_of_credit_id",
+     "type": "bigint unsigned",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "party_id",
+     "type": "bigint unsigned",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "currency_code",
+     "type": "char(3)",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "foreign_outstanding",
+     "type": "decimal(18,2)",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "book_rate",
+     "type": "decimal(18,6)",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "closing_rate",
+     "type": "decimal(18,6)",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "difference",
+     "type": "decimal(18,2)",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "created_at",
+     "type": "datetime",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "updated_at",
+     "type": "datetime",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    }
+   ],
+   "primary": [
+    "id"
+   ],
+   "unique": {},
+   "index": {
+    "fx_revaluation_lines_fx_revaluation_id_index": [
+     "fx_revaluation_id"
+    ],
+    "fx_revaluation_lines_purchase_bill_id_index": [
+     "purchase_bill_id"
+    ],
+    "fx_revaluation_lines_letter_of_credit_id_index": [
+     "letter_of_credit_id"
+    ],
+    "fx_revaluation_lines_party_id_index": [
+     "party_id"
+    ],
+    "fx_revaluation_lines_currency_code_index": [
+     "currency_code"
+    ]
+   },
+   "foreign": {
+    "fx_revaluation_lines_fx_revaluation_id_foreign": {
+     "column": "fx_revaluation_id",
+     "references_table": "fx_revaluations",
+     "references_column": "id",
+     "on_delete": "CASCADE",
+     "on_update": "RESTRICT"
+    },
+    "fx_revaluation_lines_purchase_bill_id_foreign": {
+     "column": "purchase_bill_id",
+     "references_table": "purchase_bills",
+     "references_column": "id",
+     "on_delete": "RESTRICT",
+     "on_update": "RESTRICT"
+    },
+    "fx_revaluation_lines_letter_of_credit_id_foreign": {
+     "column": "letter_of_credit_id",
+     "references_table": "letters_of_credit",
+     "references_column": "id",
+     "on_delete": "RESTRICT",
+     "on_update": "RESTRICT"
+    },
+    "fx_revaluation_lines_party_id_foreign": {
+     "column": "party_id",
+     "references_table": "parties",
+     "references_column": "id",
+     "on_delete": "RESTRICT",
+     "on_update": "RESTRICT"
+    },
+    "fx_revaluation_lines_currency_code_foreign": {
+     "column": "currency_code",
+     "references_table": "currencies",
+     "references_column": "code",
+     "on_delete": "RESTRICT",
+     "on_update": "RESTRICT"
+    }
+   },
+   "check": {
+    "fx_revaluation_lines_source_check": "`source` IN ('purchase_bill', 'lc_acceptance')"
+   }
+  },
+  "lc_loans": {
+   "seq": 87,
+   "level": 10,
+   "migration": "2026_10_18_008700_create_lc_loans_table.php",
+   "module": "LC",
+   "columns": [
+    {
+     "name": "id",
+     "type": "bigint unsigned",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": true
+    },
+    {
+     "name": "company_id",
+     "type": "bigint unsigned",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "letter_of_credit_id",
+     "type": "bigint unsigned",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "lc_payment_id",
+     "type": "bigint unsigned",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "money_account_id",
+     "type": "bigint unsigned",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "loan_number",
+     "type": "varchar(40)",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "loan_kind",
+     "type": "varchar(30)",
+     "nullable": false,
+     "default": "pad",
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "principal",
+     "type": "decimal(18,2)",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "start_date",
+     "type": "date",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "due_date",
+     "type": "date",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "interest_rate_pct",
+     "type": "decimal(7,4)",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "day_count",
+     "type": "varchar(30)",
+     "nullable": false,
+     "default": "360",
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "interest_from",
+     "type": "date",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "converted_on",
+     "type": "date",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "status",
+     "type": "varchar(30)",
+     "nullable": false,
+     "default": "open",
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "notes",
+     "type": "varchar(255)",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "lock_version",
+     "type": "int unsigned",
+     "nullable": false,
+     "default": "1",
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "created_by",
+     "type": "bigint unsigned",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "updated_by",
+     "type": "bigint unsigned",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "created_at",
+     "type": "datetime",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "updated_at",
+     "type": "datetime",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    }
+   ],
+   "primary": [
+    "id"
+   ],
+   "unique": {
+    "lc_loans_company_id_loan_number_unique": [
+     "company_id",
+     "loan_number"
+    ],
+    "lc_loans_lc_payment_id_unique": [
+     "lc_payment_id"
+    ]
+   },
+   "index": {
+    "lc_loans_company_id_status_due_date_index": [
+     "company_id",
+     "status",
+     "due_date"
+    ],
+    "lc_loans_letter_of_credit_id_index": [
+     "letter_of_credit_id"
+    ],
+    "lc_loans_money_account_id_index": [
+     "money_account_id"
+    ],
+    "lc_loans_created_by_index": [
+     "created_by"
+    ],
+    "lc_loans_updated_by_index": [
+     "updated_by"
+    ]
+   },
+   "foreign": {
+    "lc_loans_company_id_foreign": {
+     "column": "company_id",
+     "references_table": "companies",
+     "references_column": "id",
+     "on_delete": "RESTRICT",
+     "on_update": "RESTRICT"
+    },
+    "lc_loans_letter_of_credit_id_foreign": {
+     "column": "letter_of_credit_id",
+     "references_table": "letters_of_credit",
+     "references_column": "id",
+     "on_delete": "RESTRICT",
+     "on_update": "RESTRICT"
+    },
+    "lc_loans_lc_payment_id_foreign": {
+     "column": "lc_payment_id",
+     "references_table": "lc_payments",
+     "references_column": "id",
+     "on_delete": "RESTRICT",
+     "on_update": "RESTRICT"
+    },
+    "lc_loans_money_account_id_foreign": {
+     "column": "money_account_id",
+     "references_table": "money_accounts",
+     "references_column": "id",
+     "on_delete": "RESTRICT",
+     "on_update": "RESTRICT"
+    },
+    "lc_loans_created_by_foreign": {
+     "column": "created_by",
+     "references_table": "users",
+     "references_column": "id",
+     "on_delete": "RESTRICT",
+     "on_update": "RESTRICT"
+    },
+    "lc_loans_updated_by_foreign": {
+     "column": "updated_by",
+     "references_table": "users",
+     "references_column": "id",
+     "on_delete": "RESTRICT",
+     "on_update": "RESTRICT"
+    }
+   },
+   "check": {
+    "lc_loans_loan_kind_check": "`loan_kind` IN ('pad', 'ltr')",
+    "lc_loans_day_count_check": "`day_count` IN ('360', '365')",
+    "lc_loans_status_check": "`status` IN ('open', 'repaid', 'reversed')",
+    "lc_loans_rule1_check": "`principal` > 0",
+    "lc_loans_rule2_check": "`interest_rate_pct` >= 0",
+    "lc_loans_rule3_check": "`due_date` >= `start_date`"
+   }
+  },
+  "lc_loan_accruals": {
+   "seq": 88,
+   "level": 11,
+   "migration": "2026_10_18_008800_create_lc_loan_accruals_table.php",
+   "module": "LC",
+   "columns": [
+    {
+     "name": "id",
+     "type": "bigint unsigned",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": true
+    },
+    {
+     "name": "company_id",
+     "type": "bigint unsigned",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "lc_loan_id",
+     "type": "bigint unsigned",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "accrual_date",
+     "type": "date",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "interest_from",
+     "type": "date",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "days",
+     "type": "smallint unsigned",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "amount",
+     "type": "decimal(18,2)",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "status",
+     "type": "varchar(30)",
+     "nullable": false,
+     "default": "posted",
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "journal_entry_id",
+     "type": "bigint unsigned",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "created_by",
+     "type": "bigint unsigned",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "updated_by",
+     "type": "bigint unsigned",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "created_at",
+     "type": "datetime",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "updated_at",
+     "type": "datetime",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    }
+   ],
+   "primary": [
+    "id"
+   ],
+   "unique": {
+    "lc_loan_accruals_lc_loan_id_accrual_date_unique": [
+     "lc_loan_id",
+     "accrual_date"
+    ],
+    "lc_loan_accruals_journal_entry_id_unique": [
+     "journal_entry_id"
+    ]
+   },
+   "index": {
+    "lc_loan_accruals_company_id_index": [
+     "company_id"
+    ],
+    "lc_loan_accruals_created_by_index": [
+     "created_by"
+    ],
+    "lc_loan_accruals_updated_by_index": [
+     "updated_by"
+    ]
+   },
+   "foreign": {
+    "lc_loan_accruals_company_id_foreign": {
+     "column": "company_id",
+     "references_table": "companies",
+     "references_column": "id",
+     "on_delete": "RESTRICT",
+     "on_update": "RESTRICT"
+    },
+    "lc_loan_accruals_lc_loan_id_foreign": {
+     "column": "lc_loan_id",
+     "references_table": "lc_loans",
+     "references_column": "id",
+     "on_delete": "RESTRICT",
+     "on_update": "RESTRICT"
+    },
+    "lc_loan_accruals_journal_entry_id_foreign": {
+     "column": "journal_entry_id",
+     "references_table": "journal_entries",
+     "references_column": "id",
+     "on_delete": "RESTRICT",
+     "on_update": "RESTRICT"
+    },
+    "lc_loan_accruals_created_by_foreign": {
+     "column": "created_by",
+     "references_table": "users",
+     "references_column": "id",
+     "on_delete": "RESTRICT",
+     "on_update": "RESTRICT"
+    },
+    "lc_loan_accruals_updated_by_foreign": {
+     "column": "updated_by",
+     "references_table": "users",
+     "references_column": "id",
+     "on_delete": "RESTRICT",
+     "on_update": "RESTRICT"
+    }
+   },
+   "check": {
+    "lc_loan_accruals_status_check": "`status` IN ('posted', 'paid', 'reversed')",
+    "lc_loan_accruals_rule1_check": "`amount` >= 0"
+   }
+  },
+  "lc_loan_repayments": {
+   "seq": 89,
+   "level": 11,
+   "migration": "2026_10_18_008900_create_lc_loan_repayments_table.php",
+   "module": "LC",
+   "columns": [
+    {
+     "name": "id",
+     "type": "bigint unsigned",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": true
+    },
+    {
+     "name": "company_id",
+     "type": "bigint unsigned",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "lc_loan_id",
+     "type": "bigint unsigned",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "repayment_date",
+     "type": "date",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "principal_amount",
+     "type": "decimal(18,2)",
+     "nullable": false,
+     "default": "0",
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "interest_amount",
+     "type": "decimal(18,2)",
+     "nullable": false,
+     "default": "0",
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "accrued_cleared",
+     "type": "decimal(18,2)",
+     "nullable": false,
+     "default": "0",
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "interest_from",
+     "type": "date",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "interest_days",
+     "type": "smallint unsigned",
+     "nullable": false,
+     "default": "0",
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "money_account_id",
+     "type": "bigint unsigned",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "reference",
+     "type": "varchar(60)",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "status",
+     "type": "varchar(30)",
+     "nullable": false,
+     "default": "posted",
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "journal_entry_id",
+     "type": "bigint unsigned",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "lock_version",
+     "type": "int unsigned",
+     "nullable": false,
+     "default": "1",
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "created_by",
+     "type": "bigint unsigned",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "updated_by",
+     "type": "bigint unsigned",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "created_at",
+     "type": "datetime",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "updated_at",
+     "type": "datetime",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    }
+   ],
+   "primary": [
+    "id"
+   ],
+   "unique": {
+    "lc_loan_repayments_journal_entry_id_unique": [
+     "journal_entry_id"
+    ]
+   },
+   "index": {
+    "lc_loan_repayments_company_id_index": [
+     "company_id"
+    ],
+    "lc_loan_repayments_lc_loan_id_status_index": [
+     "lc_loan_id",
+     "status"
+    ],
+    "lc_loan_repayments_money_account_id_index": [
+     "money_account_id"
+    ],
+    "lc_loan_repayments_created_by_index": [
+     "created_by"
+    ],
+    "lc_loan_repayments_updated_by_index": [
+     "updated_by"
+    ]
+   },
+   "foreign": {
+    "lc_loan_repayments_company_id_foreign": {
+     "column": "company_id",
+     "references_table": "companies",
+     "references_column": "id",
+     "on_delete": "RESTRICT",
+     "on_update": "RESTRICT"
+    },
+    "lc_loan_repayments_lc_loan_id_foreign": {
+     "column": "lc_loan_id",
+     "references_table": "lc_loans",
+     "references_column": "id",
+     "on_delete": "RESTRICT",
+     "on_update": "RESTRICT"
+    },
+    "lc_loan_repayments_money_account_id_foreign": {
+     "column": "money_account_id",
+     "references_table": "money_accounts",
+     "references_column": "id",
+     "on_delete": "RESTRICT",
+     "on_update": "RESTRICT"
+    },
+    "lc_loan_repayments_journal_entry_id_foreign": {
+     "column": "journal_entry_id",
+     "references_table": "journal_entries",
+     "references_column": "id",
+     "on_delete": "RESTRICT",
+     "on_update": "RESTRICT"
+    },
+    "lc_loan_repayments_created_by_foreign": {
+     "column": "created_by",
+     "references_table": "users",
+     "references_column": "id",
+     "on_delete": "RESTRICT",
+     "on_update": "RESTRICT"
+    },
+    "lc_loan_repayments_updated_by_foreign": {
+     "column": "updated_by",
+     "references_table": "users",
+     "references_column": "id",
+     "on_delete": "RESTRICT",
+     "on_update": "RESTRICT"
+    }
+   },
+   "check": {
+    "lc_loan_repayments_status_check": "`status` IN ('posted', 'reversed')",
+    "lc_loan_repayments_rule1_check": "`principal_amount` >= 0",
+    "lc_loan_repayments_rule2_check": "`interest_amount` >= 0",
+    "lc_loan_repayments_rule3_check": "`accrued_cleared` >= 0",
+    "lc_loan_repayments_rule4_check": "`principal_amount` + `interest_amount` + `accrued_cleared` > 0"
    }
   }
  }

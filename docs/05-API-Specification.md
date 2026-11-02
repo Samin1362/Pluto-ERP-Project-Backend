@@ -2,7 +2,7 @@
 
 > Status: **Release candidate 1.0.0-rc.1 for approval** (18 Oct 2026), Laravel + Eloquent. **No endpoint is to be implemented until this contract is approved.** ⚑ Auth details (DEC-02) and the items in §12.7 are still open.
 >
-> **Generated file.** The endpoint reference (§9), schemas (§10), page action map (§11) and contract review (§12) come from `docs/source/api.py`, `schemas.py`, `actions.py`, `errors.py` and `contract_review.py`. The machine-readable contract is [`openapi.yaml`](openapi.yaml) (OpenAPI 3.1), validated against the official OpenAPI 3.1 schema (§8). Size: 315 endpoints, 197 schemas, 71 error codes, 162 pages with 522 mapped actions.
+> **Generated file.** The endpoint reference (§9), schemas (§10), page action map (§11) and contract review (§12) come from `docs/source/api.py`, `schemas.py`, `actions.py`, `errors.py` and `contract_review.py`. The machine-readable contract is [`openapi.yaml`](openapi.yaml) (OpenAPI 3.1), validated against the official OpenAPI 3.1 schema (§8). Size: 328 endpoints, 208 schemas, 75 error codes, 162 pages with 528 mapped actions.
 
 ## 1. Conventions
 
@@ -55,40 +55,40 @@
 | Code | HTTP | Title (shown to the user) | Rules | Endpoints |
 |---|---|---|---|---|
 | `approval_required` | 202 | Above your approval limit: submitted for approval | BR-007 | — (outcome) |
-| `company_required` | 400 | The X-Company-Id header is missing | BR-037 | 292 |
-| `malformed_json` | 400 | The request body is not valid JSON or has the wrong type | — | 128 |
+| `company_required` | 400 | The X-Company-Id header is missing | BR-037 | 305 |
+| `malformed_json` | 400 | The request body is not valid JSON or has the wrong type | — | 136 |
 | `invalid_credentials` | 401 | E-mail or password is incorrect | BR-061 | 2 |
 | `refresh_reuse_detected` | 401 | A refresh token was reused; every session of this sign-in was revoked | FR-001 | 1 |
 | `refresh_token_invalid` | 401 | The session has ended; sign in again | FR-001 | 1 |
-| `token_expired` | 401 | The access token has expired; refresh and retry | NFR-012 | 303 |
-| `token_invalid` | 401 | The access token is not valid | NFR-012 | 303 |
+| `token_expired` | 401 | The access token has expired; refresh and retry | NFR-012 | 316 |
+| `token_invalid` | 401 | The access token is not valid | NFR-012 | 316 |
 | `two_factor_failed` | 401 | The authentication code is not valid | FR-004 | 2 |
-| `unauthenticated` | 401 | Sign-in is required | NFR-010 | 303 |
+| `unauthenticated` | 401 | Sign-in is required | NFR-010 | 316 |
 | `branch_restricted` | 403 | This record belongs to a branch you cannot access | BR-038 | 3 |
-| `not_a_member` | 403 | You are not an active member of this company | BR-037 | 292 |
-| `permission_denied` | 403 | Your role does not allow this action | BR-037 | 292 |
+| `not_a_member` | 403 | You are not an active member of this company | BR-037 | 305 |
+| `permission_denied` | 403 | Your role does not allow this action | BR-037 | 305 |
 | `self_approval_forbidden` | 403 | You cannot approve a voucher you submitted | BR-008 | 2 |
 | `system_role` | 403 | The Owner role cannot be changed or deleted | BR-060 | 3 |
 | `two_factor_required_by_company` | 403 | Your company requires 2-step verification | FR-004 | 1 |
-| `not_found` | 404 | Not found (or it belongs to another company) | BR-037 | 166 |
+| `not_found` | 404 | Not found (or it belongs to another company) | BR-037 | 173 |
 | `already_converted` | 409 | This quotation or purchase order has already been converted | BR-056 | 1 |
-| `already_posted` | 409 | This document has already been posted | BR-009 | 22 |
-| `already_reversed` | 409 | This entry has already been reversed or cancelled | BR-003 | 14 |
+| `already_posted` | 409 | This document has already been posted | BR-009 | 24 |
+| `already_reversed` | 409 | This entry has already been reversed or cancelled | BR-003 | 16 |
 | `charge_allocated` | 409 | The charge is part of a posted landed-cost allocation | BR-045 | 4 |
 | `created_from_return` | 409 | This debit note belongs to a purchase return; cancel the return | BR-057 | 3 |
 | `duplicate` | 409 | A record with the same unique value already exists | — | 20 |
 | `duplicate_statement` | 409 | This statement file was already imported | BR-032 | 1 |
 | `duplicate_supplier_bill` | 409 | This supplier's bill number is already entered | BR-018 | 3 |
 | `has_history` | 409 | This record is used elsewhere; make it inactive instead | BR-026 | 9 |
-| `idempotency_in_progress` | 409 | The same request is still being processed | BR-050 | 72 |
+| `idempotency_in_progress` | 409 | The same request is still being processed | BR-050 | 76 |
 | `invalid_transition` | 409 | This status change is not allowed from the current status | BR-003, BR-040 | 19 |
 | `last_owner` | 409 | A company must keep at least one active Owner | BR-060 | 3 |
 | `not_draft` | 409 | Only a draft can be changed, posted or deleted | BR-025 | 26 |
 | `note_applied` | 409 | Remove the note's allocations before cancelling | BR-023 | 1 |
 | `role_in_use` | 409 | Move the members to another role first | BR-060 | 3 |
 | `seat_limit_reached` | 409 | All seats are in use | BR-059 | 3 |
-| `use_document_cancel` | 409 | System entries are corrected through their document | BR-003 | 14 |
-| `version_conflict` | 409 | Someone else changed this record; reload to see their changes | BR-049 | 32 |
+| `use_document_cancel` | 409 | System entries are corrected through their document | BR-003 | 16 |
+| `version_conflict` | 409 | Someone else changed this record; reload to see their changes | BR-049 | 34 |
 | `gone` | 410 | This link has expired | — | 2 |
 | `file_too_large` | 413 | Files may be up to 10 MB | BR-051 | 5 |
 | `file_type_not_allowed` | 415 | Only JPG, PNG or PDF up to 10 MB | BR-051 | 5 |
@@ -100,31 +100,35 @@
 | `exceeds_tolerance` | 422 | Payments would exceed the LC amount plus tolerance | BR-042 | 1 |
 | `fiscal_year_not_closable` | 422 | The year has not ended or a period is still open | BR-034 | 1 |
 | `foreign_document` | 422 | The document belongs to another party | BR-021 | 14 |
-| `idempotency_key_reused` | 422 | This Idempotency-Key was used with a different request | BR-050 | 72 |
+| `idempotency_key_reused` | 422 | This Idempotency-Key was used with a different request | BR-050 | 76 |
 | `inactive_reference` | 422 | An inactive party, product, ledger, warehouse or account was used | BR-026 | 18 |
-| `insufficient_funds` | 422 | The account would go below zero (or below its overdraft limit) | BR-031 | 7 |
+| `insufficient_funds` | 422 | The account would go below zero (or below its overdraft limit) | BR-031 | 8 |
 | `insufficient_stock` | 422 | Not enough stock in the warehouse | BR-014, BR-030 | 10 |
 | `invalid_mobile` | 422 | Mobile numbers have 11 digits starting 01 | BR-063 | 2 |
+| `lc_limit_exceeded` | 422 | The bank's LC limit would be exceeded | BR-066 | 2 |
 | `lc_not_closable` | 422 | Unpaid supplier, unpaid charges or missing documents; give an override reason | BR-046 | 1 |
 | `lc_submit_incomplete` | 422 | Supplier, amount, issuing bank and expiry are needed | BR-039 | 1 |
 | `ledger_locked` | 422 | Code or opening balance cannot change once the ledger has entries | BR-027 | 3 |
 | `lines_unhandled` | 422 | Every statement line must be matched, created, paired or ignored | BR-032 | 1 |
+| `loan_limit_exceeded` | 422 | The bank's loan (PAD/LTR) limit would be exceeded | BR-066 | 2 |
 | `lock_out_of_order` | 422 | Periods lock and unlock in date order | BR-033 | 2 |
 | `mapping_missing` | 422 | A posting ledger is not mapped in Accounting defaults | BR-064, BR-065 | 6 |
 | `margin_exceeds_deposit` | 422 | More margin applied than was deposited | BR-044 | 3 |
 | `nature_mismatch` | 422 | The group must have the same nature (asset, liability, …) | BR-027 | 3 |
-| `period_locked` | 422 | The date is in a locked period or outside an open financial year | BR-004, BR-033 | 36 |
+| `nothing_to_revalue` | 422 | No open foreign-currency items at that date | BR-068 | 2 |
+| `period_locked` | 422 | The date is in a locked period or outside an open financial year | BR-004, BR-033 | 40 |
 | `purpose_required` | 422 | Choose what the ledger is for | BR-037 | 1 |
+| `repayment_exceeds_outstanding` | 422 | The principal repaid is more than the loan's outstanding principal | BR-067 | 2 |
 | `restore_confirmation_required` | 422 | Type RESTORE to confirm | BR-062 | 1 |
 | `return_qty_exceeds` | 422 | More than the quantity still returnable | BR-022 | 6 |
 | `rounding_ledger_missing` | 422 | Map the rounding ledger in Accounting defaults first | BR-012 | 2 |
 | `same_warehouse` | 422 | Source and destination warehouses must differ | BR-030 | 3 |
-| `unbalanced_entry` | 422 | Total debit must equal total credit | BR-001, BR-002 | 29 |
-| `validation_failed` | 422 | The request has invalid fields | NFR-030 | 205 |
-| `if_match_required` | 428 | If-Match header with the current version is required | BR-049 | 32 |
+| `unbalanced_entry` | 422 | Total debit must equal total credit | BR-001, BR-002 | 31 |
+| `validation_failed` | 422 | The request has invalid fields | NFR-030 | 216 |
+| `if_match_required` | 428 | If-Match header with the current version is required | BR-049 | 34 |
 | `rate_limited` | 429 | Too many requests; try again later | NFR-013 | 13 |
-| `server_error` | 500 | Something went wrong; quote the request id | NFR-031 | 315 |
-| `company_maintenance` | 503 | This company is being restored from a backup; try again shortly (Retry-After) | BR-062 | 292 |
+| `server_error` | 500 | Something went wrong; quote the request id | NFR-031 | 328 |
+| `company_maintenance` | 503 | This company is being restored from a backup; try again shortly (Retry-After) | BR-062 | 305 |
 
 Non-blocking conditions (credit limit, overdue customer, low stock, budget, possible duplicate party) are returned as `warnings[]` in 2xx responses, not as errors (BR-015).
 
@@ -398,7 +402,7 @@ The journal debits the supplier ৳ 46,88,640 (an advance until the import bill 
 | 151 | `GET` | [`/api/v1/reports/purchase-returns`](#getreportspurchasereturns) | Purchase return report | `reports.view` | 200 |
 | 152 | `GET` | [`/api/v1/reports/income`](#getreportsincome) | Income report | `reports.financial` | 200 |
 | 153 | `GET` | [`/api/v1/reports/expenses`](#getreportsexpenses) | Expense report | `reports.financial` | 200 |
-| 154 | `GET` | [`/api/v1/reports/lc/{report}`](#getreportslcreport) | LC reports: register, status, outstanding, expiry, docs, amendments, charges, cost | `lc.view` | 200 |
+| 154 | `GET` | [`/api/v1/reports/lc/{report}`](#getreportslcreport) | LC reports: register, status, outstanding, expiry, docs, amendments, charges, cost, loans, exposure | `lc.view` | 200 |
 | 155 | `GET` | [`/api/v1/sales/overview`](#getsalesoverview) | Sales overview tiles, months, status breakdown, recent, top products | `sales.view` | 200 |
 | 156 | `POST` | [`/api/v1/sales-invoices/calculate`](#postsalesinvoicescalculate) | Authoritative totals for an unsaved invoice (no write) | `sales.create` | 200 |
 | 157 | `GET` | [`/api/v1/sales-invoices`](#getsalesinvoices) | List invoices | `sales.view` | 200 |
@@ -560,40 +564,53 @@ The journal debits the supplier ৳ 46,88,640 (an advance until the import bill 
 | 313 | `POST` | [`/api/v1/landed-cost-allocations/{id}/reverse`](#postlandedcostallocationsidreverse) | Reverse a landed-cost allocation (inventory/COGS split and landed_cost movements) | `lc.edit` | 200 |
 | 314 | `GET` | [`/api/v1/letters-of-credit/{id}/pdf`](#getlettersofcreditidpdf) | Printable LC summary | `lc.view` | 200 |
 | 315 | `GET` | [`/api/v1/letters-of-credit/{id}/cost-summary`](#getlettersofcreditidcostsummary) | Landed cost breakdown and per-unit cost | `lc.view` | 200 |
+| 316 | `GET` | [`/api/v1/bank-facilities`](#getbankfacilities) | Bank facilities (LC and loan limits) with live utilisation | `lc.view` | 200 |
+| 317 | `POST` | [`/api/v1/bank-facilities`](#postbankfacilities) | Set a bank's LC and loan limits and default loan terms | `lc.edit` | 201 |
+| 318 | `PUT` | [`/api/v1/bank-facilities/{id}`](#putbankfacilitiesid) | Change a bank facility | `lc.edit` | 200 |
+| 319 | `GET` | [`/api/v1/lc-loans`](#getlcloans) | PAD/LTR loans (filter by status, bank, LC) | `lc.view` | 200 |
+| 320 | `GET` | [`/api/v1/lc-loans/{id}`](#getlcloansid) | One loan with its repayments and the interest due today | `lc.view` | 200 |
+| 321 | `GET` | [`/api/v1/lc-loans/{id}/interest`](#getlcloansidinterest) | Interest due on a loan at a date (for the repayment dialog) | `lc.view` | 200 |
+| 322 | `POST` | [`/api/v1/lc-loans/{id}/repayments`](#postlcloansidrepayments) | Repay principal with the interest due to the date | `lc.create` | 201 |
+| 323 | `POST` | [`/api/v1/lc-loans/{id}/convert`](#postlcloansidconvert) | Convert a PAD to an LTR on the agreed terms | `lc.edit` | 200 |
+| 324 | `POST` | [`/api/v1/lc-loan-repayments/{id}/reverse`](#postlcloanrepaymentsidreverse) | Reverse a loan repayment (mirror entry; principal and interest due again) | `lc.edit` | 200 |
+| 325 | `POST` | [`/api/v1/fx-revaluations/preview`](#postfxrevaluationspreview) | Preview revaluation of open foreign bills and acceptances at closing rates | `accounting.create` | 200 |
+| 326 | `POST` | [`/api/v1/fx-revaluations`](#postfxrevaluations) | Post a revaluation (unrealised gain/loss) and its reversal dated the next day | `accounting.create` | 201 |
+| 327 | `GET` | [`/api/v1/fx-revaluations`](#getfxrevaluations) | Revaluation history | `accounting.view` | 200 |
+| 328 | `POST` | [`/api/v1/fx-revaluations/{id}/reverse`](#postfxrevaluationsidreverse) | Reverse a revaluation (both its entries) | `accounting.edit` | 200 |
 
 ## 8. Contract validation
 
 `python3 docs/source/validate_api.py` checks the generated `openapi.yaml` and the definitions behind it. The results below come from the last run and are written by the script; it exits non-zero on any failure.
 
 <!-- VALIDATION:start -->
-Last run: 24 rules, **23 passed, 1 failed**; 6 negative tests, 6 detected. Official schema: OpenAPI 3.1 `schema-base` (OAI/OpenAPI-Specification, v3.1-dev).
+Last run: 24 rules, **24 passed, 0 failed**; 6 negative tests, 6 detected. Official schema: OpenAPI 3.1 `schema-base` (OAI/OpenAPI-Specification, v3.1-dev).
 
 | Rule | Check | Items | Result |
 |---|---|---|---|
 | A01 | Document validates against the official OpenAPI 3.1 schema (schema-base: documents incl. Schema Objects) | 1 | ✅ pass |
-| A02 | Every component schema is valid JSON Schema 2020-12 (meta-schema check) | 197 | ✅ pass |
-| A03 | All $refs resolve and every component schema is used | 200 | ✅ pass |
-| A04 | Operations have unique camelCase operationIds, summary, description, tags, a 2xx, a default, and problem+json errors | 315 | ✅ pass |
-| A05 | Path templates and declared path parameters match; path parameters are required | 315 | ✅ pass |
-| A06 | Security: public only for sign-in flows, cookie only for refresh/logout, X-Company-Id on company-scoped calls, known permissions | 315 | ❌ GET /api/v1/company/{id}/logo/file: public outside auth; GET /api/v1/attachments/{id}/file: public outside auth; GET /api/v1/backups/{id}/file: public outside auth |
-| A07 | Every operation that posts a journal entry takes an Idempotency-Key and documents its locking; every body can be rejected with 422 | 315 | ✅ pass |
-| A08 | Every 201 response declares a Location header | 49 | ✅ pass |
-| A09 | Collections use the paginated envelope {data[], meta} | 49 | ✅ pass |
-| A10 | Every error code exists in the catalogue, has its HTTP status documented on the operation, and every catalogue code is reachable | 71 | ✅ pass |
-| A11 | Request-only schemas reject unknown properties (additionalProperties: false) | 90 | ✅ pass |
-| A12 | Money, quantity, cost and rate fields are decimal strings (never JSON numbers) | 204 | ✅ pass |
-| A13 | PUT/PATCH on a versioned table requires If-Match, and If-Match is only required where a version exists | 39 | ✅ pass |
-| A14 | Request fields are stored: each maps to a column (or is declared virtual) with a compatible length, enum values and nullability | 379 | ✅ pass |
+| A02 | Every component schema is valid JSON Schema 2020-12 (meta-schema check) | 208 | ✅ pass |
+| A03 | All $refs resolve and every component schema is used | 211 | ✅ pass |
+| A04 | Operations have unique camelCase operationIds, summary, description, tags, a 2xx, a default, and problem+json errors | 328 | ✅ pass |
+| A05 | Path templates and declared path parameters match; path parameters are required | 328 | ✅ pass |
+| A06 | Security: public only for sign-in flows, cookie only for refresh/logout, X-Company-Id on company-scoped calls, known permissions | 328 | ✅ pass |
+| A07 | Every operation that posts a journal entry takes an Idempotency-Key and documents its locking; every body can be rejected with 422 | 328 | ✅ pass |
+| A08 | Every 201 response declares a Location header | 52 | ✅ pass |
+| A09 | Collections use the paginated envelope {data[], meta} | 52 | ✅ pass |
+| A10 | Every error code exists in the catalogue, has its HTTP status documented on the operation, and every catalogue code is reachable | 75 | ✅ pass |
+| A11 | Request-only schemas reject unknown properties (additionalProperties: false) | 96 | ✅ pass |
+| A12 | Money, quantity, cost and rate fields are decimal strings (never JSON numbers) | 218 | ✅ pass |
+| A13 | PUT/PATCH on a versioned table requires If-Match, and If-Match is only required where a version exists | 40 | ✅ pass |
+| A14 | Request fields are stored: each maps to a column (or is declared virtual) with a compatible length, enum values and nullability | 381 | ✅ pass |
 | A15 | Response enum fields have exactly the values the database allows | 29 | ✅ pass |
-| A16 | Every action of every page maps to API calls, a dialog, navigation or explicit client behaviour, and every target exists | 522 | ✅ pass |
-| A17 | Every data-changing endpoint is triggered by at least one page action (only token refresh is system-driven) | 176 | ✅ pass |
+| A16 | Every action of every page maps to API calls, a dialog, navigation or explicit client behaviour, and every target exists | 528 | ✅ pass |
+| A17 | Every data-changing endpoint is triggered by at least one page action (only token refresh is system-driven) | 183 | ✅ pass |
 | A18 | Every page has at least one endpoint (shared components use their host page's) | 162 | ✅ pass |
-| A19 | For every action, at least one role can both open the page and call the endpoint | 322 | ✅ pass |
-| A20 | Database operations name real tables; nothing deletes posted or append-only rows; every write changes something | 1290 | ✅ pass |
-| A21 | Every parameter has a typed schema | 542 | ✅ pass |
-| A22 | Business rules exist; 43 rejecting rules map to error codes | 346 | ✅ pass |
-| A23 | Calculate/preview endpoints never reject on business state; they return warnings[] (BR-015) | 4 | ✅ pass |
-| A24 | Ledger/stock writes are coherent: entries have lines, stock movements update balances, system entries take an SJ number, bulk post = single post | 84 | ✅ pass |
+| A19 | For every action, at least one role can both open the page and call the endpoint | 333 | ✅ pass |
+| A20 | Database operations name real tables; nothing deletes posted or append-only rows; every write changes something | 1352 | ✅ pass |
+| A21 | Every parameter has a typed schema | 561 | ✅ pass |
+| A22 | Business rules exist; 46 rejecting rules map to error codes | 363 | ✅ pass |
+| A23 | Calculate/preview endpoints never reject on business state; they return warnings[] (BR-015) | 5 | ✅ pass |
+| A24 | Ledger/stock writes are coherent: entries have lines, stock movements update balances, system entries take an SJ number, bulk post = single post | 88 | ✅ pass |
 
 **Negative tests** (a deliberately broken copy of the document must fail the named rule):
 
@@ -4008,7 +4025,7 @@ Expense report. `format=xlsx|pdf|csv` requires reports.export (202 + ExportJob a
 <a id="getreportslcreport"></a>
 #### `GET /api/v1/reports/lc/{report}`
 
-LC reports: register, status, outstanding, expiry, docs, amendments, charges, cost.
+LC reports: register, status, outstanding, expiry, docs, amendments, charges, cost, loans, exposure.
 
 | | |
 |---|---|
@@ -4021,7 +4038,7 @@ LC reports: register, status, outstanding, expiry, docs, amendments, charges, co
 | **Status codes** | 200, 400, 401, 403, 404, 422, 503 |
 | **Error codes** | **`company_maintenance`**; standard: `company_required`, `not_a_member`, `not_found`, `permission_denied`, `server_error`, `token_expired`, `token_invalid`, `unauthenticated`, `validation_failed` |
 | **Headers** | — |
-| **Database** | read: landed_cost_allocations, lc_amendments, lc_charges, lc_documents, lc_payments, letters_of_credit |
+| **Database** | read: bank_facilities, landed_cost_allocations, lc_amendments, lc_charges, lc_documents, lc_loan_repayments, lc_loans, lc_payments, letters_of_credit |
 | **Business rules** | — |
 | **Requirements** | FR-099 |
 | **Pages and actions** | M8<br>M8 · Export (xlsx, pdf) |
@@ -7422,7 +7439,7 @@ Record a payment to the beneficiary at the bank's rate (applies margin, FX).
 | **Permission** | `lc.create` — roles: Owner, Finance manager, Accountant |
 | **Path / query params** | `id` / — |
 | **Request body** | [`LcPaymentInput`](#schema-lcpaymentinput) |
-| **Validation** | `payment_kind` one of sight_payment/usance_acceptance/usance_settlement; `payment_date`* YYYY-MM-DD; `amount_foreign`* decimal string, 2 dp; `bank_rate`* decimal string, 6 dp; `money_account_id`* id of a record in this company; `margin_applied` decimal string, 2 dp; `lc_shipment_id` id of a record in this company (nullable); `purchase_bill_id` id of a record in this company (nullable); `bank_reference` string ≤ 60 (nullable); `description` string ≤ 150 (nullable)<br>Unknown fields are rejected (422).<br>BR-042: LC payment taka amount = foreign amount x bank rate (rounded to 2 dp); total paid may not exceed LC amount x (1 + tolerance).<br>BR-043: Differences between the rate at which a foreign bill was booked and the rate at which it is paid post to the exchange gain or loss ledger.<br>BR-044: An LC margin deposit is a refundable asset, never part of landed cost; it is applied to the payment or released at closure. The margin applied to payments may not exceed the margin deposited for that LC.<br>BR-001: Every posted journal entry balances: total debit = total credit > 0.<br>BR-004: A document or voucher date must fall inside an open accounting period of an open financial year; posting, editing or reversing into a locked period is rejected.<br>BR-031: A payment, transfer or contra cannot take a cash or wallet account below zero, or a bank or cash-credit account below minus its overdraft_limit (zero when not set). |
+| **Validation** | `payment_kind` one of sight_payment/usance_acceptance/usance_settlement; `payment_date`* YYYY-MM-DD; `amount_foreign`* decimal string, 2 dp; `bank_rate`* decimal string, 6 dp; `money_account_id`* id of a record in this company; `margin_applied` decimal string, 2 dp; `financed_by` one of own/pad/ltr; `loan` LcLoanTerms (nullable); `lc_shipment_id` id of a record in this company (nullable); `purchase_bill_id` id of a record in this company (nullable); `bank_reference` string ≤ 60 (nullable); `description` string ≤ 150 (nullable)<br>Unknown fields are rejected (422).<br>BR-042: LC payment taka amount = foreign amount x bank rate (rounded to 2 dp); total paid may not exceed LC amount x (1 + tolerance).<br>BR-043: Differences between the rate at which a foreign bill was booked and the rate at which it is paid post to the exchange gain or loss ledger.<br>BR-044: An LC margin deposit is a refundable asset, never part of landed cost; it is applied to the payment or released at closure. The margin applied to payments may not exceed the margin deposited for that LC.<br>BR-001: Every posted journal entry balances: total debit = total credit > 0.<br>BR-004: A document or voucher date must fall inside an open accounting period of an open financial year; posting, editing or reversing into a locked period is rejected.<br>BR-031: A payment, transfer or contra cannot take a cash or wallet account below zero, or a bank or cash-credit account below minus its overdraft_limit (zero when not set). |
 | **Success** | 201 `data`: [`LcPayment`](#schema-lcpayment) |
 | **Status codes** | 201, 400, 401, 403, 404, 409, 422, 503 |
 | **Error codes** | **`company_maintenance`, `exceeds_tolerance`, `insufficient_funds`, `margin_exceeds_deposit`, `period_locked`, `unbalanced_entry`**; standard: `company_required`, `idempotency_in_progress`, `idempotency_key_reused`, `malformed_json`, `not_a_member`, `not_found`, `permission_denied`, `server_error`, `token_expired`, `token_invalid`, `unauthenticated`, `validation_failed` |
@@ -7586,6 +7603,292 @@ Landed cost breakdown and per-unit cost.
 | **Requirements** | FR-098 |
 | **Pages and actions** | M7, M4<br>M4 · Open cost summary<br>M7 · Choose LC |
 | **Transaction / concurrency** | Read-only; consistent snapshot. |
+
+<a id="getbankfacilities"></a>
+#### `GET /api/v1/bank-facilities`
+
+Bank facilities (LC and loan limits) with live utilisation. _Contract change: P16 LC finance._
+
+| | |
+|---|---|
+| **Auth** | Bearer JWT + `X-Company-Id` |
+| **Permission** | `lc.view` — roles: Owner, Finance manager, Accountant, Viewer |
+| **Path / query params** | — / — |
+| **Request body** | — |
+| **Validation** | — |
+| **Success** | 200 `data[]` of [`BankFacility`](#schema-bankfacility) + `meta` |
+| **Status codes** | 200, 400, 401, 403, 503 |
+| **Error codes** | **`company_maintenance`**; standard: `company_required`, `not_a_member`, `permission_denied`, `server_error`, `token_expired`, `token_invalid`, `unauthenticated` |
+| **Headers** | — |
+| **Database** | read: bank_facilities, lc_loans, letters_of_credit, money_accounts |
+| **Business rules** | — |
+| **Requirements** | FR-099 |
+| **Pages and actions** | M1, M8<br>M8 · Set a bank's LC and loan limits (NEW, P16 LC finance) |
+| **Transaction / concurrency** | Read-only; consistent snapshot. |
+
+<a id="postbankfacilities"></a>
+#### `POST /api/v1/bank-facilities`
+
+Set a bank's LC and loan limits and default loan terms. _Contract change: P16 LC finance._
+
+| | |
+|---|---|
+| **Auth** | Bearer JWT + `X-Company-Id` |
+| **Permission** | `lc.edit` — roles: Owner, Finance manager, Accountant |
+| **Path / query params** | — / — |
+| **Request body** | [`BankFacilityInput`](#schema-bankfacilityinput) |
+| **Validation** | `money_account_id`* id of a record in this company; `lc_limit` decimal string, 2 dp; `loan_limit` decimal string, 2 dp; `limit_action` one of warn/block; `interest_rate_pct` decimal string 0–100, 4 dp; `day_count` one of 360/365; `loan_tenor_days` integer; `notes` string ≤ 255 (nullable); `is_active` boolean<br>Unknown fields are rejected (422).<br>BR-066: A bank's LC limit counts the planned taka of its open LCs and its open usance acceptances, and its loan limit counts the outstanding PAD/LTR principal; going over warns or is refused as the facility says. |
+| **Success** | 201 `data`: [`BankFacility`](#schema-bankfacility) |
+| **Status codes** | 201, 400, 401, 403, 422, 503 |
+| **Error codes** | **`company_maintenance`, `lc_limit_exceeded`, `loan_limit_exceeded`**; standard: `company_required`, `malformed_json`, `not_a_member`, `permission_denied`, `server_error`, `token_expired`, `token_invalid`, `unauthenticated`, `validation_failed` |
+| **Headers** | `Location` on 201 |
+| **Database** | insert: audit_logs, bank_facilities; read: money_accounts |
+| **Business rules** | BR-066 |
+| **Requirements** | FR-099 |
+| **Pages and actions** | M1, M8<br>M8 · Set a bank's LC and loan limits (NEW, P16 LC finance) |
+| **Transaction / concurrency** | Single transaction. |
+
+<a id="putbankfacilitiesid"></a>
+#### `PUT /api/v1/bank-facilities/{id}`
+
+Change a bank facility. _Contract change: P16 LC finance._
+
+| | |
+|---|---|
+| **Auth** | Bearer JWT + `X-Company-Id` |
+| **Permission** | `lc.edit` — roles: Owner, Finance manager, Accountant |
+| **Path / query params** | `id` / — |
+| **Request body** | [`BankFacilityInput`](#schema-bankfacilityinput) |
+| **Validation** | `money_account_id`* id of a record in this company; `lc_limit` decimal string, 2 dp; `loan_limit` decimal string, 2 dp; `limit_action` one of warn/block; `interest_rate_pct` decimal string 0–100, 4 dp; `day_count` one of 360/365; `loan_tenor_days` integer; `notes` string ≤ 255 (nullable); `is_active` boolean<br>Unknown fields are rejected (422).<br>BR-066: A bank's LC limit counts the planned taka of its open LCs and its open usance acceptances, and its loan limit counts the outstanding PAD/LTR principal; going over warns or is refused as the facility says. |
+| **Success** | 200 `data`: [`BankFacility`](#schema-bankfacility) |
+| **Status codes** | 200, 400, 401, 403, 404, 409, 422, 428, 503 |
+| **Error codes** | **`company_maintenance`, `lc_limit_exceeded`, `loan_limit_exceeded`**; standard: `company_required`, `if_match_required`, `malformed_json`, `not_a_member`, `not_found`, `permission_denied`, `server_error`, `token_expired`, `token_invalid`, `unauthenticated`, `validation_failed`, `version_conflict` |
+| **Headers** | `If-Match` (required) |
+| **Database** | insert: audit_logs; update: bank_facilities |
+| **Business rules** | BR-066 |
+| **Requirements** | FR-099 |
+| **Pages and actions** | M1, M8<br>M8 · Set a bank's LC and loan limits (NEW, P16 LC finance) |
+| **Transaction / concurrency** | Single-row write; optimistic lock via If-Match. |
+
+<a id="getlcloans"></a>
+#### `GET /api/v1/lc-loans`
+
+PAD/LTR loans (filter by status, bank, LC). _Contract change: P16 LC finance._
+
+| | |
+|---|---|
+| **Auth** | Bearer JWT + `X-Company-Id` |
+| **Permission** | `lc.view` — roles: Owner, Finance manager, Accountant, Viewer |
+| **Path / query params** | — / `page`, `per_page`, `sort`, `q`, `status`, `bank_account_id`, `letter_of_credit_id` |
+| **Request body** | — |
+| **Validation** | Query parameters only (unknown parameters: 422). |
+| **Success** | 200 `data[]` of [`LcLoan`](#schema-lcloan) + `meta` |
+| **Status codes** | 200, 400, 401, 403, 422, 503 |
+| **Error codes** | **`company_maintenance`**; standard: `company_required`, `not_a_member`, `permission_denied`, `server_error`, `token_expired`, `token_invalid`, `unauthenticated`, `validation_failed` |
+| **Headers** | — |
+| **Database** | read: lc_loan_repayments, lc_loans, letters_of_credit, money_accounts |
+| **Business rules** | — |
+| **Requirements** | FR-097 |
+| **Pages and actions** | M4, M7 |
+| **Transaction / concurrency** | Read-only; consistent snapshot. |
+
+<a id="getlcloansid"></a>
+#### `GET /api/v1/lc-loans/{id}`
+
+One loan with its repayments and the interest due today. _Contract change: P16 LC finance._
+
+| | |
+|---|---|
+| **Auth** | Bearer JWT + `X-Company-Id` |
+| **Permission** | `lc.view` — roles: Owner, Finance manager, Accountant, Viewer |
+| **Path / query params** | `id` / — |
+| **Request body** | — |
+| **Validation** | — |
+| **Success** | 200 `data`: [`LcLoan`](#schema-lcloan) |
+| **Status codes** | 200, 400, 401, 403, 404, 503 |
+| **Error codes** | **`company_maintenance`**; standard: `company_required`, `not_a_member`, `not_found`, `permission_denied`, `server_error`, `token_expired`, `token_invalid`, `unauthenticated` |
+| **Headers** | — |
+| **Database** | read: lc_loan_accruals, lc_loan_repayments, lc_loans |
+| **Business rules** | — |
+| **Requirements** | FR-097 |
+| **Pages and actions** | M4, M7 |
+| **Transaction / concurrency** | Read-only; consistent snapshot. |
+
+<a id="getlcloansidinterest"></a>
+#### `GET /api/v1/lc-loans/{id}/interest`
+
+Interest due on a loan at a date (for the repayment dialog). _Contract change: P16 LC finance._
+
+| | |
+|---|---|
+| **Auth** | Bearer JWT + `X-Company-Id` |
+| **Permission** | `lc.view` — roles: Owner, Finance manager, Accountant, Viewer |
+| **Path / query params** | `id` / `as_of` |
+| **Request body** | — |
+| **Validation** | Query parameters only (unknown parameters: 422). |
+| **Success** | 200 `data`: [`LcLoanInterest`](#schema-lcloaninterest) |
+| **Status codes** | 200, 400, 401, 403, 404, 422, 503 |
+| **Error codes** | **`company_maintenance`**; standard: `company_required`, `not_a_member`, `not_found`, `permission_denied`, `server_error`, `token_expired`, `token_invalid`, `unauthenticated`, `validation_failed` |
+| **Headers** | — |
+| **Database** | read: lc_loan_accruals, lc_loans |
+| **Business rules** | — |
+| **Requirements** | FR-097 |
+| **Pages and actions** | M4, M7<br>M4 · Repay a PAD/LTR loan (NEW, P16 LC finance) |
+| **Transaction / concurrency** | Read-only; consistent snapshot. |
+
+<a id="postlcloansidrepayments"></a>
+#### `POST /api/v1/lc-loans/{id}/repayments`
+
+Repay principal with the interest due to the date. _Contract change: P16 LC finance._
+
+| | |
+|---|---|
+| **Auth** | Bearer JWT + `X-Company-Id` |
+| **Permission** | `lc.create` — roles: Owner, Finance manager, Accountant |
+| **Path / query params** | `id` / — |
+| **Request body** | [`LcLoanRepaymentInput`](#schema-lcloanrepaymentinput) |
+| **Validation** | `repayment_date`* YYYY-MM-DD; `principal_amount`* decimal string, 2 dp; `money_account_id`* id of a record in this company; `reference` string ≤ 60 (nullable)<br>Unknown fields are rejected (422).<br>BR-067: A PAD/LTR loan accrues interest daily on the outstanding principal at its rate over its day count (360 or 365), from the last repayment or month-end accrual; a repayment pays that interest with the principal and cannot repay more principal than is outstanding.<br>BR-001: Every posted journal entry balances: total debit = total credit > 0.<br>BR-004: A document or voucher date must fall inside an open accounting period of an open financial year; posting, editing or reversing into a locked period is rejected.<br>BR-031: A payment, transfer or contra cannot take a cash or wallet account below zero, or a bank or cash-credit account below minus its overdraft_limit (zero when not set). |
+| **Success** | 201 `data`: [`LcLoan`](#schema-lcloan) |
+| **Status codes** | 201, 400, 401, 403, 404, 409, 422, 503 |
+| **Error codes** | **`company_maintenance`, `insufficient_funds`, `period_locked`, `repayment_exceeds_outstanding`, `unbalanced_entry`**; standard: `company_required`, `idempotency_in_progress`, `idempotency_key_reused`, `malformed_json`, `not_a_member`, `not_found`, `permission_denied`, `server_error`, `token_expired`, `token_invalid`, `unauthenticated`, `validation_failed` |
+| **Headers** | `Idempotency-Key`, `Location` on 201 |
+| **Database** | lock: lc_loan_repayments; insert: audit_logs, idempotency_keys; update: lc_loan_repayments; read: account_mappings, journal_entries, journal_lines, lc_loan_accruals, lc_loans, money_accounts, number_sequences |
+| **Business rules** | BR-067, BR-001, BR-004, BR-031 |
+| **Requirements** | FR-097 |
+| **Pages and actions** | M4, M7<br>M4 · Repay a PAD/LTR loan (NEW, P16 LC finance) |
+| **Transaction / concurrency** | One DB transaction; SELECT ... FOR UPDATE on the document row, number_sequences, stock_balances in a fixed order (sequence -> document -> products by id) to avoid deadlocks. |
+
+<a id="postlcloansidconvert"></a>
+#### `POST /api/v1/lc-loans/{id}/convert`
+
+Convert a PAD to an LTR on the agreed terms. _Contract change: P16 LC finance._
+
+| | |
+|---|---|
+| **Auth** | Bearer JWT + `X-Company-Id` |
+| **Permission** | `lc.edit` — roles: Owner, Finance manager, Accountant |
+| **Path / query params** | `id` / — |
+| **Request body** | [`LcLoanConvert`](#schema-lcloanconvert) |
+| **Validation** | `converted_on`* YYYY-MM-DD; `interest_rate_pct`* decimal string 0–100, 4 dp; `tenor_days`* integer; `notes` string ≤ 255 (nullable)<br>Unknown fields are rejected (422).<br>BR-067: A PAD/LTR loan accrues interest daily on the outstanding principal at its rate over its day count (360 or 365), from the last repayment or month-end accrual; a repayment pays that interest with the principal and cannot repay more principal than is outstanding. |
+| **Success** | 200 `data`: [`LcLoan`](#schema-lcloan) |
+| **Status codes** | 200, 400, 401, 403, 404, 409, 422, 428, 503 |
+| **Error codes** | **`company_maintenance`, `repayment_exceeds_outstanding`**; standard: `company_required`, `if_match_required`, `malformed_json`, `not_a_member`, `not_found`, `permission_denied`, `server_error`, `token_expired`, `token_invalid`, `unauthenticated`, `validation_failed`, `version_conflict` |
+| **Headers** | `If-Match` (required) |
+| **Database** | lock: lc_loans; insert: audit_logs; update: lc_loans |
+| **Business rules** | BR-067 |
+| **Requirements** | FR-097 |
+| **Pages and actions** | M4, M7<br>M4 · Convert PAD to LTR (NEW, P16 LC finance) |
+| **Transaction / concurrency** | Single-row write; optimistic lock via If-Match. |
+
+<a id="postlcloanrepaymentsidreverse"></a>
+#### `POST /api/v1/lc-loan-repayments/{id}/reverse`
+
+Reverse a loan repayment (mirror entry; principal and interest due again). _Contract change: P16 LC finance._
+
+| | |
+|---|---|
+| **Auth** | Bearer JWT + `X-Company-Id` |
+| **Permission** | `lc.edit` — roles: Owner, Finance manager, Accountant |
+| **Path / query params** | `id` / — |
+| **Request body** | [`ReasonRequest`](#schema-reasonrequest) |
+| **Validation** | `reason`* string ≤ 255<br>Unknown fields are rejected (422).<br>BR-003: Posted journal entries, documents and stock movements are immutable; corrections are made only by reversal, cancellation or a credit/debit note. Non-financial fields (delivery challan, vehicle, delivered time, internal note, attachments) may still be updated after posting, and every change is audited.<br>BR-004: A document or voucher date must fall inside an open accounting period of an open financial year; posting, editing or reversing into a locked period is rejected.<br>BR-009: A document posts at most once: one journal entry per document (unique journal_entry_id); a repeated post request returns the existing result. |
+| **Success** | 200 `data`: [`LcLoan`](#schema-lcloan) |
+| **Status codes** | 200, 400, 401, 403, 404, 409, 422, 503 |
+| **Error codes** | **`already_posted`, `already_reversed`, `company_maintenance`, `period_locked`, `use_document_cancel`**; standard: `company_required`, `idempotency_in_progress`, `idempotency_key_reused`, `malformed_json`, `not_a_member`, `not_found`, `permission_denied`, `server_error`, `token_expired`, `token_invalid`, `unauthenticated`, `validation_failed` |
+| **Headers** | `Idempotency-Key` |
+| **Database** | lock: lc_loan_repayments, number_sequences; insert: audit_logs, idempotency_keys, journal_entries, journal_lines; update: journal_entries, lc_loan_repayments, number_sequences; read: lc_loan_accruals, lc_loans |
+| **Business rules** | BR-003, BR-004, BR-009 |
+| **Requirements** | FR-097 |
+| **Pages and actions** | M4, M7<br>M4 · Reverse a loan repayment (NEW, P16 LC finance) |
+| **Transaction / concurrency** | One DB transaction; SELECT ... FOR UPDATE on the document row, number_sequences, stock_balances in a fixed order (sequence -> document -> products by id) to avoid deadlocks. |
+
+<a id="postfxrevaluationspreview"></a>
+#### `POST /api/v1/fx-revaluations/preview`
+
+Preview revaluation of open foreign bills and acceptances at closing rates. _Contract change: P16 LC finance._
+
+| | |
+|---|---|
+| **Auth** | Bearer JWT + `X-Company-Id` |
+| **Permission** | `accounting.create` — roles: Owner, Finance manager, Accountant |
+| **Path / query params** | — / — |
+| **Request body** | [`FxRevaluationRequest`](#schema-fxrevaluationrequest) |
+| **Validation** | `revaluation_date`* YYYY-MM-DD; `rates`* array of FxRate; `note` string ≤ 255 (nullable)<br>Unknown fields are rejected (422).<br>BR-068: A period-end FX revaluation restates open foreign-currency bills and usance acceptances at closing rates, posts the unrealised difference to exchange gain or loss and reverses it the next day. |
+| **Success** | 200 `data`: [`FxRevaluation`](#schema-fxrevaluation) |
+| **Status codes** | 200, 400, 401, 403, 422, 503 |
+| **Error codes** | **`company_maintenance`, `nothing_to_revalue`**; standard: `company_required`, `malformed_json`, `not_a_member`, `permission_denied`, `server_error`, `token_expired`, `token_invalid`, `unauthenticated`, `validation_failed` |
+| **Headers** | — |
+| **Database** | read: bill_allocations, currencies, journal_lines, lc_payments, purchase_bills |
+| **Business rules** | BR-068 |
+| **Requirements** | FR-097 |
+| **Pages and actions** | M8<br>M8 · Revalue foreign currency at closing rates (NEW, P16 LC finance) |
+| **Transaction / concurrency** | Read-only; consistent snapshot. |
+
+<a id="postfxrevaluations"></a>
+#### `POST /api/v1/fx-revaluations`
+
+Post a revaluation (unrealised gain/loss) and its reversal dated the next day. _Contract change: P16 LC finance._
+
+| | |
+|---|---|
+| **Auth** | Bearer JWT + `X-Company-Id` |
+| **Permission** | `accounting.create` — roles: Owner, Finance manager, Accountant |
+| **Path / query params** | — / — |
+| **Request body** | [`FxRevaluationRequest`](#schema-fxrevaluationrequest) |
+| **Validation** | `revaluation_date`* YYYY-MM-DD; `rates`* array of FxRate; `note` string ≤ 255 (nullable)<br>Unknown fields are rejected (422).<br>BR-068: A period-end FX revaluation restates open foreign-currency bills and usance acceptances at closing rates, posts the unrealised difference to exchange gain or loss and reverses it the next day.<br>BR-001: Every posted journal entry balances: total debit = total credit > 0.<br>BR-004: A document or voucher date must fall inside an open accounting period of an open financial year; posting, editing or reversing into a locked period is rejected. |
+| **Success** | 201 `data`: [`FxRevaluation`](#schema-fxrevaluation) |
+| **Status codes** | 201, 400, 401, 403, 409, 422, 503 |
+| **Error codes** | **`company_maintenance`, `nothing_to_revalue`, `period_locked`, `unbalanced_entry`**; standard: `company_required`, `idempotency_in_progress`, `idempotency_key_reused`, `malformed_json`, `not_a_member`, `permission_denied`, `server_error`, `token_expired`, `token_invalid`, `unauthenticated`, `validation_failed` |
+| **Headers** | `Idempotency-Key`, `Location` on 201 |
+| **Database** | insert: audit_logs, fx_revaluation_lines, fx_revaluations, idempotency_keys; read: account_mappings, journal_entries, journal_lines, number_sequences |
+| **Business rules** | BR-068, BR-001, BR-004 |
+| **Requirements** | FR-097 |
+| **Pages and actions** | M8<br>M8 · Revalue foreign currency at closing rates (NEW, P16 LC finance) |
+| **Transaction / concurrency** | One DB transaction; SELECT ... FOR UPDATE on the document row, number_sequences, stock_balances in a fixed order (sequence -> document -> products by id) to avoid deadlocks. |
+
+<a id="getfxrevaluations"></a>
+#### `GET /api/v1/fx-revaluations`
+
+Revaluation history. _Contract change: P16 LC finance._
+
+| | |
+|---|---|
+| **Auth** | Bearer JWT + `X-Company-Id` |
+| **Permission** | `accounting.view` — roles: Owner, Finance manager, Accountant, Viewer |
+| **Path / query params** | — / `page`, `per_page`, `sort`, `q` |
+| **Request body** | — |
+| **Validation** | Query parameters only (unknown parameters: 422). |
+| **Success** | 200 `data[]` of [`FxRevaluation`](#schema-fxrevaluation) + `meta` |
+| **Status codes** | 200, 400, 401, 403, 422, 503 |
+| **Error codes** | **`company_maintenance`**; standard: `company_required`, `not_a_member`, `permission_denied`, `server_error`, `token_expired`, `token_invalid`, `unauthenticated`, `validation_failed` |
+| **Headers** | — |
+| **Database** | read: fx_revaluation_lines, fx_revaluations |
+| **Business rules** | — |
+| **Requirements** | FR-097 |
+| **Pages and actions** | M8<br>M8 · Reverse a revaluation (NEW, P16 LC finance) |
+| **Transaction / concurrency** | Read-only; consistent snapshot. |
+
+<a id="postfxrevaluationsidreverse"></a>
+#### `POST /api/v1/fx-revaluations/{id}/reverse`
+
+Reverse a revaluation (both its entries). _Contract change: P16 LC finance._
+
+| | |
+|---|---|
+| **Auth** | Bearer JWT + `X-Company-Id` |
+| **Permission** | `accounting.edit` — roles: Owner, Finance manager, Accountant |
+| **Path / query params** | `id` / — |
+| **Request body** | [`ReasonRequest`](#schema-reasonrequest) |
+| **Validation** | `reason`* string ≤ 255<br>Unknown fields are rejected (422).<br>BR-003: Posted journal entries, documents and stock movements are immutable; corrections are made only by reversal, cancellation or a credit/debit note. Non-financial fields (delivery challan, vehicle, delivered time, internal note, attachments) may still be updated after posting, and every change is audited.<br>BR-004: A document or voucher date must fall inside an open accounting period of an open financial year; posting, editing or reversing into a locked period is rejected.<br>BR-009: A document posts at most once: one journal entry per document (unique journal_entry_id); a repeated post request returns the existing result. |
+| **Success** | 200 `data`: [`FxRevaluation`](#schema-fxrevaluation) |
+| **Status codes** | 200, 400, 401, 403, 404, 409, 422, 503 |
+| **Error codes** | **`already_posted`, `already_reversed`, `company_maintenance`, `period_locked`, `use_document_cancel`**; standard: `company_required`, `idempotency_in_progress`, `idempotency_key_reused`, `malformed_json`, `not_a_member`, `not_found`, `permission_denied`, `server_error`, `token_expired`, `token_invalid`, `unauthenticated`, `validation_failed` |
+| **Headers** | `Idempotency-Key` |
+| **Database** | lock: fx_revaluations, number_sequences; insert: audit_logs, idempotency_keys, journal_entries, journal_lines; update: fx_revaluations, journal_entries, number_sequences |
+| **Business rules** | BR-003, BR-004, BR-009 |
+| **Requirements** | FR-097 |
+| **Pages and actions** | M8<br>M8 · Reverse a revaluation (NEW, P16 LC finance) |
+| **Transaction / concurrency** | One DB transaction; SELECT ... FOR UPDATE on the document row, number_sequences, stock_balances in a fixed order (sequence -> document -> products by id) to avoid deadlocks. |
 
 ## 10. Schemas
 
@@ -9382,7 +9685,7 @@ Non-blocking warning.
 
 | Property | Type | Required |
 |---|---|---|
-| `code` | `enum:CREDIT_LIMIT_EXCEEDED\|PARTY_OVERDUE\|LOW_STOCK\|BACKDATED\|BUDGET_NEAR_LIMIT\|DUPLICATE_PARTY\|INSUFFICIENT_FUNDS\|APPROVAL_REQUIRED\|LC_EXPIRING\|LC_DOCUMENTS_MISSING\|LC_UNPAID_CHARGES\|NOTHING_TO_ALLOCATE` | yes |
+| `code` | `enum:CREDIT_LIMIT_EXCEEDED\|PARTY_OVERDUE\|LOW_STOCK\|BACKDATED\|BUDGET_NEAR_LIMIT\|DUPLICATE_PARTY\|INSUFFICIENT_FUNDS\|APPROVAL_REQUIRED\|LC_EXPIRING\|LC_DOCUMENTS_MISSING\|LC_UNPAID_CHARGES\|NOTHING_TO_ALLOCATE\|LC_LIMIT_EXCEEDED\|LOAN_LIMIT_EXCEEDED\|LOAN_DUE` | yes |
 | `message` | `str` | yes |
 | `line_no` | `int \| null` | no |
 
@@ -10667,6 +10970,8 @@ Payment at the bank's rate. Unknown properties are rejected.
 | `bank_rate` | `rate` | yes |
 | `money_account_id` | `id` | yes |
 | `margin_applied` | `money` | no |
+| `financed_by` | `enum:own\|pad\|ltr` | no |
+| `loan` | `ref:LcLoanTerms \| null` | no |
 | `lc_shipment_id` | `id \| null` | no |
 | `purchase_bill_id` | `id \| null` | no |
 | `bank_reference` | `str:60 \| null` | no |
@@ -10689,6 +10994,197 @@ LC payment.
 | `fx_difference` | `money` | yes |
 | `journal_entry_id` | `id \| null` | no |
 | `status` | `str` | yes |
+| `financed_by` | `str` | yes |
+| `lc_loan_id` | `id \| null` | no |
+
+<a id="schema-lcloanterms"></a>
+#### `LcLoanTerms`
+
+Bank finance of an LC payment (PAD/LTR). Omitted fields come from the bank facility. Unknown properties are rejected.
+
+| Property | Type | Required |
+|---|---|---|
+| `loan_kind` | `enum:pad\|ltr` | no |
+| `interest_rate_pct` | `pct` | no |
+| `day_count` | `enum:360\|365` | no |
+| `tenor_days` | `int` | no |
+| `start_date` | `date \| null` | no |
+
+<a id="schema-bankfacilityinput"></a>
+#### `BankFacilityInput`
+
+Credit lines a bank grants for imports. Unknown properties are rejected.
+
+| Property | Type | Required |
+|---|---|---|
+| `money_account_id` | `id` | yes |
+| `lc_limit` | `money` | no |
+| `loan_limit` | `money` | no |
+| `limit_action` | `enum:warn\|block` | no |
+| `interest_rate_pct` | `pct` | no |
+| `day_count` | `enum:360\|365` | no |
+| `loan_tenor_days` | `int` | no |
+| `notes` | `str:255 \| null` | no |
+| `is_active` | `bool` | no |
+
+<a id="schema-bankfacility"></a>
+#### `BankFacility`
+
+Bank facility with live utilisation (planned taka of open LCs, acceptances and loans).
+
+| Property | Type | Required |
+|---|---|---|
+| `id` | `id` | yes |
+| `money_account_id` | `id` | yes |
+| `bank_name` | `str` | yes |
+| `lc_limit` | `money` | yes |
+| `loan_limit` | `money` | yes |
+| `limit_action` | `str` | yes |
+| `interest_rate_pct` | `pct` | yes |
+| `day_count` | `str` | yes |
+| `loan_tenor_days` | `int` | yes |
+| `notes` | `str \| null` | no |
+| `is_active` | `bool` | yes |
+| `lc_utilised` | `money` | yes |
+| `lc_available` | `money \| null` | no |
+| `loans_outstanding` | `money` | yes |
+| `loan_available` | `money \| null` | no |
+| `acceptances_outstanding` | `money` | yes |
+| `open_lcs` | `int` | yes |
+| `open_loans` | `int` | yes |
+| `version` | `int` | yes |
+
+<a id="schema-lcloanrepayment"></a>
+#### `LcLoanRepayment`
+
+A repayment of a PAD/LTR loan.
+
+| Property | Type | Required |
+|---|---|---|
+| `id` | `id` | yes |
+| `repayment_date` | `date` | yes |
+| `principal_amount` | `money` | yes |
+| `interest_amount` | `money` | yes |
+| `accrued_cleared` | `money` | yes |
+| `interest_from` | `date` | yes |
+| `interest_days` | `int` | yes |
+| `money_account_id` | `id` | yes |
+| `reference` | `str \| null` | no |
+| `status` | `str` | yes |
+| `journal_entry_id` | `id \| null` | no |
+
+<a id="schema-lcloan"></a>
+#### `LcLoan`
+
+PAD/LTR loan with what is owed today.
+
+| Property | Type | Required |
+|---|---|---|
+| `id` | `id` | yes |
+| `letter_of_credit_id` | `id` | yes |
+| `lc_number` | `str` | yes |
+| `lc_payment_id` | `id` | yes |
+| `loan_number` | `str` | yes |
+| `loan_kind` | `str` | yes |
+| `money_account_id` | `id` | yes |
+| `bank_name` | `str` | yes |
+| `principal` | `money` | yes |
+| `repaid_principal` | `money` | yes |
+| `outstanding_principal` | `money` | yes |
+| `interest_paid` | `money` | yes |
+| `accrued_unpaid` | `money` | yes |
+| `interest_rate_pct` | `pct` | yes |
+| `day_count` | `str` | yes |
+| `start_date` | `date` | yes |
+| `due_date` | `date` | yes |
+| `days_to_due` | `int \| null` | no |
+| `interest_from` | `date` | yes |
+| `interest_due_today` | `money` | yes |
+| `converted_on` | `date \| null` | no |
+| `status` | `str` | yes |
+| `notes` | `str \| null` | no |
+| `repayments` | `[ref:LcLoanRepayment]` | no |
+| `version` | `int` | yes |
+
+<a id="schema-lcloanrepaymentinput"></a>
+#### `LcLoanRepaymentInput`
+
+Repay a loan: principal now plus the interest due to the date (worked out by the server). Unknown properties are rejected.
+
+| Property | Type | Required |
+|---|---|---|
+| `repayment_date` | `date` | yes |
+| `principal_amount` | `money` | yes |
+| `money_account_id` | `id` | yes |
+| `reference` | `str:60 \| null` | no |
+
+<a id="schema-lcloaninterest"></a>
+#### `LcLoanInterest`
+
+Interest due on a loan at a date.
+
+| Property | Type | Required |
+|---|---|---|
+| `as_of` | `date` | yes |
+| `outstanding_principal` | `money` | yes |
+| `interest_from` | `date` | yes |
+| `days` | `int` | yes |
+| `interest_rate_pct` | `pct` | yes |
+| `day_count` | `str` | yes |
+| `interest` | `money` | yes |
+| `accrued_unpaid` | `money` | yes |
+| `total_interest` | `money` | yes |
+
+<a id="schema-lcloanconvert"></a>
+#### `LcLoanConvert`
+
+Convert a PAD to an LTR on the agreed terms (no journal; the loan ledger is the same). Unknown properties are rejected.
+
+| Property | Type | Required |
+|---|---|---|
+| `converted_on` | `date` | yes |
+| `interest_rate_pct` | `pct` | yes |
+| `tenor_days` | `int` | yes |
+| `notes` | `str:255 \| null` | no |
+
+<a id="schema-fxrate"></a>
+#### `FxRate`
+
+Closing rate of one currency. Unknown properties are rejected.
+
+| Property | Type | Required |
+|---|---|---|
+| `currency_code` | `str:3` | yes |
+| `rate` | `rate` | yes |
+
+<a id="schema-fxrevaluationrequest"></a>
+#### `FxRevaluationRequest`
+
+Revalue open foreign-currency items at closing rates on a date. Unknown properties are rejected.
+
+| Property | Type | Required |
+|---|---|---|
+| `revaluation_date` | `date` | yes |
+| `rates` | `[ref:FxRate]` | yes |
+| `note` | `str:255 \| null` | no |
+
+<a id="schema-fxrevaluation"></a>
+#### `FxRevaluation`
+
+Revaluation preview or posting.
+
+| Property | Type | Required |
+|---|---|---|
+| `id` | `id \| null` | no |
+| `status` | `enum:preview\|posted\|reversed` | yes |
+| `revaluation_date` | `date` | yes |
+| `reversal_date` | `date` | yes |
+| `rates` | `obj` | yes |
+| `total_difference` | `money` | yes |
+| `lines` | `[obj]` | yes |
+| `journal` | `[ref:PostingLine]` | no |
+| `warnings` | `[ref:Warning]` | no |
+| `created_at` | `datetime \| null` | no |
 
 <a id="schema-landedcostrequest"></a>
 #### `LandedCostRequest`
@@ -12435,7 +12931,7 @@ _No actions of its own._
 <a id="actions-m1"></a>
 #### M1 · LC dashboard
 
-View permission `lc.view`. **Loads:** [`GET /lc/overview`](#getlcoverview).
+View permission `lc.view`. **Loads:** [`GET /lc/overview`](#getlcoverview), [`GET /bank-facilities`](#getbankfacilities).
 
 | # | Action | Calls | Permission | Body → data | Success | Business errors to handle |
 |---|---|---|---|---|---|---|
@@ -12472,7 +12968,7 @@ View permission `lc.create`. **Loads:** [`GET /parties`](#getparties), [`GET /pu
 <a id="actions-m4"></a>
 #### M4 · LC details
 
-View permission `lc.view`. **Loads:** [`GET /attachments/{id}/file`](#getattachmentsidfile), [`GET /attachments/{id}/url`](#getattachmentsidurl), [`GET /audit-logs`](#getauditlogs), [`GET /letters-of-credit/{id}`](#getlettersofcreditid), [`GET /letters-of-credit/{id}/documents`](#getlettersofcreditiddocuments), [`GET /letters-of-credit/{id}/payments`](#getlettersofcreditidpayments), [`GET /letters-of-credit/{id}/pdf`](#getlettersofcreditidpdf), [`GET /letters-of-credit/{id}/cost-summary`](#getlettersofcreditidcostsummary).
+View permission `lc.view`. **Loads:** [`GET /attachments/{id}/file`](#getattachmentsidfile), [`GET /attachments/{id}/url`](#getattachmentsidurl), [`GET /audit-logs`](#getauditlogs), [`GET /letters-of-credit/{id}`](#getlettersofcreditid), [`GET /letters-of-credit/{id}/documents`](#getlettersofcreditiddocuments), [`GET /letters-of-credit/{id}/payments`](#getlettersofcreditidpayments), [`GET /letters-of-credit/{id}/pdf`](#getlettersofcreditidpdf), [`GET /letters-of-credit/{id}/cost-summary`](#getlettersofcreditidcostsummary), [`GET /lc-loans`](#getlcloans), [`GET /lc-loans/{id}`](#getlcloansid), [`GET /lc-loans/{id}/interest`](#getlcloansidinterest).
 
 | # | Action | Calls | Permission | Body → data | Success | Business errors to handle |
 |---|---|---|---|---|---|---|
@@ -12491,6 +12987,9 @@ View permission `lc.view`. **Loads:** [`GET /attachments/{id}/file`](#getattachm
 | 13 | Reverse payment, charge or landed-cost allocation (NEW, R-03) | dlg:L6 → [`POST /lc-payments/{id}/reverse`](#postlcpaymentsidreverse) \| dlg:L6 → [`POST /lc-charges/{id}/reverse`](#postlcchargesidreverse) \| dlg:L6 → [`POST /landed-cost-allocations/{id}/reverse`](#postlandedcostallocationsidreverse) | `lc.edit` | [`ReasonRequest`](#schema-reasonrequest) → [`LcPayment`](#schema-lcpayment)<br>[`ReasonRequest`](#schema-reasonrequest) → [`LcCharge`](#schema-lccharge)<br>[`ReasonRequest`](#schema-reasonrequest) → [`LandedCostAllocation`](#schema-landedcostallocation) | 200 | `already_posted`, `already_reversed`, `charge_allocated`, `invalid_transition`, `period_locked`, `use_document_cancel` |
 | 14 | Pay a charge (NEW, row) | [`POST /lc-charges/{id}/pay`](#postlcchargesidpay) | `lc.create` | [`ChargePayment`](#schema-chargepayment) → [`LcCharge`](#schema-lccharge) | 200 | `insufficient_funds`, `period_locked`, `unbalanced_entry` |
 | 15 | Remove attachment (NEW) | [`DELETE /attachments/{id}`](#deleteattachmentsid) | contextual — any → `<module>.edit of the record the file belongs to (create for a draft)` | — → — | 204 | — |
+| 16 | Repay a PAD/LTR loan (NEW, P16 LC finance) | [`GET /lc-loans/{id}/interest`](#getlcloansidinterest) → [`POST /lc-loans/{id}/repayments`](#postlcloansidrepayments) | `lc.create`, `lc.view` | [`LcLoanRepaymentInput`](#schema-lcloanrepaymentinput) → [`LcLoan`](#schema-lcloan) | 200, 201 | `insufficient_funds`, `period_locked`, `repayment_exceeds_outstanding`, `unbalanced_entry` |
+| 17 | Convert PAD to LTR (NEW, P16 LC finance) | [`POST /lc-loans/{id}/convert`](#postlcloansidconvert) | `lc.edit` | [`LcLoanConvert`](#schema-lcloanconvert) → [`LcLoan`](#schema-lcloan) | 200 | `repayment_exceeds_outstanding` |
+| 18 | Reverse a loan repayment (NEW, P16 LC finance) | dlg:L6 → [`POST /lc-loan-repayments/{id}/reverse`](#postlcloanrepaymentsidreverse) | `lc.edit` | [`ReasonRequest`](#schema-reasonrequest) → [`LcLoan`](#schema-lcloan) | 200 | `already_posted`, `already_reversed`, `period_locked`, `use_document_cancel` |
 
 <a id="actions-m5"></a>
 #### M5 · LC amendments
@@ -12516,7 +13015,7 @@ View permission `lc.view`. **Loads:** [`GET /lc-documents/matrix`](#getlcdocumen
 <a id="actions-m7"></a>
 #### M7 · Charges and cost summary
 
-View permission `lc.view`. **Loads:** [`GET /letters-of-credit`](#getlettersofcredit), [`GET /lc-charges`](#getlccharges), [`GET /letters-of-credit/{id}/cost-summary`](#getlettersofcreditidcostsummary).
+View permission `lc.view`. **Loads:** [`GET /letters-of-credit`](#getlettersofcredit), [`GET /lc-charges`](#getlccharges), [`GET /letters-of-credit/{id}/cost-summary`](#getlettersofcreditidcostsummary), [`GET /lc-loans`](#getlcloans), [`GET /lc-loans/{id}`](#getlcloansid), [`GET /lc-loans/{id}/interest`](#getlcloansidinterest).
 
 | # | Action | Calls | Permission | Body → data | Success | Business errors to handle |
 |---|---|---|---|---|---|---|
@@ -12528,12 +13027,15 @@ View permission `lc.view`. **Loads:** [`GET /letters-of-credit`](#getlettersofcr
 <a id="actions-m8"></a>
 #### M8 · LC reports
 
-View permission `lc.view`. **Loads:** [`GET /lc-amendments`](#getlcamendments), [`GET /reports/lc/{report}`](#getreportslcreport).
+View permission `lc.view`. **Loads:** [`GET /lc-amendments`](#getlcamendments), [`GET /bank-facilities`](#getbankfacilities), [`GET /fx-revaluations`](#getfxrevaluations), [`GET /reports/lc/{report}`](#getreportslcreport).
 
 | # | Action | Calls | Permission | Body → data | Success | Business errors to handle |
 |---|---|---|---|---|---|---|
 | 1 | Export (xlsx, pdf) | export:[`GET /reports/lc/{report}`](#getreportslcreport) | `lc.view` | — | 200 | — |
 | 2 | Open LC | nav:M4 | — | — | — | — |
+| 3 | Set a bank's LC and loan limits (NEW, P16 LC finance) | [`GET /bank-facilities`](#getbankfacilities) → [`POST /bank-facilities`](#postbankfacilities) \| [`PUT /bank-facilities/{id}`](#putbankfacilitiesid) | `lc.edit`, `lc.view` | [`BankFacilityInput`](#schema-bankfacilityinput) → [`BankFacility`](#schema-bankfacility) | 200, 201 | `lc_limit_exceeded`, `loan_limit_exceeded` |
+| 4 | Revalue foreign currency at closing rates (NEW, P16 LC finance) | [`POST /fx-revaluations/preview`](#postfxrevaluationspreview) → [`POST /fx-revaluations`](#postfxrevaluations) | `accounting.create` | [`FxRevaluationRequest`](#schema-fxrevaluationrequest) → [`FxRevaluation`](#schema-fxrevaluation) | 200, 201 | `nothing_to_revalue`, `period_locked`, `unbalanced_entry` |
+| 5 | Reverse a revaluation (NEW, P16 LC finance) | [`GET /fx-revaluations`](#getfxrevaluations) → dlg:L6 → [`POST /fx-revaluations/{id}/reverse`](#postfxrevaluationsidreverse) | `accounting.edit`, `accounting.view` | [`ReasonRequest`](#schema-reasonrequest) → [`FxRevaluation`](#schema-fxrevaluation) | 200 | `already_posted`, `already_reversed`, `period_locked`, `use_document_cancel` |
 
 <a id="actions-lc-dlgpay"></a>
 #### LC-DlgPay · Dialog · Record LC payment
@@ -12601,12 +13103,12 @@ View permission `lc.create`. **Loads:** nothing of its own (host page data).
 
 | | Before review | Contract |
 |---|---|---|
-| Endpoints | 280 | 315 |
-| Schemas | 191 | 197 |
+| Endpoints | 280 | 328 |
+| Schemas | 191 | 208 |
 | Pages | 155 | 162 |
-| Page actions mapped to API or client behaviour | 0 of 448 | 522 of 522 |
+| Page actions mapped to API or client behaviour | 0 of 448 | 528 of 528 |
 
-### 12.2 Missing endpoints, now added (35)
+### 12.2 Missing endpoints, now added (48)
 
 | Endpoint | Ref | Why it was missing |
 |---|---|---|
@@ -12645,6 +13147,19 @@ View permission `lc.create`. **Loads:** nothing of its own (host page data).
 | [`POST /lc-payments/{id}/reverse`](#postlcpaymentsidreverse) | R-03 | No correction path for a posted return, note, LC payment, LC charge, landed-cost allocation or cash-count adjustment (13 R-03) |
 | [`POST /landed-cost-allocations/{id}/reverse`](#postlandedcostallocationsidreverse) | R-03 | No correction path for a posted return, note, LC payment, LC charge, landed-cost allocation or cash-count adjustment (13 R-03) |
 | [`GET /letters-of-credit/{id}/pdf`](#getlettersofcreditidpdf) | C-01 | Documents that are printed or e-mailed need a server PDF (quotation, PO, notes, receipts, payments, statement, LC summary) |
+| [`GET /bank-facilities`](#getbankfacilities) | P16 LC finance |  |
+| [`POST /bank-facilities`](#postbankfacilities) | P16 LC finance |  |
+| [`PUT /bank-facilities/{id}`](#putbankfacilitiesid) | P16 LC finance |  |
+| [`GET /lc-loans`](#getlcloans) | P16 LC finance |  |
+| [`GET /lc-loans/{id}`](#getlcloansid) | P16 LC finance |  |
+| [`GET /lc-loans/{id}/interest`](#getlcloansidinterest) | P16 LC finance |  |
+| [`POST /lc-loans/{id}/repayments`](#postlcloansidrepayments) | P16 LC finance |  |
+| [`POST /lc-loans/{id}/convert`](#postlcloansidconvert) | P16 LC finance |  |
+| [`POST /lc-loan-repayments/{id}/reverse`](#postlcloanrepaymentsidreverse) | P16 LC finance |  |
+| [`POST /fx-revaluations/preview`](#postfxrevaluationspreview) | P16 LC finance |  |
+| [`POST /fx-revaluations`](#postfxrevaluations) | P16 LC finance |  |
+| [`GET /fx-revaluations`](#getfxrevaluations) | P16 LC finance |  |
+| [`POST /fx-revaluations/{id}/reverse`](#postfxrevaluationsidreverse) | P16 LC finance |  |
 
 ### 12.3 Redundant or unused endpoints, removed (6)
 
@@ -12701,6 +13216,7 @@ View permission `lc.create`. **Loads:** nothing of its own (host page data).
 | Stock adjustments and transfers | StockAdjustment returns warehouse_name, notes, line_count, posted_at and audit fields; StockTransfer returns both warehouse names, vehicle, driver, notes, line_count, transit_loss_value (costs only), its entries and audit fields, so D10/D11 can show and edit what they saved (P11.1-BE-02/03, 31 Oct 2026). Additive. |
 | Cash counts and reconciliation | CashCount returns the account name, denominations and its adjustment's number, status and approval request (G2 shows where an adjustment stands); Reconciliation returns the account name, unhandled_count and book_entries (posted book lines not yet matched, G10's right pane); POST …/lines/pair with one line marks it ignored (P12.1-BE-03/05, 31 Oct 2026). Additive. |
 | Attachments and income/expense (P13) | GET /attachments lists one record's files (Attachments tabs); AttachmentUpload.attachable_id is optional for a voucher still being written (pending file linked by POST /ie-entries attachment_ids, I6 Remove attachment); RecurringTemplate returns ends_after_count, ends_on, description and last_entry_id; GET /recurring-templates takes page, per_page, kind, active; GET /ie-entries meta adds total_amount. Additive (P13.1, 31 Oct 2026). |
+| LC finance (P16 extension) | New: bank facilities with live utilisation and LC/loan limits (warn or block), PAD/LTR loans created by a financed LC payment (LcPaymentInput financed_by + loan terms; LcPayment financed_by, lc_loan_id), interest quote, repayments, PAD to LTR conversion and reversal, period-end FX revaluation with automatic next-day reversal, LC reports loans and exposure. Warnings LC_LIMIT_EXCEEDED, LOAN_LIMIT_EXCEEDED, LOAN_DUE; errors lc_limit_exceeded, loan_limit_exceeded, repayment_exceeds_outstanding, nothing_to_revalue. Owner decisions 2 Nov 2026 (both own funds and bank finance; import only). Additive. |
 | Indexes for 1 M journal lines (P17) | journal_lines (company_id, ledger_id, is_posted, entry_date) gains debit and credit so ledger balances, the trial balance and P&L read the index only; journal_entries adds (company_id, entry_date) so the voucher list orders by date and id without sorting every voucher, and (company_id, entry_date, status) becomes (company_id, status, entry_date) so the drafts beside the trial balance read only drafts. Found by the k6 run on 1 M lines (TC-NFR-001/002; P17.1-BE-02); hand-written migration 2026_11_06_000001 converts existing databases. No API change. |
 | Signed file downloads documented (P17) | GET /attachments/{id}/file, /company/{id}/logo/file, /backups/{id}/file and /export-jobs/{id}/file were implemented with their signed-link endpoints but missing from the contract; now listed as public operations reached by the signed link (expires, signature). Found by the route-coverage test TC-NFR-008 (P17.1-BE-04). Additive, no behaviour change. |
 | LC charges and import settlement (P16) | LcChargeInput/LcCharge add tax_rule_id: a recoverable import tax (VAT/AT) charge posts to that rule's ledger instead of landed cost (owner decision 1 Nov 2026, pending tax adviser); LcCharge adds posting_status (reversed charges). Warning codes add LC_EXPIRING, LC_DOCUMENTS_MISSING, LC_UNPAID_CHARGES (LC flags) and NOTHING_TO_ALLOCATE (landed-cost preview); bill_allocations keep foreign_amount and fx_amount so LC payments settle import bills by foreign amount with the FX difference to 6603 (06 §12.5). Additive (P16.0-SETUP-01). |
@@ -12745,7 +13261,13 @@ Each pair returns similar data but serves a different permission audience. Remov
 | M4 | Reverse payment, charge or landed-cost allocation (NEW, R-03) | NEW |
 | M4 | Pay a charge (NEW, row) | NEW |
 | M4 | Remove attachment (NEW) | NEW |
+| M4 | Repay a PAD/LTR loan (NEW, P16 LC finance) | NEW |
+| M4 | Convert PAD to LTR (NEW, P16 LC finance) | NEW |
+| M4 | Reverse a loan repayment (NEW, P16 LC finance) | NEW |
 | M7 | Pay a charge (NEW, row) | NEW |
+| M8 | Set a bank's LC and loan limits (NEW, P16 LC finance) | NEW |
+| M8 | Revalue foreign currency at closing rates (NEW, P16 LC finance) | NEW |
+| M8 | Reverse a revaluation (NEW, P16 LC finance) | NEW |
 | S0 | Create a company (NEW, company switcher) | NEW |
 | K10 | Revoke invitation (NEW) | NEW |
 | K11 | Delete custom role (NEW, only without members) | NEW |

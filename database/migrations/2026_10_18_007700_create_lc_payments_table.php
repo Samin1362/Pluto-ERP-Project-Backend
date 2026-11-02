@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Table `lc_payments` (LC): migration 77 of 83, dependency level 9.
+ * Table `lc_payments` (LC): migration 77 of 89, dependency level 9.
  * Payment to the beneficiary through the bank, at the bank's rate (sight or usance maturity).
  * Depends on: companies, journal_entries, lc_shipments, letters_of_credit, money_accounts, purchase_bills, users.
  *
@@ -39,6 +39,7 @@ return new class extends Migration
             $table->string('bank_reference', 60)->nullable();
             $table->string('status', 30)->default('draft')->comment('One of: draft, posted, reversed');
             $table->unsignedBigInteger('journal_entry_id')->nullable();
+            $table->string('financed_by', 30)->default('own')->comment('One of: own, pad, ltr. own: from money_account_id; pad/ltr: the bank pays and an lc_loans row records the loan (P16 LC finance)');
             $table->unsignedInteger('lock_version')->default(1)->comment('Optimistic concurrency counter; incremented on every update (If-Match)');
             $table->unsignedBigInteger('created_by')->nullable()->comment('User who created the row');
             $table->unsignedBigInteger('updated_by')->nullable()->comment('User who last changed the row');
@@ -70,6 +71,7 @@ return new class extends Migration
                 ALTER TABLE `lc_payments`
                     ADD CONSTRAINT `lc_payments_payment_kind_check` CHECK (`payment_kind` IN ('sight_payment', 'usance_acceptance', 'usance_settlement')),
                     ADD CONSTRAINT `lc_payments_status_check` CHECK (`status` IN ('draft', 'posted', 'reversed')),
+                    ADD CONSTRAINT `lc_payments_financed_by_check` CHECK (`financed_by` IN ('own', 'pad', 'ltr')),
                     ADD CONSTRAINT `lc_payments_rule1_check` CHECK (`amount_foreign` > 0),
                     ADD CONSTRAINT `lc_payments_rule2_check` CHECK (`bank_rate` > 0),
                     ADD CONSTRAINT `lc_payments_rule3_check` CHECK (`margin_applied` >= 0)

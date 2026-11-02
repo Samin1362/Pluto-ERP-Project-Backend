@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Table `journal_lines` (Accounting): migration 64 of 83, dependency level 7.
+ * Table `journal_lines` (Accounting): migration 64 of 89, dependency level 7.
  * Debit or credit line of a journal entry. Posted lines are immutable.
  * Depends on: companies, currencies, journal_entries, ledgers, letters_of_credit, tax_rules, warehouses.
  *

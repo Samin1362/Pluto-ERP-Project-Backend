@@ -19,7 +19,7 @@ class LcReportRequest extends StrictRequest
             'date_from' => ['sometimes', 'date_format:Y-m-d'],
             'date_to' => ['sometimes', 'date_format:Y-m-d', 'after_or_equal:date_from'],
             'bank_account_id' => ['sometimes', 'integer'],
-            'segment' => ['sometimes', Rule::in(['active', 'expired', 'closed'])],
+            'segment' => ['sometimes', Rule::in(['active', 'expired', 'closed', 'open', 'all'])],
             'format' => ['sometimes', Rule::in(['xlsx', 'csv', 'pdf'])],
         ];
     }

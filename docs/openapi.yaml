@@ -36811,14 +36811,1604 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/Error'
+  /api/v1/bank-facilities:
+    get:
+      operationId: getBankFacilities
+      summary: Bank facilities (LC and loan limits) with live utilisation
+      tags:
+      - LC
+      description: "**Permission:** `lc.view`  \n**Database:** read: bank_facilities, lc_loans, letters_of_credit, money_accounts  \n**Rules:** —"
+      x-permission: lc.view
+      x-business-rules: []
+      x-requirements:
+      - FR-099
+      x-pages:
+      - M1
+      - M8
+      x-page-actions:
+      - 'M8: Set a bank''s LC and loan limits (NEW, P16 LC finance)'
+      x-tables:
+      - bank_facilities
+      - money_accounts
+      - letters_of_credit
+      - lc_loans
+      x-db-operations:
+        bank_facilities: R
+        money_accounts: R
+        letters_of_credit: R
+        lc_loans: R
+      x-error-codes:
+      - company_maintenance
+      - company_required
+      - not_a_member
+      - permission_denied
+      - server_error
+      - token_expired
+      - token_invalid
+      - unauthenticated
+      x-contract-change: P16 LC finance
+      parameters:
+      - $ref: '#/components/parameters/CompanyHeader'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                - meta
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/BankFacility'
+                  meta:
+                    $ref: '#/components/schemas/PageMeta'
+        '400':
+          description: 'Malformed request: `company_required`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: 'Not authenticated: `token_expired`, `token_invalid`, `unauthenticated`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: 'Company temporarily unavailable (restore in progress): `company_maintenance`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+              description: Seconds to wait
+        default:
+          description: Unexpected error (`server_error`)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    post:
+      operationId: postBankFacilities
+      summary: Set a bank's LC and loan limits and default loan terms
+      tags:
+      - LC
+      description: "**Permission:** `lc.edit`  \n**Database:** insert: audit_logs, bank_facilities; read: money_accounts  \n**Rules:** BR-066"
+      x-permission: lc.edit
+      x-business-rules:
+      - BR-066
+      x-requirements:
+      - FR-099
+      x-pages:
+      - M1
+      - M8
+      x-page-actions:
+      - 'M8: Set a bank''s LC and loan limits (NEW, P16 LC finance)'
+      x-tables:
+      - bank_facilities
+      - money_accounts
+      - audit_logs
+      x-db-operations:
+        bank_facilities: C
+        money_accounts: R
+        audit_logs: C
+      x-error-codes:
+      - company_maintenance
+      - company_required
+      - lc_limit_exceeded
+      - loan_limit_exceeded
+      - malformed_json
+      - not_a_member
+      - permission_denied
+      - server_error
+      - token_expired
+      - token_invalid
+      - unauthenticated
+      - validation_failed
+      x-contract-change: P16 LC finance
+      parameters:
+      - $ref: '#/components/parameters/CompanyHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BankFacilityInput'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                properties:
+                  data:
+                    $ref: '#/components/schemas/BankFacility'
+          headers:
+            Location:
+              schema:
+                type: string
+              description: URL of the created resource
+        '400':
+          description: 'Malformed request: `company_required`, `malformed_json`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: 'Not authenticated: `token_expired`, `token_invalid`, `unauthenticated`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: 'Validation or business-rule failure: `lc_limit_exceeded`, `loan_limit_exceeded`, `validation_failed`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: 'Company temporarily unavailable (restore in progress): `company_maintenance`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+              description: Seconds to wait
+        default:
+          description: Unexpected error (`server_error`)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /api/v1/bank-facilities/{id}:
+    put:
+      operationId: putBankFacilitiesId
+      summary: Change a bank facility
+      tags:
+      - LC
+      description: "**Permission:** `lc.edit`  \n**Database:** insert: audit_logs; update: bank_facilities  \n**Rules:** BR-066"
+      x-permission: lc.edit
+      x-business-rules:
+      - BR-066
+      x-requirements:
+      - FR-099
+      x-pages:
+      - M1
+      - M8
+      x-page-actions:
+      - 'M8: Set a bank''s LC and loan limits (NEW, P16 LC finance)'
+      x-tables:
+      - bank_facilities
+      - audit_logs
+      x-db-operations:
+        bank_facilities: U
+        audit_logs: C
+      x-error-codes:
+      - company_maintenance
+      - company_required
+      - if_match_required
+      - lc_limit_exceeded
+      - loan_limit_exceeded
+      - malformed_json
+      - not_a_member
+      - not_found
+      - permission_denied
+      - server_error
+      - token_expired
+      - token_invalid
+      - unauthenticated
+      - validation_failed
+      - version_conflict
+      x-contract-change: P16 LC finance
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+          minimum: 1
+      - $ref: '#/components/parameters/CompanyHeader'
+      - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BankFacilityInput'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                properties:
+                  data:
+                    $ref: '#/components/schemas/BankFacility'
+          headers:
+            ETag:
+              schema:
+                type: string
+              description: W/"<version>" for If-Match
+        '400':
+          description: 'Malformed request: `company_required`, `malformed_json`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: 'Not authenticated: `token_expired`, `token_invalid`, `unauthenticated`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: 'Not found (also for other companies'' records): `not_found`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: 'Conflict (version mismatch, state not allowed, duplicate): `version_conflict`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: 'Validation or business-rule failure: `lc_limit_exceeded`, `loan_limit_exceeded`, `validation_failed`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '428':
+          description: 'Precondition required (If-Match missing): `if_match_required`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: 'Company temporarily unavailable (restore in progress): `company_maintenance`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+              description: Seconds to wait
+        default:
+          description: Unexpected error (`server_error`)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /api/v1/lc-loans:
+    get:
+      operationId: getLcLoans
+      summary: PAD/LTR loans (filter by status, bank, LC)
+      tags:
+      - LC
+      description: "**Permission:** `lc.view`  \n**Database:** read: lc_loan_repayments, lc_loans, letters_of_credit, money_accounts  \n**Rules:** —"
+      x-permission: lc.view
+      x-business-rules: []
+      x-requirements:
+      - FR-097
+      x-pages:
+      - M4
+      - M7
+      x-page-actions: []
+      x-tables:
+      - lc_loans
+      - lc_loan_repayments
+      - letters_of_credit
+      - money_accounts
+      x-db-operations:
+        lc_loans: R
+        lc_loan_repayments: R
+        letters_of_credit: R
+        money_accounts: R
+      x-error-codes:
+      - company_maintenance
+      - company_required
+      - not_a_member
+      - permission_denied
+      - server_error
+      - token_expired
+      - token_invalid
+      - unauthenticated
+      - validation_failed
+      x-contract-change: P16 LC finance
+      parameters:
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+        description: Page number
+      - name: per_page
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 25
+        description: Rows per page (max 100)
+      - name: sort
+        in: query
+        required: false
+        schema:
+          type: string
+        description: Sort field; prefix '-' for descending, e.g. -date
+      - name: q
+        in: query
+        required: false
+        schema:
+          type: string
+          maxLength: 100
+        description: Free-text search
+      - name: status
+        in: query
+        required: false
+        schema:
+          type: string
+          maxLength: 30
+        description: Status filter (values as in the resource's status enum)
+      - name: bank_account_id
+        in: query
+        required: false
+        schema:
+          type: string
+        description: bank account id
+      - name: letter_of_credit_id
+        in: query
+        required: false
+        schema:
+          type: string
+        description: letter of credit id
+      - $ref: '#/components/parameters/CompanyHeader'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                - meta
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/LcLoan'
+                  meta:
+                    $ref: '#/components/schemas/PageMeta'
+        '400':
+          description: 'Malformed request: `company_required`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: 'Not authenticated: `token_expired`, `token_invalid`, `unauthenticated`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: 'Validation or business-rule failure: `validation_failed`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: 'Company temporarily unavailable (restore in progress): `company_maintenance`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+              description: Seconds to wait
+        default:
+          description: Unexpected error (`server_error`)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /api/v1/lc-loans/{id}:
+    get:
+      operationId: getLcLoansId
+      summary: One loan with its repayments and the interest due today
+      tags:
+      - LC
+      description: "**Permission:** `lc.view`  \n**Database:** read: lc_loan_accruals, lc_loan_repayments, lc_loans  \n**Rules:** —"
+      x-permission: lc.view
+      x-business-rules: []
+      x-requirements:
+      - FR-097
+      x-pages:
+      - M4
+      - M7
+      x-page-actions: []
+      x-tables:
+      - lc_loans
+      - lc_loan_repayments
+      - lc_loan_accruals
+      x-db-operations:
+        lc_loans: R
+        lc_loan_repayments: R
+        lc_loan_accruals: R
+      x-error-codes:
+      - company_maintenance
+      - company_required
+      - not_a_member
+      - not_found
+      - permission_denied
+      - server_error
+      - token_expired
+      - token_invalid
+      - unauthenticated
+      x-contract-change: P16 LC finance
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+          minimum: 1
+      - $ref: '#/components/parameters/CompanyHeader'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                properties:
+                  data:
+                    $ref: '#/components/schemas/LcLoan'
+          headers:
+            ETag:
+              schema:
+                type: string
+              description: W/"<version>" for If-Match
+        '400':
+          description: 'Malformed request: `company_required`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: 'Not authenticated: `token_expired`, `token_invalid`, `unauthenticated`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: 'Not found (also for other companies'' records): `not_found`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: 'Company temporarily unavailable (restore in progress): `company_maintenance`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+              description: Seconds to wait
+        default:
+          description: Unexpected error (`server_error`)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /api/v1/lc-loans/{id}/interest:
+    get:
+      operationId: getLcLoansIdInterest
+      summary: Interest due on a loan at a date (for the repayment dialog)
+      tags:
+      - LC
+      description: "**Permission:** `lc.view`  \n**Database:** read: lc_loan_accruals, lc_loans  \n**Rules:** —"
+      x-permission: lc.view
+      x-business-rules: []
+      x-requirements:
+      - FR-097
+      x-pages:
+      - M4
+      - M7
+      x-page-actions:
+      - 'M4: Repay a PAD/LTR loan (NEW, P16 LC finance)'
+      x-tables:
+      - lc_loans
+      - lc_loan_accruals
+      x-db-operations:
+        lc_loans: R
+        lc_loan_accruals: R
+      x-error-codes:
+      - company_maintenance
+      - company_required
+      - not_a_member
+      - not_found
+      - permission_denied
+      - server_error
+      - token_expired
+      - token_invalid
+      - unauthenticated
+      - validation_failed
+      x-contract-change: P16 LC finance
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+          minimum: 1
+      - name: as_of
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date
+        description: As-of date (default today)
+      - $ref: '#/components/parameters/CompanyHeader'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                properties:
+                  data:
+                    $ref: '#/components/schemas/LcLoanInterest'
+          headers:
+            ETag:
+              schema:
+                type: string
+              description: W/"<version>" for If-Match
+        '400':
+          description: 'Malformed request: `company_required`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: 'Not authenticated: `token_expired`, `token_invalid`, `unauthenticated`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: 'Not found (also for other companies'' records): `not_found`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: 'Validation or business-rule failure: `validation_failed`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: 'Company temporarily unavailable (restore in progress): `company_maintenance`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+              description: Seconds to wait
+        default:
+          description: Unexpected error (`server_error`)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /api/v1/lc-loans/{id}/repayments:
+    post:
+      operationId: postLcLoansIdRepayments
+      summary: Repay principal with the interest due to the date
+      tags:
+      - LC
+      description: "**Permission:** `lc.create`  \n**Database:** lock: lc_loan_repayments; insert: audit_logs, idempotency_keys; update: lc_loan_repayments; read:\
+        \ account_mappings, journal_entries, journal_lines, lc_loan_accruals, lc_loans, money_accounts, number_sequences  \n**Rules:** BR-067, BR-001, BR-004, BR-031\
+        \  \n**Transaction:** One DB transaction; SELECT ... FOR UPDATE on the document row, number_sequences, stock_balances in a fixed order (sequence -> document\
+        \ -> products by id) to avoid deadlocks."
+      x-permission: lc.create
+      x-business-rules:
+      - BR-067
+      - BR-001
+      - BR-004
+      - BR-031
+      x-requirements:
+      - FR-097
+      x-pages:
+      - M4
+      - M7
+      x-page-actions:
+      - 'M4: Repay a PAD/LTR loan (NEW, P16 LC finance)'
+      x-tables:
+      - lc_loan_repayments
+      - lc_loans
+      - lc_loan_accruals
+      - journal_entries
+      - journal_lines
+      - money_accounts
+      - account_mappings
+      - number_sequences
+      - audit_logs
+      x-db-operations:
+        lc_loan_repayments: LU
+        lc_loans: R
+        lc_loan_accruals: R
+        journal_entries: R
+        journal_lines: R
+        money_accounts: R
+        account_mappings: R
+        number_sequences: R
+        audit_logs: C
+        idempotency_keys: C
+      x-error-codes:
+      - company_maintenance
+      - company_required
+      - idempotency_in_progress
+      - idempotency_key_reused
+      - insufficient_funds
+      - malformed_json
+      - not_a_member
+      - not_found
+      - period_locked
+      - permission_denied
+      - repayment_exceeds_outstanding
+      - server_error
+      - token_expired
+      - token_invalid
+      - unauthenticated
+      - unbalanced_entry
+      - validation_failed
+      x-contract-change: P16 LC finance
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+          minimum: 1
+      - $ref: '#/components/parameters/CompanyHeader'
+      - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LcLoanRepaymentInput'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                properties:
+                  data:
+                    $ref: '#/components/schemas/LcLoan'
+          headers:
+            Location:
+              schema:
+                type: string
+              description: URL of the created resource
+        '400':
+          description: 'Malformed request: `company_required`, `malformed_json`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: 'Not authenticated: `token_expired`, `token_invalid`, `unauthenticated`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: 'Not found (also for other companies'' records): `not_found`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: 'Conflict (version mismatch, state not allowed, duplicate): `idempotency_in_progress`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: 'Validation or business-rule failure: `idempotency_key_reused`, `insufficient_funds`, `period_locked`, `repayment_exceeds_outstanding`, `unbalanced_entry`,
+            `validation_failed`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: 'Company temporarily unavailable (restore in progress): `company_maintenance`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+              description: Seconds to wait
+        default:
+          description: Unexpected error (`server_error`)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /api/v1/lc-loans/{id}/convert:
+    post:
+      operationId: postLcLoansIdConvert
+      summary: Convert a PAD to an LTR on the agreed terms
+      tags:
+      - LC
+      description: "**Permission:** `lc.edit`  \n**Database:** lock: lc_loans; insert: audit_logs; update: lc_loans  \n**Rules:** BR-067"
+      x-permission: lc.edit
+      x-business-rules:
+      - BR-067
+      x-requirements:
+      - FR-097
+      x-pages:
+      - M4
+      - M7
+      x-page-actions:
+      - 'M4: Convert PAD to LTR (NEW, P16 LC finance)'
+      x-tables:
+      - lc_loans
+      - audit_logs
+      x-db-operations:
+        lc_loans: LU
+        audit_logs: C
+      x-error-codes:
+      - company_maintenance
+      - company_required
+      - if_match_required
+      - malformed_json
+      - not_a_member
+      - not_found
+      - permission_denied
+      - repayment_exceeds_outstanding
+      - server_error
+      - token_expired
+      - token_invalid
+      - unauthenticated
+      - validation_failed
+      - version_conflict
+      x-contract-change: P16 LC finance
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+          minimum: 1
+      - $ref: '#/components/parameters/CompanyHeader'
+      - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LcLoanConvert'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                properties:
+                  data:
+                    $ref: '#/components/schemas/LcLoan'
+          headers:
+            ETag:
+              schema:
+                type: string
+              description: W/"<version>" for If-Match
+        '400':
+          description: 'Malformed request: `company_required`, `malformed_json`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: 'Not authenticated: `token_expired`, `token_invalid`, `unauthenticated`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: 'Not found (also for other companies'' records): `not_found`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: 'Conflict (version mismatch, state not allowed, duplicate): `version_conflict`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: 'Validation or business-rule failure: `repayment_exceeds_outstanding`, `validation_failed`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '428':
+          description: 'Precondition required (If-Match missing): `if_match_required`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: 'Company temporarily unavailable (restore in progress): `company_maintenance`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+              description: Seconds to wait
+        default:
+          description: Unexpected error (`server_error`)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /api/v1/lc-loan-repayments/{id}/reverse:
+    post:
+      operationId: postLcLoanRepaymentsIdReverse
+      summary: Reverse a loan repayment (mirror entry; principal and interest due again)
+      tags:
+      - LC
+      description: "**Permission:** `lc.edit`  \n**Database:** lock: lc_loan_repayments, number_sequences; insert: audit_logs, idempotency_keys, journal_entries,\
+        \ journal_lines; update: journal_entries, lc_loan_repayments, number_sequences; read: lc_loan_accruals, lc_loans  \n**Rules:** BR-003, BR-004, BR-009  \n\
+        **Transaction:** One DB transaction; SELECT ... FOR UPDATE on the document row, number_sequences, stock_balances in a fixed order (sequence -> document ->\
+        \ products by id) to avoid deadlocks."
+      x-permission: lc.edit
+      x-business-rules:
+      - BR-003
+      - BR-004
+      - BR-009
+      x-requirements:
+      - FR-097
+      x-pages:
+      - M4
+      - M7
+      x-page-actions:
+      - 'M4: Reverse a loan repayment (NEW, P16 LC finance)'
+      x-tables:
+      - lc_loan_repayments
+      - lc_loans
+      - lc_loan_accruals
+      - journal_entries
+      - journal_lines
+      - number_sequences
+      - audit_logs
+      x-db-operations:
+        lc_loan_repayments: LU
+        lc_loans: R
+        lc_loan_accruals: R
+        journal_entries: CU
+        journal_lines: C
+        number_sequences: LU
+        audit_logs: C
+        idempotency_keys: C
+      x-error-codes:
+      - already_posted
+      - already_reversed
+      - company_maintenance
+      - company_required
+      - idempotency_in_progress
+      - idempotency_key_reused
+      - malformed_json
+      - not_a_member
+      - not_found
+      - period_locked
+      - permission_denied
+      - server_error
+      - token_expired
+      - token_invalid
+      - unauthenticated
+      - use_document_cancel
+      - validation_failed
+      x-contract-change: P16 LC finance
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+          minimum: 1
+      - $ref: '#/components/parameters/CompanyHeader'
+      - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReasonRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                properties:
+                  data:
+                    $ref: '#/components/schemas/LcLoan'
+        '400':
+          description: 'Malformed request: `company_required`, `malformed_json`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: 'Not authenticated: `token_expired`, `token_invalid`, `unauthenticated`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: 'Not found (also for other companies'' records): `not_found`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: 'Conflict (version mismatch, state not allowed, duplicate): `already_posted`, `already_reversed`, `idempotency_in_progress`, `use_document_cancel`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: 'Validation or business-rule failure: `idempotency_key_reused`, `period_locked`, `validation_failed`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: 'Company temporarily unavailable (restore in progress): `company_maintenance`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+              description: Seconds to wait
+        default:
+          description: Unexpected error (`server_error`)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /api/v1/fx-revaluations/preview:
+    post:
+      operationId: postFxRevaluationsPreview
+      summary: Preview revaluation of open foreign bills and acceptances at closing rates
+      tags:
+      - LC
+      description: "**Permission:** `accounting.create`  \n**Database:** read: bill_allocations, currencies, journal_lines, lc_payments, purchase_bills  \n**Rules:**\
+        \ BR-068"
+      x-permission: accounting.create
+      x-business-rules:
+      - BR-068
+      x-requirements:
+      - FR-097
+      x-pages:
+      - M8
+      x-page-actions:
+      - 'M8: Revalue foreign currency at closing rates (NEW, P16 LC finance)'
+      x-tables:
+      - purchase_bills
+      - bill_allocations
+      - lc_payments
+      - journal_lines
+      - currencies
+      x-db-operations:
+        purchase_bills: R
+        bill_allocations: R
+        lc_payments: R
+        journal_lines: R
+        currencies: R
+      x-error-codes:
+      - company_maintenance
+      - company_required
+      - malformed_json
+      - not_a_member
+      - nothing_to_revalue
+      - permission_denied
+      - server_error
+      - token_expired
+      - token_invalid
+      - unauthenticated
+      - validation_failed
+      x-contract-change: P16 LC finance
+      parameters:
+      - $ref: '#/components/parameters/CompanyHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FxRevaluationRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                properties:
+                  data:
+                    $ref: '#/components/schemas/FxRevaluation'
+        '400':
+          description: 'Malformed request: `company_required`, `malformed_json`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: 'Not authenticated: `token_expired`, `token_invalid`, `unauthenticated`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: 'Validation or business-rule failure: `nothing_to_revalue`, `validation_failed`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: 'Company temporarily unavailable (restore in progress): `company_maintenance`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+              description: Seconds to wait
+        default:
+          description: Unexpected error (`server_error`)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /api/v1/fx-revaluations:
+    post:
+      operationId: postFxRevaluations
+      summary: Post a revaluation (unrealised gain/loss) and its reversal dated the next day
+      tags:
+      - LC
+      description: "**Permission:** `accounting.create`  \n**Database:** insert: audit_logs, fx_revaluation_lines, fx_revaluations, idempotency_keys; read: account_mappings,\
+        \ journal_entries, journal_lines, number_sequences  \n**Rules:** BR-068, BR-001, BR-004  \n**Transaction:** One DB transaction; SELECT ... FOR UPDATE on the\
+        \ document row, number_sequences, stock_balances in a fixed order (sequence -> document -> products by id) to avoid deadlocks."
+      x-permission: accounting.create
+      x-business-rules:
+      - BR-068
+      - BR-001
+      - BR-004
+      x-requirements:
+      - FR-097
+      x-pages:
+      - M8
+      x-page-actions:
+      - 'M8: Revalue foreign currency at closing rates (NEW, P16 LC finance)'
+      x-tables:
+      - fx_revaluations
+      - fx_revaluation_lines
+      - journal_entries
+      - journal_lines
+      - account_mappings
+      - number_sequences
+      - audit_logs
+      x-db-operations:
+        fx_revaluations: C
+        fx_revaluation_lines: C
+        journal_entries: R
+        journal_lines: R
+        account_mappings: R
+        number_sequences: R
+        audit_logs: C
+        idempotency_keys: C
+      x-error-codes:
+      - company_maintenance
+      - company_required
+      - idempotency_in_progress
+      - idempotency_key_reused
+      - malformed_json
+      - not_a_member
+      - nothing_to_revalue
+      - period_locked
+      - permission_denied
+      - server_error
+      - token_expired
+      - token_invalid
+      - unauthenticated
+      - unbalanced_entry
+      - validation_failed
+      x-contract-change: P16 LC finance
+      parameters:
+      - $ref: '#/components/parameters/CompanyHeader'
+      - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FxRevaluationRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                properties:
+                  data:
+                    $ref: '#/components/schemas/FxRevaluation'
+          headers:
+            Location:
+              schema:
+                type: string
+              description: URL of the created resource
+        '400':
+          description: 'Malformed request: `company_required`, `malformed_json`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: 'Not authenticated: `token_expired`, `token_invalid`, `unauthenticated`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: 'Conflict (version mismatch, state not allowed, duplicate): `idempotency_in_progress`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: 'Validation or business-rule failure: `idempotency_key_reused`, `nothing_to_revalue`, `period_locked`, `unbalanced_entry`, `validation_failed`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: 'Company temporarily unavailable (restore in progress): `company_maintenance`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+              description: Seconds to wait
+        default:
+          description: Unexpected error (`server_error`)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    get:
+      operationId: getFxRevaluations
+      summary: Revaluation history
+      tags:
+      - LC
+      description: "**Permission:** `accounting.view`  \n**Database:** read: fx_revaluation_lines, fx_revaluations  \n**Rules:** —"
+      x-permission: accounting.view
+      x-business-rules: []
+      x-requirements:
+      - FR-097
+      x-pages:
+      - M8
+      x-page-actions:
+      - 'M8: Reverse a revaluation (NEW, P16 LC finance)'
+      x-tables:
+      - fx_revaluations
+      - fx_revaluation_lines
+      x-db-operations:
+        fx_revaluations: R
+        fx_revaluation_lines: R
+      x-error-codes:
+      - company_maintenance
+      - company_required
+      - not_a_member
+      - permission_denied
+      - server_error
+      - token_expired
+      - token_invalid
+      - unauthenticated
+      - validation_failed
+      x-contract-change: P16 LC finance
+      parameters:
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+        description: Page number
+      - name: per_page
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 25
+        description: Rows per page (max 100)
+      - name: sort
+        in: query
+        required: false
+        schema:
+          type: string
+        description: Sort field; prefix '-' for descending, e.g. -date
+      - name: q
+        in: query
+        required: false
+        schema:
+          type: string
+          maxLength: 100
+        description: Free-text search
+      - $ref: '#/components/parameters/CompanyHeader'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                - meta
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/FxRevaluation'
+                  meta:
+                    $ref: '#/components/schemas/PageMeta'
+        '400':
+          description: 'Malformed request: `company_required`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: 'Not authenticated: `token_expired`, `token_invalid`, `unauthenticated`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: 'Validation or business-rule failure: `validation_failed`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: 'Company temporarily unavailable (restore in progress): `company_maintenance`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+              description: Seconds to wait
+        default:
+          description: Unexpected error (`server_error`)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /api/v1/fx-revaluations/{id}/reverse:
+    post:
+      operationId: postFxRevaluationsIdReverse
+      summary: Reverse a revaluation (both its entries)
+      tags:
+      - LC
+      description: "**Permission:** `accounting.edit`  \n**Database:** lock: fx_revaluations, number_sequences; insert: audit_logs, idempotency_keys, journal_entries,\
+        \ journal_lines; update: fx_revaluations, journal_entries, number_sequences  \n**Rules:** BR-003, BR-004, BR-009  \n**Transaction:** One DB transaction; SELECT\
+        \ ... FOR UPDATE on the document row, number_sequences, stock_balances in a fixed order (sequence -> document -> products by id) to avoid deadlocks."
+      x-permission: accounting.edit
+      x-business-rules:
+      - BR-003
+      - BR-004
+      - BR-009
+      x-requirements:
+      - FR-097
+      x-pages:
+      - M8
+      x-page-actions:
+      - 'M8: Reverse a revaluation (NEW, P16 LC finance)'
+      x-tables:
+      - fx_revaluations
+      - journal_entries
+      - journal_lines
+      - number_sequences
+      - audit_logs
+      x-db-operations:
+        fx_revaluations: LU
+        journal_entries: CU
+        journal_lines: C
+        number_sequences: LU
+        audit_logs: C
+        idempotency_keys: C
+      x-error-codes:
+      - already_posted
+      - already_reversed
+      - company_maintenance
+      - company_required
+      - idempotency_in_progress
+      - idempotency_key_reused
+      - malformed_json
+      - not_a_member
+      - not_found
+      - period_locked
+      - permission_denied
+      - server_error
+      - token_expired
+      - token_invalid
+      - unauthenticated
+      - use_document_cancel
+      - validation_failed
+      x-contract-change: P16 LC finance
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+          minimum: 1
+      - $ref: '#/components/parameters/CompanyHeader'
+      - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReasonRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                properties:
+                  data:
+                    $ref: '#/components/schemas/FxRevaluation'
+        '400':
+          description: 'Malformed request: `company_required`, `malformed_json`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: 'Not authenticated: `token_expired`, `token_invalid`, `unauthenticated`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: 'Not found (also for other companies'' records): `not_found`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: 'Conflict (version mismatch, state not allowed, duplicate): `already_posted`, `already_reversed`, `idempotency_in_progress`, `use_document_cancel`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: 'Validation or business-rule failure: `idempotency_key_reused`, `period_locked`, `validation_failed`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: 'Company temporarily unavailable (restore in progress): `company_maintenance`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+              description: Seconds to wait
+        default:
+          description: Unexpected error (`server_error`)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
   /api/v1/reports/lc/{report}:
     get:
       operationId: getReportsLcReport
-      summary: 'LC reports: register, status, outstanding, expiry, docs, amendments, charges, cost'
+      summary: 'LC reports: register, status, outstanding, expiry, docs, amendments, charges, cost, loans, exposure'
       tags:
       - Reports
-      description: "**Permission:** `lc.view`  \n**Database:** read: landed_cost_allocations, lc_amendments, lc_charges, lc_documents, lc_payments, letters_of_credit\
-        \  \n**Rules:** —"
+      description: "**Permission:** `lc.view`  \n**Database:** read: bank_facilities, landed_cost_allocations, lc_amendments, lc_charges, lc_documents, lc_loan_repayments,\
+        \ lc_loans, lc_payments, letters_of_credit  \n**Rules:** —"
       x-permission: lc.view
       x-business-rules: []
       x-requirements:
@@ -36834,6 +38424,9 @@ paths:
       - lc_documents
       - lc_amendments
       - landed_cost_allocations
+      - lc_loans
+      - lc_loan_repayments
+      - bank_facilities
       x-db-operations:
         letters_of_credit: R
         lc_payments: R
@@ -36841,6 +38434,9 @@ paths:
         lc_documents: R
         lc_amendments: R
         landed_cost_allocations: R
+        lc_loans: R
+        lc_loan_repayments: R
+        bank_facilities: R
       x-error-codes:
       - company_maintenance
       - company_required
@@ -37057,10 +38653,12 @@ components:
           - invalid_mobile
           - invalid_transition
           - last_owner
+          - lc_limit_exceeded
           - lc_not_closable
           - lc_submit_incomplete
           - ledger_locked
           - lines_unhandled
+          - loan_limit_exceeded
           - lock_out_of_order
           - malformed_json
           - mapping_missing
@@ -37070,12 +38668,14 @@ components:
           - not_draft
           - not_found
           - note_applied
+          - nothing_to_revalue
           - period_locked
           - permission_denied
           - purpose_required
           - rate_limited
           - refresh_reuse_detected
           - refresh_token_invalid
+          - repayment_exceeds_outstanding
           - restore_confirmation_required
           - return_qty_exceeds
           - role_in_use
@@ -40870,10 +42470,12 @@ components:
           - invalid_mobile
           - invalid_transition
           - last_owner
+          - lc_limit_exceeded
           - lc_not_closable
           - lc_submit_incomplete
           - ledger_locked
           - lines_unhandled
+          - loan_limit_exceeded
           - lock_out_of_order
           - malformed_json
           - mapping_missing
@@ -40883,12 +42485,14 @@ components:
           - not_draft
           - not_found
           - note_applied
+          - nothing_to_revalue
           - period_locked
           - permission_denied
           - purpose_required
           - rate_limited
           - refresh_reuse_detected
           - refresh_token_invalid
+          - repayment_exceeds_outstanding
           - restore_confirmation_required
           - return_qty_exceeds
           - role_in_use
@@ -41598,6 +43202,9 @@ components:
           - LC_DOCUMENTS_MISSING
           - LC_UNPAID_CHARGES
           - NOTHING_TO_ALLOCATE
+          - LC_LIMIT_EXCEEDED
+          - LOAN_LIMIT_EXCEEDED
+          - LOAN_DUE
         message:
           type: string
         line_no:
@@ -45444,6 +47051,16 @@ components:
           pattern: ^-?\d{1,16}(\.\d{1,2})?$
           example: '118450.00'
           description: Decimal as string (money)
+        financed_by:
+          type: string
+          enum:
+          - own
+          - pad
+          - ltr
+        loan:
+          oneOf:
+          - $ref: '#/components/schemas/LcLoanTerms'
+          - type: 'null'
         lc_shipment_id:
           type:
           - integer
@@ -45522,6 +47139,14 @@ components:
           minimum: 1
         status:
           type: string
+        financed_by:
+          type: string
+        lc_loan_id:
+          type:
+          - integer
+          - 'null'
+          format: int64
+          minimum: 1
       required:
       - id
       - payment_kind
@@ -45532,6 +47157,536 @@ components:
       - margin_applied
       - fx_difference
       - status
+      - financed_by
+    LcLoanTerms:
+      type: object
+      description: Bank finance of an LC payment (PAD/LTR). Omitted fields come from the bank facility.
+      properties:
+        loan_kind:
+          type: string
+          enum:
+          - pad
+          - ltr
+        interest_rate_pct:
+          type: string
+          pattern: ^\d{1,3}(\.\d{1,4})?$
+          example: '5.0000'
+          description: Decimal as string (pct)
+        day_count:
+          type: string
+          enum:
+          - '360'
+          - '365'
+        tenor_days:
+          type: integer
+        start_date:
+          type:
+          - string
+          - 'null'
+          format: date
+      additionalProperties: false
+    BankFacilityInput:
+      type: object
+      description: Credit lines a bank grants for imports.
+      properties:
+        money_account_id:
+          type: integer
+          format: int64
+          minimum: 1
+        lc_limit:
+          type: string
+          pattern: ^-?\d{1,16}(\.\d{1,2})?$
+          example: '118450.00'
+          description: Decimal as string (money)
+        loan_limit:
+          type: string
+          pattern: ^-?\d{1,16}(\.\d{1,2})?$
+          example: '118450.00'
+          description: Decimal as string (money)
+        limit_action:
+          type: string
+          enum:
+          - warn
+          - block
+        interest_rate_pct:
+          type: string
+          pattern: ^\d{1,3}(\.\d{1,4})?$
+          example: '5.0000'
+          description: Decimal as string (pct)
+        day_count:
+          type: string
+          enum:
+          - '360'
+          - '365'
+        loan_tenor_days:
+          type: integer
+        notes:
+          type:
+          - string
+          - 'null'
+          maxLength: 255
+        is_active:
+          type: boolean
+      required:
+      - money_account_id
+      additionalProperties: false
+    BankFacility:
+      type: object
+      description: Bank facility with live utilisation (planned taka of open LCs, acceptances and loans).
+      properties:
+        id:
+          type: integer
+          format: int64
+          minimum: 1
+        money_account_id:
+          type: integer
+          format: int64
+          minimum: 1
+        bank_name:
+          type: string
+        lc_limit:
+          type: string
+          pattern: ^-?\d{1,16}(\.\d{1,2})?$
+          example: '118450.00'
+          description: Decimal as string (money)
+        loan_limit:
+          type: string
+          pattern: ^-?\d{1,16}(\.\d{1,2})?$
+          example: '118450.00'
+          description: Decimal as string (money)
+        limit_action:
+          type: string
+        interest_rate_pct:
+          type: string
+          pattern: ^\d{1,3}(\.\d{1,4})?$
+          example: '5.0000'
+          description: Decimal as string (pct)
+        day_count:
+          type: string
+        loan_tenor_days:
+          type: integer
+        notes:
+          type:
+          - string
+          - 'null'
+        is_active:
+          type: boolean
+        lc_utilised:
+          type: string
+          pattern: ^-?\d{1,16}(\.\d{1,2})?$
+          example: '118450.00'
+          description: Decimal as string (money)
+        lc_available:
+          type:
+          - string
+          - 'null'
+          pattern: ^-?\d{1,16}(\.\d{1,2})?$
+          example: '118450.00'
+          description: Decimal as string (money)
+        loans_outstanding:
+          type: string
+          pattern: ^-?\d{1,16}(\.\d{1,2})?$
+          example: '118450.00'
+          description: Decimal as string (money)
+        loan_available:
+          type:
+          - string
+          - 'null'
+          pattern: ^-?\d{1,16}(\.\d{1,2})?$
+          example: '118450.00'
+          description: Decimal as string (money)
+        acceptances_outstanding:
+          type: string
+          pattern: ^-?\d{1,16}(\.\d{1,2})?$
+          example: '118450.00'
+          description: Decimal as string (money)
+        open_lcs:
+          type: integer
+        open_loans:
+          type: integer
+        version:
+          type: integer
+      required:
+      - id
+      - money_account_id
+      - bank_name
+      - lc_limit
+      - loan_limit
+      - limit_action
+      - interest_rate_pct
+      - day_count
+      - loan_tenor_days
+      - is_active
+      - lc_utilised
+      - loans_outstanding
+      - acceptances_outstanding
+      - open_lcs
+      - open_loans
+      - version
+    LcLoanRepayment:
+      type: object
+      description: A repayment of a PAD/LTR loan.
+      properties:
+        id:
+          type: integer
+          format: int64
+          minimum: 1
+        repayment_date:
+          type: string
+          format: date
+        principal_amount:
+          type: string
+          pattern: ^-?\d{1,16}(\.\d{1,2})?$
+          example: '118450.00'
+          description: Decimal as string (money)
+        interest_amount:
+          type: string
+          pattern: ^-?\d{1,16}(\.\d{1,2})?$
+          example: '118450.00'
+          description: Decimal as string (money)
+        accrued_cleared:
+          type: string
+          pattern: ^-?\d{1,16}(\.\d{1,2})?$
+          example: '118450.00'
+          description: Decimal as string (money)
+        interest_from:
+          type: string
+          format: date
+        interest_days:
+          type: integer
+        money_account_id:
+          type: integer
+          format: int64
+          minimum: 1
+        reference:
+          type:
+          - string
+          - 'null'
+        status:
+          type: string
+        journal_entry_id:
+          type:
+          - integer
+          - 'null'
+          format: int64
+          minimum: 1
+      required:
+      - id
+      - repayment_date
+      - principal_amount
+      - interest_amount
+      - accrued_cleared
+      - interest_from
+      - interest_days
+      - money_account_id
+      - status
+    LcLoan:
+      type: object
+      description: PAD/LTR loan with what is owed today.
+      properties:
+        id:
+          type: integer
+          format: int64
+          minimum: 1
+        letter_of_credit_id:
+          type: integer
+          format: int64
+          minimum: 1
+        lc_number:
+          type: string
+        lc_payment_id:
+          type: integer
+          format: int64
+          minimum: 1
+        loan_number:
+          type: string
+        loan_kind:
+          type: string
+        money_account_id:
+          type: integer
+          format: int64
+          minimum: 1
+        bank_name:
+          type: string
+        principal:
+          type: string
+          pattern: ^-?\d{1,16}(\.\d{1,2})?$
+          example: '118450.00'
+          description: Decimal as string (money)
+        repaid_principal:
+          type: string
+          pattern: ^-?\d{1,16}(\.\d{1,2})?$
+          example: '118450.00'
+          description: Decimal as string (money)
+        outstanding_principal:
+          type: string
+          pattern: ^-?\d{1,16}(\.\d{1,2})?$
+          example: '118450.00'
+          description: Decimal as string (money)
+        interest_paid:
+          type: string
+          pattern: ^-?\d{1,16}(\.\d{1,2})?$
+          example: '118450.00'
+          description: Decimal as string (money)
+        accrued_unpaid:
+          type: string
+          pattern: ^-?\d{1,16}(\.\d{1,2})?$
+          example: '118450.00'
+          description: Decimal as string (money)
+        interest_rate_pct:
+          type: string
+          pattern: ^\d{1,3}(\.\d{1,4})?$
+          example: '5.0000'
+          description: Decimal as string (pct)
+        day_count:
+          type: string
+        start_date:
+          type: string
+          format: date
+        due_date:
+          type: string
+          format: date
+        days_to_due:
+          type:
+          - integer
+          - 'null'
+        interest_from:
+          type: string
+          format: date
+        interest_due_today:
+          type: string
+          pattern: ^-?\d{1,16}(\.\d{1,2})?$
+          example: '118450.00'
+          description: Decimal as string (money)
+        converted_on:
+          type:
+          - string
+          - 'null'
+          format: date
+        status:
+          type: string
+        notes:
+          type:
+          - string
+          - 'null'
+        repayments:
+          type: array
+          items:
+            $ref: '#/components/schemas/LcLoanRepayment'
+        version:
+          type: integer
+      required:
+      - id
+      - letter_of_credit_id
+      - lc_number
+      - lc_payment_id
+      - loan_number
+      - loan_kind
+      - money_account_id
+      - bank_name
+      - principal
+      - repaid_principal
+      - outstanding_principal
+      - interest_paid
+      - accrued_unpaid
+      - interest_rate_pct
+      - day_count
+      - start_date
+      - due_date
+      - interest_from
+      - interest_due_today
+      - status
+      - version
+    LcLoanRepaymentInput:
+      type: object
+      description: 'Repay a loan: principal now plus the interest due to the date (worked out by the server).'
+      properties:
+        repayment_date:
+          type: string
+          format: date
+        principal_amount:
+          type: string
+          pattern: ^-?\d{1,16}(\.\d{1,2})?$
+          example: '118450.00'
+          description: Decimal as string (money)
+        money_account_id:
+          type: integer
+          format: int64
+          minimum: 1
+        reference:
+          type:
+          - string
+          - 'null'
+          maxLength: 60
+      required:
+      - repayment_date
+      - principal_amount
+      - money_account_id
+      additionalProperties: false
+    LcLoanInterest:
+      type: object
+      description: Interest due on a loan at a date.
+      properties:
+        as_of:
+          type: string
+          format: date
+        outstanding_principal:
+          type: string
+          pattern: ^-?\d{1,16}(\.\d{1,2})?$
+          example: '118450.00'
+          description: Decimal as string (money)
+        interest_from:
+          type: string
+          format: date
+        days:
+          type: integer
+        interest_rate_pct:
+          type: string
+          pattern: ^\d{1,3}(\.\d{1,4})?$
+          example: '5.0000'
+          description: Decimal as string (pct)
+        day_count:
+          type: string
+        interest:
+          type: string
+          pattern: ^-?\d{1,16}(\.\d{1,2})?$
+          example: '118450.00'
+          description: Decimal as string (money)
+        accrued_unpaid:
+          type: string
+          pattern: ^-?\d{1,16}(\.\d{1,2})?$
+          example: '118450.00'
+          description: Decimal as string (money)
+        total_interest:
+          type: string
+          pattern: ^-?\d{1,16}(\.\d{1,2})?$
+          example: '118450.00'
+          description: Decimal as string (money)
+      required:
+      - as_of
+      - outstanding_principal
+      - interest_from
+      - days
+      - interest_rate_pct
+      - day_count
+      - interest
+      - accrued_unpaid
+      - total_interest
+    LcLoanConvert:
+      type: object
+      description: Convert a PAD to an LTR on the agreed terms (no journal; the loan ledger is the same).
+      properties:
+        converted_on:
+          type: string
+          format: date
+        interest_rate_pct:
+          type: string
+          pattern: ^\d{1,3}(\.\d{1,4})?$
+          example: '5.0000'
+          description: Decimal as string (pct)
+        tenor_days:
+          type: integer
+        notes:
+          type:
+          - string
+          - 'null'
+          maxLength: 255
+      required:
+      - converted_on
+      - interest_rate_pct
+      - tenor_days
+      additionalProperties: false
+    FxRate:
+      type: object
+      description: Closing rate of one currency.
+      properties:
+        currency_code:
+          type: string
+          maxLength: 3
+        rate:
+          type: string
+          pattern: ^\d{1,12}(\.\d{1,6})?$
+          example: '121.500000'
+          description: Decimal as string (rate)
+      required:
+      - currency_code
+      - rate
+      additionalProperties: false
+    FxRevaluationRequest:
+      type: object
+      description: Revalue open foreign-currency items at closing rates on a date.
+      properties:
+        revaluation_date:
+          type: string
+          format: date
+        rates:
+          type: array
+          items:
+            $ref: '#/components/schemas/FxRate'
+        note:
+          type:
+          - string
+          - 'null'
+          maxLength: 255
+      required:
+      - revaluation_date
+      - rates
+      additionalProperties: false
+    FxRevaluation:
+      type: object
+      description: Revaluation preview or posting.
+      properties:
+        id:
+          type:
+          - integer
+          - 'null'
+          format: int64
+          minimum: 1
+        status:
+          type: string
+          enum:
+          - preview
+          - posted
+          - reversed
+        revaluation_date:
+          type: string
+          format: date
+        reversal_date:
+          type: string
+          format: date
+        rates:
+          type: object
+          additionalProperties: true
+        total_difference:
+          type: string
+          pattern: ^-?\d{1,16}(\.\d{1,2})?$
+          example: '118450.00'
+          description: Decimal as string (money)
+        lines:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        journal:
+          type: array
+          items:
+            $ref: '#/components/schemas/PostingLine'
+        warnings:
+          type: array
+          items:
+            $ref: '#/components/schemas/Warning'
+        created_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+      required:
+      - status
+      - revaluation_date
+      - reversal_date
+      - rates
+      - total_difference
+      - lines
     LandedCostRequest:
       type: object
       description: Allocate capitalised charges to a bill.

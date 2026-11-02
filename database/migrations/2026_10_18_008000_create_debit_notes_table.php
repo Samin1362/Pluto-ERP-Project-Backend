@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Table `debit_notes` (Purchases): migration 80 of 83, dependency level 10.
+ * Table `debit_notes` (Purchases): migration 80 of 89, dependency level 10.
  * Reduces what you owe a supplier (F7).
  * Depends on: branches, companies, journal_entries, parties, purchase_bills, purchase_returns, users.
  *

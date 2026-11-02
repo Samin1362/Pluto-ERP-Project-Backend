@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Table `lc_documents` (LC): migration 72 of 83, dependency level 8.
+ * Table `lc_documents` (LC): migration 72 of 89, dependency level 8.
  * Required document of one LC and its status (scans in attachments).
  * Depends on: companies, lc_shipments, letters_of_credit, users.
  *

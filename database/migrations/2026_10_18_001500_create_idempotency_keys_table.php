@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Table `idempotency_keys` (Platform): migration 15 of 83, dependency level 2.
+ * Table `idempotency_keys` (Platform): migration 15 of 89, dependency level 2.
  * Replay protection for POST/PUT that create or post documents (Idempotency-Key header).
  * Depends on: companies, users.
  *

@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Table `lc_amendment_changes` (LC): migration 71 of 83, dependency level 8.
+ * Table `lc_amendment_changes` (LC): migration 71 of 89, dependency level 8.
  * Field-level before/after of an amendment. Accepted changes update the LC.
  * Depends on: lc_amendments.
  *

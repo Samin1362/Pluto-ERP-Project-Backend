@@ -62,7 +62,7 @@ INPUT_TABLE = {
     "NoteInput": (["credit_notes", "debit_notes"], {"source_document_id", "return_id", "apply_to_document_id", "refund"}),
     "LetterOfCreditInput": (["letters_of_credit"], {"document_template_id", "documents", "shipment"}),
     "LcChargeInput": (["lc_charges"], set()),
-    "LcPaymentInput": (["lc_payments"], set()),
+    "LcPaymentInput": (["lc_payments"], {"loan"}),  # loan: terms of the lc_loans row a financed payment opens (P16 LC finance)
     "LcShipmentInput": (["lc_shipments"], set()),
     "LcDocumentInput": (["lc_documents"], set()),
     "LcAmendmentInput": (["lc_amendments"], {"changes", "status"}),
@@ -195,7 +195,8 @@ def run(doc, quiet=False):
         sec = op.get("security")
         public = sec == []
         cookie = sec == [{"refreshCookie": []}]
-        if public and not p.startswith(("/api/v1/auth/", "/api/v1/invitations/{token}")):
+        # Signed-link file downloads are public by design: the expiring signature is the credential (P17).
+        if public and not p.startswith(("/api/v1/auth/", "/api/v1/invitations/{token}")) and not (m == "get" and p.endswith("/file")):
             f.append(f"{k}: public outside auth")
         if cookie and p not in ("/api/v1/auth/refresh", "/api/v1/auth/logout"):
             f.append(f"{k}: refresh cookie outside refresh/logout")

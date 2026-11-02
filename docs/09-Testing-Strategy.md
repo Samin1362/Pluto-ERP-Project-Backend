@@ -1,6 +1,6 @@
 # 09 · Testing strategy
 
-> 148 test cases with unique IDs (generated table in §11). Every business rule BR-001…BR-065 has at least one test case; the doc build fails otherwise.
+> 151 test cases with unique IDs (generated table in §11). Every business rule BR-001…BR-065 has at least one test case; the doc build fails otherwise.
 
 ## 1. Principles
 1. **Money and stock are proven, not eyeballed.** Every posting rule has a test asserting the exact journal lines, that debits equal credits, and the exact stock movement.
@@ -200,6 +200,9 @@ Seven Playwright journeys (TC-E2E-001…007) mirror the six designed journeys pl
 | TC-LC-011 | Feature/API | Usance LC: acceptance at 119.60 then settlement at maturity at 120.40 | Acceptance: Dr supplier Cr LC acceptance liability; settlement: Dr liability Cr bank; difference to exchange gain or loss | BR-042, BR-043 |
 | TC-LC-012 | Feature/API | Reverse a posted LC payment | Mirror entry; margin and supplier balance restored; refused with 409 already_reversed on a second attempt (R-03) | BR-044, BR-003 |
 | TC-LC-013 | Feature/API | Apply more margin than was deposited on the LC | 422 margin_exceeds_deposit (R-32) | BR-044 |
+| TC-LC-014 | Feature/API | Submit an LC over the issuing bank's LC limit (warn, then block); finance a payment over the loan limit | warn: LC_LIMIT_EXCEEDED flag; block: 422 lc_limit_exceeded / loan_limit_exceeded; utilisation shown on the facility | BR-066 |
+| TC-LC-015 | Feature/API | Financed payment opens an LTR; interest by days; month-end accrual; part and full repayment; repay too much; reverse the last repayment | Dr supplier / Cr margin / Cr 2303; interest = outstanding x rate x days / day count; Dr 2303 / Dr 2304 / Dr 6601 / Cr bank; 422 repayment_exceeds_outstanding; reversal restores principal and accruals | BR-067 |
+| TC-LC-016 | Feature/API | Revalue an open USD bill and an open acceptance at a closing rate; reverse | Dr 6603 / Cr supplier and 2302 for a loss; mirror entry the next day; 422 nothing_to_revalue with nothing open | BR-068 |
 | TC-LC-007 | Feature/API | Margin deposit flagged include_in_landed_cost | 422 margin_not_landed_cost (also DB CHECK) | BR-044 |
 | TC-LC-008 | Feature/API | Landed cost 2,40,000 allocated by value when 40% of goods already sold | 60% Dr Inventory (avg cost up), 40% Dr COGS; Cr Goods in transit; lines sum to total | BR-045, FR-098 |
 | TC-LC-009 | Feature/API | Close LC with unpaid charge; with override reason | 422 listing open items; with reason 200 and audit | BR-046, FR-099 |

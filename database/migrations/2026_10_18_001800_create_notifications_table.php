@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Table `notifications` (Platform): migration 18 of 83, dependency level 2.
+ * Table `notifications` (Platform): migration 18 of 89, dependency level 2.
  * In-app notification feed (L3) including approval requests.
  * Depends on: companies, users.
  *

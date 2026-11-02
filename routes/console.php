@@ -34,3 +34,6 @@ Schedule::command('pluto:lc:expire')->dailyAt('07:00')->timezone('Asia/Dhaka')->
 
 // Operations check (P17.1-BE-06): the 02:00 nightly backup is there and fresh, no failed jobs; e-mails PLUTO_ALERT_EMAIL otherwise.
 Schedule::command('pluto:ops:check')->dailyAt('08:00')->timezone('Asia/Dhaka')->withoutOverlapping();
+
+// Month-end interest on open PAD/LTR loans (06 §12.12; P16.4-BE-03).
+Schedule::command('pluto:loans:accrue')->monthlyOn(1, '00:45')->timezone('Asia/Dhaka')->withoutOverlapping();

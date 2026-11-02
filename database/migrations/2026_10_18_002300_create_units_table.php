@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Table `units` (Inventory): migration 23 of 83, dependency level 2.
+ * Table `units` (Inventory): migration 23 of 89, dependency level 2.
  * Unit of measure (piece, pack, kg, bag, jar, bottle, case, trip).
  * Depends on: companies, users.
  *
