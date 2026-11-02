@@ -144,7 +144,7 @@ Approval limits (defaults): Finance manager pays up to ৳ 5,00,000 without appr
 | FR-063 | Banking | Users record cash and bank transfers (contra), including bank charges. | G8, G9 | 1 |
 | FR-064 | Banking | Users import bank statements and reconcile them in a two-pane workspace. | G10 | 9 |
 | FR-065 | Banking | Users record cash counts by denomination. | G2 | 2 |
-| FR-066 | IncExp | Users record income and expenses with category, account, method, attachment and optional recurrence. | I3, I6, I10 | 7 |
+| FR-066 | IncExp | Users record income and expenses with category, account, method, attachment and optional recurrence. | I3, I6, I10 | 8 |
 | FR-067 | IncExp | Users manage income/expense categories with ledgers and monthly budgets. | I7 | 3 |
 | FR-068 | IncExp | Users view income and expense overviews, lists and reports by category and month. | I1, I4, I2, I5, I8, I9 | 4 |
 | FR-070 | Accounting | Users view the accounting overview with books-health checks. | H1 | 1 |
@@ -154,14 +154,14 @@ Approval limits (defaults): Finance manager pays up to ৳ 5,00,000 without appr
 | FR-074 | Accounting | Users view voucher details with audit trail, reverse posted vouchers, delete drafts and print vouchers. | H8, H13, Acc-DlgReverse, H14 | 6 |
 | FR-075 | Accounting | Users configure the account mappings used by automatic postings. | K16 | 2 |
 | FR-076 | Reports | Users view trial balance, profit and loss, balance sheet, cash flow, general ledger, day book, and receivables/payables aging, and export them (xlsx, pdf, csv). | G11, G12, H15, H16, H17, H18, H19, J1, J6, J7 | 9 |
-| FR-080 | Settings | Owners view and edit the company profile, logo and locations. | K1, K2 | 7 |
+| FR-080 | Settings | Owners view and edit the company profile, logo and locations. | K1, K2 | 8 |
 | FR-081 | Settings | Users with settings edit configure preferences: numbering, defaults and controls. | K3 | 5 |
 | FR-082 | Settings | Users manage financial years and lock accounting periods; Owners close the year. | K4 | 4 |
 | FR-083 | Settings | Users set currency display and regional formats. | K5 | 2 |
 | FR-084 | Settings | Users define tax rules and how tax shows on documents. | K6 | 4 |
 | FR-085 | Settings | Users customise invoice layout with a live preview. | K7 | 2 |
 | FR-086 | Settings | Users set notification preferences, appearance and security settings for themselves. | K12, K13, K14 | 3 |
-| FR-087 | Settings | Owners configure backups, download backups, prepare the export pack and restore from a backup. | K15 | 6 |
+| FR-087 | Settings | Owners configure backups, download backups, prepare the export pack and restore from a backup. | K15 | 8 |
 | FR-090 | LC | Users view the LC dashboard: KPIs, alerts, deadlines, commitments by bank, pipeline, active LCs and recent activity. | M1 | 1 |
 | FR-091 | LC | Users list and filter LCs by status, bank, supplier and attention flags. | M2 | 1 |
 | FR-092 | LC | Users create an LC in sections (supplier and purchase, terms, banks and dates, documents, shipment, review), save drafts and submit to the bank. | M3 | 4 |

@@ -22,6 +22,12 @@ services:
 
   scheduler:
     <<: *live-app
+    # The nightly backups, read-only, for pluto:ops:check (P17.1-BE-06).
+    volumes: !override
+      - live-storage:/var/www/html/storage
+      - ./backups:/backups-host:ro
+    environment:
+      PLUTO_BACKUP_DIR: /backups-host
 
   nginx:
     # Reachable only from this machine (the tunnel connects inside the Docker network).
@@ -49,6 +55,23 @@ services:
         condition: service_healthy
     restart: unless-stopped
     profiles: ["live"]
+
+  # Public access (P17.1-BE-01). With TUNNEL_TOKEN in .env.live the named tunnel runs (fixed hostname PUBLIC_API_HOST,
+  # routed to http://nginx:80 in the Cloudflare dashboard); without it, the quick tunnel (random trycloudflare.com URL).
+  # ./scripts/live.sh picks the profile: named-tunnel or quick-tunnel.
+  cloudflared:
+    profiles: !override ["quick-tunnel"]
+
+  cloudflared-named:
+    image: cloudflare/cloudflared:2025.10.0
+    command: ["tunnel", "--no-autoupdate", "--protocol", "http2", "run"]
+    environment:
+      TUNNEL_TOKEN: ${TUNNEL_TOKEN:-}
+    depends_on:
+      nginx:
+        condition: service_healthy
+    restart: unless-stopped
+    profiles: ["named-tunnel"]
 
   mailpit:
     # Not used live (MAIL_MAILER=log until SMTP is chosen, decision C4).

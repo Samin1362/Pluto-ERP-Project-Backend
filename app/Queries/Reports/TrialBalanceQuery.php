@@ -47,8 +47,10 @@ final class TrialBalanceQuery
             $n->isNegative() ? $cr = $cr->plus($n->abs()) : $dr = $dr->plus($n);
         }
         $difference = $dr->minus($cr)->abs();
-        $unbalanced = DB::table('journal_entries')->where('company_id', $companyId)->whereIn('status', ['posted', 'reversed'])->where('entry_date', '<=', $asOf)
-            ->whereColumn('total_debit', '!=', 'total_credit')->count();
+        // An unbalanced voucher always shows as a Dr/Cr difference here (and pluto:integrity checks every voucher nightly),
+        // so the per-voucher count — a scan of every voucher — runs only when the totals differ (P17.1-BE-02).
+        $unbalanced = $difference->isZero() ? 0 : DB::table('journal_entries')->where('company_id', $companyId)->whereIn('status', ['posted', 'reversed'])
+            ->where('entry_date', '<=', $asOf)->whereColumn('total_debit', '!=', 'total_credit')->count();
         $drafts = DB::table('journal_entries')->where('company_id', $companyId)->whereIn('status', ['draft', 'submitted'])->where('entry_date', '<=', $asOf)
             ->when($branchId !== null, fn ($q) => $q->where('branch_id', $branchId));
 

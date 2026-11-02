@@ -185,18 +185,23 @@ class AuthenticationTest extends TestCase
         $r->assertJsonPath('request_id', $id);
     }
 
-    public function test_auth_endpoints_share_a_per_ip_limit(): void
+    public function test_sign_in_is_limited_per_ip_but_refresh_counts_per_session(): void
     {
-        config(['pluto.rate_limits.auth_per_ip' => 3]);
+        // 05 §1, P17.1-BE-03: credential endpoints share a per-IP budget (here 3) across e-mails…
+        config(['pluto.rate_limits.auth_per_ip' => 3, 'pluto.rate_limits.auth_per_session' => 2]);
         $this->withServerVariables(['REMOTE_ADDR' => '10.7.7.7']);
-        for ($i = 0; $i < 3; $i++) {
-            $this->withHeaders(['X-Requested-With' => 'XMLHttpRequest'])->postJson('/api/v1/auth/refresh')->assertStatus(401);
+        foreach (['a', 'b', 'c'] as $who) {
+            $this->postJson('/api/v1/auth/login', ['email' => "{$who}@meghna.example", 'password' => 'x'])->assertStatus(401);
         }
-        $r = $this->assertProblem($this->postJson('/api/v1/auth/login', ['email' => 'nobody@meghna.example', 'password' => 'x']), 429, 'rate_limited');
+        $r = $this->assertProblem($this->postJson('/api/v1/auth/login', ['email' => 'd@meghna.example', 'password' => 'x']), 429, 'rate_limited');
         $this->assertNotEmpty($r->headers->get('Retry-After'));
-        // Another address has its own budget
-        $this->withServerVariables(['REMOTE_ADDR' => '10.7.7.8'])->withHeaders(['X-Requested-With' => 'XMLHttpRequest'])
-            ->postJson('/api/v1/auth/refresh')->assertStatus(401);
+        // …while page-load refreshes from the same office IP do not use it: they count per session.
+        $this->withUnencryptedCookie('pl_rt', 'session-one')->withHeaders(['X-Requested-With' => 'XMLHttpRequest'])->postJson('/api/v1/auth/refresh')->assertStatus(401);
+        $this->withUnencryptedCookie('pl_rt', 'session-one')->withHeaders(['X-Requested-With' => 'XMLHttpRequest'])->postJson('/api/v1/auth/refresh')->assertStatus(401);
+        $this->assertProblem($this->withUnencryptedCookie('pl_rt', 'session-one')->withHeaders(['X-Requested-With' => 'XMLHttpRequest'])->postJson('/api/v1/auth/refresh'), 429, 'rate_limited');
+        $this->withUnencryptedCookie('pl_rt', 'session-two')->withHeaders(['X-Requested-With' => 'XMLHttpRequest'])->postJson('/api/v1/auth/refresh')->assertStatus(401);
+        // Another address has its own sign-in budget.
+        $this->withServerVariables(['REMOTE_ADDR' => '10.7.7.8'])->postJson('/api/v1/auth/login', ['email' => 'd@meghna.example', 'password' => 'x'])->assertStatus(401);
     }
 
     public function test_authenticated_calls_are_limited_per_user(): void

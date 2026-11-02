@@ -1,0 +1,9 @@
+# gitleaks settings (backlog P17.1-BE-03, TC-NFR-010): the default rules, minus one false positive —
+# example Idempotency-Key UUIDs in the API docs (a request id, not a secret).
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Example Idempotency-Key values in docs"
+regexTarget = "line"
+regexes = ['''Idempotency-Key: [0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}''']

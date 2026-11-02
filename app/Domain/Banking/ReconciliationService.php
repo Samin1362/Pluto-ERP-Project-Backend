@@ -227,7 +227,7 @@ final class ReconciliationService
     public function refresh(BankReconciliation $rec): void
     {
         $account = MoneyAccount::findOrFail($rec->money_account_id);
-        $book = Money::of((string) DB::table('journal_lines')->where('ledger_id', $account->ledger_id)->where('is_posted', 1)
+        $book = Money::of((string) DB::table('journal_lines')->where('company_id', $account->company_id)->where('ledger_id', $account->ledger_id)->where('is_posted', 1)
             ->where('entry_date', '<=', $rec->statement_date->toDateString())->selectRaw('COALESCE(SUM(debit) - SUM(credit), 0) b')->value('b'));
         $uncleared = Money::sum($this->uncleared($rec)->map(fn ($b) => Money::of($b['amount'])));
         $rec->forceFill(['book_balance' => $book, 'difference' => Money::of((string) $rec->statement_balance)->minus($book->minus($uncleared))])->save();

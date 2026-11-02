@@ -10,11 +10,16 @@ use App\Models\User;
 use App\Support\CurrentCompany;
 use App\Support\Problem\ErrorCatalogue;
 use Database\Seeders\ReferenceDataSeeder;
+use Illuminate\Database\Events\QueryExecuted;
+use Illuminate\Foundation\Http\Events\RequestHandled;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
+use Illuminate\Routing\Events\RouteMatched;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Testing\TestResponse;
 use Symfony\Component\HttpFoundation\Cookie;
+use Tests\Concerns\AuditCoverage;
 
 abstract class TestCase extends BaseTestCase
 {
@@ -42,6 +47,44 @@ abstract class TestCase extends BaseTestCase
         config(['pluto.jwt.private_key_path' => "$dir/jwt-private.pem", 'pluto.jwt.public_key_path' => "$dir/jwt-public.pem"]);
         $this->seed(ReferenceDataSeeder::class);
         $this->withCredentials(); // send cookies on JSON requests, as the browser does for the refresh cookie
+        // TC-NFR-004 (P17.1-BE-04): every successful API request that wrote business data must leave an audit row with
+        // its request id. Writes are seen per request (from route match to response); bookkeeping tables do not count.
+        $this->auditedRequests = [];
+        $this->app['events']->listen(RouteMatched::class, function () {
+            $this->wroteBusinessData = false;
+        });
+        $this->app['events']->listen(QueryExecuted::class, function (QueryExecuted $q) {
+            if ($this->wroteBusinessData === false && preg_match('/^\s*(insert\s+into|update|delete\s+from)\s+`?(\w+)`?/i', $q->sql, $m)
+                && ! AuditCoverage::bookkeeping($m[2])) {
+                $this->wroteBusinessData = true;
+            }
+        });
+        $this->app['events']->listen(RequestHandled::class, function (RequestHandled $e) {
+            $r = $e->request;
+            if ($this->wroteBusinessData === true && str_starts_with($r->path(), 'api/v1/') && $e->response->getStatusCode() < 300) {
+                $this->auditedRequests[] = [$r->method(), '/'.($r->route()?->uri() ?? $r->path()), (string) $e->response->headers->get('X-Request-Id')];
+            }
+            $this->wroteBusinessData = null;
+        });
+    }
+
+    /** null outside a request; false/true inside one: whether it has written business data yet. */
+    private ?bool $wroteBusinessData = null;
+
+    /** @var array<int, array{0: string, 1: string, 2: string}> */
+    private array $auditedRequests = [];
+
+    protected function tearDown(): void
+    {
+        $missing = [];
+        foreach ($this->auditedRequests as [$method, $uri, $id]) {
+            if (! AuditCoverage::exempt($method, $uri) && ($id === '' || ! DB::table('audit_logs')->where('request_id', $id)->exists())) {
+                $missing[] = "{$method} {$uri}";
+            }
+        }
+        $this->auditedRequests = [];
+        parent::tearDown();
+        AuditCoverage::report(static::class.'::'.$this->name(), array_values(array_unique($missing)));
     }
 
     protected function makeUser(string $email, string $status = 'active'): User

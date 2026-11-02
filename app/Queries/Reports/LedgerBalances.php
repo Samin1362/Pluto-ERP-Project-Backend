@@ -46,16 +46,32 @@ final class LedgerBalances
      */
     public function net(?string $from, string $to, ?int $branchId = null, array $exceptTypes = []): array
     {
-        $q = DB::table('journal_lines as l')->where('l.company_id', $this->companyId)->where('l.is_posted', 1)->where('l.entry_date', '<=', $to)
+        $lines = fn () => DB::table('journal_lines as l')->where('l.company_id', $this->companyId)->where('l.is_posted', 1)->where('l.entry_date', '<=', $to)
             ->when($from !== null, fn ($q) => $q->where('l.entry_date', '>=', $from));
-        if ($branchId !== null || $exceptTypes !== []) {
-            $q->join('journal_entries as e', 'e.id', '=', 'l.journal_entry_id')
-                ->when($branchId !== null, fn ($q) => $q->where('e.branch_id', $branchId))
-                ->when($exceptTypes !== [], fn ($q) => $q->whereNotIn('e.entry_type', $exceptTypes));
-        }
+        $sum = fn ($q) => $q->groupBy('l.ledger_id')->selectRaw('l.ledger_id, SUM(l.debit) - SUM(l.credit) net')->pluck('net', 'ledger_id');
         $out = [];
-        foreach ($q->groupBy('l.ledger_id')->selectRaw('l.ledger_id, SUM(l.debit) - SUM(l.credit) net')->pluck('net', 'ledger_id') as $id => $net) {
+        if ($branchId !== null) {
+            // A branch is on the voucher: join, and leave out the excluded types in the same pass.
+            $q = $lines()->join('journal_entries as e', 'e.id', '=', 'l.journal_entry_id')->where('e.branch_id', $branchId)
+                ->when($exceptTypes !== [], fn ($q) => $q->whereNotIn('e.entry_type', $exceptTypes));
+            foreach ($sum($q) as $id => $net) {
+                $out[(int) $id] = Money::of((string) $net);
+            }
+
+            return $out;
+        }
+        // Whole company: the covering index alone (P17.1-BE-02), then subtract the few excluded vouchers' lines
+        // (year-end closings), found from journal_entries (company_id, entry_type, status).
+        foreach ($sum($lines()) as $id => $net) {
             $out[(int) $id] = Money::of((string) $net);
+        }
+        if ($exceptTypes !== []) {
+            $excluded = DB::table('journal_entries as e')->where('e.company_id', $this->companyId)->whereIn('e.entry_type', $exceptTypes)
+                ->join('journal_lines as l', 'l.journal_entry_id', '=', 'e.id')->where('l.is_posted', 1)->where('l.entry_date', '<=', $to)
+                ->when($from !== null, fn ($q) => $q->where('l.entry_date', '>=', $from));
+            foreach ($sum($excluded) as $id => $net) {
+                $out[(int) $id] = ($out[(int) $id] ?? Money::zero())->minus((string) $net);
+            }
         }
 
         return $out;
