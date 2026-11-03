@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Table `product_categories` (Inventory): migration 30 of 89, dependency level 3.
+ * Table `product_categories` (Inventory): migration 30 of 90, dependency level 3.
  * Browsing and pricing categories, two levels (D5).
  * Depends on: companies, stock_groups, units, users. Self-reference: parent_id.
  *

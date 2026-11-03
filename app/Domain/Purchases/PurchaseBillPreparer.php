@@ -6,6 +6,7 @@ use App\Domain\Accounting\AccountMapper;
 use App\Domain\Documents\CalcLine;
 use App\Domain\Documents\CalcOptions;
 use App\Domain\Documents\DocumentCalculator;
+use App\Domain\Documents\LineUnits;
 use App\Domain\Inventory\AverageCostCalculator;
 use App\Domain\Lc\LcPostingService;
 use App\Domain\Shared\Money;
@@ -57,7 +58,7 @@ final class PurchaseBillPreparer
         if ($warehouse->status === 'inactive') {
             $errors['warehouse_id'] = ["{$warehouse->name} is inactive"];
         }
-        $products = Product::with('unit')->whereIn('id', array_column($in['lines'], 'product_id'))->get()->keyBy('id');
+        $products = Product::with(['unit', 'units.unit'])->whereIn('id', array_column($in['lines'], 'product_id'))->get()->keyBy('id');
         $rules = TaxRule::whereIn('id', array_filter(array_column($in['lines'], 'tax_rule_id')))->get()->keyBy('id');
         foreach ($in['lines'] as $i => $l) {
             if (! $products[$l['product_id']]->is_active) {
@@ -68,8 +69,18 @@ final class PurchaseBillPreparer
                 $errors["lines.{$i}.tax_rule_id"] = [$rule->is_active ? "{$rule->name} applies to sales only" : "{$rule->name} is inactive"];
             }
         }
+        $units = LineUnits::resolve($products, $in['lines'], $errors); // BR-069
+        // A line received against an order line is in the order line's unit, so received quantities add up (BR-069).
+        $orderUnits = PurchaseOrderLine::whereIn('id', array_filter(array_column($in['lines'], 'purchase_order_line_id')))->get(['id', 'unit_id', 'unit_name'])->keyBy('id');
+        foreach ($in['lines'] as $i => $l) {
+            $ol = empty($l['purchase_order_line_id']) ? null : ($orderUnits[$l['purchase_order_line_id']] ?? null);
+            $orderUnit = $ol ? (int) ($ol->unit_id ?? $products[$l['product_id']]->unit_id) : null;
+            if ($ol && ! isset($errors["lines.{$i}.unit_id"]) && $orderUnit !== $units[$i]['unit_id']) {
+                $errors["lines.{$i}.unit_id"] = ["The order line is in {$ol->unit_name}; receive it in {$ol->unit_name}"];
+            }
+        }
         if ($errors) {
-            $inactive = array_filter(array_keys($errors), fn ($k) => ! str_ends_with($k, 'tax_rule_id'));
+            $inactive = array_filter(array_keys($errors), fn ($k) => ! str_ends_with($k, 'tax_rule_id') && ! str_ends_with($k, 'unit_id'));
             throw new ApiProblem($inactive ? 'inactive_reference' : 'validation_failed', errors: $errors);
         }
 
@@ -82,7 +93,7 @@ final class PurchaseBillPreparer
             $taxRate = isset($l['tax_rule_id']) ? Rate::of($rules[$l['tax_rule_id']]->rate) : Rate::zero();
             $calcLines[] = new CalcLine($i + 1, Quantity::of($l['quantity']), UnitCost::of($l['unit_cost']), Rate::of($l['discount_pct'] ?? '0'),
                 $l['tax_rule_id'] ?? null, $taxRate, $p->track_stock);
-            $lines[] = ['product' => $p, 'input' => $l, 'stocked' => (bool) $p->track_stock, 'tax_rate' => $taxRate,
+            $lines[] = ['product' => $p, 'input' => $l, 'unit' => $units[$i], 'stocked' => (bool) $p->track_stock, 'tax_rate' => $taxRate,
                 'debit_ledger_id' => $p->track_stock ? $warehouse->inventory_ledger_id
                     : ($p->expense_ledger_id ?? $party->default_purchase_ledger_id ?? $this->mapper->ledgerFor('purchases_non_stock')->id),
                 'available' => null];
@@ -209,10 +220,11 @@ final class PurchaseBillPreparer
             }
             $lines[$i]['available'] = $onHand[$p->id]; // on hand before this bill
             [$q, $v, $a] = $positions[$p->id];
-            $qty = Quantity::of($l['input']['quantity']);
+            $qty = LineUnits::baseQuantity($l['input']['quantity'], $l['unit']['factor']); // stock and average cost in base units (BR-069)
             $after = $this->avg->afterIn($q, $v, $a, $qty, $c->baseNet->plus($this->nonRecoverableTax($l, $c)));
             $positions[$p->id] = [$after->qty, $after->value, $after->avg];
-            $effects[] = "Stock in: {$qty} {$p->unit?->name} of {$p->name} into {$warehouse->name}; average cost becomes {$after->avg}";
+            $inUnit = $l['unit']['factor']->isEqualTo(1) ? '' : ' ('.Quantity::of($l['input']['quantity'])." {$l['unit']['name']})";
+            $effects[] = "Stock in: {$qty} {$p->unit?->name}{$inUnit} of {$p->name} into {$warehouse->name}; average cost becomes {$after->avg}";
         }
         foreach ($expenses as $ledgerId => $amount) {
             $ledger = DB::table('ledgers')->where('id', $ledgerId)->first(['code', 'name']);

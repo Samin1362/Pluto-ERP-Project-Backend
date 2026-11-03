@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Table `number_sequences` (Accounting): migration 29 of 89, dependency level 3.
+ * Table `number_sequences` (Accounting): migration 29 of 90, dependency level 3.
  * Document number series per company, document type and financial year (INV-2026-0588).
  * Depends on: companies, fiscal_years, users.
  *

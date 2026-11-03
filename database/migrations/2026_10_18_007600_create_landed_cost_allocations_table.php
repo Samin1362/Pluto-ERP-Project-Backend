@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Table `landed_cost_allocations` (LC): migration 76 of 89, dependency level 9.
+ * Table `landed_cost_allocations` (LC): migration 76 of 90, dependency level 9.
  * Spreads LC charges and import expenses over the goods of an import bill.
  * Depends on: companies, journal_entries, letters_of_credit, purchase_bills, users.
  *

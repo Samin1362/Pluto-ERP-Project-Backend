@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Table `roles` (Access): migration 21 of 89, dependency level 2.
+ * Table `roles` (Access): migration 21 of 90, dependency level 2.
  * A named set of permissions inside one company (Owner, Finance manager, Accountant, Sales staff, Store keeper, Viewer, custom).
  * Depends on: companies, users.
  *

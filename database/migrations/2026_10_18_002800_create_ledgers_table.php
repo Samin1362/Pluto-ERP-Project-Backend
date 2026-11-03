@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Table `ledgers` (Accounting): migration 28 of 89, dependency level 3.
+ * Table `ledgers` (Accounting): migration 28 of 90, dependency level 3.
  * A posting account. Customers, suppliers, banks, cash and warehouse inventory each get one.
  * Depends on: account_groups, companies, users.
  *

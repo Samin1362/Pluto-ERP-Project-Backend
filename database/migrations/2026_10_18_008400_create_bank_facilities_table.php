@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Table `bank_facilities` (LC): migration 84 of 89, dependency level 5.
+ * Table `bank_facilities` (LC): migration 84 of 90, dependency level 5.
  * Credit lines a bank grants the company for imports: LC limit and loan (PAD/LTR) limit, with the default loan terms.
  * Depends on: companies, money_accounts, users.
  *

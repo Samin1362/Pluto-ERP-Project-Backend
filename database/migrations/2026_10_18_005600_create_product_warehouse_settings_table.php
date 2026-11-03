@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Table `product_warehouse_settings` (Inventory): migration 56 of 89, dependency level 6.
+ * Table `product_warehouse_settings` (Inventory): migration 56 of 90, dependency level 6.
  * Per-warehouse reorder level and reorder quantity.
  * Depends on: companies, products, users, warehouses.
  *

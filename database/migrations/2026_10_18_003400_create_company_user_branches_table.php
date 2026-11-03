@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Table `company_user_branches` (Access): migration 34 of 89, dependency level 4.
+ * Table `company_user_branches` (Access): migration 34 of 90, dependency level 4.
  * Optional branch restriction (many-to-many memberships to branches). No rows = all branches.
  * Depends on: branches, company_users.
  *

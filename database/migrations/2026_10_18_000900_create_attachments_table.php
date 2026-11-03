@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Table `attachments` (Platform): migration 9 of 89, dependency level 2.
+ * Table `attachments` (Platform): migration 9 of 90, dependency level 2.
  * Uploaded file metadata (JPG/PNG/PDF up to 10 MB). Polymorphic owner; files live in private object storage.
  * Depends on: companies, users.
  *

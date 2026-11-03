@@ -10155,8 +10155,8 @@ paths:
       summary: List products and services with stock status
       tags:
       - Inventory
-      description: "**Permission:** `inventory.view`  \n**Database:** read: product_categories, product_warehouse_settings, products, stock_balances, units  \n**Rules:**\
-        \ BR-052"
+      description: "**Permission:** `inventory.view`  \n**Database:** read: product_categories, product_units, product_warehouse_settings, products, stock_balances,\
+        \ units  \n**Rules:** BR-052"
       x-permission: inventory.view
       x-business-rules:
       - BR-052
@@ -10180,12 +10180,14 @@ paths:
       - products
       - product_categories
       - units
+      - product_units
       - stock_balances
       - product_warehouse_settings
       x-db-operations:
         products: R
         product_categories: R
         units: R
+        product_units: R
         stock_balances: R
         product_warehouse_settings: R
       x-error-codes:
@@ -10323,13 +10325,14 @@ paths:
       summary: Create a product or service (optional opening stock per warehouse)
       tags:
       - Inventory
-      description: "**Permission:** `inventory.create`  \n**Database:** insert: audit_logs, idempotency_keys, products; read: journal_entries, journal_lines, product_warehouse_settings,\
-        \ stock_balances, stock_movements  \n**Rules:** BR-028, BR-017  \n**Transaction:** One DB transaction; SELECT ... FOR UPDATE on the document row, number_sequences,\
-        \ stock_balances in a fixed order (sequence -> document -> products by id) to avoid deadlocks."
+      description: "**Permission:** `inventory.create`  \n**Database:** insert: audit_logs, idempotency_keys, products; read: journal_entries, journal_lines, product_units,\
+        \ product_warehouse_settings, stock_balances, stock_movements  \n**Rules:** BR-028, BR-017, BR-069  \n**Transaction:** One DB transaction; SELECT ... FOR\
+        \ UPDATE on the document row, number_sequences, stock_balances in a fixed order (sequence -> document -> products by id) to avoid deadlocks."
       x-permission: inventory.create
       x-business-rules:
       - BR-028
       - BR-017
+      - BR-069
       x-requirements:
       - FR-031
       x-pages:
@@ -10340,6 +10343,7 @@ paths:
       - 'D2: Save item'
       x-tables:
       - products
+      - product_units
       - product_warehouse_settings
       - stock_balances
       - stock_movements
@@ -10348,6 +10352,7 @@ paths:
       - audit_logs
       x-db-operations:
         products: C
+        product_units: R
         product_warehouse_settings: R
         stock_balances: R
         stock_movements: R
@@ -10603,7 +10608,8 @@ paths:
       summary: Product with stock by warehouse, costs (if permitted) and price history
       tags:
       - Inventory
-      description: "**Permission:** `inventory.view`  \n**Database:** read: audit_logs, product_warehouse_settings, products, stock_balances  \n**Rules:** BR-052"
+      description: "**Permission:** `inventory.view`  \n**Database:** read: audit_logs, product_units, product_warehouse_settings, products, stock_balances  \n**Rules:**\
+        \ BR-052"
       x-permission: inventory.view
       x-business-rules:
       - BR-052
@@ -10615,11 +10621,13 @@ paths:
       x-page-actions: []
       x-tables:
       - products
+      - product_units
       - stock_balances
       - product_warehouse_settings
       - audit_logs
       x-db-operations:
         products: R
+        product_units: R
         stock_balances: R
         product_warehouse_settings: R
         audit_logs: R
@@ -10705,12 +10713,13 @@ paths:
       summary: Edit a product (quantities never change here)
       tags:
       - Inventory
-      description: "**Permission:** `inventory.edit`  \n**Database:** insert: audit_logs; update: products; read: product_warehouse_settings  \n**Rules:** BR-026,\
-        \ BR-049"
+      description: "**Permission:** `inventory.edit`  \n**Database:** insert: audit_logs; update: products; read: product_units, product_warehouse_settings  \n**Rules:**\
+        \ BR-026, BR-049, BR-069"
       x-permission: inventory.edit
       x-business-rules:
       - BR-026
       - BR-049
+      - BR-069
       x-requirements:
       - FR-031
       x-pages:
@@ -10719,10 +10728,12 @@ paths:
       - 'D3: Save changes'
       x-tables:
       - products
+      - product_units
       - product_warehouse_settings
       - audit_logs
       x-db-operations:
         products: U
+        product_units: R
         product_warehouse_settings: R
         audit_logs: C
       x-error-codes:
@@ -41832,12 +41843,34 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ProductWarehouseInput'
+        units:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductUnitInput'
       required:
       - item_type
       - name
       - unit_id
       - selling_price
       - income_ledger_id
+      additionalProperties: false
+    ProductUnitInput:
+      type: object
+      description: 'An extra unit of the item: 1 of unit_id = factor base units (BR-069). Sent on edit, the list replaces the item''s extra units; a unit already
+        used on a document line cannot be removed or change factor.'
+      properties:
+        unit_id:
+          type: integer
+          format: int64
+          minimum: 1
+        factor:
+          type: string
+          pattern: ^\d{1,12}(\.\d{1,6})?$
+          example: '121.500000'
+          description: Decimal as string (rate)
+      required:
+      - unit_id
+      - factor
       additionalProperties: false
     ProductWarehouseInput:
       type: object
@@ -41893,6 +41926,10 @@ components:
           - type: 'null'
         unit:
           type: string
+        unit_id:
+          type: integer
+          format: int64
+          minimum: 1
         barcode:
           type:
           - string
@@ -41968,6 +42005,10 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/StockLevel'
+        units:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductUnit'
         is_active:
           type: boolean
         version:
@@ -41978,12 +42019,60 @@ components:
       - code
       - name
       - unit
+      - unit_id
       - selling_price
       - income_ledger_id
       - track_stock
       - stock_status
+      - units
       - is_active
       - version
+    ProductUnit:
+      type: object
+      description: A unit the item can be bought or sold in, base unit first (factor 1). Prices are the item's prices x factor, worked out by the server; last_purchase_cost
+        needs inventory.view_costs.
+      properties:
+        unit_id:
+          type: integer
+          format: int64
+          minimum: 1
+        name:
+          type: string
+        factor:
+          type: string
+          pattern: ^\d{1,12}(\.\d{1,6})?$
+          example: '121.500000'
+          description: Decimal as string (rate)
+        decimals:
+          type: integer
+        is_base:
+          type: boolean
+        selling_price:
+          type: string
+          pattern: ^-?\d{1,16}(\.\d{1,2})?$
+          example: '118450.00'
+          description: Decimal as string (money)
+        wholesale_price:
+          type:
+          - string
+          - 'null'
+          pattern: ^-?\d{1,16}(\.\d{1,2})?$
+          example: '118450.00'
+          description: Decimal as string (money)
+        last_purchase_cost:
+          type:
+          - string
+          - 'null'
+          pattern: ^-?\d{1,14}(\.\d{1,4})?$
+          example: '845.0000'
+          description: Decimal as string (cost)
+      required:
+      - unit_id
+      - name
+      - factor
+      - decimals
+      - is_base
+      - selling_price
     StockLevel:
       type: object
       description: Stock of a product in a warehouse.
@@ -42784,6 +42873,12 @@ components:
           type: integer
           format: int64
           minimum: 1
+        unit_id:
+          type:
+          - integer
+          - 'null'
+          format: int64
+          minimum: 1
         description:
           type:
           - string
@@ -42990,6 +43085,17 @@ components:
           type: string
         unit:
           type: string
+        unit_id:
+          type:
+          - integer
+          - 'null'
+          format: int64
+          minimum: 1
+        unit_factor:
+          type: string
+          pattern: ^\d{1,12}(\.\d{1,6})?$
+          example: '121.500000'
+          description: Decimal as string (rate)
         description:
           type:
           - string
@@ -43044,6 +43150,7 @@ components:
       - product_code
       - product_name
       - unit
+      - unit_factor
       - quantity
       - discount_pct
       - discount_amount
@@ -43491,6 +43598,12 @@ components:
           minimum: 1
         product_id:
           type: integer
+          format: int64
+          minimum: 1
+        unit_id:
+          type:
+          - integer
+          - 'null'
           format: int64
           minimum: 1
         description:

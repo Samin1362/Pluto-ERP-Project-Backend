@@ -2,7 +2,7 @@
 
 > Status: **Release candidate 1.0.0-rc.1 for approval** (18 Oct 2026), Laravel + Eloquent. **No endpoint is to be implemented until this contract is approved.** ⚑ Auth details (DEC-02) and the items in §12.7 are still open.
 >
-> **Generated file.** The endpoint reference (§9), schemas (§10), page action map (§11) and contract review (§12) come from `docs/source/api.py`, `schemas.py`, `actions.py`, `errors.py` and `contract_review.py`. The machine-readable contract is [`openapi.yaml`](openapi.yaml) (OpenAPI 3.1), validated against the official OpenAPI 3.1 schema (§8). Size: 328 endpoints, 208 schemas, 75 error codes, 162 pages with 528 mapped actions.
+> **Generated file.** The endpoint reference (§9), schemas (§10), page action map (§11) and contract review (§12) come from `docs/source/api.py`, `schemas.py`, `actions.py`, `errors.py` and `contract_review.py`. The machine-readable contract is [`openapi.yaml`](openapi.yaml) (OpenAPI 3.1), validated against the official OpenAPI 3.1 schema (§8). Size: 328 endpoints, 210 schemas, 75 error codes, 162 pages with 528 mapped actions.
 
 ## 1. Conventions
 
@@ -588,8 +588,8 @@ Last run: 24 rules, **24 passed, 0 failed**; 6 negative tests, 6 detected. Offic
 | Rule | Check | Items | Result |
 |---|---|---|---|
 | A01 | Document validates against the official OpenAPI 3.1 schema (schema-base: documents incl. Schema Objects) | 1 | ✅ pass |
-| A02 | Every component schema is valid JSON Schema 2020-12 (meta-schema check) | 208 | ✅ pass |
-| A03 | All $refs resolve and every component schema is used | 211 | ✅ pass |
+| A02 | Every component schema is valid JSON Schema 2020-12 (meta-schema check) | 210 | ✅ pass |
+| A03 | All $refs resolve and every component schema is used | 213 | ✅ pass |
 | A04 | Operations have unique camelCase operationIds, summary, description, tags, a 2xx, a default, and problem+json errors | 328 | ✅ pass |
 | A05 | Path templates and declared path parameters match; path parameters are required | 328 | ✅ pass |
 | A06 | Security: public only for sign-in flows, cookie only for refresh/logout, X-Company-Id on company-scoped calls, known permissions | 328 | ✅ pass |
@@ -597,18 +597,18 @@ Last run: 24 rules, **24 passed, 0 failed**; 6 negative tests, 6 detected. Offic
 | A08 | Every 201 response declares a Location header | 52 | ✅ pass |
 | A09 | Collections use the paginated envelope {data[], meta} | 52 | ✅ pass |
 | A10 | Every error code exists in the catalogue, has its HTTP status documented on the operation, and every catalogue code is reachable | 75 | ✅ pass |
-| A11 | Request-only schemas reject unknown properties (additionalProperties: false) | 96 | ✅ pass |
-| A12 | Money, quantity, cost and rate fields are decimal strings (never JSON numbers) | 218 | ✅ pass |
+| A11 | Request-only schemas reject unknown properties (additionalProperties: false) | 97 | ✅ pass |
+| A12 | Money, quantity, cost and rate fields are decimal strings (never JSON numbers) | 221 | ✅ pass |
 | A13 | PUT/PATCH on a versioned table requires If-Match, and If-Match is only required where a version exists | 40 | ✅ pass |
-| A14 | Request fields are stored: each maps to a column (or is declared virtual) with a compatible length, enum values and nullability | 381 | ✅ pass |
+| A14 | Request fields are stored: each maps to a column (or is declared virtual) with a compatible length, enum values and nullability | 386 | ✅ pass |
 | A15 | Response enum fields have exactly the values the database allows | 29 | ✅ pass |
 | A16 | Every action of every page maps to API calls, a dialog, navigation or explicit client behaviour, and every target exists | 528 | ✅ pass |
 | A17 | Every data-changing endpoint is triggered by at least one page action (only token refresh is system-driven) | 183 | ✅ pass |
 | A18 | Every page has at least one endpoint (shared components use their host page's) | 162 | ✅ pass |
 | A19 | For every action, at least one role can both open the page and call the endpoint | 333 | ✅ pass |
-| A20 | Database operations name real tables; nothing deletes posted or append-only rows; every write changes something | 1352 | ✅ pass |
+| A20 | Database operations name real tables; nothing deletes posted or append-only rows; every write changes something | 1356 | ✅ pass |
 | A21 | Every parameter has a typed schema | 561 | ✅ pass |
-| A22 | Business rules exist; 46 rejecting rules map to error codes | 363 | ✅ pass |
+| A22 | Business rules exist; 46 rejecting rules map to error codes | 365 | ✅ pass |
 | A23 | Calculate/preview endpoints never reject on business state; they return warnings[] (BR-015) | 5 | ✅ pass |
 | A24 | Ledger/stock writes are coherent: entries have lines, stock movements update balances, system entries take an SJ number, bulk post = single post | 88 | ✅ pass |
 
@@ -2847,7 +2847,7 @@ List products and services with stock status.
 | **Status codes** | 200, 400, 401, 403, 422, 503 |
 | **Error codes** | **`company_maintenance`**; standard: `company_required`, `not_a_member`, `permission_denied`, `server_error`, `token_expired`, `token_invalid`, `unauthenticated`, `validation_failed` |
 | **Headers** | — |
-| **Database** | read: product_categories, product_warehouse_settings, products, stock_balances, units |
+| **Database** | read: product_categories, product_units, product_warehouse_settings, products, stock_balances, units |
 | **Business rules** | BR-052 |
 | **Requirements** | FR-030 |
 | **Pages and actions** | D1, E3, F3, D10, D11, E10, F8<br>D10 · Add product<br>D11 · Add product<br>E3 · Find item<br>E3 · Paste from sheet<br>F3 · Find item |
@@ -2864,13 +2864,13 @@ Create a product or service (optional opening stock per warehouse).
 | **Permission** | `inventory.create` — roles: Owner, Store keeper |
 | **Path / query params** | — / — |
 | **Request body** | [`ProductInput`](#schema-productinput) |
-| **Validation** | `item_type`* one of product/service; `name`* string ≤ 190; `code` string ≤ 30 (nullable); `category_id` id of a record in this company (nullable); `unit_id`* id of a record in this company; `barcode` string ≤ 40 (nullable); `last_purchase_cost` decimal string, 4 dp (nullable); `selling_price`* decimal string, 2 dp; `wholesale_price` decimal string, 2 dp (nullable); `tax_rule_id` id of a record in this company (nullable); `income_ledger_id`* id of a record in this company; `expense_ledger_id` id of a record in this company (nullable); `stock_group_id` id of a record in this company (nullable); `preferred_supplier_id` id of a record in this company (nullable); `is_active` boolean; `warehouses` array of ProductWarehouseInput<br>Unknown fields are rejected (422).<br>BR-028: Opening balances (parties, ledgers, banks, stock) are posted as opening_balance entries dated the FY start against the opening balance adjustment ledger, and are locked after the first document.<br>BR-017: On every stock-in to a warehouse, that warehouse's average cost = (warehouse value + incoming value) / (warehouse quantity + incoming quantity); when current quantity <= 0 the incoming unit cost becomes the average. |
+| **Validation** | `item_type`* one of product/service; `name`* string ≤ 190; `code` string ≤ 30 (nullable); `category_id` id of a record in this company (nullable); `unit_id`* id of a record in this company; `barcode` string ≤ 40 (nullable); `last_purchase_cost` decimal string, 4 dp (nullable); `selling_price`* decimal string, 2 dp; `wholesale_price` decimal string, 2 dp (nullable); `tax_rule_id` id of a record in this company (nullable); `income_ledger_id`* id of a record in this company; `expense_ledger_id` id of a record in this company (nullable); `stock_group_id` id of a record in this company (nullable); `preferred_supplier_id` id of a record in this company (nullable); `is_active` boolean; `warehouses` array of ProductWarehouseInput; `units` array of ProductUnitInput<br>Unknown fields are rejected (422).<br>BR-028: Opening balances (parties, ledgers, banks, stock) are posted as opening_balance entries dated the FY start against the opening balance adjustment ledger, and are locked after the first document.<br>BR-017: On every stock-in to a warehouse, that warehouse's average cost = (warehouse value + incoming value) / (warehouse quantity + incoming quantity); when current quantity <= 0 the incoming unit cost becomes the average.<br>BR-069: A trade document line is in the item's base unit or one of its extra units (1 unit = factor base units); quantity and price are per that unit, while stock, average cost and cost of sales always move quantity x factor in the base unit. |
 | **Success** | 201 `data`: [`Product`](#schema-product) |
 | **Status codes** | 201, 400, 401, 403, 409, 422, 503 |
 | **Error codes** | **`company_maintenance`**; standard: `company_required`, `idempotency_in_progress`, `idempotency_key_reused`, `malformed_json`, `not_a_member`, `permission_denied`, `server_error`, `token_expired`, `token_invalid`, `unauthenticated`, `validation_failed` |
 | **Headers** | `Idempotency-Key`, `Location` on 201 |
-| **Database** | insert: audit_logs, idempotency_keys, products; read: journal_entries, journal_lines, product_warehouse_settings, stock_balances, stock_movements |
-| **Business rules** | BR-028, BR-017 |
+| **Database** | insert: audit_logs, idempotency_keys, products; read: journal_entries, journal_lines, product_units, product_warehouse_settings, stock_balances, stock_movements |
+| **Business rules** | BR-028, BR-017, BR-069 |
 | **Requirements** | FR-031 |
 | **Pages and actions** | D2, L5<br>D2 · Save and add another<br>D2 · Save item |
 | **Transaction / concurrency** | One DB transaction; SELECT ... FOR UPDATE on the document row, number_sequences, stock_balances in a fixed order (sequence -> document -> products by id) to avoid deadlocks. |
@@ -2913,7 +2913,7 @@ Product with stock by warehouse, costs (if permitted) and price history.
 | **Status codes** | 200, 400, 401, 403, 404, 503 |
 | **Error codes** | **`company_maintenance`**; standard: `company_required`, `not_a_member`, `not_found`, `permission_denied`, `server_error`, `token_expired`, `token_invalid`, `unauthenticated` |
 | **Headers** | — |
-| **Database** | read: audit_logs, product_warehouse_settings, products, stock_balances |
+| **Database** | read: audit_logs, product_units, product_warehouse_settings, products, stock_balances |
 | **Business rules** | BR-052 |
 | **Requirements** | FR-032 |
 | **Pages and actions** | D3, D4 |
@@ -2930,13 +2930,13 @@ Edit a product (quantities never change here).
 | **Permission** | `inventory.edit` — roles: Owner, Store keeper |
 | **Path / query params** | `id` / — |
 | **Request body** | [`ProductInput`](#schema-productinput) |
-| **Validation** | `item_type`* one of product/service; `name`* string ≤ 190; `code` string ≤ 30 (nullable); `category_id` id of a record in this company (nullable); `unit_id`* id of a record in this company; `barcode` string ≤ 40 (nullable); `last_purchase_cost` decimal string, 4 dp (nullable); `selling_price`* decimal string, 2 dp; `wholesale_price` decimal string, 2 dp (nullable); `tax_rule_id` id of a record in this company (nullable); `income_ledger_id`* id of a record in this company; `expense_ledger_id` id of a record in this company (nullable); `stock_group_id` id of a record in this company (nullable); `preferred_supplier_id` id of a record in this company (nullable); `is_active` boolean; `warehouses` array of ProductWarehouseInput<br>Unknown fields are rejected (422).<br>BR-026: A party, product, warehouse or ledger with history cannot be deleted, only made inactive; inactive records cannot be used on new documents.<br>BR-049: Updates must send the current version (If-Match); a mismatch is rejected with 409 and the user's input is preserved. |
+| **Validation** | `item_type`* one of product/service; `name`* string ≤ 190; `code` string ≤ 30 (nullable); `category_id` id of a record in this company (nullable); `unit_id`* id of a record in this company; `barcode` string ≤ 40 (nullable); `last_purchase_cost` decimal string, 4 dp (nullable); `selling_price`* decimal string, 2 dp; `wholesale_price` decimal string, 2 dp (nullable); `tax_rule_id` id of a record in this company (nullable); `income_ledger_id`* id of a record in this company; `expense_ledger_id` id of a record in this company (nullable); `stock_group_id` id of a record in this company (nullable); `preferred_supplier_id` id of a record in this company (nullable); `is_active` boolean; `warehouses` array of ProductWarehouseInput; `units` array of ProductUnitInput<br>Unknown fields are rejected (422).<br>BR-026: A party, product, warehouse or ledger with history cannot be deleted, only made inactive; inactive records cannot be used on new documents.<br>BR-049: Updates must send the current version (If-Match); a mismatch is rejected with 409 and the user's input is preserved.<br>BR-069: A trade document line is in the item's base unit or one of its extra units (1 unit = factor base units); quantity and price are per that unit, while stock, average cost and cost of sales always move quantity x factor in the base unit. |
 | **Success** | 200 `data`: [`Product`](#schema-product) |
 | **Status codes** | 200, 400, 401, 403, 404, 409, 422, 428, 503 |
 | **Error codes** | **`company_maintenance`, `has_history`, `inactive_reference`**; standard: `company_required`, `if_match_required`, `malformed_json`, `not_a_member`, `not_found`, `permission_denied`, `server_error`, `token_expired`, `token_invalid`, `unauthenticated`, `validation_failed`, `version_conflict` |
 | **Headers** | `If-Match` (required) |
-| **Database** | insert: audit_logs; update: products; read: product_warehouse_settings |
-| **Business rules** | BR-026, BR-049 |
+| **Database** | insert: audit_logs; update: products; read: product_units, product_warehouse_settings |
+| **Business rules** | BR-026, BR-049, BR-069 |
 | **Requirements** | FR-031 |
 | **Pages and actions** | D3<br>D3 · Save changes |
 | **Transaction / concurrency** | Single-row write; optimistic lock via If-Match. |
@@ -9255,6 +9255,17 @@ Create or edit a product or service. Unknown properties are rejected.
 | `preferred_supplier_id` | `id \| null` | no |
 | `is_active` | `bool` | no |
 | `warehouses` | `[ref:ProductWarehouseInput]` | no |
+| `units` | `[ref:ProductUnitInput]` | no |
+
+<a id="schema-productunitinput"></a>
+#### `ProductUnitInput`
+
+An extra unit of the item: 1 of unit_id = factor base units (BR-069). Sent on edit, the list replaces the item's extra units; a unit already used on a document line cannot be removed or change factor. Unknown properties are rejected.
+
+| Property | Type | Required |
+|---|---|---|
+| `unit_id` | `id` | yes |
+| `factor` | `rate` | yes |
 
 <a id="schema-productwarehouseinput"></a>
 #### `ProductWarehouseInput`
@@ -9282,6 +9293,7 @@ Product or service. Cost fields omitted without inventory.view_costs (BR-052).
 | `name` | `str` | yes |
 | `category` | `ref:Lookup \| null` | no |
 | `unit` | `str` | yes |
+| `unit_id` | `id` | yes |
 | `barcode` | `str \| null` | no |
 | `selling_price` | `money` | yes |
 | `wholesale_price` | `money \| null` | no |
@@ -9296,8 +9308,25 @@ Product or service. Cost fields omitted without inventory.view_costs (BR-052).
 | `stock_value` | `money \| null` | no |
 | `last_purchase_cost` | `cost \| null` | no |
 | `warehouses` | `[ref:StockLevel]` | no |
+| `units` | `[ref:ProductUnit]` | yes |
 | `is_active` | `bool` | yes |
 | `version` | `int` | yes |
+
+<a id="schema-productunit"></a>
+#### `ProductUnit`
+
+A unit the item can be bought or sold in, base unit first (factor 1). Prices are the item's prices x factor, worked out by the server; last_purchase_cost needs inventory.view_costs.
+
+| Property | Type | Required |
+|---|---|---|
+| `unit_id` | `id` | yes |
+| `name` | `str` | yes |
+| `factor` | `rate` | yes |
+| `decimals` | `int` | yes |
+| `is_base` | `bool` | yes |
+| `selling_price` | `money` | yes |
+| `wholesale_price` | `money \| null` | no |
+| `last_purchase_cost` | `cost \| null` | no |
 
 <a id="schema-stocklevel"></a>
 #### `StockLevel`
@@ -9565,6 +9594,7 @@ Invoice line. Unknown properties are rejected.
 |---|---|---|
 | `unit_price` | `money \| null` | no |
 | `product_id` | `id` | yes |
+| `unit_id` | `id \| null` | no |
 | `description` | `str:255 \| null` | no |
 | `quantity` | `qty` | yes |
 | `discount_pct` | `pct` | no |
@@ -9623,6 +9653,8 @@ Invoice line out. Cost fields need inventory.view_costs.
 | `product_code` | `str` | yes |
 | `product_name` | `str` | yes |
 | `unit` | `str` | yes |
+| `unit_id` | `id \| null` | no |
+| `unit_factor` | `rate` | yes |
 | `description` | `str \| null` | no |
 | `quantity` | `qty` | yes |
 | `discount_pct` | `pct` | yes |
@@ -9771,6 +9803,7 @@ Bill line. Unknown properties are rejected.
 | `unit_cost` | `cost` | yes |
 | `purchase_order_line_id` | `id \| null` | no |
 | `product_id` | `id` | yes |
+| `unit_id` | `id \| null` | no |
 | `description` | `str:255 \| null` | no |
 | `quantity` | `qty` | yes |
 | `discount_pct` | `pct` | no |
@@ -13104,7 +13137,7 @@ View permission `lc.create`. **Loads:** nothing of its own (host page data).
 | | Before review | Contract |
 |---|---|---|
 | Endpoints | 280 | 328 |
-| Schemas | 191 | 208 |
+| Schemas | 191 | 210 |
 | Pages | 155 | 162 |
 | Page actions mapped to API or client behaviour | 0 of 448 | 528 of 528 |
 
@@ -13216,6 +13249,7 @@ View permission `lc.create`. **Loads:** nothing of its own (host page data).
 | Stock adjustments and transfers | StockAdjustment returns warehouse_name, notes, line_count, posted_at and audit fields; StockTransfer returns both warehouse names, vehicle, driver, notes, line_count, transit_loss_value (costs only), its entries and audit fields, so D10/D11 can show and edit what they saved (P11.1-BE-02/03, 31 Oct 2026). Additive. |
 | Cash counts and reconciliation | CashCount returns the account name, denominations and its adjustment's number, status and approval request (G2 shows where an adjustment stands); Reconciliation returns the account name, unhandled_count and book_entries (posted book lines not yet matched, G10's right pane); POST …/lines/pair with one line marks it ignored (P12.1-BE-03/05, 31 Oct 2026). Additive. |
 | Attachments and income/expense (P13) | GET /attachments lists one record's files (Attachments tabs); AttachmentUpload.attachable_id is optional for a voucher still being written (pending file linked by POST /ie-entries attachment_ids, I6 Remove attachment); RecurringTemplate returns ends_after_count, ends_on, description and last_entry_id; GET /recurring-templates takes page, per_page, kind, active; GET /ie-entries meta adds total_amount. Additive (P13.1, 31 Oct 2026). |
+| Line units (P10.7) | Items may have extra units with a factor (product_units; ProductInput/Product `units`, Product `unit_id`); trade document lines take an optional `unit_id` (base unit when omitted) and return `unit_id` and `unit_factor`; stock, average cost and cost of sales move quantity x factor in the base unit (BR-069). Owner decision 3 Nov 2026 (PEP-464). Additive. |
 | LC finance (P16 extension) | New: bank facilities with live utilisation and LC/loan limits (warn or block), PAD/LTR loans created by a financed LC payment (LcPaymentInput financed_by + loan terms; LcPayment financed_by, lc_loan_id), interest quote, repayments, PAD to LTR conversion and reversal, period-end FX revaluation with automatic next-day reversal, LC reports loans and exposure. Warnings LC_LIMIT_EXCEEDED, LOAN_LIMIT_EXCEEDED, LOAN_DUE; errors lc_limit_exceeded, loan_limit_exceeded, repayment_exceeds_outstanding, nothing_to_revalue. Owner decisions 2 Nov 2026 (both own funds and bank finance; import only). Additive. |
 | Indexes for 1 M journal lines (P17) | journal_lines (company_id, ledger_id, is_posted, entry_date) gains debit and credit so ledger balances, the trial balance and P&L read the index only; journal_entries adds (company_id, entry_date) so the voucher list orders by date and id without sorting every voucher, and (company_id, entry_date, status) becomes (company_id, status, entry_date) so the drafts beside the trial balance read only drafts. Found by the k6 run on 1 M lines (TC-NFR-001/002; P17.1-BE-02); hand-written migration 2026_11_06_000001 converts existing databases. No API change. |
 | Signed file downloads documented (P17) | GET /attachments/{id}/file, /company/{id}/logo/file, /backups/{id}/file and /export-jobs/{id}/file were implemented with their signed-link endpoints but missing from the contract; now listed as public operations reached by the signed link (expires, signature). Found by the route-coverage test TC-NFR-008 (P17.1-BE-04). Additive, no behaviour change. |

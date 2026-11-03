@@ -224,15 +224,15 @@ E("POST", "/party-groups", "Add a group", "parties.create", ["party_groups", "au
 
 # ---------------------------------------------------------------- Inventory
 T = "Inventory"
-E("GET", "/products", "List products and services with stock status", "inventory.view", ["products", "product_categories", "units", "stock_balances", "product_warehouse_settings"],
+E("GET", "/products", "List products and services with stock status", "inventory.view", ["products", "product_categories", "units", "product_units", "stock_balances", "product_warehouse_settings"],
   ["D1", "E3", "F3", "D10", "D11", "E10", "F8"], rules=["BR-052"], params=LISTQ + ["item_type", "category_id", "warehouse_id", "stock_status", "active"], resp="Page<Product>", tag=T, fr=["FR-030"])
 E("POST", "/products", "Create a product or service (optional opening stock per warehouse)", "inventory.create",
-  ["products", "product_warehouse_settings", "stock_balances", "stock_movements", "journal_entries", "journal_lines", "audit_logs"], ["D2", "L5"],
-  rules=["BR-028", "BR-017"], req="ProductInput", resp="Product", idem=True, tx=TXP, tag=T, fr=["FR-031"], codes=[201, 422])
+  ["products", "product_units", "product_warehouse_settings", "stock_balances", "stock_movements", "journal_entries", "journal_lines", "audit_logs"], ["D2", "L5"],
+  rules=["BR-028", "BR-017", "BR-069"], req="ProductInput", resp="Product", idem=True, tx=TXP, tag=T, fr=["FR-031"], codes=[201, 422])
 E("POST", "/products/import", "Import products from CSV/XLSX: dry_run=true validates and previews, false creates in one transaction", "inventory.create", ["products", "product_categories", "units", "ledgers", "tax_rules", "product_warehouse_settings", "audit_logs"], ["D1"], rules=["BR-036", "BR-026"], req="ProductImport", resp="ImportResult", params=["dry_run"], idem=True, tag=T, fr=["FR-030"], codes=[200, 201, 413, 415, 422], added="C-05")
-E("GET", "/products/{id}", "Product with stock by warehouse, costs (if permitted) and price history", "inventory.view", ["products", "stock_balances", "product_warehouse_settings", "audit_logs"], ["D3", "D4"],
+E("GET", "/products/{id}", "Product with stock by warehouse, costs (if permitted) and price history", "inventory.view", ["products", "product_units", "stock_balances", "product_warehouse_settings", "audit_logs"], ["D3", "D4"],
   rules=["BR-052"], resp="Product", tag=T, fr=["FR-032"])
-E("PATCH", "/products/{id}", "Edit a product (quantities never change here)", "inventory.edit", ["products", "product_warehouse_settings", "audit_logs"], ["D3"], rules=["BR-026", "BR-049"], req="ProductInput", resp="Product", ifmatch=True, tag=T, fr=["FR-031"])
+E("PATCH", "/products/{id}", "Edit a product (quantities never change here)", "inventory.edit", ["products", "product_units", "product_warehouse_settings", "audit_logs"], ["D3"], rules=["BR-026", "BR-049", "BR-069"], req="ProductInput", resp="Product", ifmatch=True, tag=T, fr=["FR-031"])
 E("DELETE", "/products/{id}", "Delete an unused product; used products are deactivated instead", "inventory.delete", ["products", "stock_movements", "sales_invoice_lines", "purchase_bill_lines"], ["D3"], rules=["BR-026"], tag=T, fr=["FR-031"], codes=[204, 409])
 E("GET", "/stock-movements", "All stock movements", "inventory.view", ["stock_movements", "products", "warehouses"], ["D9"],
   params=LISTQ + DATEQ + ["movement_type", "warehouse_id", "product_id"], resp="Page<StockMovement>", tag=T, fr=["FR-034"], rules=['BR-052'])

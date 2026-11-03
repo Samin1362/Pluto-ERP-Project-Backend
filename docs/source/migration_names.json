@@ -81,5 +81,12 @@
  "debit_notes": "2026_10_18_008000_create_debit_notes_table.php",
  "landed_cost_allocation_lines": "2026_10_18_008100_create_landed_cost_allocation_lines_table.php",
  "lc_charges": "2026_10_18_008200_create_lc_charges_table.php",
- "purchase_return_lines": "2026_10_18_008300_create_purchase_return_lines_table.php"
+ "purchase_return_lines": "2026_10_18_008300_create_purchase_return_lines_table.php",
+ "bank_facilities": "2026_10_18_008400_create_bank_facilities_table.php",
+ "fx_revaluations": "2026_10_18_008500_create_fx_revaluations_table.php",
+ "fx_revaluation_lines": "2026_10_18_008600_create_fx_revaluation_lines_table.php",
+ "lc_loans": "2026_10_18_008700_create_lc_loans_table.php",
+ "lc_loan_accruals": "2026_10_18_008800_create_lc_loan_accruals_table.php",
+ "lc_loan_repayments": "2026_10_18_008900_create_lc_loan_repayments_table.php",
+ "product_units": "2026_10_18_009000_create_product_units_table.php"
 }

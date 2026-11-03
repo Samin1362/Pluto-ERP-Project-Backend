@@ -42,7 +42,8 @@ OAS = oas_validator()
 INPUT_TABLE = {
     "PartyInput": (["parties"], {"opening_balance", "opening_side", "bank_accounts"}),
     "PartyBankAccount": (["party_bank_accounts"], {"id"}),
-    "ProductInput": (["products"], {"warehouses"}),
+    "ProductInput": (["products"], {"warehouses", "units"}),  # units: product_units rows (P10.7)
+    "ProductUnitInput": (["product_units"], set()),
     "ProductWarehouseInput": (["product_warehouse_settings"], {"opening_qty", "opening_unit_cost"}),
     "WarehouseInput": (["warehouses"], set()),
     "BranchInput": (["branches"], set()),

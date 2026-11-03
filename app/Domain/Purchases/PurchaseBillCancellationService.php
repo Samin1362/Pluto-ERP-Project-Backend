@@ -70,7 +70,7 @@ final class PurchaseBillCancellationService
                     continue;
                 }
                 $orig = Money::of($receipts[$line->id]->value_in);
-                $out = $this->stock->reverseIn($products[$line->product_id], $warehouse, Quantity::of($line->quantity), $orig, $bill, $date, $line->id, "lines.{$i}.quantity");
+                $out = $this->stock->reverseIn($products[$line->product_id], $warehouse, Quantity::of($receipts[$line->id]->quantity_in), $orig, $bill, $date, $line->id, "lines.{$i}.quantity"); // what was received (base units, BR-069)
                 $diff = $orig->minus($out);
                 if (! $diff->isZero()) { // R-17: stock gave back less (or more) value than the bill put in
                     $b->debit($warehouse->inventory_ledger_id, $diff, ['warehouse_id' => $warehouse->id])->credit($this->mapper->ledgerFor('stock_adjustment'), $diff);

@@ -63,7 +63,7 @@ final class SalesInvoiceCancellationService
             $this->stock->lock($stocked->map(fn ($l) => [$l->product_id, $warehouse->id])->values()->all());
             $issues = StockMovement::where('source_type', $invoice->getMorphClass())->where('source_id', $invoice->id)->where('movement_type', 'sale_out')->get()->keyBy('source_line_id');
             foreach ($stocked as $line) {
-                $after = $this->stock->stockIn($products[$line->product_id], $warehouse, Quantity::of($line->quantity), Money::of($issues[$line->id]->value_out),
+                $after = $this->stock->stockIn($products[$line->product_id], $warehouse, Quantity::of($issues[$line->id]->quantity_out), Money::of($issues[$line->id]->value_out), // what was issued (base units, BR-069)
                     $invoice, $date, 'reversal', $line->id);
                 if (! $after->trueUp->isZero()) { // negative stock covered (R-16): re-cost what was issued short
                     $b->debit($warehouse->inventory_ledger_id, $after->trueUp, ['warehouse_id' => $warehouse->id])->credit($this->mapper->ledgerFor('cogs'), $after->trueUp);

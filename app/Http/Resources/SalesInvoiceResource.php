@@ -43,7 +43,7 @@ class SalesInvoiceResource extends JsonResource
             'customer_po_ref' => $inv->customer_po_ref,
             'lines' => ! $this->summary && $inv->relationLoaded('lines') ? $inv->lines->map(fn ($l) => [
                 'id' => $l->id, 'line_no' => $l->line_no, 'product_id' => $l->product_id, 'product_code' => $l->product_code, 'product_name' => $l->product_name,
-                'unit' => $l->unit_name, 'description' => $l->description, 'quantity' => (string) $l->quantity, 'unit_price' => (string) $l->unit_price,
+                'unit' => $l->unit_name, 'unit_id' => $l->unit_id, 'unit_factor' => (string) ($l->unit_factor ?? '1.000000'), 'description' => $l->description, 'quantity' => (string) $l->quantity, 'unit_price' => (string) $l->unit_price,
                 'discount_pct' => $l->discount_pct, 'discount_amount' => (string) $l->discount_amount, 'tax_rule_id' => $l->tax_rule_id, 'tax_rate' => $l->tax_rate,
                 'tax_amount' => (string) $l->tax_amount, 'net_amount' => (string) $l->net_amount, 'line_total' => (string) $l->line_total,
                 'unit_cost' => $this->showCosts ? $l->unit_cost?->toString() : null, 'cost_amount' => $this->showCosts ? $l->cost_amount?->toString() : null,

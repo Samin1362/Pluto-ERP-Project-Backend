@@ -57,8 +57,9 @@ class PurchaseOrderRequest extends StrictRequest
             'notes' => ['sometimes', 'nullable', 'string', 'max:2000'],
             'internal_note' => ['sometimes', 'nullable', 'string', 'max:2000'],
             'lines' => ['required', 'array', 'min:1', 'max:200'],
-            'lines.*' => ['array:product_id,description,quantity,discount_pct,tax_rule_id,unit_cost,purchase_order_line_id'],
+            'lines.*' => ['array:product_id,unit_id,description,quantity,discount_pct,tax_rule_id,unit_cost,purchase_order_line_id'],
             'lines.*.product_id' => ['required', 'integer', $exists('products')->whereNull('deleted_at')],
+            'lines.*.unit_id' => ['sometimes', 'nullable', 'integer', $exists('units')], // one of the item's units: checked when the lines are priced (BR-069)
             'lines.*.description' => ['sometimes', 'nullable', 'string', 'max:255'],
             'lines.*.quantity' => ['required', 'string', 'regex:'.self::QTY, 'not_regex:/^0+(\.0+)?$/'],
             'lines.*.unit_cost' => ['required', 'string', 'regex:'.self::COST],

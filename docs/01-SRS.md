@@ -296,6 +296,7 @@ Approval limits (defaults): Finance manager pays up to ৳ 5,00,000 without appr
 | BR-066 | A bank's LC limit counts the planned taka of its open LCs and its open usance acceptances, and its loan limit counts the outstanding PAD/LTR principal; going over warns or is refused as the facility says. | 2 | TC-LC-014 |
 | BR-067 | A PAD/LTR loan accrues interest daily on the outstanding principal at its rate over its day count (360 or 365), from the last repayment or month-end accrual; a repayment pays that interest with the principal and cannot repay more principal than is outstanding. | 2 | TC-LC-015 |
 | BR-068 | A period-end FX revaluation restates open foreign-currency bills and usance acceptances at closing rates, posts the unrealised difference to exchange gain or loss and reverses it the next day. | 2 | TC-LC-016 |
+| BR-069 | A trade document line is in the item's base unit or one of its extra units (1 unit = factor base units); quantity and price are per that unit, while stock, average cost and cost of sales always move quantity x factor in the base unit. | 2 |  |
 
 ## 9. Use cases
 

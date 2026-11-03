@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Table `company_users` (Access): migration 26 of 89, dependency level 3.
+ * Table `company_users` (Access): migration 26 of 90, dependency level 3.
  * Membership: a user belongs to a company with exactly one role (junction users to companies with payload).
  * Depends on: companies, roles, users.
  *

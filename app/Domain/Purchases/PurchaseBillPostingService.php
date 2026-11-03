@@ -6,11 +6,11 @@ use App\Domain\Accounting\AccountMapper;
 use App\Domain\Accounting\JournalBuilder;
 use App\Domain\Accounting\PeriodGuard;
 use App\Domain\Accounting\PostingService;
+use App\Domain\Documents\LineUnits;
 use App\Domain\Inventory\StockService;
 use App\Domain\Lc\LcPostingService;
 use App\Domain\Shared\AuditLogger;
 use App\Domain\Shared\Money;
-use App\Domain\Shared\Quantity;
 use App\Models\CompanySetting;
 use App\Models\Party;
 use App\Models\Product;
@@ -71,7 +71,7 @@ final class PurchaseBillPostingService
                 $recoverable = $rule && $rule->is_recoverable && $tax->isPositive();
                 $cost = $line->base_net_amount->plus($recoverable ? Money::zero() : $tax); // non-recoverable tax is cost (06 §8)
                 if ($products[$line->product_id]->track_stock) {
-                    $after = $this->stock->stockIn($products[$line->product_id], $warehouse, Quantity::of($line->quantity), $cost, $bill, $bill->bill_date,
+                    $after = $this->stock->stockIn($products[$line->product_id], $warehouse, LineUnits::baseQuantity($line->quantity, $line->unit_factor), $cost, $bill, $bill->bill_date, // BR-069
                         'purchase_in', $line->id);
                     $b->debit($warehouse->inventory_ledger_id, $cost, ['warehouse_id' => $warehouse->id]);
                     if (! $after->trueUp->isZero()) { // negative stock covered (R-16): re-cost what was issued short
