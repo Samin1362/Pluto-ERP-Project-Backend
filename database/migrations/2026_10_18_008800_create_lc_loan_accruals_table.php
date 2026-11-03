@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Table `lc_loan_accruals` (LC): migration 88 of 89, dependency level 11.
+ * Table `lc_loan_accruals` (LC): migration 88 of 90, dependency level 11.
  * Month-end interest accrued on an open loan (Dr interest expense / Cr interest payable), cleared by the next repayment.
  * Depends on: companies, journal_entries, lc_loans, users.
  *

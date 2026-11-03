@@ -12,8 +12,8 @@ def s(_name, _desc, **props):
     S[_name] = (_desc, props)
 
 
-LINE_IN = dict(product_id="id!", description="str:255?", quantity="qty!", discount_pct="pct", tax_rule_id="id?")
-LINE_OUT = dict(id="id!", line_no="int!", product_id="id!", product_code="str!", product_name="str!", unit="str!", description="str?", quantity="qty!",
+LINE_IN = dict(product_id="id!", unit_id="id?", description="str:255?", quantity="qty!", discount_pct="pct", tax_rule_id="id?")
+LINE_OUT = dict(id="id!", line_no="int!", product_id="id!", product_code="str!", product_name="str!", unit="str!", unit_id="id?", unit_factor="rate!", description="str?", quantity="qty!",
                 discount_pct="pct!", discount_amount="money!", tax_rule_id="id?", tax_rate="pct!", tax_amount="money!", net_amount="money!", line_total="money!")
 TOTALS = dict(subtotal="money!", discount_total="money!", tax_total="money!", rounding_adjustment="money!", total="money!", amount_in_words="str!")
 AUDIT = dict(created_at="datetime!", created_by="ref:UserRef?", updated_at="datetime!", version="int!")
@@ -147,12 +147,15 @@ s("StatementSendRequest", "Send statements.", party_ids="[id]!", date_from="date
 # ---------------------------------------------------------------- inventory
 s("ProductInput", "Create or edit a product or service.", item_type="enum:product|service!", name="str:190!", code="str:30?", category_id="id?", unit_id="id!", barcode="str:40?",
   last_purchase_cost="cost?", selling_price="money!", wholesale_price="money?", tax_rule_id="id?", income_ledger_id="id!", expense_ledger_id="id?", stock_group_id="id?",
-  preferred_supplier_id="id?", is_active="bool", warehouses="[ref:ProductWarehouseInput]")
+  preferred_supplier_id="id?", is_active="bool", warehouses="[ref:ProductWarehouseInput]", units="[ref:ProductUnitInput]")
+s("ProductUnitInput", "An extra unit of the item: 1 of unit_id = factor base units (BR-069). Sent on edit, the list replaces the item's extra units; a unit already used on a document line cannot be removed or change factor.", unit_id="id!", factor="rate!")
 s("ProductWarehouseInput", "Per-warehouse settings; opening_qty only on create.", warehouse_id="id!", reorder_level="qty", reorder_qty="qty", opening_qty="qty", opening_unit_cost="cost")
-s("Product", "Product or service. Cost fields omitted without inventory.view_costs (BR-052).", id="id!", item_type="enum:product|service!", code="str!", name="str!", category="ref:Lookup?", unit="str!",
+s("Product", "Product or service. Cost fields omitted without inventory.view_costs (BR-052).", id="id!", item_type="enum:product|service!", code="str!", name="str!", category="ref:Lookup?", unit="str!", unit_id="id!",
   barcode="str?", selling_price="money!", wholesale_price="money?", tax_rule_id="id?", income_ledger_id="id!", track_stock="bool!", stock_group="ref:Lookup?", preferred_supplier="ref:PartyRef?",
   on_hand="qty?", stock_status="enum:in_stock|low_stock|out_of_stock|not_tracked!", avg_cost="cost?", stock_value="money?", last_purchase_cost="cost?",
-  warehouses="[ref:StockLevel]", is_active="bool!", version="int!")
+  warehouses="[ref:StockLevel]", units="[ref:ProductUnit]!", is_active="bool!", version="int!")
+s("ProductUnit", "A unit the item can be bought or sold in, base unit first (factor 1). Prices are the item's prices x factor, worked out by the server; last_purchase_cost needs inventory.view_costs.", unit_id="id!", name="str!", factor="rate!", decimals="int!", is_base="bool!",
+  selling_price="money!", wholesale_price="money?", last_purchase_cost="cost?")
 s("StockLevel", "Stock of a product in a warehouse.", product_id="id!", product_code="str!", product_name="str!", warehouse_id="id!", warehouse_name="str!", qty_on_hand="qty!", reorder_level="qty!",
   reorder_qty="qty!", value="money?", status="enum:in_stock|low_stock|out_of_stock|not_stocked!")
 s("StockMovement", "Stock ledger row. unit_cost and value are omitted without inventory.view_costs (BR-052).", id="id!", moved_on="date!", movement_type="str!", product="ref:Lookup!", warehouse="ref:Lookup!", quantity_in="qty!", quantity_out="qty!",

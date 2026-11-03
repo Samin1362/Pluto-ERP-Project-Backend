@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Table `money_accounts` (Money): migration 37 of 89, dependency level 4.
+ * Table `money_accounts` (Money): migration 37 of 90, dependency level 4.
  * Cash, bank, mobile-wallet or card account; 1:1 with its ledger.
  * Depends on: companies, currencies, ledgers, users.
  *

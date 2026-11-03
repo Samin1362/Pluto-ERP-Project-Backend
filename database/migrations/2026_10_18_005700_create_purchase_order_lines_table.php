@@ -6,9 +6,9 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Table `purchase_order_lines` (Purchases): migration 57 of 89, dependency level 6.
+ * Table `purchase_order_lines` (Purchases): migration 57 of 90, dependency level 6.
  * Items ordered and quantity received so far.
- * Depends on: products, purchase_orders, tax_rules.
+ * Depends on: products, purchase_orders, tax_rules, units.
  *
  * Generated from docs/source/schema.py by docs/source/build_migrations.py (baseline schema).
  * After the first deployment, never edit this file: add a new migration instead.
@@ -29,7 +29,9 @@ return new class extends Migration
             $table->unsignedBigInteger('product_id');
             $table->string('product_code', 30)->comment('Snapshot at save (R-30)');
             $table->string('product_name', 190)->comment('Snapshot at save');
-            $table->string('unit_name', 30)->comment('Snapshot at save');
+            $table->string('unit_name', 30)->comment('Snapshot at save: the chosen unit (BR-069)');
+            $table->unsignedBigInteger('unit_id')->nullable()->comment('Unit the quantity and price are in; NULL on rows saved before P10.7 = the product\'s base unit');
+            $table->decimal('unit_factor', 18, 6)->default(1)->comment('Base units per one line unit, snapshot at save; stock moves quantity x unit_factor (BR-069)');
             $table->string('description', 255)->nullable();
             $table->decimal('quantity', 18, 3);
             $table->decimal('unit_cost', 18, 4)->comment('In PO currency');
@@ -46,10 +48,12 @@ return new class extends Migration
 
             $table->unique(['purchase_order_id', 'line_no'], 'purchase_order_lines_purchase_order_id_line_no_unique');
             $table->index(['product_id'], 'purchase_order_lines_product_id_index');
+            $table->index(['unit_id'], 'purchase_order_lines_unit_id_index');
             $table->index(['tax_rule_id'], 'purchase_order_lines_tax_rule_id_index');
 
             $table->foreign('purchase_order_id', 'purchase_order_lines_purchase_order_id_foreign')->references('id')->on('purchase_orders')->cascadeOnDelete()->restrictOnUpdate();
             $table->foreign('product_id', 'purchase_order_lines_product_id_foreign')->references('id')->on('products')->restrictOnDelete()->restrictOnUpdate();
+            $table->foreign('unit_id', 'purchase_order_lines_unit_id_foreign')->references('id')->on('units')->restrictOnDelete()->restrictOnUpdate();
             $table->foreign('tax_rule_id', 'purchase_order_lines_tax_rule_id_foreign')->references('id')->on('tax_rules')->restrictOnDelete()->restrictOnUpdate();
         });
 

@@ -156,7 +156,7 @@ final class QuotationService
                 'party_id' => $q->party_id, 'invoice_date' => CarbonImmutable::now('Asia/Dhaka')->toDateString(), 'payment_term_id' => $q->payment_term_id,
                 'warehouse_id' => $warehouseId, 'quotation_id' => $q->id, 'notes' => $q->notes,
                 'lines' => $q->lines->map(fn ($l) => [
-                    'product_id' => $l->product_id, 'description' => $l->description, 'quantity' => (string) $l->quantity, 'unit_price' => (string) $l->unit_price,
+                    'product_id' => $l->product_id, 'unit_id' => $l->unit_id, 'description' => $l->description, 'quantity' => (string) $l->quantity, 'unit_price' => (string) $l->unit_price,
                     'discount_pct' => (string) $l->discount_pct, 'tax_rule_id' => $l->tax_rule_id,
                 ])->all(),
             ]);
@@ -225,7 +225,7 @@ final class QuotationService
             $c = $calc->lines[$i];
             $q->lines()->create([
                 'line_no' => $i + 1, 'product_id' => $l['product']->id, 'product_code' => $l['product']->code, 'product_name' => $l['product']->name,
-                'unit_name' => $l['product']->unit?->name ?? '', 'description' => $l['input']['description'] ?? null,
+                'unit_name' => $l['unit']['name'], 'unit_id' => $l['unit']['unit_id'], 'unit_factor' => (string) $l['unit']['factor'], 'description' => $l['input']['description'] ?? null,
                 'quantity' => $l['input']['quantity'], 'unit_price' => $l['unit_price'], 'discount_pct' => $l['input']['discount_pct'] ?? '0',
                 'discount_amount' => $c->discountTotal(), 'tax_rule_id' => $c->taxRuleId, 'tax_rate' => $l['tax_rate']->toBigDecimal()->toScale(4, RoundingMode::HalfUp)->toString(),
                 'tax_amount' => $c->tax, 'net_amount' => $c->net, 'line_total' => $c->total,

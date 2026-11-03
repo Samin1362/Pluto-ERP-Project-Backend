@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Table `company_settings` (Platform): migration 45 of 89, dependency level 5.
+ * Table `company_settings` (Platform): migration 45 of 90, dependency level 5.
  * One row per company: preferences, controls, currency display and invoice design (K3, K5, K6, K7, K14, K15).
  * Depends on: companies, payment_terms, users, warehouses.
  *

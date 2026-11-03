@@ -62,6 +62,12 @@ class Product extends Model
         return $this->hasMany(ProductWarehouseSetting::class);
     }
 
+    /** Extra units with their factor to the base unit (BR-069), by factor. */
+    public function units(): HasMany
+    {
+        return $this->hasMany(ProductUnit::class)->orderBy('factor')->orderBy('id');
+    }
+
     public function stockBalances(): HasMany
     {
         return $this->hasMany(StockBalance::class);

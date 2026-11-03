@@ -6,6 +6,7 @@ use App\Domain\Accounting\AccountMapper;
 use App\Domain\Accounting\JournalBuilder;
 use App\Domain\Accounting\PeriodGuard;
 use App\Domain\Accounting\PostingService;
+use App\Domain\Documents\LineUnits;
 use App\Domain\Inventory\StockService;
 use App\Domain\Settlements\AllocationService;
 use App\Domain\Shared\AuditLogger;
@@ -136,7 +137,7 @@ final class PurchaseReturnService
                 if (! $products[$l->product_id]->track_stock) {
                     $b->credit($this->mapper->ledgerFor('purchase_returns_non_stock'), $cost);
                 } elseif ($sendBack) {
-                    $out = $this->stock->reverseIn($products[$l->product_id], $warehouse, Quantity::of($l->quantity), $cost, $ret, $ret->return_date, $l->id,
+                    $out = $this->stock->reverseIn($products[$l->product_id], $warehouse, LineUnits::baseQuantity($l->quantity, $bl->unit_factor), $cost, $ret, $ret->return_date, $l->id, // in the bill line's unit (BR-069)
                         "lines.{$i}.quantity", 'purchase_return_out');
                     $b->credit($warehouse->inventory_ledger_id, $cost, ['warehouse_id' => $warehouse->id]);
                     $diff = $cost->minus($out);
@@ -206,7 +207,7 @@ final class PurchaseReturnService
                     if (! isset($issues[$l->id])) {
                         continue;
                     }
-                    $after = $this->stock->stockIn($products[$l->product_id], $warehouse, Quantity::of($l->quantity), Money::of($issues[$l->id]->value_out), $ret, $date, 'reversal', $l->id);
+                    $after = $this->stock->stockIn($products[$l->product_id], $warehouse, Quantity::of($issues[$l->id]->quantity_out), Money::of($issues[$l->id]->value_out), $ret, $date, 'reversal', $l->id); // base units (BR-069)
                     if (! $after->trueUp->isZero()) { // negative stock covered (R-16)
                         $b->debit($warehouse->inventory_ledger_id, $after->trueUp, ['warehouse_id' => $warehouse->id])->credit($this->mapper->ledgerFor('cogs'), $after->trueUp);
                     }

@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Table `sales_invoices` (Sales): migration 59 of 89, dependency level 6.
+ * Table `sales_invoices` (Sales): migration 59 of 90, dependency level 6.
  * Sales invoice (E3-E6). Posting moves stock out and creates its journal entry.
  * Depends on: branches, companies, journal_entries, parties, payment_terms, quotations, users, warehouses.
  *

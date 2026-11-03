@@ -10,7 +10,7 @@ use Illuminate\Validation\Rule;
  * ProductInput (05 postProducts / patchProductsId, D2/D3, backlog P3.1-BE-05). POST needs kind, name, unit, selling
  * price and income account; PATCH is partial. On-hand quantity and average cost are not fields at all, so a PATCH
  * that sends them is a 422 like any unknown field (TC-INV-005). Ledger natures and service rules are checked by
- * ProductService. Opening stock (opening_qty with opening_unit_cost) is taken only when the item is created (06 §11.2,
+ * ProductService. `units` are the item's extra units with their factor to the base unit (BR-069, P10.7). Opening stock (opening_qty with opening_unit_cost) is taken only when the item is created (06 §11.2,
  * BR-028; P11.1-BE-05); afterwards stock changes through stock documents, so a PATCH must send 0.
  */
 class ProductRequest extends StrictRequest
@@ -21,10 +21,12 @@ class ProductRequest extends StrictRequest
 
     private const COST = '/^\d{1,14}(\.\d{1,4})?$/';
 
+    private const RATE = '/^\d{1,12}(\.\d{1,6})?$/';
+
     protected function allowedFields(): array
     {
         return ['item_type', 'name', 'code', 'category_id', 'unit_id', 'barcode', 'last_purchase_cost', 'selling_price', 'wholesale_price',
-            'tax_rule_id', 'income_ledger_id', 'expense_ledger_id', 'stock_group_id', 'preferred_supplier_id', 'is_active', 'warehouses'];
+            'tax_rule_id', 'income_ledger_id', 'expense_ledger_id', 'stock_group_id', 'preferred_supplier_id', 'is_active', 'warehouses', 'units'];
     }
 
     protected function prepareForValidation(): void
@@ -76,6 +78,12 @@ class ProductRequest extends StrictRequest
             'warehouses.*.reorder_qty' => ['sometimes', 'nullable', 'string', 'regex:'.self::QTY],
             'warehouses.*.opening_qty' => ['sometimes', 'nullable', 'string', 'regex:'.($creating ? self::QTY : '/^0+(\.0{1,3})?$/')],
             'warehouses.*.opening_unit_cost' => ['sometimes', 'nullable', 'string', 'regex:'.self::COST],
+            // Extra units (BR-069, P10.7): sent, the list replaces the item's extra units. ProductService checks the base
+            // unit is not repeated, factors are above 0 and a unit used on a document keeps its factor.
+            'units' => ['sometimes', 'array', 'max:20'],
+            'units.*' => ['array:unit_id,factor'],
+            'units.*.unit_id' => ['required', 'integer', 'distinct', $exists('units')],
+            'units.*.factor' => ['required', 'string', 'regex:'.self::RATE],
         ];
     }
 
@@ -93,6 +101,10 @@ class ProductRequest extends StrictRequest
             'code.regex' => 'Use capital letters, digits and dashes, e.g. OIL-0001',
             'barcode.unique' => 'Another item already uses this barcode',
             'warehouses.*.warehouse_id.distinct' => 'Each warehouse can appear only once',
+            'units.*.unit_id.required' => 'Choose a unit',
+            'units.*.unit_id.distinct' => 'Each unit can appear only once',
+            'units.*.factor.required' => 'Enter how many base units one of this unit holds',
+            'units.*.factor.regex' => 'Enter a number above 0 with up to 6 decimals',
             'warehouses.*.opening_qty.regex' => $this->isMethod('POST') ? 'Enter a quantity with up to 3 decimals'
                 : 'Opening stock is entered when the item is created; use a stock adjustment now',
         ];

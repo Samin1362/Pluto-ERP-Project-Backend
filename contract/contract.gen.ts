@@ -1706,6 +1706,7 @@ export interface Product {
   name: string
   category?: Lookup | null
   unit: string
+  unit_id: number
   barcode?: string | null
   selling_price: Decimal
   wholesale_price?: Decimal | null
@@ -1720,6 +1721,7 @@ export interface Product {
   stock_value?: Decimal | null
   last_purchase_cost?: Decimal | null
   warehouses?: Array<StockLevel>
+  units: Array<ProductUnit>
   is_active: boolean
   version: number
 }
@@ -1747,6 +1749,25 @@ export interface ProductInput {
   preferred_supplier_id?: number | null
   is_active?: boolean
   warehouses?: Array<ProductWarehouseInput>
+  units?: Array<ProductUnitInput>
+}
+
+/** A unit the item can be bought or sold in, base unit first (factor 1). Prices are the item's prices x factor, worked out by the server; last_purchase_cost needs inventory.view_costs. */
+export interface ProductUnit {
+  unit_id: number
+  name: string
+  factor: Decimal
+  decimals: number
+  is_base: boolean
+  selling_price: Decimal
+  wholesale_price?: Decimal | null
+  last_purchase_cost?: Decimal | null
+}
+
+/** An extra unit of the item: 1 of unit_id = factor base units (BR-069). Sent on edit, the list replaces the item's extra units; a unit already used on a document line cannot be removed or change factor. */
+export interface ProductUnitInput {
+  unit_id: number
+  factor: Decimal
 }
 
 /** Per-warehouse settings; opening_qty only on create. */
@@ -1818,6 +1839,7 @@ export interface PurchaseLineInput {
   unit_cost: Decimal
   purchase_order_line_id?: number | null
   product_id: number
+  unit_id?: number | null
   description?: string | null
   quantity: Decimal
   discount_pct?: Decimal
@@ -2161,6 +2183,8 @@ export interface SalesLine {
   product_code: string
   product_name: string
   unit: string
+  unit_id?: number | null
+  unit_factor: Decimal
   description?: string | null
   quantity: Decimal
   discount_pct: Decimal
@@ -2176,6 +2200,7 @@ export interface SalesLine {
 export interface SalesLineInput {
   unit_price?: Decimal | null
   product_id: number
+  unit_id?: number | null
   description?: string | null
   quantity: Decimal
   discount_pct?: Decimal

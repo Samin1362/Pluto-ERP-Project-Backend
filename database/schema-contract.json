@@ -10175,6 +10175,22 @@
      "auto_increment": false
     },
     {
+     "name": "unit_id",
+     "type": "bigint unsigned",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "unit_factor",
+     "type": "decimal(18,6)",
+     "nullable": false,
+     "default": "1",
+     "generated": null,
+     "auto_increment": false
+    },
+    {
      "name": "description",
      "type": "varchar(255)",
      "nullable": true,
@@ -10292,6 +10308,9 @@
     "purchase_order_lines_product_id_index": [
      "product_id"
     ],
+    "purchase_order_lines_unit_id_index": [
+     "unit_id"
+    ],
     "purchase_order_lines_tax_rule_id_index": [
      "tax_rule_id"
     ]
@@ -10307,6 +10326,13 @@
     "purchase_order_lines_product_id_foreign": {
      "column": "product_id",
      "references_table": "products",
+     "references_column": "id",
+     "on_delete": "RESTRICT",
+     "on_update": "RESTRICT"
+    },
+    "purchase_order_lines_unit_id_foreign": {
+     "column": "unit_id",
+     "references_table": "units",
      "references_column": "id",
      "on_delete": "RESTRICT",
      "on_update": "RESTRICT"
@@ -10383,6 +10409,22 @@
      "type": "varchar(30)",
      "nullable": false,
      "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "unit_id",
+     "type": "bigint unsigned",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "unit_factor",
+     "type": "decimal(18,6)",
+     "nullable": false,
+     "default": "1",
      "generated": null,
      "auto_increment": false
     },
@@ -10496,6 +10538,9 @@
     "quotation_lines_product_id_index": [
      "product_id"
     ],
+    "quotation_lines_unit_id_index": [
+     "unit_id"
+    ],
     "quotation_lines_tax_rule_id_index": [
      "tax_rule_id"
     ]
@@ -10511,6 +10556,13 @@
     "quotation_lines_product_id_foreign": {
      "column": "product_id",
      "references_table": "products",
+     "references_column": "id",
+     "on_delete": "RESTRICT",
+     "on_update": "RESTRICT"
+    },
+    "quotation_lines_unit_id_foreign": {
+     "column": "unit_id",
+     "references_table": "units",
      "references_column": "id",
      "on_delete": "RESTRICT",
      "on_update": "RESTRICT"
@@ -12365,6 +12417,22 @@
      "auto_increment": false
     },
     {
+     "name": "unit_id",
+     "type": "bigint unsigned",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "unit_factor",
+     "type": "decimal(18,6)",
+     "nullable": false,
+     "default": "1",
+     "generated": null,
+     "auto_increment": false
+    },
+    {
      "name": "description",
      "type": "varchar(255)",
      "nullable": true,
@@ -12506,6 +12574,9 @@
     "sales_invoice_lines_product_id_index": [
      "product_id"
     ],
+    "sales_invoice_lines_unit_id_index": [
+     "unit_id"
+    ],
     "sales_invoice_lines_tax_rule_id_index": [
      "tax_rule_id"
     ],
@@ -12524,6 +12595,13 @@
     "sales_invoice_lines_product_id_foreign": {
      "column": "product_id",
      "references_table": "products",
+     "references_column": "id",
+     "on_delete": "RESTRICT",
+     "on_update": "RESTRICT"
+    },
+    "sales_invoice_lines_unit_id_foreign": {
+     "column": "unit_id",
+     "references_table": "units",
      "references_column": "id",
      "on_delete": "RESTRICT",
      "on_update": "RESTRICT"
@@ -15017,6 +15095,22 @@
      "auto_increment": false
     },
     {
+     "name": "unit_id",
+     "type": "bigint unsigned",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "unit_factor",
+     "type": "decimal(18,6)",
+     "nullable": false,
+     "default": "1",
+     "generated": null,
+     "auto_increment": false
+    },
+    {
      "name": "description",
      "type": "varchar(255)",
      "nullable": true,
@@ -15166,6 +15260,9 @@
     "purchase_bill_lines_product_id_index": [
      "product_id"
     ],
+    "purchase_bill_lines_unit_id_index": [
+     "unit_id"
+    ],
     "purchase_bill_lines_tax_rule_id_index": [
      "tax_rule_id"
     ],
@@ -15187,6 +15284,13 @@
     "purchase_bill_lines_product_id_foreign": {
      "column": "product_id",
      "references_table": "products",
+     "references_column": "id",
+     "on_delete": "RESTRICT",
+     "on_update": "RESTRICT"
+    },
+    "purchase_bill_lines_unit_id_foreign": {
+     "column": "unit_id",
+     "references_table": "units",
      "references_column": "id",
      "on_delete": "RESTRICT",
      "on_update": "RESTRICT"
@@ -17587,6 +17691,149 @@
     "lc_loan_repayments_rule2_check": "`interest_amount` >= 0",
     "lc_loan_repayments_rule3_check": "`accrued_cleared` >= 0",
     "lc_loan_repayments_rule4_check": "`principal_amount` + `interest_amount` + `accrued_cleared` > 0"
+   }
+  },
+  "product_units": {
+   "seq": 90,
+   "level": 6,
+   "migration": "2026_10_18_009000_create_product_units_table.php",
+   "module": "Inventory",
+   "columns": [
+    {
+     "name": "id",
+     "type": "bigint unsigned",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": true
+    },
+    {
+     "name": "company_id",
+     "type": "bigint unsigned",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "product_id",
+     "type": "bigint unsigned",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "unit_id",
+     "type": "bigint unsigned",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "factor",
+     "type": "decimal(18,6)",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "created_by",
+     "type": "bigint unsigned",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "updated_by",
+     "type": "bigint unsigned",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "created_at",
+     "type": "datetime",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "updated_at",
+     "type": "datetime",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    }
+   ],
+   "primary": [
+    "id"
+   ],
+   "unique": {
+    "product_units_product_id_unit_id_unique": [
+     "product_id",
+     "unit_id"
+    ]
+   },
+   "index": {
+    "product_units_company_id_index": [
+     "company_id"
+    ],
+    "product_units_unit_id_index": [
+     "unit_id"
+    ],
+    "product_units_created_by_index": [
+     "created_by"
+    ],
+    "product_units_updated_by_index": [
+     "updated_by"
+    ]
+   },
+   "foreign": {
+    "product_units_company_id_foreign": {
+     "column": "company_id",
+     "references_table": "companies",
+     "references_column": "id",
+     "on_delete": "RESTRICT",
+     "on_update": "RESTRICT"
+    },
+    "product_units_product_id_foreign": {
+     "column": "product_id",
+     "references_table": "products",
+     "references_column": "id",
+     "on_delete": "CASCADE",
+     "on_update": "RESTRICT"
+    },
+    "product_units_unit_id_foreign": {
+     "column": "unit_id",
+     "references_table": "units",
+     "references_column": "id",
+     "on_delete": "RESTRICT",
+     "on_update": "RESTRICT"
+    },
+    "product_units_created_by_foreign": {
+     "column": "created_by",
+     "references_table": "users",
+     "references_column": "id",
+     "on_delete": "RESTRICT",
+     "on_update": "RESTRICT"
+    },
+    "product_units_updated_by_foreign": {
+     "column": "updated_by",
+     "references_table": "users",
+     "references_column": "id",
+     "on_delete": "RESTRICT",
+     "on_update": "RESTRICT"
+    }
+   },
+   "check": {
+    "product_units_rule1_check": "`factor` > 0"
    }
   }
  }

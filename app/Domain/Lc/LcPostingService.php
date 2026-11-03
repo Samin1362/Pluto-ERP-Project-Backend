@@ -6,6 +6,7 @@ use App\Domain\Accounting\AccountMapper;
 use App\Domain\Accounting\JournalBuilder;
 use App\Domain\Accounting\PeriodGuard;
 use App\Domain\Accounting\PostingService;
+use App\Domain\Documents\LineUnits;
 use App\Domain\Inventory\StockService;
 use App\Domain\Shared\AuditLogger;
 use App\Domain\Shared\Money;
@@ -531,7 +532,7 @@ final class LcPostingService
             throw new ApiProblem('validation_failed', errors: ['purchase_bill_id' => ["{$bill->number} has no stock items to carry the cost"]]);
         }
         $method = $in['method'] ?? 'value';
-        $basis = $lines->map(fn ($l) => $method === 'quantity' ? BigDecimal::of((string) $l->quantity) : $l->base_net_amount->toBigDecimal());
+        $basis = $lines->map(fn ($l) => $method === 'quantity' ? LineUnits::baseQuantity($l->quantity, $l->unit_factor)->toBigDecimal() : $l->base_net_amount->toBigDecimal()); // base units (BR-069)
         $sum = $basis->reduce(fn ($a, $v) => $a->plus($v), BigDecimal::zero());
         if ($sum->isZero()) {
             throw new ApiProblem('validation_failed', errors: ['method' => ['The bill lines have no value to spread by; use quantity']]);
@@ -542,12 +543,12 @@ final class LcPostingService
             $last = $i === $lines->count() - 1;
             $alloc = $last ? $left : Money::of($total->toBigDecimal()->multipliedBy($basis[$i])->dividedBy($sum, 2, RoundingMode::HalfUp));
             $left = $left->minus($alloc);
-            $received = Quantity::of((string) $l->quantity);
+            $received = LineUnits::baseQuantity($l->quantity, $l->unit_factor); // compared with stock on hand, so base units (BR-069)
             $onHand = Quantity::of((string) (DB::table('stock_balances')->where('product_id', $l->product_id)->where('warehouse_id', $bill->warehouse_id)->value('qty_on_hand') ?? '0'));
             $kept = $onHand->isGreaterThan($received) ? $received : ($onHand->isNegative() ? Quantity::zero() : $onHand);
             $toInv = $kept->isEqualTo($received) ? $alloc : Money::of($alloc->toBigDecimal()->multipliedBy($kept->toBigDecimal())->dividedBy($received->toBigDecimal(), 2, RoundingMode::HalfUp));
             $out[] = ['purchase_bill_line_id' => $l->id, 'product_id' => $l->product_id, 'product_name' => $products[$l->product_id]->name, 'warehouse_id' => $bill->warehouse_id,
-                'basis_value' => $method === 'quantity' ? (string) Money::of((string) $l->quantity) : (string) $l->base_net_amount, 'allocated_amount' => (string) $alloc,
+                'basis_value' => $method === 'quantity' ? (string) Money::of($received->toBigDecimal()) : (string) $l->base_net_amount, 'allocated_amount' => (string) $alloc,
                 'qty_received' => (string) $received, 'qty_on_hand' => (string) $kept, 'amount_to_inventory' => (string) $toInv, 'amount_to_cogs' => (string) $alloc->minus($toInv),
                 'per_unit' => (string) $alloc->toBigDecimal()->dividedBy($received->toBigDecimal(), 4, RoundingMode::HalfUp)];
         }

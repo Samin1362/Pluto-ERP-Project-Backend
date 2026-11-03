@@ -37,7 +37,7 @@ class ProductController extends Controller
     {
         $page = $this->query->page($request->validated());
         $rows = $page->getCollection()->keyBy('id');
-        $products = Product::with(['category', 'unit', 'stockGroup', 'preferredSupplier'])->whereIn('id', $rows->keys())->get()->keyBy('id');
+        $products = Product::with(['category', 'unit', 'units.unit', 'stockGroup', 'preferredSupplier'])->whereIn('id', $rows->keys())->get()->keyBy('id');
         $costs = $this->showCosts();
 
         return response()->json([
@@ -79,7 +79,7 @@ class ProductController extends Controller
 
     private function respond(Request $request, Product $product, int $status = 200): JsonResponse
     {
-        $product->load(['category', 'unit', 'stockGroup', 'preferredSupplier']);
+        $product->load(['category', 'unit', 'units.unit', 'stockGroup', 'preferredSupplier']);
         $resource = new ProductResource($product, $this->stock->totals([$product->id])[$product->id] ?? null, $this->showCosts(), $this->stock->levels($product->id));
 
         return response()->json(['data' => $resource->resolve($request)], $status)->setEtag((string) $product->lock_version, true);

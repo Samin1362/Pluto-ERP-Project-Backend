@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Table `stock_groups` (Inventory): migration 22 of 89, dependency level 2.
+ * Table `stock_groups` (Inventory): migration 22 of 90, dependency level 2.
  * Reporting hierarchy for stock valuation (D6). Does not choose the ledger (see GAP-20).
  * Depends on: companies, users. Self-reference: parent_id.
  *

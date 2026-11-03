@@ -6,6 +6,7 @@ use App\Domain\Accounting\AccountMapper;
 use App\Domain\Accounting\JournalBuilder;
 use App\Domain\Accounting\PeriodGuard;
 use App\Domain\Accounting\PostingService;
+use App\Domain\Documents\LineUnits;
 use App\Domain\Inventory\StockService;
 use App\Domain\Shared\AuditLogger;
 use App\Domain\Shared\DocumentNumberService;
@@ -127,7 +128,7 @@ final class SalesReturnService
                 foreach ($stocked as $l) {
                     $unitCost = $invLines[$l->sales_invoice_line_id]->unit_cost;
                     $value = Money::of($unitCost->toBigDecimal()->multipliedBy($l->quantity->toBigDecimal())->toScale(2, RoundingMode::HalfUp));
-                    $after = $this->stock->stockIn($products[$l->product_id], $warehouse, Quantity::of($l->quantity), $value, $ret, $ret->return_date, 'sales_return_in', $l->id);
+                    $after = $this->stock->stockIn($products[$l->product_id], $warehouse, LineUnits::baseQuantity($l->quantity, $invLines[$l->sales_invoice_line_id]->unit_factor), $value, $ret, $ret->return_date, 'sales_return_in', $l->id); // in the invoice line's unit (BR-069)
                     $l->forceFill(['unit_cost' => $unitCost])->save();
                     $b->debit($warehouse->inventory_ledger_id, $value->plus($after->trueUp), ['warehouse_id' => $warehouse->id])->credit($cogs, $value->plus($after->trueUp));
                 }
@@ -185,7 +186,7 @@ final class SalesReturnService
                 $this->stock->lock($stocked->map(fn ($l) => [$l->product_id, $warehouse->id])->all());
                 foreach ($stocked as $i => $l) {
                     $orig = Money::of($receipts[$l->id]->value_in);
-                    $out = $this->stock->reverseIn($products[$l->product_id], $warehouse, Quantity::of($l->quantity), $orig, $ret, $date, $l->id, "lines.{$i}.quantity");
+                    $out = $this->stock->reverseIn($products[$l->product_id], $warehouse, Quantity::of($receipts[$l->id]->quantity_in), $orig, $ret, $date, $l->id, "lines.{$i}.quantity"); // base units (BR-069)
                     $diff = $orig->minus($out);
                     if (! $diff->isZero()) { // R-17: stock gave back less (or more) value than the return put in
                         $b->debit($warehouse->inventory_ledger_id, $diff, ['warehouse_id' => $warehouse->id])->credit($this->mapper->ledgerFor('stock_adjustment'), $diff);

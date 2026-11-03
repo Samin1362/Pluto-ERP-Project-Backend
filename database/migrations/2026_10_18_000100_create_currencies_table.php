@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Table `currencies` (Platform): migration 1 of 89, dependency level 0.
+ * Table `currencies` (Platform): migration 1 of 90, dependency level 0.
  * ISO 4217 reference list (BDT base, USD/EUR/CNY for imports). Global reference data.
  * Depends on: nothing.
  *

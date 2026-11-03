@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Table `lc_loan_repayments` (LC): migration 89 of 89, dependency level 11.
+ * Table `lc_loan_repayments` (LC): migration 89 of 90, dependency level 11.
  * A repayment of a PAD/LTR loan: principal and the interest due to that date.
  * Depends on: companies, journal_entries, lc_loans, money_accounts, users.
  *

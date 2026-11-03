@@ -6,6 +6,7 @@ use App\Domain\Accounting\AccountMapper;
 use App\Domain\Accounting\JournalBuilder;
 use App\Domain\Accounting\PeriodGuard;
 use App\Domain\Accounting\PostingService;
+use App\Domain\Documents\LineUnits;
 use App\Domain\Inventory\StockService;
 use App\Domain\Settlements\PartyPaymentService;
 use App\Domain\Shared\AuditLogger;
@@ -69,7 +70,7 @@ final class SalesInvoicePostingService
             $stocked = $lines->filter(fn ($l) => $products[$l->product_id]->track_stock);
 
             $costs = $this->stock->stockOutMany($stocked->mapWithKeys(fn ($l, $i) => [$i => ['product' => $products[$l->product_id], 'warehouse' => $warehouse,
-                'qty' => Quantity::of($l->quantity), 'source_line_id' => $l->id]])->all(), $invoice, $invoice->invoice_date);
+                'qty' => LineUnits::baseQuantity($l->quantity, $l->unit_factor), 'source_line_id' => $l->id]])->all(), $invoice, $invoice->invoice_date); // BR-069: quantities in base units
 
             $b = new JournalBuilder;
             $b->debit($party->ledger_id, $invoice->total, ['against_reference' => $invoice->number]);

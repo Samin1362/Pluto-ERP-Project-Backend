@@ -7,6 +7,7 @@ use App\Domain\Documents\CalcLine;
 use App\Domain\Documents\CalcOptions;
 use App\Domain\Documents\Calculation;
 use App\Domain\Documents\DocumentCalculator;
+use App\Domain\Documents\LineUnits;
 use App\Domain\Shared\Money;
 use App\Domain\Shared\Quantity;
 use App\Domain\Shared\Rate;
@@ -77,11 +78,11 @@ final class SalesInvoicePreparer
      * together with any $errors the caller already found (422 inactive_reference / validation_failed).
      *
      * @param  array<string, list<string>>  $errors
-     * @return array{0: list<array{product: Product, input: array, stocked: bool, unit_price: Money, income_ledger_id: int, tax_rate: Rate, available: ?string}>, 1: Calculation}
+     * @return array{0: list<array{product: Product, input: array, unit: array{unit_id: int, name: string, factor: Rate}, stocked: bool, unit_price: Money, income_ledger_id: int, tax_rate: Rate, available: ?string}>, 1: Calculation}
      */
     public function priceLines(Party $party, array $inLines, array $errors = []): array
     {
-        $products = Product::with('unit')->whereIn('id', array_column($inLines, 'product_id'))->get()->keyBy('id');
+        $products = Product::with(['unit', 'units.unit'])->whereIn('id', array_column($inLines, 'product_id'))->get()->keyBy('id');
         $rules = TaxRule::whereIn('id', array_filter(array_column($inLines, 'tax_rule_id')))->get()->keyBy('id');
         foreach ($inLines as $i => $l) {
             if (! $products[$l['product_id']]->is_active) {
@@ -92,8 +93,9 @@ final class SalesInvoicePreparer
                 $errors["lines.{$i}.tax_rule_id"] = [$rule->is_active ? "{$rule->name} applies to purchases only" : "{$rule->name} is inactive"];
             }
         }
+        $units = LineUnits::resolve($products, $inLines, $errors); // BR-069
         if ($errors) {
-            $inactive = array_filter(array_keys($errors), fn ($k) => ! str_ends_with($k, 'tax_rule_id'));
+            $inactive = array_filter(array_keys($errors), fn ($k) => ! str_ends_with($k, 'tax_rule_id') && ! str_ends_with($k, 'unit_id'));
             throw new ApiProblem($inactive ? 'inactive_reference' : 'validation_failed', errors: $errors);
         }
 
@@ -102,11 +104,11 @@ final class SalesInvoicePreparer
         $calcLines = [];
         foreach ($inLines as $i => $l) {
             $p = $products[$l['product_id']];
-            $price = Money::of($l['unit_price'] ?? $this->tierPrice($p, $party));
+            $price = Money::of($l['unit_price'] ?? Money::of($this->tierPrice($p, $party))->multipliedBy($units[$i]['factor'])); // tier price per chosen unit (BR-069)
             $taxRate = isset($l['tax_rule_id']) ? Rate::of($rules[$l['tax_rule_id']]->rate) : Rate::zero();
             $calcLines[] = new CalcLine($i + 1, Quantity::of($l['quantity']), UnitCost::of($price), Rate::of($l['discount_pct'] ?? '0'),
                 $l['tax_rule_id'] ?? null, $taxRate, (bool) $p->track_stock);
-            $lines[] = ['product' => $p, 'input' => $l, 'stocked' => (bool) $p->track_stock, 'unit_price' => $price, 'tax_rate' => $taxRate,
+            $lines[] = ['product' => $p, 'input' => $l, 'unit' => $units[$i], 'stocked' => (bool) $p->track_stock, 'unit_price' => $price, 'tax_rate' => $taxRate,
                 'income_ledger_id' => $p->income_ledger_id, 'available' => null];
         }
         $calc = $this->calculator->calculate($calcLines, new CalcOptions(rounding: $settings?->invoice_rounding ?? 'none',
@@ -184,7 +186,7 @@ final class SalesInvoicePreparer
             $onHand[$p->id] ??= Quantity::of(StockBalance::where('product_id', $p->id)->where('warehouse_id', $warehouse->id)->value('qty_on_hand') ?? '0');
             $lines[$i]['available'] = (string) $onHand[$p->id];
             $before = $needed[$p->id] ?? Quantity::zero();
-            $needed[$p->id] = $before->plus(Quantity::of($l['input']['quantity']));
+            $needed[$p->id] = $before->plus(LineUnits::baseQuantity($l['input']['quantity'], $l['unit']['factor'])); // base units (BR-069)
             if ($needed[$p->id]->isGreaterThan($onHand[$p->id]) && ! $before->isGreaterThan($onHand[$p->id])) {
                 $warnings[] = ['code' => 'LOW_STOCK', 'line_no' => $i + 1,
                     'message' => 'Only '.self::qty($onHand[$p->id])." {$p->unit?->name} of {$p->name} at {$warehouse->name}; the invoice needs ".self::qty($needed[$p->id])];
@@ -213,7 +215,8 @@ final class SalesInvoicePreparer
                 $tax[$ledgerId] = ($tax[$ledgerId] ?? Money::zero())->plus($c->tax);
             }
             if ($l['stocked']) {
-                $effects[] = 'Stock out: '.Quantity::of($l['input']['quantity'])." {$l['product']->unit?->name} of {$l['product']->name} from {$warehouse->name}";
+                $inUnit = $l['unit']['factor']->isEqualTo(1) ? '' : ' ('.Quantity::of($l['input']['quantity'])." {$l['unit']['name']})";
+                $effects[] = 'Stock out: '.LineUnits::baseQuantity($l['input']['quantity'], $l['unit']['factor'])." {$l['product']->unit?->name}{$inUnit} of {$l['product']->name} from {$warehouse->name}";
             }
         }
         $ledgers = DB::table('ledgers')->whereIn('id', array_keys($income + $tax))->get(['id', 'code', 'name'])->keyBy('id');

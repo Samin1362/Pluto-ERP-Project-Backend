@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Table `stock_adjustments` (Inventory): migration 52 of 89, dependency level 5.
+ * Table `stock_adjustments` (Inventory): migration 52 of 90, dependency level 5.
  * Count correction, damage, expiry, theft or samples (D10). Posts value difference.
  * Depends on: companies, journal_entries, users, warehouses.
  *

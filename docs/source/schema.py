@@ -360,6 +360,9 @@ add(
        c("is_active", BOOL, default="1")],
       uniques=[["company_id", "code"], ["company_id", "barcode"]], indexes=[["company_id", "item_type", "is_active"], ["company_id", "name"]],
       checks=["selling_price >= 0", "item_type = 'product' OR track_stock = 0"], version=True, soft_delete=True),
+    T("product_units", "Inventory", "Extra units an item is bought or sold in, each worth `factor` of its base unit (products.unit_id), e.g. 1 box = 12 pcs (BR-069). Stock is always kept in the base unit.",
+      [fk("product_id", "products", on_delete="CASCADE"), fk("unit_id", "units"), c("factor", RATE, note="Base units in one of this unit")],
+      uniques=[["product_id", "unit_id"]], checks=["factor > 0"]),
     T("product_warehouse_settings", "Inventory", "Per-warehouse reorder level and reorder quantity.",
       [fk("product_id", "products", on_delete="CASCADE"), fk("warehouse_id", "warehouses", on_delete="CASCADE"),
        c("reorder_level", QTY, default="0"), c("reorder_qty", QTY, default="0")],
@@ -518,7 +521,9 @@ def totals(foreign=False):
 def lines(parent, parent_tbl, extra):
     return ([fk(parent, parent_tbl, on_delete="CASCADE"), c("line_no", "SMALLINT UNSIGNED"), fk("product_id", "products"),
              c("product_code", V(30), note="Snapshot at save (R-30)"), c("product_name", V(190), note="Snapshot at save"),
-             c("unit_name", V(30), note="Snapshot at save"),
+             c("unit_name", V(30), note="Snapshot at save: the chosen unit (BR-069)"),
+             fk("unit_id", "units", null=True, note="Unit the quantity and price are in; NULL on rows saved before P10.7 = the product's base unit"),
+             c("unit_factor", RATE, default="1", note="Base units per one line unit, snapshot at save; stock moves quantity x unit_factor (BR-069)"),
              c("description", V(255), null=True), c("quantity", QTY)] + extra)
 
 

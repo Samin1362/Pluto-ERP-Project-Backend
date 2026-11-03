@@ -144,7 +144,7 @@ final class PurchaseBillService
             $c = $p->calculation->lines[$i]; // tax_rate is stored with the column's 4 decimals
             $bill->lines()->create([
                 'line_no' => $i + 1, 'product_id' => $l['product']->id, 'product_code' => $l['product']->code, 'product_name' => $l['product']->name,
-                'unit_name' => $l['product']->unit?->name ?? '', 'description' => $l['input']['description'] ?? null,
+                'unit_name' => $l['unit']['name'], 'unit_id' => $l['unit']['unit_id'], 'unit_factor' => (string) $l['unit']['factor'], 'description' => $l['input']['description'] ?? null,
                 'quantity' => $l['input']['quantity'], 'unit_cost' => $l['input']['unit_cost'], 'discount_pct' => $l['input']['discount_pct'] ?? '0',
                 'discount_amount' => $c->discountTotal(), 'tax_rule_id' => $c->taxRuleId, 'tax_rate' => $l['tax_rate']->toBigDecimal()->toScale(4, RoundingMode::HalfUp)->toString(), 'tax_amount' => $c->tax,
                 'net_amount' => $c->net, 'line_total' => $c->total, 'base_net_amount' => $c->baseNet, 'debit_ledger_id' => $l['debit_ledger_id'],

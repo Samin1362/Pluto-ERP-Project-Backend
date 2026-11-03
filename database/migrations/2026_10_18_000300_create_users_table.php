@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Table `users` (Platform): migration 3 of 89, dependency level 0.
+ * Table `users` (Platform): migration 3 of 90, dependency level 0.
  * A person who can sign in. Global; membership of companies is in company_users.
  * Depends on: nothing.
  *

@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Table `tax_rules` (Accounting): migration 39 of 89, dependency level 4.
+ * Table `tax_rules` (Accounting): migration 39 of 90, dependency level 4.
  * User-defined tax rule (K6). Pluto never assumes rates.
  * Depends on: companies, ledgers, users.
  *
