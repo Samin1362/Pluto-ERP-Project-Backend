@@ -100,6 +100,7 @@ t("TC-PUR-009", S, F, "Bill converted from PO", "PO received_quantity updated; P
 t("TC-PUR-010", S, F, "Cancel posted bill whose stock was partly sold", "422 insufficient_stock unless negative allowed; otherwise reversal at bill cost", ["BR-024", "BR-014"])
 t("TC-PUR-011", S, F, "Cancel a posted purchase return", "Stock restored at the return cost; its debit note cancelled in the same transaction; supplier balance restored; SJ voucher number (R-03)", ["BR-003", "BR-057"])
 t("TC-PUR-012", S, F, "Post a debit note created by a purchase return", "409 created_from_return; the supplier was debited once, by the return (R-04)", ["BR-057"])
+t("TC-PUR-013", S, F, "Bill lines past the order line's remaining quantity (with and without an LC tolerance); two drafts that each fit", "Calculate warns ORDER_QTY_EXCEEDED; save 422 order_qty_exceeded on lines.{i}.quantity; the second draft's posting 422 order_qty_exceeded and nothing posts", ["BR-056", "FR-051"])
 
 # ---------------------------------------------------------------- inventory
 S = "Inventory consistency"

@@ -81,6 +81,7 @@ E = {
     "note_applied": (409, "Remove the note's allocations before cancelling", ["BR-023"]),
     "created_from_return": (409, "This debit note belongs to a purchase return; cancel the return", ["BR-057"]),
     "already_converted": (409, "This quotation or purchase order has already been converted", ["BR-056"]),
+    "order_qty_exceeded": (422, "More than the purchase order still expects (plus the LC's tolerance)", ["BR-056"]),
     "comment_required": (422, "A comment is required to reject", ["FR-014"]),
     "purpose_required": (422, "Choose what the ledger is for", ["BR-037"]),
     "role_in_use": (409, "Move the members to another role first", ["BR-060"]),

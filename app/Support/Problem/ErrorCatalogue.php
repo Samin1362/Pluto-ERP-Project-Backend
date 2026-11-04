@@ -59,6 +59,7 @@ final class ErrorCatalogue
         'not_found' => [404, 'Not found (or it belongs to another company)'],
         'note_applied' => [409, 'Remove the note\'s allocations before cancelling'],
         'nothing_to_revalue' => [422, 'No open foreign-currency items at that date'],
+        'order_qty_exceeded' => [422, 'More than the purchase order still expects (plus the LC\'s tolerance)'],
         'period_locked' => [422, 'The date is in a locked period or outside an open financial year'],
         'permission_denied' => [403, 'Your role does not allow this action'],
         'purpose_required' => [422, 'Choose what the ledger is for'],

@@ -33,6 +33,7 @@ final class PurchaseBillService
     {
         return DB::transaction(function () use ($in) {
             $prepared = $this->preparer->prepare($in);
+            $this->assertWithinOrder($prepared);
             $period = $this->periods->assertOpen($prepared->billDate);
             $this->assertUniqueSupplierBill($prepared->party->id, $in['supplier_bill_no']);
             $bill = new PurchaseBill(['status' => 'draft', 'payment_status' => 'unpaid', 'amount_settled' => '0']);
@@ -54,6 +55,7 @@ final class PurchaseBillService
                 throw new ApiProblem('version_conflict', extra: ['current_version' => (int) $bill->lock_version]);
             }
             $prepared = $this->preparer->prepare($in);
+            $this->assertWithinOrder($prepared);
             $this->periods->assertOpen($prepared->billDate);
             $this->assertUniqueSupplierBill($prepared->party->id, $in['supplier_bill_no'], $bill->id);
             $old = $this->audited($bill);
@@ -64,6 +66,14 @@ final class PurchaseBillService
 
             return $bill->load('lines');
         });
+    }
+
+    /** BR-056: a draft may not receive more than its purchase order still expects (plus the LC's tolerance). */
+    private function assertWithinOrder(PreparedBill $p): void
+    {
+        if ($p->orderExcess) {
+            throw new ApiProblem('order_qty_exceeded', array_values($p->orderExcess)[0][0].'.', errors: $p->orderExcess);
+        }
     }
 
     /** BR-025: drafts only. The number is voided, not freed (BR-006, GAP-09). */

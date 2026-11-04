@@ -33,6 +33,9 @@ use Illuminate\Support\Facades\DB;
  * P4.2-BE-01). Shared by POST /purchase-bills/calculate (DEC-09: the UI shows only the server's figures) and by the
  * draft services, so a saved draft carries exactly what calculate showed.
  *
+ * Lines linked to a purchase order line are checked against what that line still expects (PurchaseOrderLimits,
+ * BR-056): a warning here, refused by the draft services.
+ *
  * Refuses (422) an inactive supplier, warehouse or product (inactive_reference), a tax rule that is inactive or only
  * for sales, and a foreign currency without an exchange rate. Each line's debit ledger follows 06 §8: the warehouse's
  * inventory ledger for stock; for non-stock lines the product's expense ledger, else the supplier's default purchase
@@ -44,6 +47,7 @@ final class PurchaseBillPreparer
         private readonly DocumentCalculator $calculator,
         private readonly AccountMapper $mapper,
         private readonly AverageCostCalculator $avg,
+        private readonly PurchaseOrderLimits $limits,
     ) {}
 
     public function prepare(array $in): PreparedBill
@@ -112,10 +116,18 @@ final class PurchaseBillPreparer
             $warnings[] = ['code' => 'BACKDATED', 'message' => "The bill date is more than {$window} days ago; posting will ask you to confirm it (BR-053)."];
         }
 
+        // BR-056: linked lines may not take more than the order line still expects (plus the LC's tolerance). Calculate
+        // shows it as a line warning; saving and posting refuse it (order_qty_exceeded).
+        $excess = $this->limits->excess(isset($in['purchase_order_id']) ? (int) $in['purchase_order_id'] : null,
+            empty($in['letter_of_credit_id']) ? null : (int) $in['letter_of_credit_id'], $in['lines']);
+        foreach ($excess as $key => [$message]) {
+            $warnings[] = ['code' => 'ORDER_QTY_EXCEEDED', 'message' => $message, 'line_no' => (int) explode('.', $key)[1] + 1];
+        }
+
         $balance = $this->payableBalance($party);
         [$lines, $effects] = $this->effects($lines, $calc, $warehouse, $party, $due, $balance);
 
-        return new PreparedBill($party, $warehouse, $lines, $calc, $currency, $rate, $billDate, $due, $termId, $warnings, $effects, $balance);
+        return new PreparedBill($party, $warehouse, $lines, $calc, $currency, $rate, $billDate, $due, $termId, $warnings, $effects, $balance, $excess);
     }
 
     /**

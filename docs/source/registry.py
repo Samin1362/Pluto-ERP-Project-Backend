@@ -108,7 +108,7 @@ BR = {
  "BR-053": "A voucher dated more than the configured number of days in the past requires explicit confirmation.",
  "BR-054": "An expense or income entry needs amount > 0, a category and a money account; it posts the category ledger against the money account.",
  "BR-055": "Due date defaults to document date + the party's payment-term days and may be edited.",
- "BR-056": "Quotations and purchase orders never post; converting copies lines and prices; bills update purchase-order received quantities.",
+ "BR-056": "Quotations and purchase orders never post; converting copies lines and prices; bills update purchase-order received quantities. Bill lines linked to an order line take at most ordered - received, or ordered x (1 + tolerance) - received when the bill's LC is raised against that order.",
  "BR-057": "A purchase return credits inventory at the original bill cost of the returned lines; the supplier is debited through the debit note.",
  "BR-058": "A cash-count difference posts to the cash short/over ledger and requires approval.",
  "BR-059": "Active plus invited users cannot exceed the company's seat limit.",

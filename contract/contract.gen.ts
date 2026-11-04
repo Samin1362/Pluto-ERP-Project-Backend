@@ -55,6 +55,7 @@ export type ErrorCode =
   | 'not_found'
   | 'note_applied'
   | 'nothing_to_revalue'
+  | 'order_qty_exceeded'
   | 'period_locked'
   | 'permission_denied'
   | 'purpose_required'
@@ -1141,12 +1142,16 @@ export interface LensData {
   table?: ReportData
 }
 
-/** Import LC. */
+/** Import LC. `purchase_order_id`/`purchase_order_number` name the order it is raised against (F3 fills an import bill's lines from it); `quantity` and `quantity_unit` are the LC's own goods quantity, a reference only. */
 export interface LetterOfCredit {
   id: number
   lc_number: string
   status: 'draft' | 'awaiting_bank' | 'opened' | 'partly_shipped' | 'documents_presented' | 'payment_due' | 'closed' | 'cancelled' | 'expired'
   party: PartyRef
+  purchase_order_id?: number | null
+  purchase_order_number?: string | null
+  quantity?: Decimal | null
+  quantity_unit?: string | null
   goods_description: string
   currency_code: string
   amount: Decimal
