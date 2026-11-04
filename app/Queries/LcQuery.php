@@ -29,7 +29,7 @@ final class LcQuery
 
     public function list(array $f): Builder
     {
-        $q = LetterOfCredit::query()->with('party', 'issuingBank');
+        $q = LetterOfCredit::query()->with('party', 'issuingBank', 'purchaseOrder');
         if (! empty($f['group']) && isset(self::GROUPS[$f['group']])) {
             $q->whereIn('status', self::GROUPS[$f['group']]);
         }

@@ -1,6 +1,6 @@
 # 09 · Testing strategy
 
-> 151 test cases with unique IDs (generated table in §11). Every business rule BR-001…BR-065 has at least one test case; the doc build fails otherwise.
+> 152 test cases with unique IDs (generated table in §11). Every business rule BR-001…BR-065 has at least one test case; the doc build fails otherwise.
 
 ## 1. Principles
 1. **Money and stock are proven, not eyeballed.** Every posting rule has a test asserting the exact journal lines, that debits equal credits, and the exact stock movement.
@@ -159,6 +159,7 @@ Seven Playwright journeys (TC-E2E-001…007) mirror the six designed journeys pl
 | TC-PUR-010 | Feature/API | Cancel posted bill whose stock was partly sold | 422 insufficient_stock unless negative allowed; otherwise reversal at bill cost | BR-024, BR-014 |
 | TC-PUR-011 | Feature/API | Cancel a posted purchase return | Stock restored at the return cost; its debit note cancelled in the same transaction; supplier balance restored; SJ voucher number (R-03) | BR-003, BR-057 |
 | TC-PUR-012 | Feature/API | Post a debit note created by a purchase return | 409 created_from_return; the supplier was debited once, by the return (R-04) | BR-057 |
+| TC-PUR-013 | Feature/API | Bill lines past the order line's remaining quantity (with and without an LC tolerance); two drafts that each fit | Calculate warns ORDER_QTY_EXCEEDED; save 422 order_qty_exceeded on lines.{i}.quantity; the second draft's posting 422 order_qty_exceeded and nothing posts | BR-056, FR-051 |
 
 ### Inventory consistency
 

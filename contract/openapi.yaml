@@ -20708,6 +20708,7 @@ paths:
       - idempotency_key_reused
       - malformed_json
       - not_a_member
+      - order_qty_exceeded
       - permission_denied
       - server_error
       - token_expired
@@ -20765,7 +20766,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '422':
-          description: 'Validation or business-rule failure: `idempotency_key_reused`, `validation_failed`'
+          description: 'Validation or business-rule failure: `idempotency_key_reused`, `order_qty_exceeded`, `validation_failed`'
           content:
             application/problem+json:
               schema:
@@ -20926,6 +20927,7 @@ paths:
       - not_a_member
       - not_draft
       - not_found
+      - order_qty_exceeded
       - permission_denied
       - server_error
       - token_expired
@@ -20997,7 +20999,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '422':
-          description: 'Validation or business-rule failure: `validation_failed`'
+          description: 'Validation or business-rule failure: `order_qty_exceeded`, `validation_failed`'
           content:
             application/problem+json:
               schema:
@@ -21182,6 +21184,7 @@ paths:
       - malformed_json
       - not_a_member
       - not_found
+      - order_qty_exceeded
       - period_locked
       - permission_denied
       - server_error
@@ -21249,7 +21252,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '422':
-          description: 'Validation or business-rule failure: `backdated_confirmation_required`, `idempotency_key_reused`, `period_locked`, `unbalanced_entry`, `validation_failed`'
+          description: 'Validation or business-rule failure: `backdated_confirmation_required`, `idempotency_key_reused`, `order_qty_exceeded`, `period_locked`, `unbalanced_entry`,
+            `validation_failed`'
           content:
             application/problem+json:
               schema:
@@ -38680,6 +38684,7 @@ components:
           - not_found
           - note_applied
           - nothing_to_revalue
+          - order_qty_exceeded
           - period_locked
           - permission_denied
           - purpose_required
@@ -42575,6 +42580,7 @@ components:
           - not_found
           - note_applied
           - nothing_to_revalue
+          - order_qty_exceeded
           - period_locked
           - permission_denied
           - purpose_required
@@ -46316,7 +46322,8 @@ components:
       additionalProperties: false
     LetterOfCredit:
       type: object
-      description: Import LC.
+      description: Import LC. `purchase_order_id`/`purchase_order_number` name the order it is raised against (F3 fills an import bill's lines from it); `quantity`
+        and `quantity_unit` are the LC's own goods quantity, a reference only.
       properties:
         id:
           type: integer
@@ -46338,6 +46345,27 @@ components:
           - expired
         party:
           $ref: '#/components/schemas/PartyRef'
+        purchase_order_id:
+          type:
+          - integer
+          - 'null'
+          format: int64
+          minimum: 1
+        purchase_order_number:
+          type:
+          - string
+          - 'null'
+        quantity:
+          type:
+          - string
+          - 'null'
+          pattern: ^-?\d{1,15}(\.\d{1,3})?$
+          example: '24.000'
+          description: Decimal as string (qty)
+        quantity_unit:
+          type:
+          - string
+          - 'null'
         goods_description:
           type: string
         currency_code:

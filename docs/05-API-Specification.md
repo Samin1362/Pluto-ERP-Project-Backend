@@ -2,7 +2,7 @@
 
 > Status: **Release candidate 1.0.0-rc.1 for approval** (18 Oct 2026), Laravel + Eloquent. **No endpoint is to be implemented until this contract is approved.** ⚑ Auth details (DEC-02) and the items in §12.7 are still open.
 >
-> **Generated file.** The endpoint reference (§9), schemas (§10), page action map (§11) and contract review (§12) come from `docs/source/api.py`, `schemas.py`, `actions.py`, `errors.py` and `contract_review.py`. The machine-readable contract is [`openapi.yaml`](openapi.yaml) (OpenAPI 3.1), validated against the official OpenAPI 3.1 schema (§8). Size: 328 endpoints, 210 schemas, 75 error codes, 162 pages with 528 mapped actions.
+> **Generated file.** The endpoint reference (§9), schemas (§10), page action map (§11) and contract review (§12) come from `docs/source/api.py`, `schemas.py`, `actions.py`, `errors.py` and `contract_review.py`. The machine-readable contract is [`openapi.yaml`](openapi.yaml) (OpenAPI 3.1), validated against the official OpenAPI 3.1 schema (§8). Size: 328 endpoints, 210 schemas, 76 error codes, 162 pages with 528 mapped actions.
 
 ## 1. Conventions
 
@@ -116,6 +116,7 @@
 | `margin_exceeds_deposit` | 422 | More margin applied than was deposited | BR-044 | 3 |
 | `nature_mismatch` | 422 | The group must have the same nature (asset, liability, …) | BR-027 | 3 |
 | `nothing_to_revalue` | 422 | No open foreign-currency items at that date | BR-068 | 2 |
+| `order_qty_exceeded` | 422 | More than the purchase order still expects (plus the LC's tolerance) | BR-056 | 3 |
 | `period_locked` | 422 | The date is in a locked period or outside an open financial year | BR-004, BR-033 | 40 |
 | `purpose_required` | 422 | Choose what the ledger is for | BR-037 | 1 |
 | `repayment_exceeds_outstanding` | 422 | The principal repaid is more than the loan's outstanding principal | BR-067 | 2 |
@@ -596,9 +597,9 @@ Last run: 24 rules, **24 passed, 0 failed**; 6 negative tests, 6 detected. Offic
 | A07 | Every operation that posts a journal entry takes an Idempotency-Key and documents its locking; every body can be rejected with 422 | 328 | ✅ pass |
 | A08 | Every 201 response declares a Location header | 52 | ✅ pass |
 | A09 | Collections use the paginated envelope {data[], meta} | 52 | ✅ pass |
-| A10 | Every error code exists in the catalogue, has its HTTP status documented on the operation, and every catalogue code is reachable | 75 | ✅ pass |
+| A10 | Every error code exists in the catalogue, has its HTTP status documented on the operation, and every catalogue code is reachable | 76 | ✅ pass |
 | A11 | Request-only schemas reject unknown properties (additionalProperties: false) | 97 | ✅ pass |
-| A12 | Money, quantity, cost and rate fields are decimal strings (never JSON numbers) | 221 | ✅ pass |
+| A12 | Money, quantity, cost and rate fields are decimal strings (never JSON numbers) | 223 | ✅ pass |
 | A13 | PUT/PATCH on a versioned table requires If-Match, and If-Match is only required where a version exists | 40 | ✅ pass |
 | A14 | Request fields are stored: each maps to a column (or is declared virtual) with a compatible length, enum values and nullability | 386 | ✅ pass |
 | A15 | Response enum fields have exactly the values the database allows | 29 | ✅ pass |
@@ -4498,7 +4499,7 @@ Create a quotation.
 | **Permission** | `sales.create` — roles: Owner, Finance manager, Accountant, Sales staff |
 | **Path / query params** | — / — |
 | **Request body** | [`QuotationInput`](#schema-quotationinput) |
-| **Validation** | `party_id`* id of a record in this company; `quotation_date`* YYYY-MM-DD; `valid_until`* YYYY-MM-DD; `warehouse_id` id of a record in this company (nullable); `payment_term_id` id of a record in this company (nullable); `notes` text ≤ 65,535 (nullable); `internal_note` text ≤ 65,535 (nullable); `lines`* array of SalesLineInput<br>Unknown fields are rejected (422).<br>BR-056: Quotations and purchase orders never post; converting copies lines and prices; bills update purchase-order received quantities.<br>BR-006: Document numbers come from the company's sequence for the document type and FY, are unique, are reserved at first save and are never reused; voiding a draft number is audited. |
+| **Validation** | `party_id`* id of a record in this company; `quotation_date`* YYYY-MM-DD; `valid_until`* YYYY-MM-DD; `warehouse_id` id of a record in this company (nullable); `payment_term_id` id of a record in this company (nullable); `notes` text ≤ 65,535 (nullable); `internal_note` text ≤ 65,535 (nullable); `lines`* array of SalesLineInput<br>Unknown fields are rejected (422).<br>BR-056: Quotations and purchase orders never post; converting copies lines and prices; bills update purchase-order received quantities. Bill lines linked to an order line take at most ordered - received, or ordered x (1 + tolerance) - received when the bill's LC is raised against that order.<br>BR-006: Document numbers come from the company's sequence for the document type and FY, are unique, are reserved at first save and are never reused; voiding a draft number is audited. |
 | **Success** | 201 `data`: [`Quotation`](#schema-quotation) |
 | **Status codes** | 201, 400, 401, 403, 409, 422, 503 |
 | **Error codes** | **`company_maintenance`, `duplicate`, `inactive_reference`**; standard: `company_required`, `idempotency_in_progress`, `idempotency_key_reused`, `malformed_json`, `not_a_member`, `permission_denied`, `server_error`, `token_expired`, `token_invalid`, `unauthenticated`, `validation_failed` |
@@ -4586,7 +4587,7 @@ Convert an accepted quotation into a draft invoice. Copies the lines and prices 
 | **Permission** | `sales.create` — roles: Owner, Finance manager, Accountant, Sales staff |
 | **Path / query params** | `id` / — |
 | **Request body** | — |
-| **Validation** | BR-056: Quotations and purchase orders never post; converting copies lines and prices; bills update purchase-order received quantities. |
+| **Validation** | BR-056: Quotations and purchase orders never post; converting copies lines and prices; bills update purchase-order received quantities. Bill lines linked to an order line take at most ordered - received, or ordered x (1 + tolerance) - received when the bill's LC is raised against that order. |
 | **Success** | 201 `data`: [`SalesInvoice`](#schema-salesinvoice) |
 | **Status codes** | 201, 400, 401, 403, 404, 409, 422, 503 |
 | **Error codes** | **`already_converted`, `company_maintenance`, `inactive_reference`, `invalid_transition`, `period_locked`**; standard: `company_required`, `idempotency_in_progress`, `idempotency_key_reused`, `not_a_member`, `not_found`, `permission_denied`, `server_error`, `token_expired`, `token_invalid`, `unauthenticated` |
@@ -5076,7 +5077,7 @@ Create a draft bill (local or import mode).
 | **Validation** | `party_id`* id of a record in this company; `supplier_bill_no`* string ≤ 60; `bill_date`* YYYY-MM-DD; `due_date` YYYY-MM-DD (nullable); `payment_term_id` id of a record in this company (nullable); `warehouse_id`* id of a record in this company; `purchase_order_id` id of a record in this company (nullable); `letter_of_credit_id` id of a record in this company (nullable); `lc_shipment_id` id of a record in this company (nullable); `currency_code` ISO 4217; `exchange_rate` decimal string, 6 dp; `branch_id` id of a record in this company (nullable); `notes` text ≤ 65,535 (nullable); `internal_note` text ≤ 65,535 (nullable); `receipt_condition_note` string ≤ 255 (nullable); `lines`* array of PurchaseLineInput<br>Unknown fields are rejected (422).<br>BR-018: A purchase bill requires the supplier's bill number, unique per supplier within the company.<br>BR-006: Document numbers come from the company's sequence for the document type and FY, are unique, are reserved at first save and are never reused; voiding a draft number is audited.<br>BR-010: Money uses decimal arithmetic only. Line amounts are rounded half-up to 2 decimals; document totals are the sum of rounded lines; the server's calculation is authoritative.<br>BR-011: Line gross = quantity x unit price; discount = gross x discount% ; tax = (gross - discount) x tax rate; line total = gross - discount + tax.<br>BR-055: Due date defaults to document date + the party's payment-term days and may be edited. |
 | **Success** | 201 `data`: [`PurchaseBill`](#schema-purchasebill) |
 | **Status codes** | 201, 400, 401, 403, 409, 422, 503 |
-| **Error codes** | **`company_maintenance`, `duplicate`, `duplicate_supplier_bill`**; standard: `company_required`, `idempotency_in_progress`, `idempotency_key_reused`, `malformed_json`, `not_a_member`, `permission_denied`, `server_error`, `token_expired`, `token_invalid`, `unauthenticated`, `validation_failed` |
+| **Error codes** | **`company_maintenance`, `duplicate`, `duplicate_supplier_bill`, `order_qty_exceeded`**; standard: `company_required`, `idempotency_in_progress`, `idempotency_key_reused`, `malformed_json`, `not_a_member`, `permission_denied`, `server_error`, `token_expired`, `token_invalid`, `unauthenticated`, `validation_failed` |
 | **Headers** | `Idempotency-Key`, `Location` on 201 |
 | **Database** | insert: audit_logs, idempotency_keys, purchase_bill_lines, purchase_bills; read: lc_shipments, letters_of_credit, number_sequences, parties, products |
 | **Business rules** | BR-018, BR-006, BR-010, BR-011, BR-055 |
@@ -5120,7 +5121,7 @@ Replace a draft bill.
 | **Validation** | `party_id`* id of a record in this company; `supplier_bill_no`* string ≤ 60; `bill_date`* YYYY-MM-DD; `due_date` YYYY-MM-DD (nullable); `payment_term_id` id of a record in this company (nullable); `warehouse_id`* id of a record in this company; `purchase_order_id` id of a record in this company (nullable); `letter_of_credit_id` id of a record in this company (nullable); `lc_shipment_id` id of a record in this company (nullable); `currency_code` ISO 4217; `exchange_rate` decimal string, 6 dp; `branch_id` id of a record in this company (nullable); `notes` text ≤ 65,535 (nullable); `internal_note` text ≤ 65,535 (nullable); `receipt_condition_note` string ≤ 255 (nullable); `lines`* array of PurchaseLineInput<br>Unknown fields are rejected (422).<br>BR-025: Only drafts can be deleted; a posted document can only be cancelled or reversed.<br>BR-018: A purchase bill requires the supplier's bill number, unique per supplier within the company.<br>BR-049: Updates must send the current version (If-Match); a mismatch is rejected with 409 and the user's input is preserved. |
 | **Success** | 200 `data`: [`PurchaseBill`](#schema-purchasebill) |
 | **Status codes** | 200, 400, 401, 403, 404, 409, 422, 428, 503 |
-| **Error codes** | **`company_maintenance`, `duplicate_supplier_bill`, `not_draft`**; standard: `company_required`, `if_match_required`, `malformed_json`, `not_a_member`, `not_found`, `permission_denied`, `server_error`, `token_expired`, `token_invalid`, `unauthenticated`, `validation_failed`, `version_conflict` |
+| **Error codes** | **`company_maintenance`, `duplicate_supplier_bill`, `not_draft`, `order_qty_exceeded`**; standard: `company_required`, `if_match_required`, `malformed_json`, `not_a_member`, `not_found`, `permission_denied`, `server_error`, `token_expired`, `token_invalid`, `unauthenticated`, `validation_failed`, `version_conflict` |
 | **Headers** | `If-Match` (required) |
 | **Database** | insert: audit_logs, purchase_bill_lines; update: purchase_bills; delete: purchase_bill_lines |
 | **Business rules** | BR-025, BR-018, BR-049 |
@@ -5161,10 +5162,10 @@ Post: stock in, average cost update, journal, supplier balance, PO received qty.
 | **Permission** | `purchases.create` — roles: Owner, Finance manager, Accountant |
 | **Path / query params** | `id` / — |
 | **Request body** | [`PostRequest`](#schema-postrequest) |
-| **Validation** | `confirm_backdated` boolean; `acknowledge_warnings` array of str; `receipt` CashReceiptInput (nullable)<br>Unknown fields are rejected (422).<br>BR-018: A purchase bill requires the supplier's bill number, unique per supplier within the company.<br>BR-019: Posting a bill increases stock in the receiving warehouse and debits that warehouse's inventory ledger for stocked lines, or the line's expense ledger for non-stock lines; the supplier is credited.<br>BR-017: On every stock-in to a warehouse, that warehouse's average cost = (warehouse value + incoming value) / (warehouse quantity + incoming quantity); when current quantity <= 0 the incoming unit cost becomes the average.<br>BR-001: Every posted journal entry balances: total debit = total credit > 0.<br>BR-004: A document or voucher date must fall inside an open accounting period of an open financial year; posting, editing or reversing into a locked period is rejected.<br>BR-009: A document posts at most once: one journal entry per document (unique journal_entry_id); a repeated post request returns the existing result.<br>BR-056: Quotations and purchase orders never post; converting copies lines and prices; bills update purchase-order received quantities.<br>BR-053: A voucher dated more than the configured number of days in the past requires explicit confirmation. |
+| **Validation** | `confirm_backdated` boolean; `acknowledge_warnings` array of str; `receipt` CashReceiptInput (nullable)<br>Unknown fields are rejected (422).<br>BR-018: A purchase bill requires the supplier's bill number, unique per supplier within the company.<br>BR-019: Posting a bill increases stock in the receiving warehouse and debits that warehouse's inventory ledger for stocked lines, or the line's expense ledger for non-stock lines; the supplier is credited.<br>BR-017: On every stock-in to a warehouse, that warehouse's average cost = (warehouse value + incoming value) / (warehouse quantity + incoming quantity); when current quantity <= 0 the incoming unit cost becomes the average.<br>BR-001: Every posted journal entry balances: total debit = total credit > 0.<br>BR-004: A document or voucher date must fall inside an open accounting period of an open financial year; posting, editing or reversing into a locked period is rejected.<br>BR-009: A document posts at most once: one journal entry per document (unique journal_entry_id); a repeated post request returns the existing result.<br>BR-056: Quotations and purchase orders never post; converting copies lines and prices; bills update purchase-order received quantities. Bill lines linked to an order line take at most ordered - received, or ordered x (1 + tolerance) - received when the bill's LC is raised against that order.<br>BR-053: A voucher dated more than the configured number of days in the past requires explicit confirmation. |
 | **Success** | 200 `data`: [`PurchaseBill`](#schema-purchasebill) |
 | **Status codes** | 200, 400, 401, 403, 404, 409, 422, 503 |
-| **Error codes** | **`already_posted`, `backdated_confirmation_required`, `company_maintenance`, `duplicate_supplier_bill`, `period_locked`, `unbalanced_entry`**; standard: `company_required`, `idempotency_in_progress`, `idempotency_key_reused`, `malformed_json`, `not_a_member`, `not_found`, `permission_denied`, `server_error`, `token_expired`, `token_invalid`, `unauthenticated`, `validation_failed` |
+| **Error codes** | **`already_posted`, `backdated_confirmation_required`, `company_maintenance`, `duplicate_supplier_bill`, `order_qty_exceeded`, `period_locked`, `unbalanced_entry`**; standard: `company_required`, `idempotency_in_progress`, `idempotency_key_reused`, `malformed_json`, `not_a_member`, `not_found`, `permission_denied`, `server_error`, `token_expired`, `token_invalid`, `unauthenticated`, `validation_failed` |
 | **Headers** | `Idempotency-Key` |
 | **Database** | lock: purchase_bills, stock_balances; insert: audit_logs, idempotency_keys, journal_entries, journal_lines, stock_movements; update: purchase_bill_lines, purchase_bills, purchase_order_lines, purchase_orders, stock_balances; read: account_mappings, accounting_periods, products |
 | **Business rules** | BR-018, BR-019, BR-017, BR-001, BR-004, BR-009, BR-056, BR-053 |
@@ -5315,7 +5316,7 @@ Create a purchase order. Lines as PurchaseLineInput (purchase_order_line_id is i
 | **Permission** | `purchases.create` — roles: Owner, Finance manager, Accountant |
 | **Path / query params** | — / — |
 | **Request body** | [`PurchaseOrderInput`](#schema-purchaseorderinput) |
-| **Validation** | `party_id`* id of a record in this company; `order_date`* YYYY-MM-DD; `expected_date` YYYY-MM-DD (nullable); `warehouse_id`* id of a record in this company; `payment_term_id` id of a record in this company (nullable); `currency_code` ISO 4217; `exchange_rate` decimal string, 6 dp; `source_note` string ≤ 120 (nullable); `notes` text ≤ 65,535 (nullable); `internal_note` text ≤ 65,535 (nullable); `lines`* array of PurchaseLineInput<br>Unknown fields are rejected (422).<br>BR-056: Quotations and purchase orders never post; converting copies lines and prices; bills update purchase-order received quantities.<br>BR-006: Document numbers come from the company's sequence for the document type and FY, are unique, are reserved at first save and are never reused; voiding a draft number is audited. |
+| **Validation** | `party_id`* id of a record in this company; `order_date`* YYYY-MM-DD; `expected_date` YYYY-MM-DD (nullable); `warehouse_id`* id of a record in this company; `payment_term_id` id of a record in this company (nullable); `currency_code` ISO 4217; `exchange_rate` decimal string, 6 dp; `source_note` string ≤ 120 (nullable); `notes` text ≤ 65,535 (nullable); `internal_note` text ≤ 65,535 (nullable); `lines`* array of PurchaseLineInput<br>Unknown fields are rejected (422).<br>BR-056: Quotations and purchase orders never post; converting copies lines and prices; bills update purchase-order received quantities. Bill lines linked to an order line take at most ordered - received, or ordered x (1 + tolerance) - received when the bill's LC is raised against that order.<br>BR-006: Document numbers come from the company's sequence for the document type and FY, are unique, are reserved at first save and are never reused; voiding a draft number is audited. |
 | **Success** | 201 `data`: [`PurchaseOrder`](#schema-purchaseorder) |
 | **Status codes** | 201, 400, 401, 403, 409, 422, 503 |
 | **Error codes** | **`company_maintenance`, `duplicate`, `inactive_reference`**; standard: `company_required`, `idempotency_in_progress`, `idempotency_key_reused`, `malformed_json`, `not_a_member`, `permission_denied`, `server_error`, `token_expired`, `token_invalid`, `unauthenticated`, `validation_failed` |
@@ -5425,7 +5426,7 @@ Create a draft bill from remaining quantities. A draft bill dated today for each
 | **Permission** | `purchases.create` — roles: Owner, Finance manager, Accountant |
 | **Path / query params** | `id` / — |
 | **Request body** | — |
-| **Validation** | BR-056: Quotations and purchase orders never post; converting copies lines and prices; bills update purchase-order received quantities. |
+| **Validation** | BR-056: Quotations and purchase orders never post; converting copies lines and prices; bills update purchase-order received quantities. Bill lines linked to an order line take at most ordered - received, or ordered x (1 + tolerance) - received when the bill's LC is raised against that order. |
 | **Success** | 201 `data`: [`PurchaseBill`](#schema-purchasebill) |
 | **Status codes** | 201, 400, 401, 403, 404, 409, 422, 503 |
 | **Error codes** | **`company_maintenance`, `inactive_reference`, `invalid_transition`, `period_locked`**; standard: `company_required`, `idempotency_in_progress`, `idempotency_key_reused`, `not_a_member`, `not_found`, `permission_denied`, `server_error`, `token_expired`, `token_invalid`, `unauthenticated` |
@@ -10715,7 +10716,7 @@ Create or update a draft/awaiting LC. Only supplier, amount, issuing bank and ex
 <a id="schema-letterofcredit"></a>
 #### `LetterOfCredit`
 
-Import LC.
+Import LC. `purchase_order_id`/`purchase_order_number` name the order it is raised against (F3 fills an import bill's lines from it); `quantity` and `quantity_unit` are the LC's own goods quantity, a reference only.
 
 | Property | Type | Required |
 |---|---|---|
@@ -10723,6 +10724,10 @@ Import LC.
 | `lc_number` | `str` | yes |
 | `status` | `enum:draft\|awaiting_bank\|opened\|partly_shipped\|documents_presented\|payment_due\|closed\|cancelled\|expired` | yes |
 | `party` | `ref:PartyRef` | yes |
+| `purchase_order_id` | `id \| null` | no |
+| `purchase_order_number` | `str \| null` | no |
+| `quantity` | `qty \| null` | no |
+| `quantity_unit` | `str \| null` | no |
 | `goods_description` | `str` | yes |
 | `currency_code` | `ccy` | yes |
 | `amount` | `money` | yes |
@@ -12006,9 +12011,9 @@ View permission `purchases.create`. **Loads:** [`GET /payment-terms`](#getpaymen
 |---|---|---|---|---|---|---|
 | 1 | Find item | [`GET /products`](#getproducts) | `inventory.view` | — | 200 | — |
 | 2 | Add line | ui:add a line → [`POST /purchase-bills/calculate`](#postpurchasebillscalculate) | `purchases.create` | [`PurchaseBillInput`](#schema-purchasebillinput) → [`DocumentCalculation`](#schema-documentcalculation) | 200 | — |
-| 3 | Save draft | [`POST /purchase-bills`](#postpurchasebills) \| [`PUT /purchase-bills/{id}`](#putpurchasebillsid) | `purchases.create`, `purchases.edit` | [`PurchaseBillInput`](#schema-purchasebillinput) → [`PurchaseBill`](#schema-purchasebill) | 200, 201 | `duplicate`, `duplicate_supplier_bill`, `not_draft` |
+| 3 | Save draft | [`POST /purchase-bills`](#postpurchasebills) \| [`PUT /purchase-bills/{id}`](#putpurchasebillsid) | `purchases.create`, `purchases.edit` | [`PurchaseBillInput`](#schema-purchasebillinput) → [`PurchaseBill`](#schema-purchasebill) | 200, 201 | `duplicate`, `duplicate_supplier_bill`, `not_draft`, `order_qty_exceeded` |
 | 4 | Print | ui:browser print of the loaded view (print stylesheet) | — | — | — | — |
-| 5 | Save bill > Post dialog | [`POST /purchase-bills`](#postpurchasebills) \| [`PUT /purchase-bills/{id}`](#putpurchasebillsid) → dlg:L6 → [`POST /purchase-bills/{id}/post`](#postpurchasebillsidpost) | `purchases.create`, `purchases.edit` | [`PurchaseBillInput`](#schema-purchasebillinput) → [`PurchaseBill`](#schema-purchasebill)<br>[`PostRequest`](#schema-postrequest) → [`PurchaseBill`](#schema-purchasebill) | 200, 201 | `already_posted`, `backdated_confirmation_required`, `duplicate`, `duplicate_supplier_bill`, `not_draft`, `period_locked`, `unbalanced_entry` |
+| 5 | Save bill > Post dialog | [`POST /purchase-bills`](#postpurchasebills) \| [`PUT /purchase-bills/{id}`](#putpurchasebillsid) → dlg:L6 → [`POST /purchase-bills/{id}/post`](#postpurchasebillsidpost) | `purchases.create`, `purchases.edit` | [`PurchaseBillInput`](#schema-purchasebillinput) → [`PurchaseBill`](#schema-purchasebill)<br>[`PostRequest`](#schema-postrequest) → [`PurchaseBill`](#schema-purchasebill) | 200, 201 | `already_posted`, `backdated_confirmation_required`, `duplicate`, `duplicate_supplier_bill`, `not_draft`, `order_qty_exceeded`, `period_locked`, `unbalanced_entry` |
 | 6 | Delete draft (NEW) | dlg:L7 → [`DELETE /purchase-bills/{id}`](#deletepurchasebillsid) | `purchases.delete` | — → — | 204 | `not_draft` |
 
 <a id="actions-f4"></a>
@@ -13225,6 +13230,7 @@ View permission `lc.create`. **Loads:** nothing of its own (host page data).
 | POST /sales-invoices/{id}/post | Optional `receipt` posts a cash sale's receipt in the same transaction (R-28). |
 | POST /customer-receipts | No approval step (receipts are outside BR-007); approval_requests removed (R-22). |
 | POST /purchase-returns/{id}/post, POST /debit-notes/{id}/post | The return's entry is the debit note's entry; posting a return-based note separately is refused with `created_from_return` (R-04). |
+| POST/PUT /purchase-bills, /purchase-bills/{id}/post, /calculate | Lines linked to an order line may take at most what it still expects (plus the LC's tolerance when the LC is raised against that order): 422 `order_qty_exceeded`; calculate warns `ORDER_QTY_EXCEEDED` (BR-056). GET /letters-of-credit adds `purchase_order_id`, `purchase_order_number`, `quantity`, `quantity_unit`. |
 | Stock adjustment, transfer and movement endpoints | BR-052 cost masking declared; value fields omitted without inventory.view_costs (R-24). |
 | POST /invitations, accept | Branch restriction stored in `user_invitation_branches` (R-18). |
 | Reports with `format` | 200 returns the xlsx/pdf/csv file directly; 202 + ExportJob above 5,000 rows. |

@@ -470,13 +470,16 @@ final class LcService
     /** LetterOfCredit (05 schema); `$full` adds documents, lots, charges, payments, amendments and the money position (M4). */
     public function resource(LetterOfCredit $lc, bool $full = true): array
     {
-        $lc->loadMissing('party', 'issuingBank');
+        $lc->loadMissing('party', 'issuingBank', 'purchaseOrder');
         $paid = LcPostingService::paidForeign($lc->id);
         $today = CarbonImmutable::parse(CarbonImmutable::now('Asia/Dhaka')->toDateString());
         $days = $lc->expiry_date ? (int) $today->diffInDays(CarbonImmutable::parse($lc->expiry_date->toDateString()), false) : null;
         $margin = Money::of($lc->amount)->toBigDecimal()->multipliedBy($lc->planning_rate->toBigDecimal())->multipliedBy((string) $lc->margin_pct)->dividedBy(100, 2, RoundingMode::HalfUp);
         $out = [
             'id' => $lc->id, 'lc_number' => $lc->lc_number, 'status' => $lc->status, 'party' => ['id' => $lc->party->id, 'code' => $lc->party->code, 'name' => $lc->party->name],
+            'purchase_order_id' => $lc->purchase_order_id ? (int) $lc->purchase_order_id : null,
+            'purchase_order_number' => $lc->purchaseOrder?->number,
+            'quantity' => $lc->quantity !== null ? (string) $lc->quantity : null, 'quantity_unit' => $lc->quantity_unit,
             'goods_description' => $lc->goods_description, 'currency_code' => $lc->currency_code, 'amount' => (string) $lc->amount, 'tolerance_pct' => number_format((float) $lc->tolerance_pct, 4, '.', ''),
             'planning_rate' => (string) $lc->planning_rate,
             'amount_bdt_planned' => (string) Money::of($lc->amount->toBigDecimal()->multipliedBy($lc->planning_rate->toBigDecimal())),

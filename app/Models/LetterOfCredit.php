@@ -32,6 +32,11 @@ class LetterOfCredit extends Model
         return $this->belongsTo(Party::class)->withTrashed();
     }
 
+    public function purchaseOrder(): BelongsTo
+    {
+        return $this->belongsTo(PurchaseOrder::class);
+    }
+
     public function issuingBank(): BelongsTo
     {
         return $this->belongsTo(MoneyAccount::class, 'issuing_bank_account_id');

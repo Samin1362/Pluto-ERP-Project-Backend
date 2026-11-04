@@ -283,7 +283,7 @@ Approval limits (defaults): Finance manager pays up to ৳ 5,00,000 without appr
 | BR-053 | A voucher dated more than the configured number of days in the past requires explicit confirmation. | 5 | TC-ACC-018 |
 | BR-054 | An expense or income entry needs amount > 0, a category and a money account; it posts the category ledger against the money account. | 1 | TC-BNK-007 |
 | BR-055 | Due date defaults to document date + the party's payment-term days and may be edited. | 2 | TC-SAL-015 |
-| BR-056 | Quotations and purchase orders never post; converting copies lines and prices; bills update purchase-order received quantities. | 5 | TC-SAL-014, TC-PUR-009 |
+| BR-056 | Quotations and purchase orders never post; converting copies lines and prices; bills update purchase-order received quantities. Bill lines linked to an order line take at most ordered - received, or ordered x (1 + tolerance) - received when the bill's LC is raised against that order. | 5 | TC-SAL-014, TC-PUR-009, TC-PUR-013 |
 | BR-057 | A purchase return credits inventory at the original bill cost of the returned lines; the supplier is debited through the debit note. | 2 | TC-PUR-008, TC-PUR-011, TC-PUR-012 |
 | BR-058 | A cash-count difference posts to the cash short/over ledger and requires approval. | 2 | TC-BNK-006, TC-BNK-010 |
 | BR-059 | Active plus invited users cannot exceed the company's seat limit. | 3 | TC-AUTH-014 |

@@ -37,6 +37,7 @@ CHANGED = [
     ("POST /sales-invoices/{id}/post", "Optional `receipt` posts a cash sale's receipt in the same transaction (R-28)."),
     ("POST /customer-receipts", "No approval step (receipts are outside BR-007); approval_requests removed (R-22)."),
     ("POST /purchase-returns/{id}/post, POST /debit-notes/{id}/post", "The return's entry is the debit note's entry; posting a return-based note separately is refused with `created_from_return` (R-04)."),
+    ("POST/PUT /purchase-bills, /purchase-bills/{id}/post, /calculate", "Lines linked to an order line may take at most what it still expects (plus the LC's tolerance when the LC is raised against that order): 422 `order_qty_exceeded`; calculate warns `ORDER_QTY_EXCEEDED` (BR-056). GET /letters-of-credit adds `purchase_order_id`, `purchase_order_number`, `quantity`, `quantity_unit`."),
     ("Stock adjustment, transfer and movement endpoints", "BR-052 cost masking declared; value fields omitted without inventory.view_costs (R-24)."),
     ("POST /invitations, accept", "Branch restriction stored in `user_invitation_branches` (R-18)."),
     ("Reports with `format`", "200 returns the xlsx/pdf/csv file directly; 202 + ExportJob above 5,000 rows."),

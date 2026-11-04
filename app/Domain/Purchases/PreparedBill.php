@@ -20,6 +20,7 @@ final readonly class PreparedBill
      * @param  list<array{product: Product, input: array, stocked: bool, debit_ledger_id: int, tax_rate: Rate, available: ?string}>  $lines
      * @param  list<array{code: string, message: string, line_no?: int}>  $warnings
      * @param  list<string>  $effects
+     * @param  array<string, list<string>>  $orderExcess  lines.{i}.quantity => message, for lines past their order line (BR-056)
      */
     public function __construct(
         public Party $party,
@@ -34,6 +35,7 @@ final readonly class PreparedBill
         public array $warnings,
         public array $effects,
         public Money $partyBalanceBefore,
+        public array $orderExcess = [],
     ) {}
 
     public function foreign(): bool

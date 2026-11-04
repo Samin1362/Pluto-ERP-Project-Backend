@@ -7,17 +7,19 @@ use App\Domain\Shared\Quantity;
 use App\Models\PurchaseBill;
 use App\Models\PurchaseOrder;
 use App\Models\PurchaseOrderLine;
+use App\Support\Problem\ApiProblem;
 
 /**
  * Keeps purchase orders in step with their bills (BR-056, TC-PUR-009; backlog P10.2-BE-01). Called inside the bill's
  * posting or cancelling transaction, after the bill row is locked: each bill line linked to an order line adds (posted)
  * or takes back (cancelled) its quantity in received_quantity, then the order's status follows what has arrived —
  * received when every line is in full, partly_received when something is, sent when nothing is any more. Closed and
- * cancelled orders keep their status.
+ * cancelled orders keep their status. Posting first re-checks, under the order lock, that the bill stays within what
+ * the order still expects (PurchaseOrderLimits; 422 order_qty_exceeded rolls the whole posting back).
  */
 final class PurchaseOrderReceipts
 {
-    public function __construct(private readonly AuditLogger $audit) {}
+    public function __construct(private readonly AuditLogger $audit, private readonly PurchaseOrderLimits $limits) {}
 
     public function billPosted(PurchaseBill $bill): void
     {
@@ -39,6 +41,13 @@ final class PurchaseOrderReceipts
             return;
         }
         $lines = PurchaseOrderLine::where('purchase_order_id', $po->id)->orderBy('id')->lockForUpdate()->get()->keyBy('id');
+        if ($sign > 0) { // BR-056, under the order lock: drafts saved before another bill posted are checked again here
+            $excess = $this->limits->excess($po->id, $bill->letter_of_credit_id, $bill->lines->values()->map(fn ($l) => [
+                'purchase_order_line_id' => $l->purchase_order_line_id, 'quantity' => (string) $l->quantity])->all(), $lines);
+            if ($excess) {
+                throw new ApiProblem('order_qty_exceeded', "{$bill->number}: ".reset($excess)[0].'; edit the draft.', errors: $excess);
+            }
+        }
         foreach ($bill->lines as $l) {
             if (! $l->purchase_order_line_id || ! isset($lines[$l->purchase_order_line_id])) {
                 continue;
