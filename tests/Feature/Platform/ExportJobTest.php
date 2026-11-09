@@ -119,6 +119,21 @@ class ExportJobTest extends TestCase
         $this->assertContains("profit-and-loss-{$month}.xlsx", $names);
     }
 
+    public function test_the_pack_runs_in_a_queue_worker_with_no_company_context(): void
+    {
+        // A real worker has no request: the job must set its own company (the PDF letterhead needs it).
+        $month = CarbonImmutable::now('Asia/Dhaka')->format('Y-m');
+        $done = ExportJob::find($this->req('POST', '/api/v1/export-jobs', ['kind' => 'export_pack', 'format' => 'pdf', 'period' => $month])->assertStatus(202)->json('data.id'));
+        $copy = $done->replicate();
+        $copy->forceFill(['status' => 'queued', 'file_path' => null, 'finished_at' => null, 'error' => null])->save();
+        $id = $copy->id;
+        app(\App\Support\CurrentCompany::class)->clear();
+        app(\App\Domain\Exports\ExportJobService::class)->run($id);
+        $job = ExportJob::withoutGlobalScopes()->find($id);
+        $this->assertSame('complete', $job->status, (string) $job->error);
+        $this->assertFalse(app(\App\Support\CurrentCompany::class)->has());
+    }
+
     public function test_validation_permissions_and_rate_limit(): void
     {
         $this->assertProblem($this->req('POST', '/api/v1/export-jobs', ['kind' => 'report', 'format' => 'xlsx', 'source' => 'getUsers']), 422, 'validation_failed')
