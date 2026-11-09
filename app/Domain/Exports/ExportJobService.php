@@ -5,6 +5,7 @@ namespace App\Domain\Exports;
 use App\Domain\Access\JwtService;
 use App\Domain\Access\PermissionResolver;
 use App\Jobs\RunExportJob;
+use App\Models\Company;
 use App\Models\CompanyUser;
 use App\Models\ExportJob;
 use App\Models\User;
@@ -117,8 +118,13 @@ final class ExportJobService
         }
         $job->forceFill(['status' => 'running'])->save();
         $dir = "exports/company/{$job->company_id}/".Str::uuid();
+        $previous = $this->current->has() ? [$this->current->company(), $this->current->membership()] : null;
         try {
             $user = User::findOrFail($job->created_by);
+            // The worker has no request, so set the job's company for the whole run: the internal calls restore it
+            // after each request, and the PDF writer needs it for the letterhead.
+            $this->current->set(Company::findOrFail($job->company_id),
+                CompanyUser::withoutGlobalScopes()->where('company_id', $job->company_id)->where('user_id', $user->id)->first());
             $p = $job->parameters;
             $call = fn (string $path, array $query, bool $page = false) => $this->call($user, (int) $p['session_id'], (int) $job->company_id, $path, $query, $page);
             [$name, $files] = match ($job->kind) {
@@ -134,6 +140,8 @@ final class ExportJobService
                 report($e);
             }
             $job->forceFill(['status' => 'failed', 'finished_at' => now(), 'error' => mb_substr($e instanceof RuntimeException || $e instanceof ApiProblem ? $e->getMessage() : 'The export could not be prepared; try again.', 0, 500)])->save();
+        } finally {
+            $previous ? $this->current->set(...$previous) : $this->current->clear();
         }
     }
 
