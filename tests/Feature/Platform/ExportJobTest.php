@@ -2,8 +2,10 @@
 
 namespace Tests\Feature\Platform;
 
+use App\Domain\Exports\ExportJobService;
 use App\Domain\Exports\ExportSources;
 use App\Models\ExportJob;
+use App\Support\CurrentCompany;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -127,11 +129,11 @@ class ExportJobTest extends TestCase
         $copy = $done->replicate();
         $copy->forceFill(['status' => 'queued', 'file_path' => null, 'finished_at' => null, 'error' => null])->save();
         $id = $copy->id;
-        app(\App\Support\CurrentCompany::class)->clear();
-        app(\App\Domain\Exports\ExportJobService::class)->run($id);
+        app(CurrentCompany::class)->clear();
+        app(ExportJobService::class)->run($id);
         $job = ExportJob::withoutGlobalScopes()->find($id);
         $this->assertSame('complete', $job->status, (string) $job->error);
-        $this->assertFalse(app(\App\Support\CurrentCompany::class)->has());
+        $this->assertFalse(app(CurrentCompany::class)->has());
     }
 
     public function test_validation_permissions_and_rate_limit(): void
