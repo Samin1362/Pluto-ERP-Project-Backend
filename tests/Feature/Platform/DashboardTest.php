@@ -6,6 +6,7 @@ use App\Models\Party;
 use App\Models\Product;
 use App\Models\Warehouse;
 use App\Queries\BankingQuery;
+use App\Queries\DashboardQuery;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -155,13 +156,13 @@ class DashboardTest extends TestCase
         $ids = DB::table('journal_entries')->where('company_id', $this->books->id)->where('status', 'posted')->orderBy('id')->pluck('id');
         DB::table('journal_entries')->where('id', $ids[0])->update(['posted_at' => $start->subMinute()->utc()->toDateTimeString()]);
         DB::table('journal_entries')->where('id', $ids[1])->update(['posted_at' => $start->utc()->toDateTimeString()]);
-        $q = app(\App\Queries\DashboardQuery::class)->today($this->books->id);
+        $q = app(DashboardQuery::class)->today($this->books->id);
         $this->assertSame(3, $q['count']);
         $this->assertNotContains($ids[0], array_column($q['items'], 'id'));
         $this->assertSame('00:00', collect($q['items'])->firstWhere('id', $ids[1])['time']);
 
         // Another company's postings never show.
-        $this->assertSame(0, app(\App\Queries\DashboardQuery::class)->today($this->books->id + 999)['count']);
+        $this->assertSame(0, app(DashboardQuery::class)->today($this->books->id + 999)['count']);
     }
 
     public function test_err_8_a_failing_widget_comes_back_empty_and_the_rest_still_loads(): void
