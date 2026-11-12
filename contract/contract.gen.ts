@@ -540,6 +540,7 @@ export interface DashboardSummary {
   inventory_alerts: Array<Record<string, unknown>>
   banners?: Array<Record<string, unknown>>
   widget_errors?: Array<Record<string, unknown>>
+  today?: Record<string, unknown>
 }
 
 /** Delivery details. */

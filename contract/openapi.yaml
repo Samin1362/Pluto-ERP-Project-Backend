@@ -40783,6 +40783,9 @@ components:
           items:
             type: object
             additionalProperties: true
+        today:
+          type: object
+          additionalProperties: true
       required:
       - period
       - kpis

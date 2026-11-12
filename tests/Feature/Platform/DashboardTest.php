@@ -138,6 +138,32 @@ class DashboardTest extends TestCase
         $this->req('GET', '/api/v1/dashboard')->assertJsonPath('data.kpis.1.value', '21000.00')->assertJsonPath('data.kpis.3.value', '195000.00');
     }
 
+    public function test_today_feed_lists_what_was_posted_since_midnight_in_dhaka(): void
+    {
+        $r = $this->req('GET', '/api/v1/dashboard')->assertOk();
+        $r->assertJsonPath('data.today.date', $this->today())->assertJsonPath('data.today.count', 4);
+        $this->assertSame('expense', $r->json('data.today.items.0.type'));
+        $this->assertSame('4000.00', $r->json('data.today.items.0.amount'));
+        $this->assertMatchesRegularExpression('/^\d{2}:\d{2}$/', $r->json('data.today.items.0.time'));
+        $this->assertStringEndsWith('+06:00', $r->json('data.today.items.0.posted_at'));
+        $this->assertStringStartsWith('/accounting/vouchers/', $r->json('data.today.items.0.url'));
+        $this->assertNotEmpty($r->json('data.today.items.0.by'));
+        $this->assertSame($this->karim->name, collect($r->json('data.today.items'))->firstWhere('type', 'sales_invoice')['party']);
+
+        // posted_at is UTC: 23:59 Dhaka yesterday is 17:59 UTC the day before; 00:00 Dhaka today counts.
+        $start = CarbonImmutable::now('Asia/Dhaka')->startOfDay();
+        $ids = DB::table('journal_entries')->where('company_id', $this->books->id)->where('status', 'posted')->orderBy('id')->pluck('id');
+        DB::table('journal_entries')->where('id', $ids[0])->update(['posted_at' => $start->subMinute()->utc()->toDateTimeString()]);
+        DB::table('journal_entries')->where('id', $ids[1])->update(['posted_at' => $start->utc()->toDateTimeString()]);
+        $q = app(\App\Queries\DashboardQuery::class)->today($this->books->id);
+        $this->assertSame(3, $q['count']);
+        $this->assertNotContains($ids[0], array_column($q['items'], 'id'));
+        $this->assertSame('00:00', collect($q['items'])->firstWhere('id', $ids[1])['time']);
+
+        // Another company's postings never show.
+        $this->assertSame(0, app(\App\Queries\DashboardQuery::class)->today($this->books->id + 999)['count']);
+    }
+
     public function test_err_8_a_failing_widget_comes_back_empty_and_the_rest_still_loads(): void
     {
         $this->mock(BankingQuery::class, fn ($m) => $m->shouldReceive('overview')->andThrow(new RuntimeException('bank feed down')));
