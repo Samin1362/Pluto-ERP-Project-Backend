@@ -30,8 +30,8 @@ Sev-4 cosmetic. **Exit rule: no open Sev-1 or Sev-2.**
 
 | # | Sign-off | Evidence | Signed by / date |
 |---|---|---|---|
-| B1 | **Accountant: posting rules (06).** Each document type's journal checked in staging against 06 §5–§13 (invoice, receipt, bill, payment, returns, notes, stock, cash count, LC, landed cost, year-end) | the A5–A9 vouchers | |
-| B2 | **Tax adviser: 06 §14 items (NFR-070).** Answer each row of 06 §14 (VAT registration and Mushak forms, rates and exemptions, SD, VDS/TDS/AIT, import duties and what is recoverable, LC regulation, invoice numbering, record retention, statement format). Anything Pluto does not do yet becomes a dated Jira item | written answers attached | |
+| B1 | **Accountant: posting rules (06)** (sheet: accountant-posting-rules-signoff.md). Each document type's journal checked in staging against 06 §5–§13 (invoice, receipt, bill, payment, returns, notes, stock, cash count, LC, landed cost, year-end) | the A5–A9 vouchers | |
+| B2 | **Tax adviser: 06 §14 items (NFR-070)** (questions: tax-adviser-questions.md). Answer each row of 06 §14 (VAT registration and Mushak forms, rates and exemptions, SD, VDS/TDS/AIT, import duties and what is recoverable, LC regulation, invoice numbering, record retention, statement format). Anything Pluto does not do yet becomes a dated Jira item | written answers attached | |
 | B3 | **Owner: UAT exit.** Part A complete, no Sev-1/2 open, the owner accepts go-live on the date below | Part A | |
 
 ## Part C · Go-live checklist

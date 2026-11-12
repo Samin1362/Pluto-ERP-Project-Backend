@@ -14,7 +14,7 @@ Copy the templates from `docs/import-templates/` and fill them from the old book
 | `suppliers.csv` | name, mobile, email, address, district, contact_person, opening_balance, opening_side | side `cr` (we owe them) is the default |
 | `ledgers.csv` | code, name, group, opening_balance, opening_side | an existing code sets that ledger's opening; a new code also needs name and group (code or name) |
 | `banks.csv` | account_type, name, bank_name, branch_name, account_name, account_number, opening_balance | type bank, cash, wallet, card or cash_credit |
-| `stock.csv` | product_code, warehouse_code, quantity, unit_cost | products that already exist; new products with stock go through Inventory → Products → Import (D1) |
+| `stock.csv` | product_code, warehouse_code, quantity, unit_cost | products and warehouses that already exist (create the warehouses first; the template's `WH-1` is only a sample code); new products with stock go through Inventory → Products → Import (D1) |
 
 Amounts are plain numbers with up to 2 decimals (`125000.50`, no commas or ৳). Save as CSV UTF-8.
 
