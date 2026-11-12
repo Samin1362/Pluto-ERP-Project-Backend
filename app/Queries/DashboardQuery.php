@@ -93,6 +93,7 @@ final class DashboardQuery
             'upcoming_payments' => $see['financial'] && $see['purchases'] ? $this->widget('upcoming_payments', fn () => $this->upcoming($c), []) : [],
             'recent_transactions' => $see['accounting'] ? $this->widget('recent_transactions', fn () => $this->recent($c, $see['financial']), []) : [],
             'inventory_alerts' => $see['inventory'] ? $this->widget('inventory_alerts', fn () => $this->alerts($c), []) : [],
+            'today' => $see['accounting'] ? $this->widget('today', fn () => $this->today($c), (object) []) : (object) [],
             'banners' => [],
             'widget_errors' => $this->errors,
         ];
@@ -288,6 +289,36 @@ final class DashboardQuery
         return $rows->map(fn ($r) => ['id' => $r->id, 'date' => (string) $r->entry_date, 'voucher_number' => $r->voucher_number, 'type' => $r->entry_type,
             'party' => $parties[$r->id] ?? null, 'narration' => $r->narration, 'amount' => (string) Money::of((string) $r->total_debit),
             'url' => "/accounting/vouchers/{$r->id}"])->all();
+    }
+
+    /**
+     * A1 Today feed (UI redesign A+, PEP-478): vouchers posted since midnight in Dhaka, newest first, with the time, who
+     * posted them and the party they touch. posted_at is stored in UTC, so the day's bounds are converted. Same rows and
+     * permission as recent_transactions (accounting.view).
+     *
+     * @return array{date: string, count: int, items: list<array<string, mixed>>}
+     */
+    public function today(int $c, int $limit = 8, ?CarbonImmutable $now = null): array
+    {
+        $now ??= CarbonImmutable::now('Asia/Dhaka');
+        $from = $now->setTimezone('Asia/Dhaka')->startOfDay();
+        $range = [$from->utc()->toDateTimeString(), $from->addDay()->utc()->toDateTimeString()];
+        $base = DB::table('journal_entries')->where('company_id', $c)->where('status', 'posted')->where('posted_at', '>=', $range[0])->where('posted_at', '<', $range[1]);
+        $count = (clone $base)->count();
+        $rows = (clone $base)->leftJoin('users as u', 'u.id', '=', 'journal_entries.posted_by')
+            ->orderByDesc('journal_entries.posted_at')->orderByDesc('journal_entries.id')->limit($limit)
+            ->get(['journal_entries.id', 'journal_entries.posted_at', 'journal_entries.voucher_number', 'journal_entries.entry_type', 'journal_entries.narration',
+                'journal_entries.total_debit', 'u.name as by']);
+        $parties = DB::table('journal_lines as l')->join('parties as p', 'p.ledger_id', '=', 'l.ledger_id')->whereIn('l.journal_entry_id', $rows->pluck('id'))
+            ->orderBy('l.line_no')->get(['l.journal_entry_id', 'p.name'])->groupBy('journal_entry_id')->map(fn ($g) => $g->first()->name);
+
+        return ['date' => $from->toDateString(), 'count' => $count, 'items' => $rows->map(function ($r) use ($parties) {
+            $at = CarbonImmutable::parse($r->posted_at, 'UTC')->setTimezone('Asia/Dhaka');
+
+            return ['id' => $r->id, 'posted_at' => $at->toIso8601String(), 'time' => $at->format('H:i'), 'type' => $r->entry_type, 'voucher_number' => $r->voucher_number,
+                'party' => $parties[$r->id] ?? null, 'narration' => $r->narration, 'amount' => (string) Money::of((string) $r->total_debit),
+                'by' => $r->by, 'url' => "/accounting/vouchers/{$r->id}"];
+        })->all()];
     }
 
     private function alerts(int $c, int $limit = 6): array

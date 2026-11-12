@@ -8888,6 +8888,7 @@ A1 payload.
 | `inventory_alerts` | `[obj]` | yes |
 | `banners` | `[obj]` | no |
 | `widget_errors` | `[obj]` | no |
+| `today` | `obj` | no |
 
 <a id="schema-kpi"></a>
 #### `Kpi`
@@ -13262,6 +13263,7 @@ View permission `lc.create`. **Loads:** nothing of its own (host page data).
 | LC charges and import settlement (P16) | LcChargeInput/LcCharge add tax_rule_id: a recoverable import tax (VAT/AT) charge posts to that rule's ledger instead of landed cost (owner decision 1 Nov 2026, pending tax adviser); LcCharge adds posting_status (reversed charges). Warning codes add LC_EXPIRING, LC_DOCUMENTS_MISSING, LC_UNPAID_CHARGES (LC flags) and NOTHING_TO_ALLOCATE (landed-cost preview); bill_allocations keep foreign_amount and fx_amount so LC payments settle import bills by foreign amount with the FX difference to 6603 (06 §12.5). Additive (P16.0-SETUP-01). |
 | Settings, users and security (P15) | GET /invitations lists the open invitations for K8 (they are not members yet, so GET /users cannot carry them); notification_preferences.send_at keeps the daily summary time of K12. Additive (P15.0-SETUP-01, 1 Nov 2026). |
 | Dashboards and exports (P14) | DashboardSummary adds widget_errors (a widget that failed, ERR-8); ExportJobCreate.kind adds report (one report by operationId); ExportJob adds source, format, file_name and created_at for the download list; LensData adds period (as DashboardSummary); Kpi adds trend_pct (sparkline positions 0–100, so the SPA never scales money) and link (the page the tile opens); lens permissions spelled out per DEC-13 (profit and balance lenses need reports.financial). Additive (P14.0-SETUP-01, 1 Nov 2026). |
+| Dashboard Today feed (UI redesign A+) | DashboardSummary adds today: { date, count, items } — the vouchers posted since midnight in Dhaka (time, type, voucher number, party, amount, who posted it, link), newest first, for the A1 Today feed. Same permission and rows as recent_transactions (accounting.view). PEP-478, 12 Nov 2026. Additive. |
 | GET /reports/income, GET /reports/expenses | Need reports.financial instead of reports.view: they are profit-and-loss figures, which owner decision DEC-13 / C7 keeps from Sales staff and Viewer (P13.1-BE-05). |
 | Dashboard lenses A2–A8 | Load only `GET /dashboard/lenses/{lens}`; the overlapping report and list endpoints were removed from their page lists. |
 
