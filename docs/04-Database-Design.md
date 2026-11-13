@@ -1548,6 +1548,7 @@ erDiagram
         varchar lc_number
         bigint party_id FK
         bigint purchase_order_id FK
+        boolean items_entered
         varchar intended_import
         varchar goods_description
         decimal quantity
@@ -1651,6 +1652,19 @@ erDiagram
         varchar field_key
         varchar old_value
         varchar new_value
+    }
+    lc_amendment_lines {
+        bigint id PK
+        bigint lc_amendment_id FK
+        varchar action
+        bigint purchase_order_line_id FK
+        bigint product_id FK
+        bigint unit_id FK
+        varchar description
+        decimal old_quantity
+        decimal quantity
+        decimal old_unit_cost
+        decimal unit_cost
     }
     landed_cost_allocations {
         bigint id PK
@@ -1822,10 +1836,16 @@ erDiagram
     purchase_bills {
         bigint id PK
     }
+    purchase_order_lines {
+        bigint id PK
+    }
     purchase_orders {
         bigint id PK
     }
     tax_rules {
+        bigint id PK
+    }
+    units {
         bigint id PK
     }
     warehouses {
@@ -1846,6 +1866,7 @@ erDiagram
     landed_cost_allocations ||--o{ landed_cost_allocation_lines : "landed_cost_allocation_id"
     lc_amendments |o--o{ lc_charges : "lc_amendment_id"
     lc_amendments ||--o{ lc_amendment_changes : "lc_amendment_id"
+    lc_amendments ||--o{ lc_amendment_lines : "lc_amendment_id"
     lc_document_templates ||--o{ lc_document_template_items : "lc_document_template_id"
     lc_loans ||--o{ lc_loan_accruals : "lc_loan_id"
     lc_loans ||--o{ lc_loan_repayments : "lc_loan_id"
@@ -1872,12 +1893,15 @@ erDiagram
     parties |o--o{ lc_charges : "payee_party_id"
     parties ||--o{ letters_of_credit : "party_id"
     products ||--o{ landed_cost_allocation_lines : "product_id"
+    products ||--o{ lc_amendment_lines : "product_id"
     purchase_bill_lines ||--o{ landed_cost_allocation_lines : "purchase_bill_line_id"
     purchase_bills |o--o{ fx_revaluation_lines : "purchase_bill_id"
     purchase_bills |o--o{ lc_payments : "purchase_bill_id"
     purchase_bills ||--o{ landed_cost_allocations : "purchase_bill_id"
+    purchase_order_lines |o--o{ lc_amendment_lines : "purchase_order_line_id"
     purchase_orders |o--o{ letters_of_credit : "purchase_order_id"
     tax_rules |o--o{ lc_charges : "tax_rule_id"
+    units |o--o{ lc_amendment_lines : "unit_id"
     warehouses ||--o{ landed_cost_allocation_lines : "warehouse_id"
 ```
 
@@ -4632,6 +4656,7 @@ Standard columns are listed in each table: `id` (PK), `company_id` (tenant), `lo
 | `lc_number` | VARCHAR(30) | no | — | — | — | Internal LC-2026-022 |
 | `party_id` | BIGINT UNSIGNED | no | — | FK → `parties.id` | ON DELETE RESTRICT / ON UPDATE RESTRICT | Beneficiary (supplier) |
 | `purchase_order_id` | BIGINT UNSIGNED | yes | NULL | FK → `purchase_orders.id` | ON DELETE RESTRICT / ON UPDATE RESTRICT |  |
+| `items_entered` | BOOLEAN | no | 0 | — | — | 1 when the linked purchase order was created from the items entered on the LC (PEP-487); 0 for an existing order or none |
 | `intended_import` | VARCHAR(255) | yes | NULL | — | — | When not yet linked to a PO |
 | `goods_description` | VARCHAR(500) | no | — | — | — |  |
 | `quantity` | DECIMAL(18,3) | yes | NULL | — | — |  |
@@ -4879,6 +4904,40 @@ Standard columns are listed in each table: `id` (PK), `company_id` (tenant), `lo
 
 **Relationships:**
 - `lc_amendment_id` → `lc_amendments`: one-to-many
+
+#### `lc_amendment_lines`
+
+**Purpose:** Item change of an amendment (PEP-487): add, change or remove an item of the LC. An accepted amendment applies them to the linked purchase order's lines.  
+**Flags:** —  
+**Primary key:** (id)
+
+| Column | Type | Null | Default | Keys | FK rule | Meaning / rules |
+|---|---|---|---|---|---|---|
+| `id` | BIGINT UNSIGNED | no | — | PK | — | Primary key, auto-increment |
+| `lc_amendment_id` | BIGINT UNSIGNED | no | — | FK → `lc_amendments.id` | ON DELETE CASCADE / ON UPDATE RESTRICT |  |
+| `action` | VARCHAR(30) | no | — | — | — | enum: add \| change \| remove |
+| `purchase_order_line_id` | BIGINT UNSIGNED | yes | NULL | FK → `purchase_order_lines.id` | ON DELETE SET NULL / ON UPDATE RESTRICT | The LC item changed or removed; the new line once an added item is applied |
+| `product_id` | BIGINT UNSIGNED | no | — | FK → `products.id` | ON DELETE RESTRICT / ON UPDATE RESTRICT |  |
+| `unit_id` | BIGINT UNSIGNED | yes | NULL | FK → `units.id` | ON DELETE RESTRICT / ON UPDATE RESTRICT | Unit of an added item; NULL = the product's base unit |
+| `description` | VARCHAR(255) | yes | NULL | — | — |  |
+| `old_quantity` | DECIMAL(18,3) | yes | NULL | — | — | Before the amendment |
+| `quantity` | DECIMAL(18,3) | yes | NULL | — | — | New quantity; NULL = unchanged or removed |
+| `old_unit_cost` | DECIMAL(18,4) | yes | NULL | — | — | Before the amendment, LC currency |
+| `unit_cost` | DECIMAL(18,4) | yes | NULL | — | — | New unit cost in the LC currency; NULL = unchanged or removed |
+| `created_at` | DATETIME | yes | NULL | — | — | Set by Laravel |
+| `updated_at` | DATETIME | yes | NULL | — | — | Set by Laravel |
+
+- Index (lc_amendment_id)
+- Index (purchase_order_line_id)
+- Index (product_id)
+- Index (unit_id)
+- **Check** `action IN ('add', 'change', 'remove')`
+
+**Relationships:**
+- `lc_amendment_id` → `lc_amendments`: one-to-many
+- `purchase_order_line_id` → `purchase_order_lines`: one-to-many (optional)
+- `product_id` → `products`: one-to-many
+- `unit_id` → `units`: one-to-many (optional)
 
 #### `landed_cost_allocations`
 
@@ -5301,7 +5360,7 @@ Standard columns are listed in each table: `id` (PK), `company_id` (tenant), `lo
 - `party_id` → `parties`: one-to-many (optional)
 - `currency_code` → `currencies`: one-to-many
 
-_Total: 91 application tables._
+_Total: 92 application tables._
 
 
 ## 7. Relationship matrix
@@ -5512,42 +5571,46 @@ Every foreign key except the uniform `company_id`, `created_by` and `updated_by`
 | 200 | `lc_documents` | `lc_shipment_id` | `lc_shipments` | one-to-many (optional) | no | SET NULL |
 | 201 | `lc_amendments` | `letter_of_credit_id` | `letters_of_credit` | one-to-many | yes | CASCADE |
 | 202 | `lc_amendment_changes` | `lc_amendment_id` | `lc_amendments` | one-to-many | yes | CASCADE |
-| 203 | `landed_cost_allocations` | `letter_of_credit_id` | `letters_of_credit` | one-to-many | yes | RESTRICT |
-| 204 | `landed_cost_allocations` | `purchase_bill_id` | `purchase_bills` | one-to-many | yes | RESTRICT |
-| 205 | `landed_cost_allocations` | `journal_entry_id` | `journal_entries` | one-to-one (optional) | no | RESTRICT |
-| 206 | `landed_cost_allocation_lines` | `landed_cost_allocation_id` | `landed_cost_allocations` | one-to-many | yes | CASCADE |
-| 207 | `landed_cost_allocation_lines` | `purchase_bill_line_id` | `purchase_bill_lines` | one-to-many | yes | RESTRICT |
-| 208 | `landed_cost_allocation_lines` | `product_id` | `products` | one-to-many | yes | RESTRICT |
-| 209 | `landed_cost_allocation_lines` | `warehouse_id` | `warehouses` | one-to-many | yes | RESTRICT |
-| 210 | `lc_charges` | `letter_of_credit_id` | `letters_of_credit` | one-to-many | yes | RESTRICT |
-| 211 | `lc_charges` | `lc_amendment_id` | `lc_amendments` | one-to-many (optional) | no | RESTRICT |
-| 212 | `lc_charges` | `lc_shipment_id` | `lc_shipments` | one-to-many (optional) | no | RESTRICT |
-| 213 | `lc_charges` | `payee_party_id` | `parties` | one-to-many (optional) | no | RESTRICT |
-| 214 | `lc_charges` | `paid_from_account_id` | `money_accounts` | one-to-many (optional) | no | RESTRICT |
-| 215 | `lc_charges` | `journal_entry_id` | `journal_entries` | one-to-one (optional) | no | RESTRICT |
-| 216 | `lc_charges` | `landed_cost_allocation_id` | `landed_cost_allocations` | one-to-many (optional) | no | SET NULL |
-| 217 | `lc_charges` | `tax_rule_id` | `tax_rules` | one-to-many (optional) | no | RESTRICT |
-| 218 | `lc_payments` | `letter_of_credit_id` | `letters_of_credit` | one-to-many | yes | RESTRICT |
-| 219 | `lc_payments` | `lc_shipment_id` | `lc_shipments` | one-to-many (optional) | no | RESTRICT |
-| 220 | `lc_payments` | `purchase_bill_id` | `purchase_bills` | one-to-many (optional) | no | RESTRICT |
-| 221 | `lc_payments` | `money_account_id` | `money_accounts` | one-to-many | yes | RESTRICT |
-| 222 | `lc_payments` | `journal_entry_id` | `journal_entries` | one-to-one (optional) | no | RESTRICT |
-| 223 | `bank_facilities` | `money_account_id` | `money_accounts` | one-to-many | yes | RESTRICT |
-| 224 | `lc_loans` | `letter_of_credit_id` | `letters_of_credit` | one-to-many | yes | RESTRICT |
-| 225 | `lc_loans` | `lc_payment_id` | `lc_payments` | one-to-one | yes | RESTRICT |
-| 226 | `lc_loans` | `money_account_id` | `money_accounts` | one-to-many | yes | RESTRICT |
-| 227 | `lc_loan_repayments` | `lc_loan_id` | `lc_loans` | one-to-many | yes | RESTRICT |
-| 228 | `lc_loan_repayments` | `money_account_id` | `money_accounts` | one-to-many | yes | RESTRICT |
-| 229 | `lc_loan_repayments` | `journal_entry_id` | `journal_entries` | one-to-one (optional) | no | RESTRICT |
-| 230 | `lc_loan_accruals` | `lc_loan_id` | `lc_loans` | one-to-many | yes | RESTRICT |
-| 231 | `lc_loan_accruals` | `journal_entry_id` | `journal_entries` | one-to-one (optional) | no | RESTRICT |
-| 232 | `fx_revaluations` | `journal_entry_id` | `journal_entries` | one-to-one (optional) | no | RESTRICT |
-| 233 | `fx_revaluations` | `reversal_entry_id` | `journal_entries` | one-to-one (optional) | no | RESTRICT |
-| 234 | `fx_revaluation_lines` | `fx_revaluation_id` | `fx_revaluations` | one-to-many | yes | CASCADE |
-| 235 | `fx_revaluation_lines` | `purchase_bill_id` | `purchase_bills` | one-to-many (optional) | no | RESTRICT |
-| 236 | `fx_revaluation_lines` | `letter_of_credit_id` | `letters_of_credit` | one-to-many (optional) | no | RESTRICT |
-| 237 | `fx_revaluation_lines` | `party_id` | `parties` | one-to-many (optional) | no | RESTRICT |
-| 238 | `fx_revaluation_lines` | `currency_code` | `currencies` | one-to-many | yes | RESTRICT |
+| 203 | `lc_amendment_lines` | `lc_amendment_id` | `lc_amendments` | one-to-many | yes | CASCADE |
+| 204 | `lc_amendment_lines` | `purchase_order_line_id` | `purchase_order_lines` | one-to-many (optional) | no | SET NULL |
+| 205 | `lc_amendment_lines` | `product_id` | `products` | one-to-many | yes | RESTRICT |
+| 206 | `lc_amendment_lines` | `unit_id` | `units` | one-to-many (optional) | no | RESTRICT |
+| 207 | `landed_cost_allocations` | `letter_of_credit_id` | `letters_of_credit` | one-to-many | yes | RESTRICT |
+| 208 | `landed_cost_allocations` | `purchase_bill_id` | `purchase_bills` | one-to-many | yes | RESTRICT |
+| 209 | `landed_cost_allocations` | `journal_entry_id` | `journal_entries` | one-to-one (optional) | no | RESTRICT |
+| 210 | `landed_cost_allocation_lines` | `landed_cost_allocation_id` | `landed_cost_allocations` | one-to-many | yes | CASCADE |
+| 211 | `landed_cost_allocation_lines` | `purchase_bill_line_id` | `purchase_bill_lines` | one-to-many | yes | RESTRICT |
+| 212 | `landed_cost_allocation_lines` | `product_id` | `products` | one-to-many | yes | RESTRICT |
+| 213 | `landed_cost_allocation_lines` | `warehouse_id` | `warehouses` | one-to-many | yes | RESTRICT |
+| 214 | `lc_charges` | `letter_of_credit_id` | `letters_of_credit` | one-to-many | yes | RESTRICT |
+| 215 | `lc_charges` | `lc_amendment_id` | `lc_amendments` | one-to-many (optional) | no | RESTRICT |
+| 216 | `lc_charges` | `lc_shipment_id` | `lc_shipments` | one-to-many (optional) | no | RESTRICT |
+| 217 | `lc_charges` | `payee_party_id` | `parties` | one-to-many (optional) | no | RESTRICT |
+| 218 | `lc_charges` | `paid_from_account_id` | `money_accounts` | one-to-many (optional) | no | RESTRICT |
+| 219 | `lc_charges` | `journal_entry_id` | `journal_entries` | one-to-one (optional) | no | RESTRICT |
+| 220 | `lc_charges` | `landed_cost_allocation_id` | `landed_cost_allocations` | one-to-many (optional) | no | SET NULL |
+| 221 | `lc_charges` | `tax_rule_id` | `tax_rules` | one-to-many (optional) | no | RESTRICT |
+| 222 | `lc_payments` | `letter_of_credit_id` | `letters_of_credit` | one-to-many | yes | RESTRICT |
+| 223 | `lc_payments` | `lc_shipment_id` | `lc_shipments` | one-to-many (optional) | no | RESTRICT |
+| 224 | `lc_payments` | `purchase_bill_id` | `purchase_bills` | one-to-many (optional) | no | RESTRICT |
+| 225 | `lc_payments` | `money_account_id` | `money_accounts` | one-to-many | yes | RESTRICT |
+| 226 | `lc_payments` | `journal_entry_id` | `journal_entries` | one-to-one (optional) | no | RESTRICT |
+| 227 | `bank_facilities` | `money_account_id` | `money_accounts` | one-to-many | yes | RESTRICT |
+| 228 | `lc_loans` | `letter_of_credit_id` | `letters_of_credit` | one-to-many | yes | RESTRICT |
+| 229 | `lc_loans` | `lc_payment_id` | `lc_payments` | one-to-one | yes | RESTRICT |
+| 230 | `lc_loans` | `money_account_id` | `money_accounts` | one-to-many | yes | RESTRICT |
+| 231 | `lc_loan_repayments` | `lc_loan_id` | `lc_loans` | one-to-many | yes | RESTRICT |
+| 232 | `lc_loan_repayments` | `money_account_id` | `money_accounts` | one-to-many | yes | RESTRICT |
+| 233 | `lc_loan_repayments` | `journal_entry_id` | `journal_entries` | one-to-one (optional) | no | RESTRICT |
+| 234 | `lc_loan_accruals` | `lc_loan_id` | `lc_loans` | one-to-many | yes | RESTRICT |
+| 235 | `lc_loan_accruals` | `journal_entry_id` | `journal_entries` | one-to-one (optional) | no | RESTRICT |
+| 236 | `fx_revaluations` | `journal_entry_id` | `journal_entries` | one-to-one (optional) | no | RESTRICT |
+| 237 | `fx_revaluations` | `reversal_entry_id` | `journal_entries` | one-to-one (optional) | no | RESTRICT |
+| 238 | `fx_revaluation_lines` | `fx_revaluation_id` | `fx_revaluations` | one-to-many | yes | CASCADE |
+| 239 | `fx_revaluation_lines` | `purchase_bill_id` | `purchase_bills` | one-to-many (optional) | no | RESTRICT |
+| 240 | `fx_revaluation_lines` | `letter_of_credit_id` | `letters_of_credit` | one-to-many (optional) | no | RESTRICT |
+| 241 | `fx_revaluation_lines` | `party_id` | `parties` | one-to-many (optional) | no | RESTRICT |
+| 242 | `fx_revaluation_lines` | `currency_code` | `currencies` | one-to-many | yes | RESTRICT |
 
 **Many-to-many relationships** are only ever implemented through junction tables:
 
@@ -5643,6 +5706,7 @@ For each table, the tables it references (must exist first). Self-references are
 | `lc_documents` | `companies`, `lc_shipments`, `letters_of_credit`, `users` | — |
 | `lc_amendments` | `companies`, `letters_of_credit`, `users` | — |
 | `lc_amendment_changes` | `lc_amendments` | — |
+| `lc_amendment_lines` | `lc_amendments`, `products`, `purchase_order_lines`, `units` | — |
 | `landed_cost_allocations` | `companies`, `journal_entries`, `letters_of_credit`, `purchase_bills`, `users` | — |
 | `landed_cost_allocation_lines` | `landed_cost_allocations`, `products`, `purchase_bill_lines`, `warehouses` | — |
 | `lc_charges` | `companies`, `journal_entries`, `landed_cost_allocations`, `lc_amendments`, `lc_shipments`, `letters_of_credit`, `money_accounts`, `parties`, `tax_rules`, `users` | — |
@@ -5760,31 +5824,32 @@ Computed by topological sort of section 8, so every referenced table is created 
 73. `bank_statement_lines`
 74. `credit_notes`
 75. `lc_amendment_changes`
-76. `lc_documents`
-77. `purchase_bills`
-78. `sales_return_lines`
+76. `lc_amendment_lines`
+77. `lc_documents`
+78. `purchase_bills`
+79. `sales_return_lines`
 
 **Level 9**
 
-79. `bill_allocations`
-80. `fx_revaluation_lines`
-81. `landed_cost_allocations`
-82. `lc_payments`
-83. `purchase_bill_lines`
-84. `purchase_returns`
+80. `bill_allocations`
+81. `fx_revaluation_lines`
+82. `landed_cost_allocations`
+83. `lc_payments`
+84. `purchase_bill_lines`
+85. `purchase_returns`
 
 **Level 10**
 
-85. `debit_notes`
-86. `landed_cost_allocation_lines`
-87. `lc_charges`
-88. `lc_loans`
-89. `purchase_return_lines`
+86. `debit_notes`
+87. `landed_cost_allocation_lines`
+88. `lc_charges`
+89. `lc_loans`
+90. `purchase_return_lines`
 
 **Level 11**
 
-90. `lc_loan_accruals`
-91. `lc_loan_repayments`
+91. `lc_loan_accruals`
+92. `lc_loan_repayments`
 
 ## 10. Index and uniqueness recommendations
 

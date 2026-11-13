@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Table `purchase_bills` (Purchases): migration 73 of 91, dependency level 8.
+ * Table `purchase_bills` (Purchases): migration 73 of 92, dependency level 8.
  * Supplier bill (F3/F4) = goods receipt. Import mode links an LC and lot and carries a foreign currency.
  * Depends on: branches, companies, currencies, journal_entries, lc_shipments, letters_of_credit, parties, payment_terms, purchase_orders, users, warehouses.
  *

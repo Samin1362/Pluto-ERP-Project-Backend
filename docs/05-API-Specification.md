@@ -2,7 +2,7 @@
 
 > Status: **Release candidate 1.0.0-rc.1 for approval** (18 Oct 2026), Laravel + Eloquent. **No endpoint is to be implemented until this contract is approved.** ⚑ Auth details (DEC-02) and the items in §12.7 are still open.
 >
-> **Generated file.** The endpoint reference (§9), schemas (§10), page action map (§11) and contract review (§12) come from `docs/source/api.py`, `schemas.py`, `actions.py`, `errors.py` and `contract_review.py`. The machine-readable contract is [`openapi.yaml`](openapi.yaml) (OpenAPI 3.1), validated against the official OpenAPI 3.1 schema (§8). Size: 334 endpoints, 215 schemas, 79 error codes, 163 pages with 533 mapped actions.
+> **Generated file.** The endpoint reference (§9), schemas (§10), page action map (§11) and contract review (§12) come from `docs/source/api.py`, `schemas.py`, `actions.py`, `errors.py` and `contract_review.py`. The machine-readable contract is [`openapi.yaml`](openapi.yaml) (OpenAPI 3.1), validated against the official OpenAPI 3.1 schema (§8). Size: 335 endpoints, 220 schemas, 79 error codes, 163 pages with 535 mapped actions.
 
 ## 1. Conventions
 
@@ -55,35 +55,35 @@
 | Code | HTTP | Title (shown to the user) | Rules | Endpoints |
 |---|---|---|---|---|
 | `approval_required` | 202 | Above your approval limit: submitted for approval | BR-007 | — (outcome) |
-| `company_required` | 400 | The X-Company-Id header is missing | BR-037 | 305 |
-| `malformed_json` | 400 | The request body is not valid JSON or has the wrong type | — | 140 |
+| `company_required` | 400 | The X-Company-Id header is missing | BR-037 | 306 |
+| `malformed_json` | 400 | The request body is not valid JSON or has the wrong type | — | 141 |
 | `invalid_credentials` | 401 | E-mail or password is incorrect | BR-061 | 2 |
 | `refresh_reuse_detected` | 401 | A refresh token was reused; every session of this sign-in was revoked | FR-001 | 1 |
 | `refresh_token_invalid` | 401 | The session has ended; sign in again | FR-001 | 1 |
-| `token_expired` | 401 | The access token has expired; refresh and retry | NFR-012 | 322 |
-| `token_invalid` | 401 | The access token is not valid | NFR-012 | 322 |
+| `token_expired` | 401 | The access token has expired; refresh and retry | NFR-012 | 323 |
+| `token_invalid` | 401 | The access token is not valid | NFR-012 | 323 |
 | `two_factor_failed` | 401 | The authentication code is not valid | FR-004 | 2 |
-| `unauthenticated` | 401 | Sign-in is required | NFR-010 | 322 |
+| `unauthenticated` | 401 | Sign-in is required | NFR-010 | 323 |
 | `branch_restricted` | 403 | This record belongs to a branch you cannot access | BR-038 | 3 |
-| `not_a_member` | 403 | You are not an active member of this company | BR-037 | 305 |
-| `permission_denied` | 403 | Your role does not allow this action | BR-037 | 305 |
+| `not_a_member` | 403 | You are not an active member of this company | BR-037 | 306 |
+| `permission_denied` | 403 | Your role does not allow this action | BR-037 | 306 |
 | `platform_admin_only` | 403 | Only a platform admin can do this | FR-005 | 6 |
 | `platform_two_factor_required` | 403 | Platform admins must sign in with 2-step verification | FR-004 | 6 |
 | `self_approval_forbidden` | 403 | You cannot approve a voucher you submitted | BR-008 | 2 |
-| `support_read_only` | 403 | This is a read-only support view; nothing can be changed | FR-005 | 174 |
+| `support_read_only` | 403 | This is a read-only support view; nothing can be changed | FR-005 | 175 |
 | `system_role` | 403 | The Owner role cannot be changed or deleted | BR-060 | 3 |
 | `two_factor_required_by_company` | 403 | Your company requires 2-step verification | FR-004 | 1 |
-| `not_found` | 404 | Not found (or it belongs to another company) | BR-037 | 177 |
+| `not_found` | 404 | Not found (or it belongs to another company) | BR-037 | 178 |
 | `already_converted` | 409 | This quotation or purchase order has already been converted | BR-056 | 1 |
 | `already_posted` | 409 | This document has already been posted | BR-009 | 24 |
 | `already_reversed` | 409 | This entry has already been reversed or cancelled | BR-003 | 16 |
 | `charge_allocated` | 409 | The charge is part of a posted landed-cost allocation | BR-045 | 4 |
 | `created_from_return` | 409 | This debit note belongs to a purchase return; cancel the return | BR-057 | 3 |
-| `duplicate` | 409 | A record with the same unique value already exists | — | 20 |
+| `duplicate` | 409 | A record with the same unique value already exists | — | 21 |
 | `duplicate_statement` | 409 | This statement file was already imported | BR-032 | 1 |
 | `duplicate_supplier_bill` | 409 | This supplier's bill number is already entered | BR-018 | 3 |
 | `has_history` | 409 | This record is used elsewhere; make it inactive instead | BR-026 | 9 |
-| `idempotency_in_progress` | 409 | The same request is still being processed | BR-050 | 77 |
+| `idempotency_in_progress` | 409 | The same request is still being processed | BR-050 | 78 |
 | `invalid_transition` | 409 | This status change is not allowed from the current status | BR-003, BR-040 | 21 |
 | `last_owner` | 409 | A company must keep at least one active Owner | BR-060 | 3 |
 | `not_draft` | 409 | Only a draft can be changed, posted or deleted | BR-025 | 26 |
@@ -103,7 +103,7 @@
 | `exceeds_tolerance` | 422 | Payments would exceed the LC amount plus tolerance | BR-042 | 1 |
 | `fiscal_year_not_closable` | 422 | The year has not ended or a period is still open | BR-034 | 1 |
 | `foreign_document` | 422 | The document belongs to another party | BR-021 | 14 |
-| `idempotency_key_reused` | 422 | This Idempotency-Key was used with a different request | BR-050 | 77 |
+| `idempotency_key_reused` | 422 | This Idempotency-Key was used with a different request | BR-050 | 78 |
 | `inactive_reference` | 422 | An inactive party, product, ledger, warehouse or account was used | BR-026 | 18 |
 | `insufficient_funds` | 422 | The account would go below zero (or below its overdraft limit) | BR-031 | 8 |
 | `insufficient_stock` | 422 | Not enough stock in the warehouse | BR-014, BR-030 | 10 |
@@ -128,11 +128,11 @@
 | `rounding_ledger_missing` | 422 | Map the rounding ledger in Accounting defaults first | BR-012 | 2 |
 | `same_warehouse` | 422 | Source and destination warehouses must differ | BR-030 | 3 |
 | `unbalanced_entry` | 422 | Total debit must equal total credit | BR-001, BR-002 | 31 |
-| `validation_failed` | 422 | The request has invalid fields | NFR-030 | 221 |
+| `validation_failed` | 422 | The request has invalid fields | NFR-030 | 222 |
 | `if_match_required` | 428 | If-Match header with the current version is required | BR-049 | 34 |
 | `rate_limited` | 429 | Too many requests; try again later | NFR-013 | 13 |
-| `server_error` | 500 | Something went wrong; quote the request id | NFR-031 | 334 |
-| `company_maintenance` | 503 | This company is being restored from a backup; try again shortly (Retry-After) | BR-062 | 305 |
+| `server_error` | 500 | Something went wrong; quote the request id | NFR-031 | 335 |
+| `company_maintenance` | 503 | This company is being restored from a backup; try again shortly (Retry-After) | BR-062 | 306 |
 
 Non-blocking conditions (credit limit, overdue customer, low stock, budget, possible duplicate party) are returned as `warnings[]` in 2xx responses, not as errors (BR-015).
 
@@ -544,49 +544,50 @@ The journal debits the supplier ৳ 46,88,640 (an advance until the import bill 
 | 289 | `GET` | [`/api/v1/voucher-templates`](#getvouchertemplates) | Journal templates (depreciation, accruals, reclassify) | `accounting.view` | 200 |
 | 290 | `GET` | [`/api/v1/lc/overview`](#getlcoverview) | LC KPIs, alerts, deadlines, by bank, pipeline, active, recent | `lc.view` | 200 |
 | 291 | `GET` | [`/api/v1/letters-of-credit`](#getlettersofcredit) | List LCs | `lc.view` | 200 |
-| 292 | `POST` | [`/api/v1/letters-of-credit`](#postlettersofcredit) | Create a draft LC (documents copied from template) | `lc.create` | 201 |
-| 293 | `GET` | [`/api/v1/letters-of-credit/{id}`](#getlettersofcreditid) | LC with milestones, terms, documents, shipments, charges, payments, amendments, money position | `lc.view` | 200 |
+| 292 | `POST` | [`/api/v1/letters-of-credit`](#postlettersofcredit) | Create a draft LC (documents copied from template; items kept in a linked purchase order) | `lc.create` | 201 |
+| 293 | `GET` | [`/api/v1/letters-of-credit/{id}`](#getlettersofcreditid) | LC with milestones, terms, items, documents, shipments, charges, payments, amendments, money position | `lc.view` | 200 |
 | 294 | `PUT` | [`/api/v1/letters-of-credit/{id}`](#putlettersofcreditid) | Update a draft or awaiting-bank LC (opened LCs change only through amendments) | `lc.edit` | 200 |
-| 295 | `DELETE` | [`/api/v1/letters-of-credit/{id}`](#deletelettersofcreditid) | Delete a draft LC | `lc.delete` | 204 |
-| 296 | `POST` | [`/api/v1/letters-of-credit/{id}/transition`](#postlettersofcreditidtransition) | Change status: submit, mark_opened, mark_refused, documents_presented, cancel, expire, reopen | `lc.edit` | 200 |
-| 297 | `POST` | [`/api/v1/letters-of-credit/{id}/close`](#postlettersofcreditidclose) | Close after checks (or with override reason); margin release posted | `lc.edit` | 200 |
-| 298 | `GET` | [`/api/v1/letters-of-credit/{id}/documents`](#getlettersofcreditiddocuments) | Documents of an LC | `lc.view` | 200 |
-| 299 | `POST` | [`/api/v1/letters-of-credit/{id}/documents`](#postlettersofcreditiddocuments) | Add a required document | `lc.edit` | 201 |
-| 300 | `PATCH` | [`/api/v1/lc-documents/{id}`](#patchlcdocumentsid) | Update document status, dates, discrepancy note | `lc.edit` | 200 |
-| 301 | `GET` | [`/api/v1/lc-documents/matrix`](#getlcdocumentsmatrix) | Document status matrix across open LCs and follow-up list | `lc.view` | 200 |
-| 302 | `GET` | [`/api/v1/lc-document-templates`](#getlcdocumenttemplates) | Checklist templates with items | `lc.view` | 200 |
-| 303 | `PUT` | [`/api/v1/lc-document-templates/{id}`](#putlcdocumenttemplatesid) | Replace a template's items | `lc.edit` | 200 |
-| 304 | `POST` | [`/api/v1/lc-document-templates`](#postlcdocumenttemplates) | Create a template | `lc.create` | 201 |
-| 305 | `GET` | [`/api/v1/lc-amendments`](#getlcamendments) | All amendments (filter pending/accepted) | `lc.view` | 200 |
-| 306 | `POST` | [`/api/v1/letters-of-credit/{id}/amendments`](#postlettersofcreditidamendments) | Record an amendment with field changes | `lc.edit` | 201 |
-| 307 | `PATCH` | [`/api/v1/lc-amendments/{id}`](#patchlcamendmentsid) | Advance amendment status; on accepted the LC is updated | `lc.edit` | 200 |
-| 308 | `POST` | [`/api/v1/letters-of-credit/{id}/shipments`](#postlettersofcreditidshipments) | Add a shipment lot | `lc.edit` | 201 |
-| 309 | `PATCH` | [`/api/v1/lc-shipments/{id}`](#patchlcshipmentsid) | Update a lot (status, B/L, vessel, ETD/ETA, arrived) | `lc.edit` | 200 |
-| 310 | `GET` | [`/api/v1/lc-charges`](#getlccharges) | Charges across LCs (filter by LC and paid status) | `lc.view` | 200 |
-| 311 | `POST` | [`/api/v1/lc-charges`](#postlccharges) | Add a charge or import expense (posts accrual or payment) | `lc.create` | 201 |
-| 312 | `POST` | [`/api/v1/lc-charges/{id}/reverse`](#postlcchargesidreverse) | Reverse an LC charge (refused once included in a posted landed-cost allocation) | `lc.edit` | 200 |
-| 313 | `POST` | [`/api/v1/lc-charges/{id}/pay`](#postlcchargesidpay) | Pay an unpaid charge | `lc.create` | 200 |
-| 314 | `POST` | [`/api/v1/letters-of-credit/{id}/payments`](#postlettersofcreditidpayments) | Record a payment to the beneficiary at the bank's rate (applies margin, FX) | `lc.create` | 201 |
-| 315 | `GET` | [`/api/v1/letters-of-credit/{id}/payments`](#getlettersofcreditidpayments) | Payments of an LC with bank rate, margin applied and FX difference | `lc.view` | 200 |
-| 316 | `POST` | [`/api/v1/lc-payments/{id}/reverse`](#postlcpaymentsidreverse) | Reverse an LC payment (restores margin and supplier balance; mirror entry) | `lc.edit` | 200 |
-| 317 | `POST` | [`/api/v1/letters-of-credit/{id}/landed-cost/preview`](#postlettersofcreditidlandedcostpreview) | Preview allocation of capitalised charges to an import bill's lines | `lc.view` | 200 |
-| 318 | `POST` | [`/api/v1/letters-of-credit/{id}/landed-cost`](#postlettersofcreditidlandedcost) | Post a landed-cost allocation (inventory and COGS split) | `lc.create` | 201 |
-| 319 | `POST` | [`/api/v1/landed-cost-allocations/{id}/reverse`](#postlandedcostallocationsidreverse) | Reverse a landed-cost allocation (inventory/COGS split and landed_cost movements) | `lc.edit` | 200 |
-| 320 | `GET` | [`/api/v1/letters-of-credit/{id}/pdf`](#getlettersofcreditidpdf) | Printable LC summary | `lc.view` | 200 |
-| 321 | `GET` | [`/api/v1/letters-of-credit/{id}/cost-summary`](#getlettersofcreditidcostsummary) | Landed cost breakdown and per-unit cost | `lc.view` | 200 |
-| 322 | `GET` | [`/api/v1/bank-facilities`](#getbankfacilities) | Bank facilities (LC and loan limits) with live utilisation | `lc.view` | 200 |
-| 323 | `POST` | [`/api/v1/bank-facilities`](#postbankfacilities) | Set a bank's LC and loan limits and default loan terms | `lc.edit` | 201 |
-| 324 | `PUT` | [`/api/v1/bank-facilities/{id}`](#putbankfacilitiesid) | Change a bank facility | `lc.edit` | 200 |
-| 325 | `GET` | [`/api/v1/lc-loans`](#getlcloans) | PAD/LTR loans (filter by status, bank, LC) | `lc.view` | 200 |
-| 326 | `GET` | [`/api/v1/lc-loans/{id}`](#getlcloansid) | One loan with its repayments and the interest due today | `lc.view` | 200 |
-| 327 | `GET` | [`/api/v1/lc-loans/{id}/interest`](#getlcloansidinterest) | Interest due on a loan at a date (for the repayment dialog) | `lc.view` | 200 |
-| 328 | `POST` | [`/api/v1/lc-loans/{id}/repayments`](#postlcloansidrepayments) | Repay principal with the interest due to the date | `lc.create` | 201 |
-| 329 | `POST` | [`/api/v1/lc-loans/{id}/convert`](#postlcloansidconvert) | Convert a PAD to an LTR on the agreed terms | `lc.edit` | 200 |
-| 330 | `POST` | [`/api/v1/lc-loan-repayments/{id}/reverse`](#postlcloanrepaymentsidreverse) | Reverse a loan repayment (mirror entry; principal and interest due again) | `lc.edit` | 200 |
-| 331 | `POST` | [`/api/v1/fx-revaluations/preview`](#postfxrevaluationspreview) | Preview revaluation of open foreign bills and acceptances at closing rates | `accounting.create` | 200 |
-| 332 | `POST` | [`/api/v1/fx-revaluations`](#postfxrevaluations) | Post a revaluation (unrealised gain/loss) and its reversal dated the next day | `accounting.create` | 201 |
-| 333 | `GET` | [`/api/v1/fx-revaluations`](#getfxrevaluations) | Revaluation history | `accounting.view` | 200 |
-| 334 | `POST` | [`/api/v1/fx-revaluations/{id}/reverse`](#postfxrevaluationsidreverse) | Reverse a revaluation (both its entries) | `accounting.edit` | 200 |
+| 295 | `POST` | [`/api/v1/letters-of-credit/{id}/items`](#postlettersofcreditiditems) | Add the items to an LC that has none (creates the linked purchase order) | `lc.edit` | 201 |
+| 296 | `DELETE` | [`/api/v1/letters-of-credit/{id}`](#deletelettersofcreditid) | Delete a draft LC | `lc.delete` | 204 |
+| 297 | `POST` | [`/api/v1/letters-of-credit/{id}/transition`](#postlettersofcreditidtransition) | Change status: submit, mark_opened, mark_refused, documents_presented, cancel, expire, reopen | `lc.edit` | 200 |
+| 298 | `POST` | [`/api/v1/letters-of-credit/{id}/close`](#postlettersofcreditidclose) | Close after checks (or with override reason); margin release posted | `lc.edit` | 200 |
+| 299 | `GET` | [`/api/v1/letters-of-credit/{id}/documents`](#getlettersofcreditiddocuments) | Documents of an LC | `lc.view` | 200 |
+| 300 | `POST` | [`/api/v1/letters-of-credit/{id}/documents`](#postlettersofcreditiddocuments) | Add a required document | `lc.edit` | 201 |
+| 301 | `PATCH` | [`/api/v1/lc-documents/{id}`](#patchlcdocumentsid) | Update document status, dates, discrepancy note | `lc.edit` | 200 |
+| 302 | `GET` | [`/api/v1/lc-documents/matrix`](#getlcdocumentsmatrix) | Document status matrix across open LCs and follow-up list | `lc.view` | 200 |
+| 303 | `GET` | [`/api/v1/lc-document-templates`](#getlcdocumenttemplates) | Checklist templates with items | `lc.view` | 200 |
+| 304 | `PUT` | [`/api/v1/lc-document-templates/{id}`](#putlcdocumenttemplatesid) | Replace a template's items | `lc.edit` | 200 |
+| 305 | `POST` | [`/api/v1/lc-document-templates`](#postlcdocumenttemplates) | Create a template | `lc.create` | 201 |
+| 306 | `GET` | [`/api/v1/lc-amendments`](#getlcamendments) | All amendments (filter pending/accepted) | `lc.view` | 200 |
+| 307 | `POST` | [`/api/v1/letters-of-credit/{id}/amendments`](#postlettersofcreditidamendments) | Record an amendment with field and item changes | `lc.edit` | 201 |
+| 308 | `PATCH` | [`/api/v1/lc-amendments/{id}`](#patchlcamendmentsid) | Advance amendment status; on accepted the LC and its items are updated | `lc.edit` | 200 |
+| 309 | `POST` | [`/api/v1/letters-of-credit/{id}/shipments`](#postlettersofcreditidshipments) | Add a shipment lot | `lc.edit` | 201 |
+| 310 | `PATCH` | [`/api/v1/lc-shipments/{id}`](#patchlcshipmentsid) | Update a lot (status, B/L, vessel, ETD/ETA, arrived) | `lc.edit` | 200 |
+| 311 | `GET` | [`/api/v1/lc-charges`](#getlccharges) | Charges across LCs (filter by LC and paid status) | `lc.view` | 200 |
+| 312 | `POST` | [`/api/v1/lc-charges`](#postlccharges) | Add a charge or import expense (posts accrual or payment) | `lc.create` | 201 |
+| 313 | `POST` | [`/api/v1/lc-charges/{id}/reverse`](#postlcchargesidreverse) | Reverse an LC charge (refused once included in a posted landed-cost allocation) | `lc.edit` | 200 |
+| 314 | `POST` | [`/api/v1/lc-charges/{id}/pay`](#postlcchargesidpay) | Pay an unpaid charge | `lc.create` | 200 |
+| 315 | `POST` | [`/api/v1/letters-of-credit/{id}/payments`](#postlettersofcreditidpayments) | Record a payment to the beneficiary at the bank's rate (applies margin, FX) | `lc.create` | 201 |
+| 316 | `GET` | [`/api/v1/letters-of-credit/{id}/payments`](#getlettersofcreditidpayments) | Payments of an LC with bank rate, margin applied and FX difference | `lc.view` | 200 |
+| 317 | `POST` | [`/api/v1/lc-payments/{id}/reverse`](#postlcpaymentsidreverse) | Reverse an LC payment (restores margin and supplier balance; mirror entry) | `lc.edit` | 200 |
+| 318 | `POST` | [`/api/v1/letters-of-credit/{id}/landed-cost/preview`](#postlettersofcreditidlandedcostpreview) | Preview allocation of capitalised charges to an import bill's lines | `lc.view` | 200 |
+| 319 | `POST` | [`/api/v1/letters-of-credit/{id}/landed-cost`](#postlettersofcreditidlandedcost) | Post a landed-cost allocation (inventory and COGS split) | `lc.create` | 201 |
+| 320 | `POST` | [`/api/v1/landed-cost-allocations/{id}/reverse`](#postlandedcostallocationsidreverse) | Reverse a landed-cost allocation (inventory/COGS split and landed_cost movements) | `lc.edit` | 200 |
+| 321 | `GET` | [`/api/v1/letters-of-credit/{id}/pdf`](#getlettersofcreditidpdf) | Printable LC summary | `lc.view` | 200 |
+| 322 | `GET` | [`/api/v1/letters-of-credit/{id}/cost-summary`](#getlettersofcreditidcostsummary) | Landed cost breakdown and per-unit cost | `lc.view` | 200 |
+| 323 | `GET` | [`/api/v1/bank-facilities`](#getbankfacilities) | Bank facilities (LC and loan limits) with live utilisation | `lc.view` | 200 |
+| 324 | `POST` | [`/api/v1/bank-facilities`](#postbankfacilities) | Set a bank's LC and loan limits and default loan terms | `lc.edit` | 201 |
+| 325 | `PUT` | [`/api/v1/bank-facilities/{id}`](#putbankfacilitiesid) | Change a bank facility | `lc.edit` | 200 |
+| 326 | `GET` | [`/api/v1/lc-loans`](#getlcloans) | PAD/LTR loans (filter by status, bank, LC) | `lc.view` | 200 |
+| 327 | `GET` | [`/api/v1/lc-loans/{id}`](#getlcloansid) | One loan with its repayments and the interest due today | `lc.view` | 200 |
+| 328 | `GET` | [`/api/v1/lc-loans/{id}/interest`](#getlcloansidinterest) | Interest due on a loan at a date (for the repayment dialog) | `lc.view` | 200 |
+| 329 | `POST` | [`/api/v1/lc-loans/{id}/repayments`](#postlcloansidrepayments) | Repay principal with the interest due to the date | `lc.create` | 201 |
+| 330 | `POST` | [`/api/v1/lc-loans/{id}/convert`](#postlcloansidconvert) | Convert a PAD to an LTR on the agreed terms | `lc.edit` | 200 |
+| 331 | `POST` | [`/api/v1/lc-loan-repayments/{id}/reverse`](#postlcloanrepaymentsidreverse) | Reverse a loan repayment (mirror entry; principal and interest due again) | `lc.edit` | 200 |
+| 332 | `POST` | [`/api/v1/fx-revaluations/preview`](#postfxrevaluationspreview) | Preview revaluation of open foreign bills and acceptances at closing rates | `accounting.create` | 200 |
+| 333 | `POST` | [`/api/v1/fx-revaluations`](#postfxrevaluations) | Post a revaluation (unrealised gain/loss) and its reversal dated the next day | `accounting.create` | 201 |
+| 334 | `GET` | [`/api/v1/fx-revaluations`](#getfxrevaluations) | Revaluation history | `accounting.view` | 200 |
+| 335 | `POST` | [`/api/v1/fx-revaluations/{id}/reverse`](#postfxrevaluationsidreverse) | Reverse a revaluation (both its entries) | `accounting.edit` | 200 |
 
 ## 8. Contract validation
 
@@ -598,27 +599,27 @@ Last run: 24 rules, **24 passed, 0 failed**; 6 negative tests, 6 detected. Offic
 | Rule | Check | Items | Result |
 |---|---|---|---|
 | A01 | Document validates against the official OpenAPI 3.1 schema (schema-base: documents incl. Schema Objects) | 1 | ✅ pass |
-| A02 | Every component schema is valid JSON Schema 2020-12 (meta-schema check) | 215 | ✅ pass |
-| A03 | All $refs resolve and every component schema is used | 218 | ✅ pass |
-| A04 | Operations have unique camelCase operationIds, summary, description, tags, a 2xx, a default, and problem+json errors | 334 | ✅ pass |
-| A05 | Path templates and declared path parameters match; path parameters are required | 334 | ✅ pass |
-| A06 | Security: public only for sign-in flows, cookie only for refresh/logout, X-Company-Id on company-scoped calls, known permissions | 334 | ✅ pass |
-| A07 | Every operation that posts a journal entry takes an Idempotency-Key and documents its locking; every body can be rejected with 422 | 334 | ✅ pass |
-| A08 | Every 201 response declares a Location header | 54 | ✅ pass |
+| A02 | Every component schema is valid JSON Schema 2020-12 (meta-schema check) | 220 | ✅ pass |
+| A03 | All $refs resolve and every component schema is used | 223 | ✅ pass |
+| A04 | Operations have unique camelCase operationIds, summary, description, tags, a 2xx, a default, and problem+json errors | 335 | ✅ pass |
+| A05 | Path templates and declared path parameters match; path parameters are required | 335 | ✅ pass |
+| A06 | Security: public only for sign-in flows, cookie only for refresh/logout, X-Company-Id on company-scoped calls, known permissions | 335 | ✅ pass |
+| A07 | Every operation that posts a journal entry takes an Idempotency-Key and documents its locking; every body can be rejected with 422 | 335 | ✅ pass |
+| A08 | Every 201 response declares a Location header | 55 | ✅ pass |
 | A09 | Collections use the paginated envelope {data[], meta} | 53 | ✅ pass |
 | A10 | Every error code exists in the catalogue, has its HTTP status documented on the operation, and every catalogue code is reachable | 79 | ✅ pass |
-| A11 | Request-only schemas reject unknown properties (additionalProperties: false) | 99 | ✅ pass |
-| A12 | Money, quantity, cost and rate fields are decimal strings (never JSON numbers) | 223 | ✅ pass |
+| A11 | Request-only schemas reject unknown properties (additionalProperties: false) | 102 | ✅ pass |
+| A12 | Money, quantity, cost and rate fields are decimal strings (never JSON numbers) | 237 | ✅ pass |
 | A13 | PUT/PATCH on a versioned table requires If-Match, and If-Match is only required where a version exists | 40 | ✅ pass |
-| A14 | Request fields are stored: each maps to a column (or is declared virtual) with a compatible length, enum values and nullability | 386 | ✅ pass |
+| A14 | Request fields are stored: each maps to a column (or is declared virtual) with a compatible length, enum values and nullability | 403 | ✅ pass |
 | A15 | Response enum fields have exactly the values the database allows | 29 | ✅ pass |
-| A16 | Every action of every page maps to API calls, a dialog, navigation or explicit client behaviour, and every target exists | 533 | ✅ pass |
-| A17 | Every data-changing endpoint is triggered by at least one page action (only token refresh is system-driven) | 188 | ✅ pass |
+| A16 | Every action of every page maps to API calls, a dialog, navigation or explicit client behaviour, and every target exists | 535 | ✅ pass |
+| A17 | Every data-changing endpoint is triggered by at least one page action (only token refresh is system-driven) | 189 | ✅ pass |
 | A18 | Every page has at least one endpoint (shared components use their host page's) | 163 | ✅ pass |
-| A19 | For every action, at least one role can both open the page and call the endpoint | 333 | ✅ pass |
-| A20 | Database operations name real tables; nothing deletes posted or append-only rows; every write changes something | 1389 | ✅ pass |
-| A21 | Every parameter has a typed schema | 569 | ✅ pass |
-| A22 | Business rules exist; 46 rejecting rules map to error codes | 365 | ✅ pass |
+| A19 | For every action, at least one role can both open the page and call the endpoint | 338 | ✅ pass |
+| A20 | Database operations name real tables; nothing deletes posted or append-only rows; every write changes something | 1416 | ✅ pass |
+| A21 | Every parameter has a typed schema | 570 | ✅ pass |
+| A22 | Business rules exist; 46 rejecting rules map to error codes | 373 | ✅ pass |
 | A23 | Calculate/preview endpoints never reject on business state; they return warnings[] (BR-015) | 5 | ✅ pass |
 | A24 | Ledger/stock writes are coherent: entries have lines, stock movements update balances, system entries take an SJ number, bulk post = single post | 88 | ✅ pass |
 
@@ -2995,7 +2996,7 @@ List products and services with stock status.
 | **Database** | read: product_categories, product_units, product_warehouse_settings, products, stock_balances, units |
 | **Business rules** | BR-052 |
 | **Requirements** | FR-030 |
-| **Pages and actions** | D1, E3, F3, D10, D11, E10, F8<br>D10 · Add product<br>D11 · Add product<br>E3 · Find item<br>E3 · Paste from sheet<br>F3 · Find item |
+| **Pages and actions** | D1, E3, F3, D10, D11, E10, F8, M3, M4<br>D10 · Add product<br>D11 · Add product<br>E3 · Find item<br>E3 · Paste from sheet<br>F3 · Find item<br>M3 · Enter the items (NEW, PEP-487: product, quantity, unit, unit cost; arrival warehouse)<br>M4 · Add items to an LC without items (NEW, PEP-487) |
 | **Transaction / concurrency** | Read-only; consistent snapshot. |
 
 <a id="postproducts"></a>
@@ -7092,7 +7093,7 @@ List LCs.
 <a id="postlettersofcredit"></a>
 #### `POST /api/v1/letters-of-credit`
 
-Create a draft LC (documents copied from template).
+Create a draft LC (documents copied from template; items kept in a linked purchase order). `lines` (PEP-487) are the LC's items: in the same transaction a purchase order for the supplier is created in the LC currency at the planning rate, marked sent (no e-mail) and linked, so an import bill fills from what is still to come (BR-056, with the LC's tolerance). Send either `lines` or `purchase_order_id` (an existing order), not both (422).
 
 | | |
 |---|---|
@@ -7100,21 +7101,21 @@ Create a draft LC (documents copied from template).
 | **Permission** | `lc.create` — roles: Owner, Finance manager, Accountant |
 | **Path / query params** | — / — |
 | **Request body** | [`LetterOfCreditInput`](#schema-letterofcreditinput) |
-| **Validation** | `party_id`* id of a record in this company; `purchase_order_id` id of a record in this company (nullable); `intended_import` string ≤ 255 (nullable); `goods_description`* string ≤ 500; `quantity` decimal string, 3 dp (nullable); `quantity_unit` string ≤ 20 (nullable); `import_authorization_ref` string ≤ 60 (nullable); `lc_type` one of irrevocable/irrevocable_transferable/standby; `tenor`* one of sight/usance; `usance_days` integer (nullable); `incoterm`* string ≤ 40; `currency_code`* ISO 4217; `amount`* decimal string, 2 dp; `tolerance_pct` decimal string 0–100, 4 dp; `planning_rate`* decimal string, 6 dp; `partial_shipments` boolean; `transhipment` boolean; `confirmation_required` boolean; `issuing_bank_account_id` id of a record in this company (nullable); `advising_bank` string ≤ 190 (nullable); `margin_pct` decimal string 0–100, 4 dp; `margin_account_id` id of a record in this company (nullable); `application_date` YYYY-MM-DD (nullable); `latest_shipment_date` YYYY-MM-DD (nullable); `expiry_date` YYYY-MM-DD (nullable); `presentation_days` integer; `document_template_id` id of a record in this company (nullable); `documents` array of LcDocumentInput; `record_shipments` boolean; `shipment` LcShipmentInput (nullable)<br>Unknown fields are rejected (422).<br>BR-006: Document numbers come from the company's sequence for the document type and FY, are unique, are reserved at first save and are never reused; voiding a draft number is audited. |
+| **Validation** | `party_id`* id of a record in this company; `purchase_order_id` id of a record in this company (nullable); `intended_import` string ≤ 255 (nullable); `goods_description`* string ≤ 500; `quantity` decimal string, 3 dp (nullable); `quantity_unit` string ≤ 20 (nullable); `import_authorization_ref` string ≤ 60 (nullable); `lc_type` one of irrevocable/irrevocable_transferable/standby; `tenor`* one of sight/usance; `usance_days` integer (nullable); `incoterm`* string ≤ 40; `currency_code`* ISO 4217; `amount`* decimal string, 2 dp; `tolerance_pct` decimal string 0–100, 4 dp; `planning_rate`* decimal string, 6 dp; `partial_shipments` boolean; `transhipment` boolean; `confirmation_required` boolean; `issuing_bank_account_id` id of a record in this company (nullable); `advising_bank` string ≤ 190 (nullable); `margin_pct` decimal string 0–100, 4 dp; `margin_account_id` id of a record in this company (nullable); `application_date` YYYY-MM-DD (nullable); `latest_shipment_date` YYYY-MM-DD (nullable); `expiry_date` YYYY-MM-DD (nullable); `presentation_days` integer; `document_template_id` id of a record in this company (nullable); `documents` array of LcDocumentInput; `record_shipments` boolean; `shipment` LcShipmentInput (nullable); `lines` array of LcLineInput; `warehouse_id` id of a record in this company (nullable)<br>Unknown fields are rejected (422).<br>BR-006: Document numbers come from the company's sequence for the document type and FY, are unique, are reserved at first save and are never reused; voiding a draft number is audited.<br>BR-056: Quotations and purchase orders never post; converting copies lines and prices; bills update purchase-order received quantities. Bill lines linked to an order line take at most ordered - received, or ordered x (1 + tolerance) - received when the bill's LC is raised against that order.<br>BR-069: A trade document line is in the item's base unit or one of its extra units (1 unit = factor base units); quantity and price are per that unit, while stock, average cost and cost of sales always move quantity x factor in the base unit. |
 | **Success** | 201 `data`: [`LetterOfCredit`](#schema-letterofcredit) |
 | **Status codes** | 201, 400, 401, 403, 409, 422, 503 |
 | **Error codes** | **`company_maintenance`, `duplicate`, `support_read_only`**; standard: `company_required`, `idempotency_in_progress`, `idempotency_key_reused`, `malformed_json`, `not_a_member`, `permission_denied`, `server_error`, `token_expired`, `token_invalid`, `unauthenticated`, `validation_failed` |
 | **Headers** | `Idempotency-Key`, `Location` on 201 |
-| **Database** | insert: audit_logs, idempotency_keys, letters_of_credit; read: lc_document_template_items, lc_documents, lc_shipments, number_sequences |
-| **Business rules** | BR-006 |
+| **Database** | insert: audit_logs, idempotency_keys, letters_of_credit; read: lc_document_template_items, lc_documents, lc_shipments, number_sequences, purchase_order_lines, purchase_orders, warehouses |
+| **Business rules** | BR-006, BR-056, BR-069 |
 | **Requirements** | FR-092 |
-| **Pages and actions** | M3, F8<br>M3 · Save draft<br>M3 · Submit to bank |
+| **Pages and actions** | M3, F8<br>M3 · Save draft<br>M3 · Submit to bank<br>M3 · Enter the items (NEW, PEP-487: product, quantity, unit, unit cost; arrival warehouse) |
 | **Transaction / concurrency** | Single transaction. |
 
 <a id="getlettersofcreditid"></a>
 #### `GET /api/v1/letters-of-credit/{id}`
 
-LC with milestones, terms, documents, shipments, charges, payments, amendments, money position.
+LC with milestones, terms, items, documents, shipments, charges, payments, amendments, money position.
 
 | | |
 |---|---|
@@ -7127,7 +7128,7 @@ LC with milestones, terms, documents, shipments, charges, payments, amendments, 
 | **Status codes** | 200, 400, 401, 403, 404, 503 |
 | **Error codes** | **`company_maintenance`**; standard: `company_required`, `not_a_member`, `not_found`, `permission_denied`, `server_error`, `token_expired`, `token_invalid`, `unauthenticated` |
 | **Headers** | — |
-| **Database** | read: lc_amendment_changes, lc_amendments, lc_charges, lc_documents, lc_payments, lc_shipments, letters_of_credit |
+| **Database** | read: lc_amendment_changes, lc_amendment_lines, lc_amendments, lc_charges, lc_documents, lc_payments, lc_shipments, letters_of_credit, purchase_order_lines, purchase_orders |
 | **Business rules** | — |
 | **Requirements** | FR-093 |
 | **Pages and actions** | M4 |
@@ -7136,7 +7137,7 @@ LC with milestones, terms, documents, shipments, charges, payments, amendments, 
 <a id="putlettersofcreditid"></a>
 #### `PUT /api/v1/letters-of-credit/{id}`
 
-Update a draft or awaiting-bank LC (opened LCs change only through amendments).
+Update a draft or awaiting-bank LC (opened LCs change only through amendments). `lines` replace the LC's items (the linked purchase order's lines; an empty list removes them). Refused with 409 invalid_transition once a draft or posted bill uses that order. Send either `lines` or `purchase_order_id`, not both (422).
 
 | | |
 |---|---|
@@ -7144,16 +7145,38 @@ Update a draft or awaiting-bank LC (opened LCs change only through amendments).
 | **Permission** | `lc.edit` — roles: Owner, Finance manager, Accountant |
 | **Path / query params** | `id` / — |
 | **Request body** | [`LetterOfCreditInput`](#schema-letterofcreditinput) |
-| **Validation** | `party_id`* id of a record in this company; `purchase_order_id` id of a record in this company (nullable); `intended_import` string ≤ 255 (nullable); `goods_description`* string ≤ 500; `quantity` decimal string, 3 dp (nullable); `quantity_unit` string ≤ 20 (nullable); `import_authorization_ref` string ≤ 60 (nullable); `lc_type` one of irrevocable/irrevocable_transferable/standby; `tenor`* one of sight/usance; `usance_days` integer (nullable); `incoterm`* string ≤ 40; `currency_code`* ISO 4217; `amount`* decimal string, 2 dp; `tolerance_pct` decimal string 0–100, 4 dp; `planning_rate`* decimal string, 6 dp; `partial_shipments` boolean; `transhipment` boolean; `confirmation_required` boolean; `issuing_bank_account_id` id of a record in this company (nullable); `advising_bank` string ≤ 190 (nullable); `margin_pct` decimal string 0–100, 4 dp; `margin_account_id` id of a record in this company (nullable); `application_date` YYYY-MM-DD (nullable); `latest_shipment_date` YYYY-MM-DD (nullable); `expiry_date` YYYY-MM-DD (nullable); `presentation_days` integer; `document_template_id` id of a record in this company (nullable); `documents` array of LcDocumentInput; `record_shipments` boolean; `shipment` LcShipmentInput (nullable)<br>Unknown fields are rejected (422).<br>BR-040: LC status follows the state machine in 06 section 12.1; closed and cancelled LCs are read-only.<br>BR-041: LC amendment changes apply to the LC only when the amendment is accepted; each accepted change is recorded with old and new values.<br>BR-049: Updates must send the current version (If-Match); a mismatch is rejected with 409 and the user's input is preserved. |
+| **Validation** | `party_id`* id of a record in this company; `purchase_order_id` id of a record in this company (nullable); `intended_import` string ≤ 255 (nullable); `goods_description`* string ≤ 500; `quantity` decimal string, 3 dp (nullable); `quantity_unit` string ≤ 20 (nullable); `import_authorization_ref` string ≤ 60 (nullable); `lc_type` one of irrevocable/irrevocable_transferable/standby; `tenor`* one of sight/usance; `usance_days` integer (nullable); `incoterm`* string ≤ 40; `currency_code`* ISO 4217; `amount`* decimal string, 2 dp; `tolerance_pct` decimal string 0–100, 4 dp; `planning_rate`* decimal string, 6 dp; `partial_shipments` boolean; `transhipment` boolean; `confirmation_required` boolean; `issuing_bank_account_id` id of a record in this company (nullable); `advising_bank` string ≤ 190 (nullable); `margin_pct` decimal string 0–100, 4 dp; `margin_account_id` id of a record in this company (nullable); `application_date` YYYY-MM-DD (nullable); `latest_shipment_date` YYYY-MM-DD (nullable); `expiry_date` YYYY-MM-DD (nullable); `presentation_days` integer; `document_template_id` id of a record in this company (nullable); `documents` array of LcDocumentInput; `record_shipments` boolean; `shipment` LcShipmentInput (nullable); `lines` array of LcLineInput; `warehouse_id` id of a record in this company (nullable)<br>Unknown fields are rejected (422).<br>BR-040: LC status follows the state machine in 06 section 12.1; closed and cancelled LCs are read-only.<br>BR-041: LC amendment changes apply to the LC only when the amendment is accepted; each accepted change is recorded with old and new values.<br>BR-049: Updates must send the current version (If-Match); a mismatch is rejected with 409 and the user's input is preserved.<br>BR-056: Quotations and purchase orders never post; converting copies lines and prices; bills update purchase-order received quantities. Bill lines linked to an order line take at most ordered - received, or ordered x (1 + tolerance) - received when the bill's LC is raised against that order. |
 | **Success** | 200 `data`: [`LetterOfCredit`](#schema-letterofcredit) |
 | **Status codes** | 200, 400, 401, 403, 404, 409, 422, 428, 503 |
 | **Error codes** | **`company_maintenance`, `invalid_transition`, `support_read_only`**; standard: `company_required`, `if_match_required`, `malformed_json`, `not_a_member`, `not_found`, `permission_denied`, `server_error`, `token_expired`, `token_invalid`, `unauthenticated`, `validation_failed`, `version_conflict` |
 | **Headers** | `If-Match` (required) |
-| **Database** | insert: audit_logs; update: letters_of_credit; read: lc_documents, lc_shipments |
-| **Business rules** | BR-040, BR-041, BR-049 |
+| **Database** | insert: audit_logs; update: letters_of_credit; read: lc_documents, lc_shipments, purchase_bills, purchase_order_lines, purchase_orders, warehouses |
+| **Business rules** | BR-040, BR-041, BR-049, BR-056 |
 | **Requirements** | FR-092 |
-| **Pages and actions** | M3<br>M3 · Save draft<br>M3 · Submit to bank<br>M3 · Change template |
+| **Pages and actions** | M3<br>M3 · Save draft<br>M3 · Submit to bank<br>M3 · Change template<br>M3 · Enter the items (NEW, PEP-487: product, quantity, unit, unit cost; arrival warehouse) |
 | **Transaction / concurrency** | Single-row write; optimistic lock via If-Match. |
+
+<a id="postlettersofcreditiditems"></a>
+#### `POST /api/v1/letters-of-credit/{id}/items`
+
+Add the items to an LC that has none (creates the linked purchase order). Catch-up for an LC made before items were kept on it (PEP-487), in any status except closed or cancelled. 409 invalid_transition when the LC already has a purchase order or a bill; after that an opened LC's items change only through an accepted amendment (BR-041).
+
+| | |
+|---|---|
+| **Auth** | Bearer JWT + `X-Company-Id` |
+| **Permission** | `lc.edit` — roles: Owner, Finance manager, Accountant |
+| **Path / query params** | `id` / — |
+| **Request body** | [`LcItemsInput`](#schema-lcitemsinput) |
+| **Validation** | `lines`* array of LcLineInput; `warehouse_id` id of a record in this company (nullable)<br>Unknown fields are rejected (422).<br>BR-006: Document numbers come from the company's sequence for the document type and FY, are unique, are reserved at first save and are never reused; voiding a draft number is audited.<br>BR-056: Quotations and purchase orders never post; converting copies lines and prices; bills update purchase-order received quantities. Bill lines linked to an order line take at most ordered - received, or ordered x (1 + tolerance) - received when the bill's LC is raised against that order.<br>BR-069: A trade document line is in the item's base unit or one of its extra units (1 unit = factor base units); quantity and price are per that unit, while stock, average cost and cost of sales always move quantity x factor in the base unit. |
+| **Success** | 201 `data`: [`LetterOfCredit`](#schema-letterofcredit) |
+| **Status codes** | 201, 400, 401, 403, 404, 409, 422, 503 |
+| **Error codes** | **`company_maintenance`, `duplicate`, `support_read_only`**; standard: `company_required`, `idempotency_in_progress`, `idempotency_key_reused`, `malformed_json`, `not_a_member`, `not_found`, `permission_denied`, `server_error`, `token_expired`, `token_invalid`, `unauthenticated`, `validation_failed` |
+| **Headers** | `Idempotency-Key`, `Location` on 201 |
+| **Database** | lock: letters_of_credit; insert: audit_logs, idempotency_keys; update: letters_of_credit; read: number_sequences, purchase_bills, purchase_order_lines, purchase_orders, warehouses |
+| **Business rules** | BR-006, BR-056, BR-069 |
+| **Requirements** | FR-092, FR-093 |
+| **Pages and actions** | M4<br>M4 · Add items to an LC without items (NEW, PEP-487) |
+| **Transaction / concurrency** | Single transaction. |
 
 <a id="deletelettersofcreditid"></a>
 #### `DELETE /api/v1/letters-of-credit/{id}`
@@ -7391,7 +7414,7 @@ All amendments (filter pending/accepted).
 | **Status codes** | 200, 400, 401, 403, 422, 503 |
 | **Error codes** | **`company_maintenance`**; standard: `company_required`, `not_a_member`, `permission_denied`, `server_error`, `token_expired`, `token_invalid`, `unauthenticated`, `validation_failed` |
 | **Headers** | — |
-| **Database** | read: lc_amendment_changes, lc_amendments, letters_of_credit |
+| **Database** | read: lc_amendment_changes, lc_amendment_lines, lc_amendments, letters_of_credit |
 | **Business rules** | — |
 | **Requirements** | FR-094 |
 | **Pages and actions** | M5, M8 |
@@ -7400,7 +7423,7 @@ All amendments (filter pending/accepted).
 <a id="postlettersofcreditidamendments"></a>
 #### `POST /api/v1/letters-of-credit/{id}/amendments`
 
-Record an amendment with field changes.
+Record an amendment with field and item changes. `lines` (PEP-487) carry item changes: add an item, change a quantity or unit cost, remove an item. They need an LC with items and are checked against what bills have already taken; they are applied when the amendment is accepted. `changes` may be empty when `lines` are given.
 
 | | |
 |---|---|
@@ -7408,13 +7431,13 @@ Record an amendment with field changes.
 | **Permission** | `lc.edit` — roles: Owner, Finance manager, Accountant |
 | **Path / query params** | `id` / — |
 | **Request body** | [`LcAmendmentInput`](#schema-lcamendmentinput) |
-| **Validation** | `requested_on`* YYYY-MM-DD; `status`* one of requested/issued/accepted; `changes`* array of AmendmentChange; `other_change` string ≤ 255 (nullable); `reason` string ≤ 500 (nullable); `bank_fee` decimal string, 2 dp<br>Unknown fields are rejected (422).<br>BR-041: LC amendment changes apply to the LC only when the amendment is accepted; each accepted change is recorded with old and new values. |
+| **Validation** | `requested_on`* YYYY-MM-DD; `status`* one of requested/issued/accepted; `changes`* array of AmendmentChange; `other_change` string ≤ 255 (nullable); `reason` string ≤ 500 (nullable); `bank_fee` decimal string, 2 dp; `lines` array of LcAmendmentLineInput<br>Unknown fields are rejected (422).<br>BR-041: LC amendment changes apply to the LC only when the amendment is accepted; each accepted change is recorded with old and new values.<br>BR-056: Quotations and purchase orders never post; converting copies lines and prices; bills update purchase-order received quantities. Bill lines linked to an order line take at most ordered - received, or ordered x (1 + tolerance) - received when the bill's LC is raised against that order. |
 | **Success** | 201 `data`: [`LcAmendment`](#schema-lcamendment) |
 | **Status codes** | 201, 400, 401, 403, 404, 409, 422, 503 |
 | **Error codes** | **`company_maintenance`, `support_read_only`**; standard: `company_required`, `idempotency_in_progress`, `idempotency_key_reused`, `malformed_json`, `not_a_member`, `not_found`, `permission_denied`, `server_error`, `token_expired`, `token_invalid`, `unauthenticated`, `validation_failed` |
 | **Headers** | `Idempotency-Key`, `Location` on 201 |
-| **Database** | insert: audit_logs, idempotency_keys, lc_amendment_changes, lc_amendments; read: lc_charges, letters_of_credit |
-| **Business rules** | BR-041 |
+| **Database** | insert: audit_logs, idempotency_keys, lc_amendment_changes, lc_amendment_lines, lc_amendments; read: lc_charges, letters_of_credit, purchase_bills, purchase_order_lines, purchase_orders |
+| **Business rules** | BR-041, BR-056 |
 | **Requirements** | FR-094 |
 | **Pages and actions** | M5, M4<br>M4 · Record amendment<br>M5 · Record amendment |
 | **Transaction / concurrency** | Single transaction. |
@@ -7422,7 +7445,7 @@ Record an amendment with field changes.
 <a id="patchlcamendmentsid"></a>
 #### `PATCH /api/v1/lc-amendments/{id}`
 
-Advance amendment status; on accepted the LC is updated.
+Advance amendment status; on accepted the LC and its items are updated.
 
 | | |
 |---|---|
@@ -7430,16 +7453,16 @@ Advance amendment status; on accepted the LC is updated.
 | **Permission** | `lc.edit` — roles: Owner, Finance manager, Accountant |
 | **Path / query params** | `id` / — |
 | **Request body** | [`LcAmendmentStatus`](#schema-lcamendmentstatus) |
-| **Validation** | `status`* one of issued/accepted/refused; `date`* YYYY-MM-DD<br>Unknown fields are rejected (422).<br>BR-041: LC amendment changes apply to the LC only when the amendment is accepted; each accepted change is recorded with old and new values. |
+| **Validation** | `status`* one of issued/accepted/refused; `date`* YYYY-MM-DD<br>Unknown fields are rejected (422).<br>BR-041: LC amendment changes apply to the LC only when the amendment is accepted; each accepted change is recorded with old and new values.<br>BR-056: Quotations and purchase orders never post; converting copies lines and prices; bills update purchase-order received quantities. Bill lines linked to an order line take at most ordered - received, or ordered x (1 + tolerance) - received when the bill's LC is raised against that order. |
 | **Success** | 200 `data`: [`LcAmendment`](#schema-lcamendment) |
 | **Status codes** | 200, 400, 401, 403, 404, 409, 422, 428, 503 |
 | **Error codes** | **`company_maintenance`, `support_read_only`**; standard: `company_required`, `if_match_required`, `malformed_json`, `not_a_member`, `not_found`, `permission_denied`, `server_error`, `token_expired`, `token_invalid`, `unauthenticated`, `validation_failed`, `version_conflict` |
 | **Headers** | `If-Match` (required) |
-| **Database** | insert: audit_logs; update: lc_amendments; read: lc_amendment_changes, letters_of_credit |
-| **Business rules** | BR-041 |
+| **Database** | insert: audit_logs; update: lc_amendments; read: lc_amendment_changes, lc_amendment_lines, letters_of_credit, purchase_bills, purchase_order_lines, purchase_orders |
+| **Business rules** | BR-041, BR-056 |
 | **Requirements** | FR-094 |
 | **Pages and actions** | M5, M4<br>M5 · Record amendment |
-| **Transaction / concurrency** | Locks the LC row when applying accepted changes. |
+| **Transaction / concurrency** | Locks the LC row, then the purchase order and its lines, when applying accepted changes. |
 
 <a id="postlettersofcreditidshipments"></a>
 #### `POST /api/v1/letters-of-credit/{id}/shipments`
@@ -10927,11 +10950,57 @@ Create or update a draft/awaiting LC. Only supplier, amount, issuing bank and ex
 | `documents` | `[ref:LcDocumentInput]` | no |
 | `record_shipments` | `bool` | no |
 | `shipment` | `ref:LcShipmentInput \| null` | no |
+| `lines` | `[ref:LcLineInput]` | no |
+| `warehouse_id` | `id \| null` | no |
+
+<a id="schema-lclineinput"></a>
+#### `LcLineInput`
+
+One item of an LC (PEP-487): product, quantity in the chosen unit (one of the product's units, BR-069; default its base unit) and unit cost in the LC currency. Unknown properties are rejected.
+
+| Property | Type | Required |
+|---|---|---|
+| `product_id` | `id` | yes |
+| `quantity` | `qty` | yes |
+| `unit_id` | `id \| null` | no |
+| `unit_cost` | `cost` | yes |
+| `description` | `str:255 \| null` | no |
+
+<a id="schema-lcitemsinput"></a>
+#### `LcItemsInput`
+
+Add the items to an LC that has none (POST /letters-of-credit/{id}/items; PEP-487). `warehouse_id` is where the goods will arrive (default: the head office's first active warehouse). Unknown properties are rejected.
+
+| Property | Type | Required |
+|---|---|---|
+| `lines` | `[ref:LcLineInput]` | yes |
+| `warehouse_id` | `id \| null` | no |
+
+<a id="schema-lcline"></a>
+#### `LcLine`
+
+An item of the LC, read from its purchase order line (`id` is that line; an amendment names it as purchase_order_line_id). Cost and line total are in the LC currency; `received_quantity` is what posted bills have received, `remaining_quantity` what is still to come.
+
+| Property | Type | Required |
+|---|---|---|
+| `id` | `id` | yes |
+| `line_no` | `int` | yes |
+| `product_id` | `id` | yes |
+| `product_code` | `str` | yes |
+| `product_name` | `str` | yes |
+| `unit` | `str` | yes |
+| `unit_id` | `id \| null` | no |
+| `description` | `str \| null` | no |
+| `quantity` | `qty` | yes |
+| `unit_cost` | `cost` | yes |
+| `line_total` | `money` | yes |
+| `received_quantity` | `qty` | yes |
+| `remaining_quantity` | `qty` | yes |
 
 <a id="schema-letterofcredit"></a>
 #### `LetterOfCredit`
 
-Import LC. `purchase_order_id`/`purchase_order_number` name the order it is raised against (F3 fills an import bill's lines from it); `quantity` and `quantity_unit` are the LC's own goods quantity, a reference only.
+Import LC. `purchase_order_id`/`purchase_order_number` name the order that keeps its items (F3 fills an import bill's lines from it): created from the LC's own items (`items_source` entered) or an existing order the LC was raised against (purchase_order); `lines` (M4 only) and `lines_total` are read from that order, in the LC currency. `quantity` and `quantity_unit` are the LC's own goods quantity, a reference only.
 
 | Property | Type | Required |
 |---|---|---|
@@ -10972,6 +11041,10 @@ Import LC. `purchase_order_id`/`purchase_order_number` name the order it is rais
 | `payments` | `[ref:LcPayment]` | no |
 | `amendments` | `[ref:LcAmendment]` | no |
 | `money_position` | `obj \| null` | no |
+| `items_source` | `enum:entered\|purchase_order\|none` | yes |
+| `lines` | `[ref:LcLine]` | no |
+| `lines_total` | `money \| null` | no |
+| `warehouse_id` | `id \| null` | no |
 | `created_at` | `datetime` | yes |
 | `created_by` | `ref:UserRef \| null` | no |
 | `updated_at` | `datetime` | yes |
@@ -11072,6 +11145,40 @@ Record an amendment. Unknown properties are rejected.
 | `other_change` | `str:255 \| null` | no |
 | `reason` | `str:500 \| null` | no |
 | `bank_fee` | `money` | no |
+| `lines` | `[ref:LcAmendmentLineInput]` | no |
+
+<a id="schema-lcamendmentlineinput"></a>
+#### `LcAmendmentLineInput`
+
+An item change carried by an amendment (PEP-487); applied to the LC's items when the amendment is accepted. add: product_id, quantity, unit_cost (unit_id optional); change: purchase_order_line_id (LcLine.id) with the new quantity and/or unit_cost; remove: purchase_order_line_id. A quantity is never below what bills have already taken. Unknown properties are rejected.
+
+| Property | Type | Required |
+|---|---|---|
+| `action` | `enum:add\|change\|remove` | yes |
+| `purchase_order_line_id` | `id \| null` | no |
+| `product_id` | `id \| null` | no |
+| `unit_id` | `id \| null` | no |
+| `quantity` | `qty \| null` | no |
+| `unit_cost` | `cost \| null` | no |
+| `description` | `str:255 \| null` | no |
+
+<a id="schema-lcamendmentline"></a>
+#### `LcAmendmentLine`
+
+Item change of an amendment, with the values before it.
+
+| Property | Type | Required |
+|---|---|---|
+| `action` | `enum:add\|change\|remove` | yes |
+| `purchase_order_line_id` | `id \| null` | no |
+| `product_id` | `id` | yes |
+| `product_code` | `str` | yes |
+| `product_name` | `str` | yes |
+| `unit` | `str` | yes |
+| `old_quantity` | `qty \| null` | no |
+| `quantity` | `qty \| null` | no |
+| `old_unit_cost` | `cost \| null` | no |
+| `unit_cost` | `cost \| null` | no |
 
 <a id="schema-amendmentchange"></a>
 #### `AmendmentChange`
@@ -11108,6 +11215,7 @@ Amendment.
 | `issued_on` | `date \| null` | no |
 | `accepted_on` | `date \| null` | no |
 | `changes` | `[obj]` | yes |
+| `lines` | `[ref:LcAmendmentLine]` | no |
 | `bank_fee` | `money` | yes |
 | `reason` | `str \| null` | no |
 | `version` | `int` | yes |
@@ -13230,6 +13338,7 @@ View permission `lc.create`. **Loads:** [`GET /parties`](#getparties), [`GET /pu
 | 5 | Add document | [`POST /letters-of-credit/{id}/documents`](#postlettersofcreditiddocuments) | `lc.edit` | [`LcDocumentInput`](#schema-lcdocumentinput) → [`LcDocument`](#schema-lcdocument) | 201 | `support_read_only` |
 | 6 | Change template | [`GET /lc-document-templates`](#getlcdocumenttemplates) → [`PUT /letters-of-credit/{id}`](#putlettersofcreditid) (document_template_id) | `lc.edit`, `lc.view` | [`LetterOfCreditInput`](#schema-letterofcreditinput) → [`LetterOfCredit`](#schema-letterofcredit) | 200 | `invalid_transition`, `support_read_only` |
 | 7 | Delete draft (NEW) | dlg:L7 → [`DELETE /letters-of-credit/{id}`](#deletelettersofcreditid) | `lc.delete` | — → — | 204 | `not_draft`, `support_read_only` |
+| 8 | Enter the items (NEW, PEP-487: product, quantity, unit, unit cost; arrival warehouse) | [`GET /products`](#getproducts) → [`POST /letters-of-credit`](#postlettersofcredit) \| [`PUT /letters-of-credit/{id}`](#putlettersofcreditid) (lines, warehouse_id) | `inventory.view`, `lc.create`, `lc.edit` | [`LetterOfCreditInput`](#schema-letterofcreditinput) → [`LetterOfCredit`](#schema-letterofcredit) | 200, 201 | `duplicate`, `invalid_transition`, `support_read_only` |
 
 <a id="actions-m4"></a>
 #### M4 · LC details
@@ -13256,6 +13365,7 @@ View permission `lc.view`. **Loads:** [`GET /attachments/{id}/file`](#getattachm
 | 16 | Repay a PAD/LTR loan (NEW, P16 LC finance) | [`GET /lc-loans/{id}/interest`](#getlcloansidinterest) → [`POST /lc-loans/{id}/repayments`](#postlcloansidrepayments) | `lc.create`, `lc.view` | [`LcLoanRepaymentInput`](#schema-lcloanrepaymentinput) → [`LcLoan`](#schema-lcloan) | 200, 201 | `insufficient_funds`, `period_locked`, `repayment_exceeds_outstanding`, `support_read_only`, `unbalanced_entry` |
 | 17 | Convert PAD to LTR (NEW, P16 LC finance) | [`POST /lc-loans/{id}/convert`](#postlcloansidconvert) | `lc.edit` | [`LcLoanConvert`](#schema-lcloanconvert) → [`LcLoan`](#schema-lcloan) | 200 | `repayment_exceeds_outstanding`, `support_read_only` |
 | 18 | Reverse a loan repayment (NEW, P16 LC finance) | dlg:L6 → [`POST /lc-loan-repayments/{id}/reverse`](#postlcloanrepaymentsidreverse) | `lc.edit` | [`ReasonRequest`](#schema-reasonrequest) → [`LcLoan`](#schema-lcloan) | 200 | `already_posted`, `already_reversed`, `period_locked`, `support_read_only`, `use_document_cancel` |
+| 19 | Add items to an LC without items (NEW, PEP-487) | [`GET /products`](#getproducts) → [`POST /letters-of-credit/{id}/items`](#postlettersofcreditiditems) | `inventory.view`, `lc.edit` | [`LcItemsInput`](#schema-lcitemsinput) → [`LetterOfCredit`](#schema-letterofcredit) | 200, 201 | `duplicate`, `support_read_only` |
 
 <a id="actions-m5"></a>
 #### M5 · LC amendments
@@ -13369,10 +13479,10 @@ View permission `lc.create`. **Loads:** nothing of its own (host page data).
 
 | | Before review | Contract |
 |---|---|---|
-| Endpoints | 280 | 334 |
-| Schemas | 191 | 215 |
+| Endpoints | 280 | 335 |
+| Schemas | 191 | 220 |
 | Pages | 155 | 163 |
-| Page actions mapped to API or client behaviour | 0 of 448 | 533 of 533 |
+| Page actions mapped to API or client behaviour | 0 of 448 | 535 of 535 |
 
 ### 12.2 Missing endpoints, now added (54)
 
@@ -13500,6 +13610,7 @@ View permission `lc.create`. **Loads:** nothing of its own (host page data).
 | Checks before posting (UI redesign A+) | DocumentCalculation adds checks: [PostingCheck { key, status pass\|warn\|block, label, line_no }] for sales invoices and purchase bills — the period is open, stock, credit limit, overdue invoices, back-dating, purchase-order quantities — so E3/F3 show what passed as well as what needs attention. Built from the same warnings and PeriodGuard the post uses. PEP-480, 12 Nov 2026. Additive. |
 | Platform console (PEP-483) | New /platform/companies endpoints (list, create with an Owner invitation, suspend, reactivate) for platform admins: e-mails in PLUTO_PLATFORM_ADMINS with 2-step sign-in, never a company role, so selling Pluto to many companies needs no shared membership. Me adds platform_admin (shows the console link; PEP-484). Schemas PlatformCompany, PlatformCompanyCreate; errors platform_admin_only, platform_two_factor_required. Owner request 12-13 Nov 2026. Additive. |
 | Read-only support access (PEP-485) | POST/DELETE /platform/companies/{id}/support-access: a platform admin opens a company read-only for 15-240 minutes with a reason (table support_access_grants); its owners get a notification and the audit log keeps the start and end; any change answers 403 support_read_only; Me adds support_access while the current company is such a view. Additive. |
+| Items on a letter of credit (PEP-487) | LetterOfCreditInput adds lines [LcLineInput { product_id, quantity, unit_id, unit_cost, description }] and warehouse_id: the items are kept in a purchase order created and linked in the same transaction (LC currency, planning rate, marked sent), so an import bill fills from what is still to come and BR-056 with the LC tolerance applies; lines and purchase_order_id together are refused. LetterOfCredit adds items_source (entered \| purchase_order \| none), lines [LcLine], lines_total and warehouse_id, read from that order. New POST /letters-of-credit/{id}/items (LcItemsInput) adds the items once to an LC that has none. LcAmendmentInput adds lines [LcAmendmentLineInput { action add\|change\|remove, purchase_order_line_id, product_id, unit_id, quantity, unit_cost }] and LcAmendment returns them; an accepted amendment applies them to the order's lines, never below what bills have taken (table lc_amendment_lines; column letters_of_credit.items_entered, hand-written migration 2026_11_13_000001). A bill from an LC with items may contain only those items. Owner request 13 Nov 2026. Additive. |
 | GET /reports/income, GET /reports/expenses | Need reports.financial instead of reports.view: they are profit-and-loss figures, which owner decision DEC-13 / C7 keeps from Sales staff and Viewer (P13.1-BE-05). |
 | Dashboard lenses A2–A8 | Load only `GET /dashboard/lenses/{lens}`; the overlapping report and list endpoints were removed from their page lists. |
 
@@ -13542,6 +13653,7 @@ Each pair returns similar data but serves a different permission audience. Remov
 | M4 | Repay a PAD/LTR loan (NEW, P16 LC finance) | NEW |
 | M4 | Convert PAD to LTR (NEW, P16 LC finance) | NEW |
 | M4 | Reverse a loan repayment (NEW, P16 LC finance) | NEW |
+| M4 | Add items to an LC without items (NEW, PEP-487) | NEW |
 | M7 | Pay a charge (NEW, row) | NEW |
 | M8 | Set a bank's LC and loan limits (NEW, P16 LC finance) | NEW |
 | M8 | Revalue foreign currency at closing rates (NEW, P16 LC finance) | NEW |
@@ -13564,6 +13676,7 @@ Each pair returns similar data but serves a different permission audience. Remov
 | F3 | Delete draft (NEW) | NEW |
 | G5 | Edit account (NEW) | NEW |
 | M3 | Delete draft (NEW) | NEW |
+| M3 | Enter the items (NEW, PEP-487: product, quantity, unit, unit cost; arrival warehouse) | NEW |
 
 ### 12.7 Open decisions that affect the contract
 

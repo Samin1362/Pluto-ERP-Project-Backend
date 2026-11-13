@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Table `company_backups` (Platform): migration 12 of 91, dependency level 2.
+ * Table `company_backups` (Platform): migration 12 of 92, dependency level 2.
  * Per-company logical snapshot (automatic daily, manual, before restore, before period lock).
  * Depends on: companies, users.
  *

@@ -9531,6 +9531,14 @@
      "auto_increment": false
     },
     {
+     "name": "items_entered",
+     "type": "tinyint(1)",
+     "nullable": false,
+     "default": "0",
+     "generated": null,
+     "auto_increment": false
+    },
+    {
      "name": "intended_import",
      "type": "varchar(255)",
      "nullable": true,
@@ -17974,6 +17982,169 @@
     }
    },
    "check": {}
+  },
+  "lc_amendment_lines": {
+   "seq": 92,
+   "level": 8,
+   "migration": "2026_10_18_009200_create_lc_amendment_lines_table.php",
+   "module": "LC",
+   "columns": [
+    {
+     "name": "id",
+     "type": "bigint unsigned",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": true
+    },
+    {
+     "name": "lc_amendment_id",
+     "type": "bigint unsigned",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "action",
+     "type": "varchar(30)",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "purchase_order_line_id",
+     "type": "bigint unsigned",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "product_id",
+     "type": "bigint unsigned",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "unit_id",
+     "type": "bigint unsigned",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "description",
+     "type": "varchar(255)",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "old_quantity",
+     "type": "decimal(18,3)",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "quantity",
+     "type": "decimal(18,3)",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "old_unit_cost",
+     "type": "decimal(18,4)",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "unit_cost",
+     "type": "decimal(18,4)",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "created_at",
+     "type": "datetime",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "updated_at",
+     "type": "datetime",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    }
+   ],
+   "primary": [
+    "id"
+   ],
+   "unique": {},
+   "index": {
+    "lc_amendment_lines_lc_amendment_id_index": [
+     "lc_amendment_id"
+    ],
+    "lc_amendment_lines_purchase_order_line_id_index": [
+     "purchase_order_line_id"
+    ],
+    "lc_amendment_lines_product_id_index": [
+     "product_id"
+    ],
+    "lc_amendment_lines_unit_id_index": [
+     "unit_id"
+    ]
+   },
+   "foreign": {
+    "lc_amendment_lines_lc_amendment_id_foreign": {
+     "column": "lc_amendment_id",
+     "references_table": "lc_amendments",
+     "references_column": "id",
+     "on_delete": "CASCADE",
+     "on_update": "RESTRICT"
+    },
+    "lc_amendment_lines_purchase_order_line_id_foreign": {
+     "column": "purchase_order_line_id",
+     "references_table": "purchase_order_lines",
+     "references_column": "id",
+     "on_delete": "SET NULL",
+     "on_update": "RESTRICT"
+    },
+    "lc_amendment_lines_product_id_foreign": {
+     "column": "product_id",
+     "references_table": "products",
+     "references_column": "id",
+     "on_delete": "RESTRICT",
+     "on_update": "RESTRICT"
+    },
+    "lc_amendment_lines_unit_id_foreign": {
+     "column": "unit_id",
+     "references_table": "units",
+     "references_column": "id",
+     "on_delete": "RESTRICT",
+     "on_update": "RESTRICT"
+    }
+   },
+   "check": {
+    "lc_amendment_lines_action_check": "`action` IN ('add', 'change', 'remove')"
+   }
   }
  }
 }

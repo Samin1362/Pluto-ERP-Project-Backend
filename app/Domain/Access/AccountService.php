@@ -30,6 +30,7 @@ final class AccountService
         'approval_rejected' => ['label' => 'My voucher was rejected', 'in_app' => true, 'email' => false],
         'invoice_overdue' => ['label' => 'An invoice falls overdue', 'in_app' => true, 'email' => false],
         'bill_due_soon' => ['label' => 'A bill is due in 3 days', 'in_app' => true, 'email' => false],
+        'lc_deadline' => ['label' => 'An LC deadline is near (expiry, last shipment, payment maturity, PAD/LTR loan due)', 'in_app' => true, 'email' => false],
         'daily_summary' => ['label' => 'Daily summary', 'in_app' => false, 'email' => false],
     ];
 

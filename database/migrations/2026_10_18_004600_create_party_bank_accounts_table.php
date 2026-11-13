@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Table `party_bank_accounts` (Parties): migration 46 of 91, dependency level 5.
+ * Table `party_bank_accounts` (Parties): migration 46 of 92, dependency level 5.
  * Bank details of a supplier (pay-to) or advising bank of an international supplier.
  * Depends on: companies, parties, users.
  *

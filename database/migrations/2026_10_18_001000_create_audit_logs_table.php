@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Table `audit_logs` (Platform): migration 10 of 91, dependency level 2.
+ * Table `audit_logs` (Platform): migration 10 of 92, dependency level 2.
  * Append-only audit trail of every create/update/post/approve/reverse/cancel/delete and security event.
  * Depends on: companies, users.
  *

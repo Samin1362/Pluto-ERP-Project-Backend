@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Table `support_access_grants` (Access): migration 91 of 91, dependency level 2.
+ * Table `support_access_grants` (Access): migration 91 of 92, dependency level 2.
  * Read-only support access (PEP-485): a platform admin opened this company for a limited time with a reason; the company's owners are told and the start and end are in its audit log. While it lasts the admin may only read (every change is refused with support_read_only).
  * Depends on: companies, users.
  *

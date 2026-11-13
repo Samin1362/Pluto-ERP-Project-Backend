@@ -809,6 +809,7 @@ export interface LcAmendment {
   issued_on?: string | null
   accepted_on?: string | null
   changes: Array<Record<string, unknown>>
+  lines?: Array<LcAmendmentLine>
   bank_fee: Decimal
   reason?: string | null
   version: number
@@ -822,6 +823,32 @@ export interface LcAmendmentInput {
   other_change?: string | null
   reason?: string | null
   bank_fee?: Decimal
+  lines?: Array<LcAmendmentLineInput>
+}
+
+/** Item change of an amendment, with the values before it. */
+export interface LcAmendmentLine {
+  action: 'add' | 'change' | 'remove'
+  purchase_order_line_id?: number | null
+  product_id: number
+  product_code: string
+  product_name: string
+  unit: string
+  old_quantity?: Decimal | null
+  quantity?: Decimal | null
+  old_unit_cost?: Decimal | null
+  unit_cost?: Decimal | null
+}
+
+/** An item change carried by an amendment (PEP-487); applied to the LC's items when the amendment is accepted. add: product_id, quantity, unit_cost (unit_id optional); change: purchase_order_line_id (LcLine.id) with the new quantity and/or unit_cost; remove: purchase_order_line_id. A quantity is never below what bills have already taken. */
+export interface LcAmendmentLineInput {
+  action: 'add' | 'change' | 'remove'
+  purchase_order_line_id?: number | null
+  product_id?: number | null
+  unit_id?: number | null
+  quantity?: Decimal | null
+  unit_cost?: Decimal | null
+  description?: string | null
 }
 
 /** Advance status. */
@@ -915,6 +942,38 @@ export interface LcDocumentTemplateInput {
   name: string
   is_default?: boolean
   items: Array<Record<string, unknown>>
+}
+
+/** Add the items to an LC that has none (POST /letters-of-credit/{id}/items; PEP-487). `warehouse_id` is where the goods will arrive (default: the head office's first active warehouse). */
+export interface LcItemsInput {
+  lines: Array<LcLineInput>
+  warehouse_id?: number | null
+}
+
+/** An item of the LC, read from its purchase order line (`id` is that line; an amendment names it as purchase_order_line_id). Cost and line total are in the LC currency; `received_quantity` is what posted bills have received, `remaining_quantity` what is still to come. */
+export interface LcLine {
+  id: number
+  line_no: number
+  product_id: number
+  product_code: string
+  product_name: string
+  unit: string
+  unit_id?: number | null
+  description?: string | null
+  quantity: Decimal
+  unit_cost: Decimal
+  line_total: Decimal
+  received_quantity: Decimal
+  remaining_quantity: Decimal
+}
+
+/** One item of an LC (PEP-487): product, quantity in the chosen unit (one of the product's units, BR-069; default its base unit) and unit cost in the LC currency. */
+export interface LcLineInput {
+  product_id: number
+  quantity: Decimal
+  unit_id?: number | null
+  unit_cost: Decimal
+  description?: string | null
 }
 
 /** PAD/LTR loan with what is owed today. */
@@ -1147,7 +1206,7 @@ export interface LensData {
   table?: ReportData
 }
 
-/** Import LC. `purchase_order_id`/`purchase_order_number` name the order it is raised against (F3 fills an import bill's lines from it); `quantity` and `quantity_unit` are the LC's own goods quantity, a reference only. */
+/** Import LC. `purchase_order_id`/`purchase_order_number` name the order that keeps its items (F3 fills an import bill's lines from it): created from the LC's own items (`items_source` entered) or an existing order the LC was raised against (purchase_order); `lines` (M4 only) and `lines_total` are read from that order, in the LC currency. `quantity` and `quantity_unit` are the LC's own goods quantity, a reference only. */
 export interface LetterOfCredit {
   id: number
   lc_number: string
@@ -1186,6 +1245,10 @@ export interface LetterOfCredit {
   payments?: Array<LcPayment>
   amendments?: Array<LcAmendment>
   money_position?: Record<string, unknown> | null
+  items_source: 'entered' | 'purchase_order' | 'none'
+  lines?: Array<LcLine>
+  lines_total?: Decimal | null
+  warehouse_id?: number | null
   created_at: string
   created_by?: UserRef | null
   updated_at: string
@@ -1224,6 +1287,8 @@ export interface LetterOfCreditInput {
   documents?: Array<LcDocumentInput>
   record_shipments?: boolean
   shipment?: LcShipmentInput | null
+  lines?: Array<LcLineInput>
+  warehouse_id?: number | null
 }
 
 /** E-mail and password. */

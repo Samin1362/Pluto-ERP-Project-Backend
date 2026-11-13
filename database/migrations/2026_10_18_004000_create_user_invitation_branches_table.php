@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Table `user_invitation_branches` (Access): migration 40 of 91, dependency level 4.
+ * Table `user_invitation_branches` (Access): migration 40 of 92, dependency level 4.
  * Branch restriction chosen on the invitation (R-18); copied to company_user_branches on accept.
  * Depends on: branches, user_invitations.
  *

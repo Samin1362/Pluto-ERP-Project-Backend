@@ -164,8 +164,8 @@ Approval limits (defaults): Finance manager pays up to ৳ 5,00,000 without appr
 | FR-087 | Settings | Owners configure backups, download backups, prepare the export pack and restore from a backup. | K15 | 8 |
 | FR-090 | LC | Users view the LC dashboard: KPIs, alerts, deadlines, commitments by bank, pipeline, active LCs and recent activity. | M1 | 1 |
 | FR-091 | LC | Users list and filter LCs by status, bank, supplier and attention flags. | M2 | 1 |
-| FR-092 | LC | Users create an LC in sections (supplier and purchase, terms, banks and dates, documents, shipment, review), save drafts and submit to the bank. | M3 | 4 |
-| FR-093 | LC | Users view LC details with overview, terms, documents, shipment, charges and payments, amendments and activity. | M4 | 3 |
+| FR-092 | LC | Users create an LC in sections (supplier and purchase, terms, banks and dates, documents, shipment, review), save drafts and submit to the bank. | M3 | 5 |
+| FR-093 | LC | Users view LC details with overview, terms, documents, shipment, charges and payments, amendments and activity. | M4 | 4 |
 | FR-094 | LC | Users record LC amendments with field-level changes and status. | M5 | 3 |
 | FR-095 | LC | Users maintain document checklists and templates and update document status, with scans attached. | M6 | 7 |
 | FR-096 | LC | Users record shipment lots and milestones inside an LC. | M4 | 2 |
@@ -233,7 +233,7 @@ Approval limits (defaults): Finance manager pays up to ৳ 5,00,000 without appr
 | BR-003 | Posted journal entries, documents and stock movements are immutable; corrections are made only by reversal, cancellation or a credit/debit note. Non-financial fields (delivery challan, vehicle, delivered time, internal note, attachments) may still be updated after posting, and every change is audited. | 16 | TC-ACC-003, TC-ACC-007, TC-ACC-008, TC-SAL-018, TC-PUR-011, TC-INV-005, TC-BNK-010, TC-LC-012 |
 | BR-004 | A document or voucher date must fall inside an open accounting period of an open financial year; posting, editing or reversing into a locked period is rejected. | 38 | TC-ACC-004 |
 | BR-005 | Drafts, submitted and rejected vouchers never affect ledger balances, stock or reports. | 7 | TC-ACC-006 |
-| BR-006 | Document numbers come from the company's sequence for the document type and FY, are unique, are reserved at first save and are never reused; voiding a draft number is audited. | 20 | TC-ACC-023, TC-SAL-013, TC-DB-002 |
+| BR-006 | Document numbers come from the company's sequence for the document type and FY, are unique, are reserved at first save and are never reused; voiding a draft number is audited. | 21 | TC-ACC-023, TC-SAL-013, TC-DB-002 |
 | BR-007 | A payment or journal voucher whose amount exceeds the submitter's role limit must be approved by a user with the module's approve permission before it posts. | 7 | TC-AUTH-019, TC-ACC-009, TC-PUR-006 |
 | BR-008 | Nobody approves a voucher they submitted (segregation of duties). | 2 | TC-ACC-010 |
 | BR-009 | A document posts at most once: one journal entry per document (unique journal_entry_id); a repeated post request returns the existing result. | 24 | TC-ACC-007, TC-SAL-005, TC-SAL-016, TC-SAL-021, TC-CON-003 |
@@ -283,7 +283,7 @@ Approval limits (defaults): Finance manager pays up to ৳ 5,00,000 without appr
 | BR-053 | A voucher dated more than the configured number of days in the past requires explicit confirmation. | 5 | TC-ACC-018 |
 | BR-054 | An expense or income entry needs amount > 0, a category and a money account; it posts the category ledger against the money account. | 1 | TC-BNK-007 |
 | BR-055 | Due date defaults to document date + the party's payment-term days and may be edited. | 2 | TC-SAL-015 |
-| BR-056 | Quotations and purchase orders never post; converting copies lines and prices; bills update purchase-order received quantities. Bill lines linked to an order line take at most ordered - received, or ordered x (1 + tolerance) - received when the bill's LC is raised against that order. | 5 | TC-SAL-014, TC-PUR-009, TC-PUR-013 |
+| BR-056 | Quotations and purchase orders never post; converting copies lines and prices; bills update purchase-order received quantities. Bill lines linked to an order line take at most ordered - received, or ordered x (1 + tolerance) - received when the bill's LC is raised against that order. | 10 | TC-SAL-014, TC-PUR-009, TC-PUR-013 |
 | BR-057 | A purchase return credits inventory at the original bill cost of the returned lines; the supplier is debited through the debit note. | 2 | TC-PUR-008, TC-PUR-011, TC-PUR-012 |
 | BR-058 | A cash-count difference posts to the cash short/over ledger and requires approval. | 2 | TC-BNK-006, TC-BNK-010 |
 | BR-059 | Active plus invited users cannot exceed the company's seat limit. | 3 | TC-AUTH-014 |
@@ -296,7 +296,7 @@ Approval limits (defaults): Finance manager pays up to ৳ 5,00,000 without appr
 | BR-066 | A bank's LC limit counts the planned taka of its open LCs and its open usance acceptances, and its loan limit counts the outstanding PAD/LTR principal; going over warns or is refused as the facility says. | 2 | TC-LC-014 |
 | BR-067 | A PAD/LTR loan accrues interest daily on the outstanding principal at its rate over its day count (360 or 365), from the last repayment or month-end accrual; a repayment pays that interest with the principal and cannot repay more principal than is outstanding. | 2 | TC-LC-015 |
 | BR-068 | A period-end FX revaluation restates open foreign-currency bills and usance acceptances at closing rates, posts the unrealised difference to exchange gain or loss and reverses it the next day. | 2 | TC-LC-016 |
-| BR-069 | A trade document line is in the item's base unit or one of its extra units (1 unit = factor base units); quantity and price are per that unit, while stock, average cost and cost of sales always move quantity x factor in the base unit. | 2 | TC-INV-008 |
+| BR-069 | A trade document line is in the item's base unit or one of its extra units (1 unit = factor base units); quantity and price are per that unit, while stock, average cost and cost of sales always move quantity x factor in the base unit. | 4 | TC-INV-008 |
 
 ## 9. Use cases
 

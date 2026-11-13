@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Table `companies` (Platform): migration 4 of 91, dependency level 1.
+ * Table `companies` (Platform): migration 4 of 92, dependency level 1.
  * A business (tenant). All business data hangs off a company.
  * Depends on: currencies, users.
  *

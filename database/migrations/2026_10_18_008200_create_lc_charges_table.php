@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Table `lc_charges` (LC): migration 82 of 91, dependency level 10.
+ * Table `lc_charges` (LC): migration 82 of 92, dependency level 10.
  * Bank charge or import expense of an LC (opening commission, insurance, C&F, port, duties as assessed, margin deposit, ...).
  * Depends on: companies, journal_entries, landed_cost_allocations, lc_amendments, lc_shipments, letters_of_credit, money_accounts, parties, tax_rules, users.
  *

@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Table `export_jobs` (Platform): migration 13 of 91, dependency level 2.
+ * Table `export_jobs` (Platform): migration 13 of 92, dependency level 2.
  * Asynchronous export (month-end pack, report exports).
  * Depends on: companies, users.
  *

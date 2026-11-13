@@ -300,12 +300,21 @@ s("LetterOfCreditInput", "Create or update a draft/awaiting LC. Only supplier, a
   goods_description="str:500!", quantity="qty?", quantity_unit="str:20?", import_authorization_ref="str:60?", lc_type="enum:irrevocable|irrevocable_transferable|standby", tenor="enum:sight|usance!",
   usance_days="int?", incoterm="str:40!", currency_code="ccy!", amount="money!", tolerance_pct="pct", planning_rate="rate!", partial_shipments="bool", transhipment="bool",
   confirmation_required="bool", issuing_bank_account_id="id?", advising_bank="str:190?", margin_pct="pct", margin_account_id="id?", application_date="date?", latest_shipment_date="date?",
-  expiry_date="date?", presentation_days="int", document_template_id="id?", documents="[ref:LcDocumentInput]", record_shipments="bool", shipment="ref:LcShipmentInput?")
-s("LetterOfCredit", "Import LC. `purchase_order_id`/`purchase_order_number` name the order it is raised against (F3 fills an import bill's lines from it); `quantity` and `quantity_unit` are the LC's own goods quantity, a reference only.", id="id!", lc_number="str!", status="enum:draft|awaiting_bank|opened|partly_shipped|documents_presented|payment_due|closed|cancelled|expired!", party="ref:PartyRef!",
+  expiry_date="date?", presentation_days="int", document_template_id="id?", documents="[ref:LcDocumentInput]", record_shipments="bool", shipment="ref:LcShipmentInput?",
+  lines="[ref:LcLineInput]", warehouse_id="id?")
+s("LcLineInput", "One item of an LC (PEP-487): product, quantity in the chosen unit (one of the product's units, BR-069; default its base unit) and unit cost in the LC currency.",
+  product_id="id!", quantity="qty!", unit_id="id?", unit_cost="cost!", description="str:255?")
+s("LcItemsInput", "Add the items to an LC that has none (POST /letters-of-credit/{id}/items; PEP-487). `warehouse_id` is where the goods will arrive (default: the head office's first active warehouse).",
+  lines="[ref:LcLineInput]!", warehouse_id="id?")
+s("LcLine", "An item of the LC, read from its purchase order line (`id` is that line; an amendment names it as purchase_order_line_id). Cost and line total are in the LC currency; `received_quantity` is what posted bills have received, `remaining_quantity` what is still to come.",
+  id="id!", line_no="int!", product_id="id!", product_code="str!", product_name="str!", unit="str!", unit_id="id?", description="str?", quantity="qty!", unit_cost="cost!",
+  line_total="money!", received_quantity="qty!", remaining_quantity="qty!")
+s("LetterOfCredit", "Import LC. `purchase_order_id`/`purchase_order_number` name the order that keeps its items (F3 fills an import bill's lines from it): created from the LC's own items (`items_source` entered) or an existing order the LC was raised against (purchase_order); `lines` (M4 only) and `lines_total` are read from that order, in the LC currency. `quantity` and `quantity_unit` are the LC's own goods quantity, a reference only.", id="id!", lc_number="str!", status="enum:draft|awaiting_bank|opened|partly_shipped|documents_presented|payment_due|closed|cancelled|expired!", party="ref:PartyRef!",
   purchase_order_id="id?", purchase_order_number="str?", quantity="qty?", quantity_unit="str?", goods_description="str!", currency_code="ccy!", amount="money!", tolerance_pct="pct!", planning_rate="rate!", amount_bdt_planned="money!", paid_foreign="money!", outstanding_foreign="money!",
   tenor="str!", usance_days="int?", incoterm="str!", issuing_bank="ref:MoneyAccount?", bank_reference="str?", opening_status="str!", opened_on="date?", latest_shipment_date="date?",
   expiry_date="date?", days_to_expiry="int?", maturity_date="date?", margin_pct="pct!", margin_amount="money!", flags="[ref:Warning]", milestones="[obj]!",
-  documents="[ref:LcDocument]", shipments="[ref:LcShipment]", charges="[ref:LcCharge]", payments="[ref:LcPayment]", amendments="[ref:LcAmendment]", money_position="obj?", **AUDIT)
+  documents="[ref:LcDocument]", shipments="[ref:LcShipment]", charges="[ref:LcCharge]", payments="[ref:LcPayment]", amendments="[ref:LcAmendment]", money_position="obj?",
+  items_source="enum:entered|purchase_order|none!", lines="[ref:LcLine]", lines_total="money?", warehouse_id="id?", **AUDIT)
 s("LcTransition", "Status change.", action="enum:submit|mark_opened|mark_refused|documents_presented|payment_due|cancel|expire|reopen!", bank_reference="str:60?", date="date?", reason="str:255?")
 s("LcCloseRequest", "Close an LC.", override_reason="str:255?", release_margin_to_account_id="id?")
 s("LcDocumentInput", "Required document.", name="str:120!", provided_by="str:80!", copies="int", note="str:255?", is_required="bool",
@@ -313,10 +322,15 @@ s("LcDocumentInput", "Required document.", name="str:120!", provided_by="str:80!
 s("LcDocument", "LC document.", id="id!", name="str!", provided_by="str!", copies="int!", note="str?", is_required="bool!", status="str!", due_date="date?", received_date="date?", attachments="[ref:Attachment]", version="int!")
 s("LcDocumentTemplate", "Checklist template.", id="id!", name="str!", is_default="bool!", items="[obj]!")
 s("LcDocumentTemplateInput", "Template items.", name="str:80!", is_default="bool", items="[obj]!")
-s("LcAmendmentInput", "Record an amendment.", requested_on="date!", status="enum:requested|issued|accepted!", changes="[ref:AmendmentChange]!", other_change="str:255?", reason="str:500?", bank_fee="money")
+s("LcAmendmentInput", "Record an amendment.", requested_on="date!", status="enum:requested|issued|accepted!", changes="[ref:AmendmentChange]!", other_change="str:255?", reason="str:500?", bank_fee="money",
+  lines="[ref:LcAmendmentLineInput]")
+s("LcAmendmentLineInput", "An item change carried by an amendment (PEP-487); applied to the LC's items when the amendment is accepted. add: product_id, quantity, unit_cost (unit_id optional); change: purchase_order_line_id (LcLine.id) with the new quantity and/or unit_cost; remove: purchase_order_line_id. A quantity is never below what bills have already taken.",
+  action="enum:add|change|remove!", purchase_order_line_id="id?", product_id="id?", unit_id="id?", quantity="qty?", unit_cost="cost?", description="str:255?")
+s("LcAmendmentLine", "Item change of an amendment, with the values before it.", action="enum:add|change|remove!", purchase_order_line_id="id?", product_id="id!", product_code="str!", product_name="str!",
+  unit="str!", old_quantity="qty?", quantity="qty?", old_unit_cost="cost?", unit_cost="cost?")
 s("AmendmentChange", "Changed field.", field_key="enum:expiry_date|latest_shipment_date|amount|tolerance_pct|other!", new_value="str:120!")
 s("LcAmendmentStatus", "Advance status.", status="enum:issued|accepted|refused!", date="date!")
-s("LcAmendment", "Amendment.", id="id!", letter_of_credit_id="id!", amendment_no="int!", status="str!", requested_on="date!", issued_on="date?", accepted_on="date?", changes="[obj]!", bank_fee="money!", reason="str?", version="int!")
+s("LcAmendment", "Amendment.", id="id!", letter_of_credit_id="id!", amendment_no="int!", status="str!", requested_on="date!", issued_on="date?", accepted_on="date?", changes="[obj]!", lines="[ref:LcAmendmentLine]", bank_fee="money!", reason="str?", version="int!")
 s("LcShipmentInput", "Shipment lot.", lot_no="int", status="enum:not_shipped|booking_confirmed|at_sea|arrived|arrived_cleared|not_shipped_expired", booking_ref="str:60?", bl_number="str:60?",
   vessel="str:120?", port_of_loading="str:120?", port_of_discharge="str:120?", mode="enum:sea|air|road", etd="date?", eta="date?", shipped_on="date?", arrived_on="date?", quantity="qty?", value_foreign="money?")
 s("LcShipment", "Shipment lot.", id="id!", lot_no="int!", status="str!", bl_number="str?", vessel="str?", etd="date?", eta="date?", arrived_on="date?", quantity="qty?", value_foreign="money?", purchase_bill_id="id?", version="int!")

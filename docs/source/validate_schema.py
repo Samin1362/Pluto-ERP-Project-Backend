@@ -175,7 +175,7 @@ def expected_decimal(name):
         return S.PCT
     if "qty" in name or "quantity" in name or name == "reorder_level":
         return S.QTY
-    if name in ("unit_cost", "avg_unit_cost", "avg_cost_after", "last_purchase_cost"):
+    if name in ("unit_cost", "old_unit_cost", "avg_unit_cost", "avg_cost_after", "last_purchase_cost"):
         return S.COST
     return S.MONEY
 

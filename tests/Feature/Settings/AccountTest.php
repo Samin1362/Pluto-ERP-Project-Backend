@@ -71,7 +71,7 @@ class AccountTest extends TestCase
 
         $c = $this->books->id;
         $n = $this->api('GET', '/api/v1/me/notification-preferences', $t, $c)->assertOk();
-        $this->assertSame(['approval_requested', 'approval_approved', 'approval_rejected', 'invoice_overdue', 'bill_due_soon', 'daily_summary'], array_column($n->json('data.events'), 'event_key'));
+        $this->assertSame(['approval_requested', 'approval_approved', 'approval_rejected', 'invoice_overdue', 'bill_due_soon', 'lc_deadline', 'daily_summary'], array_column($n->json('data.events'), 'event_key'));
         $n->assertJsonPath('data.daily_summary_time', '08:00')->assertJsonPath('data.events.5.email', false);
         $this->api('PUT', '/api/v1/me/notification-preferences', $t, $c, ['events' => [['event_key' => 'invoice_overdue', 'in_app' => false, 'email' => true],
             ['event_key' => 'daily_summary', 'in_app' => false, 'email' => true]], 'daily_summary_time' => '07:30'])->assertOk()

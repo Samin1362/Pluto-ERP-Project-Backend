@@ -1570,6 +1570,7 @@ CREATE TABLE `letters_of_credit` (
   `lc_number` varchar(30) NOT NULL COMMENT 'Internal LC-2026-022',
   `party_id` bigint unsigned NOT NULL COMMENT 'Beneficiary (supplier)',
   `purchase_order_id` bigint unsigned NULL,
+  `items_entered` tinyint(1) NOT NULL DEFAULT 0 COMMENT '1 when the linked purchase order was created from the items entered on the LC (PEP-487); 0 for an existing order or none',
   `intended_import` varchar(255) NULL COMMENT 'When not yet linked to a PO',
   `goods_description` varchar(500) NOT NULL,
   `quantity` decimal(18,3) NULL,
@@ -2967,3 +2968,30 @@ CREATE TABLE `support_access_grants` (
   CONSTRAINT `support_access_grants_created_by_foreign` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `support_access_grants_updated_by_foreign` FOREIGN KEY (`updated_by`) REFERENCES `users` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Read-only support access (PEP-485): a platform admin opened this company for a limited time with a reason; the company''s owners are told and the start and end are in its audit log. While it lasts the admin may only read (every change is refused with support_read_only).';
+
+-- 92. lc_amendment_lines (level 8)
+CREATE TABLE `lc_amendment_lines` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT COMMENT 'Primary key, auto-increment',
+  `lc_amendment_id` bigint unsigned NOT NULL,
+  `action` varchar(30) NOT NULL COMMENT 'One of: add, change, remove',
+  `purchase_order_line_id` bigint unsigned NULL COMMENT 'The LC item changed or removed; the new line once an added item is applied',
+  `product_id` bigint unsigned NOT NULL,
+  `unit_id` bigint unsigned NULL COMMENT 'Unit of an added item; NULL = the product''s base unit',
+  `description` varchar(255) NULL,
+  `old_quantity` decimal(18,3) NULL COMMENT 'Before the amendment',
+  `quantity` decimal(18,3) NULL COMMENT 'New quantity; NULL = unchanged or removed',
+  `old_unit_cost` decimal(18,4) NULL COMMENT 'Before the amendment, LC currency',
+  `unit_cost` decimal(18,4) NULL COMMENT 'New unit cost in the LC currency; NULL = unchanged or removed',
+  `created_at` datetime NULL COMMENT 'Set by Laravel',
+  `updated_at` datetime NULL COMMENT 'Set by Laravel',
+  PRIMARY KEY (`id`),
+  KEY `lc_amendment_lines_lc_amendment_id_index` (`lc_amendment_id`),
+  KEY `lc_amendment_lines_purchase_order_line_id_index` (`purchase_order_line_id`),
+  KEY `lc_amendment_lines_product_id_index` (`product_id`),
+  KEY `lc_amendment_lines_unit_id_index` (`unit_id`),
+  CONSTRAINT `lc_amendment_lines_lc_amendment_id_foreign` FOREIGN KEY (`lc_amendment_id`) REFERENCES `lc_amendments` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT,
+  CONSTRAINT `lc_amendment_lines_purchase_order_line_id_foreign` FOREIGN KEY (`purchase_order_line_id`) REFERENCES `purchase_order_lines` (`id`) ON DELETE SET NULL ON UPDATE RESTRICT,
+  CONSTRAINT `lc_amendment_lines_product_id_foreign` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  CONSTRAINT `lc_amendment_lines_unit_id_foreign` FOREIGN KEY (`unit_id`) REFERENCES `units` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  CONSTRAINT `lc_amendment_lines_action_check` CHECK (`action` IN ('add', 'change', 'remove'))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Item change of an amendment (PEP-487): add, change or remove an item of the LC. An accepted amendment applies them to the linked purchase order''s lines.';

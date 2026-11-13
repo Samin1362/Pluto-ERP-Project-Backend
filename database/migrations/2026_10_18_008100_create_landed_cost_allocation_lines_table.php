@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Table `landed_cost_allocation_lines` (LC): migration 81 of 91, dependency level 10.
+ * Table `landed_cost_allocation_lines` (LC): migration 81 of 92, dependency level 10.
  * Share of a landed-cost allocation per bill line; split between stock on hand and COGS.
  * Depends on: landed_cost_allocations, products, purchase_bill_lines, warehouses.
  *

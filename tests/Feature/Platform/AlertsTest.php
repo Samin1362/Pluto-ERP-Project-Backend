@@ -3,6 +3,7 @@
 namespace Tests\Feature\Platform;
 
 use App\Domain\Approvals\NotificationService;
+use App\Domain\Notifications\AlertService;
 use App\Mail\NotificationMail;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
@@ -117,6 +118,42 @@ class AlertsTest extends TestCase
         });
         Mail::assertQueued(NotificationMail::class, fn (NotificationMail $m) => $m->hasTo('sales@meghna.example') && str_contains(implode("\n", $m->lines), 'Sales yesterday')
             && ! str_contains(implode("\n", $m->lines), 'Overdue') && ! str_contains(implode("\n", $m->lines), 'Cash'));
+    }
+
+    public function test_lc_deadlines_alert_seven_days_ahead_and_on_the_day_once(): void
+    {
+        // PEP-489: an open LC expiring in 7 days whose last shipment date is the run day, maturing in 7 days, and a PAD loan due in 7 days.
+        $h = fn () => ['Idempotency-Key' => (string) Str::uuid()];
+        $bank = $this->api('POST', '/api/v1/money-accounts', $this->token, $this->books->id, ['account_type' => 'bank', 'bank_name' => 'Sonali Bank', 'account_name' => 'Meghna Traders Ltd.',
+            'account_number' => '0012345678', 'opening_balance' => '1000000.00'], $h())->assertCreated()->json('data');
+        $this->useBooks();
+        $lc = $this->api('POST', '/api/v1/letters-of-credit', $this->token, $this->books->id, ['party_id' => $this->supplier('Straits Edible Oils', '01711000801')->id,
+            'goods_description' => '20,000 kg crude palm oil', 'tenor' => 'usance', 'usance_days' => 90, 'incoterm' => 'CFR Chattogram', 'currency_code' => 'USD', 'amount' => '38400.00',
+            'planning_rate' => '121.50', 'issuing_bank_account_id' => $bank['id'], 'expiry_date' => $this->runOn->addDays(30)->toDateString()], $h())->assertCreated()->json('data');
+        $this->useBooks();
+        $in7 = $this->runOn->addDays(7)->toDateString();
+        DB::table('letters_of_credit')->where('id', $lc['id'])->update(['status' => 'opened', 'expiry_date' => $in7, 'latest_shipment_date' => $this->runOn->toDateString(), 'maturity_date' => $in7]);
+        $pay = DB::table('lc_payments')->insertGetId(['company_id' => $this->books->id, 'letter_of_credit_id' => $lc['id'], 'payment_kind' => 'sight_payment', 'payment_date' => $this->today->toDateString(),
+            'amount_foreign' => '1000.00', 'bank_rate' => '122.00', 'amount_bdt' => '122000.00', 'money_account_id' => $bank['id'], 'status' => 'draft', 'financed_by' => 'pad',
+            'created_at' => now(), 'updated_at' => now()]);
+        $loan = DB::table('lc_loans')->insertGetId(['company_id' => $this->books->id, 'letter_of_credit_id' => $lc['id'], 'lc_payment_id' => $pay, 'money_account_id' => $bank['id'],
+            'loan_number' => "{$lc['lc_number']}/L1", 'loan_kind' => 'pad', 'principal' => '122000.00', 'start_date' => $this->today->toDateString(), 'due_date' => $in7,
+            'interest_rate_pct' => '11', 'interest_from' => $this->today->toDateString(), 'status' => 'open', 'created_at' => now(), 'updated_at' => now()]);
+
+        $run = ['--company' => $this->books->id, '--date' => $this->runOn->toDateString()];
+        $this->artisan('pluto:alerts:run', $run)->expectsOutputToContain('4 LC deadline alert(s)')->assertSuccessful();
+        $titles = DB::table('notifications')->where('company_id', $this->books->id)->where('event_key', 'lc_deadline')->where('user_id', $this->userId('owner@meghna.example'))
+            ->orderBy('id')->pluck('title')->all();
+        $this->assertSame(["{$lc['lc_number']} expires in 7 days", "{$lc['lc_number']}: last shipment date today", "{$lc['lc_number']}: payment matures in 7 days",
+            "PAD loan {$lc['lc_number']}/L1 is due in 7 days"], $titles);
+        $this->assertSame((int) $loan, (int) DB::table('notifications')->where('event_key', 'lc_deadline')->where('link_type', 'lc_loans')->value('link_id'));
+        $this->assertNotContains('sales@meghna.example', $this->told('lc_deadline'), 'only people who can see LCs');
+
+        $this->artisan('pluto:alerts:run', $run)->expectsOutputToContain('0 LC deadline alert(s)')->assertSuccessful(); // a rerun repeats nothing
+        $this->artisan('pluto:alerts:run', ['--company' => $this->books->id, '--date' => $in7])->expectsOutputToContain('3 LC deadline alert(s)')->assertSuccessful(); // on the day
+        $this->useBooks();
+        $lines = app(AlertService::class)->summaryLines($this->books->id, $this->runOn, fn () => true, $this->userId('owner@meghna.example'));
+        $this->assertContains('• LC deadlines in the next 7 days: 2 (expiry, last shipment, maturity or PAD/LTR due).', $lines);
     }
 
     public function test_approval_notifications_follow_the_same_switches(): void
