@@ -3,27 +3,27 @@ Last run: 24 rules, **24 passed, 0 failed**; 6 negative tests, 6 detected. Offic
 | Rule | Check | Items | Result |
 |---|---|---|---|
 | A01 | Document validates against the official OpenAPI 3.1 schema (schema-base: documents incl. Schema Objects) | 1 | ✅ pass |
-| A02 | Every component schema is valid JSON Schema 2020-12 (meta-schema check) | 213 | ✅ pass |
-| A03 | All $refs resolve and every component schema is used | 216 | ✅ pass |
-| A04 | Operations have unique camelCase operationIds, summary, description, tags, a 2xx, a default, and problem+json errors | 332 | ✅ pass |
-| A05 | Path templates and declared path parameters match; path parameters are required | 332 | ✅ pass |
-| A06 | Security: public only for sign-in flows, cookie only for refresh/logout, X-Company-Id on company-scoped calls, known permissions | 332 | ✅ pass |
-| A07 | Every operation that posts a journal entry takes an Idempotency-Key and documents its locking; every body can be rejected with 422 | 332 | ✅ pass |
-| A08 | Every 201 response declares a Location header | 53 | ✅ pass |
+| A02 | Every component schema is valid JSON Schema 2020-12 (meta-schema check) | 220 | ✅ pass |
+| A03 | All $refs resolve and every component schema is used | 223 | ✅ pass |
+| A04 | Operations have unique camelCase operationIds, summary, description, tags, a 2xx, a default, and problem+json errors | 335 | ✅ pass |
+| A05 | Path templates and declared path parameters match; path parameters are required | 335 | ✅ pass |
+| A06 | Security: public only for sign-in flows, cookie only for refresh/logout, X-Company-Id on company-scoped calls, known permissions | 335 | ✅ pass |
+| A07 | Every operation that posts a journal entry takes an Idempotency-Key and documents its locking; every body can be rejected with 422 | 335 | ✅ pass |
+| A08 | Every 201 response declares a Location header | 55 | ✅ pass |
 | A09 | Collections use the paginated envelope {data[], meta} | 53 | ✅ pass |
-| A10 | Every error code exists in the catalogue, has its HTTP status documented on the operation, and every catalogue code is reachable | 78 | ✅ pass |
-| A11 | Request-only schemas reject unknown properties (additionalProperties: false) | 98 | ✅ pass |
-| A12 | Money, quantity, cost and rate fields are decimal strings (never JSON numbers) | 223 | ✅ pass |
+| A10 | Every error code exists in the catalogue, has its HTTP status documented on the operation, and every catalogue code is reachable | 79 | ✅ pass |
+| A11 | Request-only schemas reject unknown properties (additionalProperties: false) | 102 | ✅ pass |
+| A12 | Money, quantity, cost and rate fields are decimal strings (never JSON numbers) | 237 | ✅ pass |
 | A13 | PUT/PATCH on a versioned table requires If-Match, and If-Match is only required where a version exists | 40 | ✅ pass |
-| A14 | Request fields are stored: each maps to a column (or is declared virtual) with a compatible length, enum values and nullability | 386 | ✅ pass |
+| A14 | Request fields are stored: each maps to a column (or is declared virtual) with a compatible length, enum values and nullability | 403 | ✅ pass |
 | A15 | Response enum fields have exactly the values the database allows | 29 | ✅ pass |
-| A16 | Every action of every page maps to API calls, a dialog, navigation or explicit client behaviour, and every target exists | 531 | ✅ pass |
-| A17 | Every data-changing endpoint is triggered by at least one page action (only token refresh is system-driven) | 186 | ✅ pass |
+| A16 | Every action of every page maps to API calls, a dialog, navigation or explicit client behaviour, and every target exists | 535 | ✅ pass |
+| A17 | Every data-changing endpoint is triggered by at least one page action (only token refresh is system-driven) | 189 | ✅ pass |
 | A18 | Every page has at least one endpoint (shared components use their host page's) | 163 | ✅ pass |
-| A19 | For every action, at least one role can both open the page and call the endpoint | 333 | ✅ pass |
-| A20 | Database operations name real tables; nothing deletes posted or append-only rows; every write changes something | 1382 | ✅ pass |
-| A21 | Every parameter has a typed schema | 567 | ✅ pass |
-| A22 | Business rules exist; 46 rejecting rules map to error codes | 365 | ✅ pass |
+| A19 | For every action, at least one role can both open the page and call the endpoint | 338 | ✅ pass |
+| A20 | Database operations name real tables; nothing deletes posted or append-only rows; every write changes something | 1416 | ✅ pass |
+| A21 | Every parameter has a typed schema | 570 | ✅ pass |
+| A22 | Business rules exist; 46 rejecting rules map to error codes | 373 | ✅ pass |
 | A23 | Calculate/preview endpoints never reject on business state; they return warnings[] (BR-015) | 5 | ✅ pass |
 | A24 | Ledger/stock writes are coherent: entries have lines, stock movements update balances, system entries take an SJ number, bulk post = single post | 88 | ✅ pass |
 

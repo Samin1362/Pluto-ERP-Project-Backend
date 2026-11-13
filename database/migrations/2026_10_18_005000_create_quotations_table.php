@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Table `quotations` (Sales): migration 50 of 90, dependency level 5.
+ * Table `quotations` (Sales): migration 50 of 92, dependency level 5.
  * Offer to a customer or prospect (E10). Never posts.
  * Depends on: branches, companies, parties, payment_terms, users, warehouses.
  *

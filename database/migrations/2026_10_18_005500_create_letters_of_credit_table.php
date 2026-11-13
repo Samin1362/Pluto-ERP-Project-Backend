@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Table `letters_of_credit` (LC): migration 55 of 90, dependency level 6.
+ * Table `letters_of_credit` (LC): migration 55 of 92, dependency level 6.
  * Import letter of credit (M3/M4). Shipment lots, documents, amendments, charges and payments hang off it.
  * Depends on: branches, companies, currencies, money_accounts, parties, purchase_orders, users.
  *
@@ -29,6 +29,7 @@ return new class extends Migration
             $table->string('lc_number', 30)->comment('Internal LC-2026-022');
             $table->unsignedBigInteger('party_id')->comment('Beneficiary (supplier)');
             $table->unsignedBigInteger('purchase_order_id')->nullable();
+            $table->boolean('items_entered')->default(false)->comment('1 when the linked purchase order was created from the items entered on the LC (PEP-487); 0 for an existing order or none');
             $table->string('intended_import', 255)->nullable()->comment('When not yet linked to a PO');
             $table->string('goods_description', 500);
             $table->decimal('quantity', 18, 3)->nullable();

@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Table `notification_preferences` (Platform): migration 17 of 90, dependency level 2.
+ * Table `notification_preferences` (Platform): migration 17 of 92, dependency level 2.
  * Per user, company and event: in-app, e-mail and SMS switches (K12).
  * Depends on: companies, users.
  *

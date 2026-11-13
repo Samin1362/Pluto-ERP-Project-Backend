@@ -61,12 +61,15 @@ INPUT_TABLE = {
     "ReturnInput": (["sales_returns", "purchase_returns"], {"source_document_id", "usage", "apply_to_document_id", "lines"}),
     "ReturnLineInput": (["sales_return_lines", "purchase_return_lines"], {"source_line_id"}),
     "NoteInput": (["credit_notes", "debit_notes"], {"source_document_id", "return_id", "apply_to_document_id", "refund"}),
-    "LetterOfCreditInput": (["letters_of_credit"], {"document_template_id", "documents", "shipment"}),
+    "LetterOfCreditInput": (["letters_of_credit"], {"document_template_id", "documents", "shipment", "lines", "warehouse_id"}),  # lines, warehouse_id: the linked purchase order (PEP-487)
+    "LcLineInput": (["purchase_order_lines"], set()),
+    "LcItemsInput": (["purchase_orders"], {"lines", "warehouse_id"}),  # warehouse_id: the server picks the default warehouse when absent
+    "LcAmendmentLineInput": (["lc_amendment_lines"], {"product_id"}),  # product_id: sent for add; taken from the item for change and remove
     "LcChargeInput": (["lc_charges"], set()),
     "LcPaymentInput": (["lc_payments"], {"loan"}),  # loan: terms of the lc_loans row a financed payment opens (P16 LC finance)
     "LcShipmentInput": (["lc_shipments"], set()),
     "LcDocumentInput": (["lc_documents"], set()),
-    "LcAmendmentInput": (["lc_amendments"], {"changes", "status"}),
+    "LcAmendmentInput": (["lc_amendments"], {"changes", "status", "lines"}),
     "StockAdjustmentInput": (["stock_adjustments"], {"lines"}),
     "StockTransferInput": (["stock_transfers"], {"lines"}),
     "CashCountInput": (["cash_counts"], {"denominations"}),

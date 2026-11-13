@@ -29,7 +29,7 @@ class RunAlerts extends Command
                 $this->line("#{$company->id} {$company->legal_name}: {$n} summary e-mail".($n === 1 ? '' : 's'));
             } else {
                 $r = $alerts->run($today);
-                $this->line("#{$company->id} {$company->legal_name}: {$r['overdue']} overdue invoice(s), {$r['due_soon']} bill(s) due in 3 days");
+                $this->line("#{$company->id} {$company->legal_name}: {$r['overdue']} overdue invoice(s), {$r['due_soon']} bill(s) due in 3 days, {$r['lc']} LC deadline alert(s)");
             }
         }
         $current->clear();

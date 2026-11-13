@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Table `stock_adjustment_lines` (Inventory): migration 60 of 90, dependency level 6.
+ * Table `stock_adjustment_lines` (Inventory): migration 60 of 92, dependency level 6.
  * Counted vs system quantity per product.
  * Depends on: products, stock_adjustments.
  *

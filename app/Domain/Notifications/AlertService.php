@@ -18,6 +18,8 @@ use Illuminate\Support\Str;
  * Scheduled alerts (11 §6; FR-013; backlog P14.1-BE-04), for the current company:
  *  - invoices that fell overdue yesterday → members with sales.view;
  *  - bills due in 3 days → members with purchases.view;
+ *  - LC deadlines (PEP-489) 7 days ahead and on the day: LC expiry, latest shipment date, payment maturity, PAD/LTR
+ *    loan due date → members with lc.view; each deadline once per LC or loan;
  *  - the daily summary e-mail → members who switched it on (notification_preferences, event daily_summary, e-mail),
  *    with only what their role may see (DEC-13: no balances without reports.financial).
  * Each document is alerted once: a rerun on the same day adds nothing in-app.
@@ -27,7 +29,12 @@ final class AlertService
     public function __construct(private readonly NotificationService $notifications, private readonly PermissionResolver $permissions,
         private readonly CurrentCompany $current) {}
 
-    /** @return array{overdue: int, due_soon: int} documents alerted */
+    /** Days before an LC deadline that the first alert goes out (a second one comes on the day). */
+    public const LC_LEAD_DAYS = 7;
+
+    private const LC_OPEN = ['opened', 'partly_shipped', 'documents_presented', 'payment_due'];
+
+    /** @return array{overdue: int, due_soon: int, lc: int} documents alerted */
     public function run(CarbonImmutable $today): array
     {
         $c = $this->current->id();
@@ -40,7 +47,59 @@ final class AlertService
             fn ($d) => "{$d->party} · due ".CarbonImmutable::parse($d->due_date)->format('j M Y').' · '.Taka::format(Money::of((string) $d->balance_due)).' to pay',
             '/purchases/bills/');
 
-        return ['overdue' => $overdue, 'due_soon' => $soon];
+        return ['overdue' => $overdue, 'due_soon' => $soon, 'lc' => $this->lcDeadlines($c, $today)];
+    }
+
+    /**
+     * PEP-489: what an importer must not miss. A missed expiry means a new LC; a missed maturity or loan due date means
+     * penalty interest. Alerts LEAD_DAYS before and on the day; a rerun never repeats one (same event, record and title).
+     */
+    private function lcDeadlines(int $c, CarbonImmutable $today): int
+    {
+        $soon = $today->addDays(self::LC_LEAD_DAYS)->toDateString();
+        $days = [$today->toDateString() => 'today', $soon => 'in '.self::LC_LEAD_DAYS.' days'];
+        $when = fn (string $date) => $days[CarbonImmutable::parse($date)->toDateString()];
+        $alerts = [];
+        $lcs = DB::table('letters_of_credit as l')->join('parties as p', 'p.id', '=', 'l.party_id')->where('l.company_id', $c)->whereIn('l.status', self::LC_OPEN)
+            ->where(fn ($q) => $q->whereIn('l.expiry_date', array_keys($days))->orWhereIn('l.latest_shipment_date', array_keys($days))->orWhereIn('l.maturity_date', array_keys($days)))
+            ->get(['l.id', 'l.lc_number', 'l.status', 'l.currency_code', 'l.amount', 'l.expiry_date', 'l.latest_shipment_date', 'l.maturity_date', 'p.name as party']);
+        foreach ($lcs as $l) {
+            $what = "{$l->party} · {$l->currency_code} {$l->amount}";
+            if ($l->expiry_date && isset($days[(string) $l->expiry_date])) {
+                $alerts[] = ['letters_of_credit', $l->id, "{$l->lc_number} expires {$when($l->expiry_date)}", "{$what} · expiry ".self::day($l->expiry_date).'. Ship and present documents before it, or ask the bank for an amendment.', "/lc/{$l->id}"];
+            }
+            if ($l->latest_shipment_date && in_array($l->status, ['opened', 'partly_shipped'], true) && isset($days[(string) $l->latest_shipment_date])) {
+                $alerts[] = ['letters_of_credit', $l->id, "{$l->lc_number}: last shipment date {$when($l->latest_shipment_date)}", "{$what} · goods must be shipped by ".self::day($l->latest_shipment_date).'.', "/lc/{$l->id}"];
+            }
+            if ($l->maturity_date && isset($days[(string) $l->maturity_date])) {
+                $alerts[] = ['letters_of_credit', $l->id, "{$l->lc_number}: payment matures {$when($l->maturity_date)}", "{$what} · the bank pays the supplier on ".self::day($l->maturity_date).'; keep the funds ready.', "/lc/{$l->id}"];
+            }
+        }
+        $loans = DB::table('lc_loans as n')->join('letters_of_credit as l', 'l.id', '=', 'n.letter_of_credit_id')->where('n.company_id', $c)->where('n.status', 'open')
+            ->whereIn('n.due_date', array_keys($days))->get(['n.id', 'n.loan_number', 'n.loan_kind', 'n.due_date', 'l.lc_number']);
+        foreach ($loans as $n) {
+            $kind = strtoupper((string) $n->loan_kind);
+            $alerts[] = ['lc_loans', $n->id, "{$kind} loan {$n->loan_number} is due {$when($n->due_date)}", "For {$n->lc_number} · repay by ".self::day($n->due_date).' to avoid penalty interest.', "/lc/loans/{$n->id}"];
+        }
+
+        $holders = null;
+        $sent = 0;
+        foreach ($alerts as [$type, $id, $title, $body, $url]) {
+            $done = DB::table('notifications')->where('company_id', $c)->where('event_key', 'lc_deadline')->where('link_type', $type)->where('link_id', $id)->where('title', $title)->exists();
+            if ($done) {
+                continue;
+            }
+            $holders ??= $this->notifications->holders('lc.view');
+            $this->notifications->notify($c, $holders, 'lc_deadline', $title, $body, 'alerts', $type, (int) $id, $url);
+            $sent++;
+        }
+
+        return $sent;
+    }
+
+    private static function day(string $date): string
+    {
+        return CarbonImmutable::parse($date)->format('j M Y');
     }
 
     private function documents(int $c, string $table, string $dueOn, string $event, string $permission, callable $title, callable $body, string $url): int
@@ -120,6 +179,16 @@ final class AlertService
                 ->where('s.company_id', $c)->where('s.reorder_level', '>', 0)->where('p.is_active', true)->whereNull('p.deleted_at')
                 ->whereRaw('COALESCE(b.qty_on_hand, 0) <= s.reorder_level')->count();
             $lines[] = "• Products at or below their reorder level: {$low}.";
+        }
+        if ($can('lc.view')) { // PEP-489
+            $until = $today->addDays(self::LC_LEAD_DAYS)->toDateString();
+            $n = DB::table('letters_of_credit')->where('company_id', $c)->whereIn('status', self::LC_OPEN)
+                ->where(fn ($q) => $q->whereBetween('expiry_date', [$today->toDateString(), $until])->orWhereBetween('latest_shipment_date', [$today->toDateString(), $until])
+                    ->orWhereBetween('maturity_date', [$today->toDateString(), $until]))->count()
+                + DB::table('lc_loans')->where('company_id', $c)->where('status', 'open')->whereBetween('due_date', [$today->toDateString(), $until])->count();
+            if ($n > 0) {
+                $lines[] = '• LC deadlines in the next '.self::LC_LEAD_DAYS." days: {$n} (expiry, last shipment, maturity or PAD/LTR due).";
+            }
         }
         $waiting = DB::table('approval_requests')->where('company_id', $c)->where('status', 'pending')->where('requested_by', '!=', $userId)
             ->pluck('required_permission')->filter(fn ($p) => $can((string) $p))->count();

@@ -1570,6 +1570,7 @@ CREATE TABLE `letters_of_credit` (
   `lc_number` varchar(30) NOT NULL COMMENT 'Internal LC-2026-022',
   `party_id` bigint unsigned NOT NULL COMMENT 'Beneficiary (supplier)',
   `purchase_order_id` bigint unsigned NULL,
+  `items_entered` tinyint(1) NOT NULL DEFAULT 0 COMMENT '1 when the linked purchase order was created from the items entered on the LC (PEP-487); 0 for an existing order or none',
   `intended_import` varchar(255) NULL COMMENT 'When not yet linked to a PO',
   `goods_description` varchar(500) NOT NULL,
   `quantity` decimal(18,3) NULL,
@@ -2944,3 +2945,53 @@ CREATE TABLE `product_units` (
   CONSTRAINT `product_units_updated_by_foreign` FOREIGN KEY (`updated_by`) REFERENCES `users` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `product_units_rule1_check` CHECK (`factor` > 0)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Extra units an item is bought or sold in, each worth `factor` of its base unit (products.unit_id), e.g. 1 box = 12 pcs (BR-069). Stock is always kept in the base unit.';
+
+-- 91. support_access_grants (level 2)
+CREATE TABLE `support_access_grants` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT COMMENT 'Primary key, auto-increment',
+  `company_id` bigint unsigned NOT NULL COMMENT 'Tenant owner. Every query is scoped by it.',
+  `user_id` bigint unsigned NOT NULL COMMENT 'The platform admin',
+  `reason` varchar(255) NOT NULL,
+  `expires_at` datetime NOT NULL,
+  `ended_at` datetime NULL COMMENT 'Ended early by the admin',
+  `created_by` bigint unsigned NULL COMMENT 'User who created the row',
+  `updated_by` bigint unsigned NULL COMMENT 'User who last changed the row',
+  `created_at` datetime NULL COMMENT 'Set by Laravel',
+  `updated_at` datetime NULL COMMENT 'Set by Laravel',
+  PRIMARY KEY (`id`),
+  KEY `support_access_grants_company_id_user_id_expires_at_index` (`company_id`, `user_id`, `expires_at`),
+  KEY `support_access_grants_user_id_index` (`user_id`),
+  KEY `support_access_grants_created_by_index` (`created_by`),
+  KEY `support_access_grants_updated_by_index` (`updated_by`),
+  CONSTRAINT `support_access_grants_company_id_foreign` FOREIGN KEY (`company_id`) REFERENCES `companies` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  CONSTRAINT `support_access_grants_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  CONSTRAINT `support_access_grants_created_by_foreign` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  CONSTRAINT `support_access_grants_updated_by_foreign` FOREIGN KEY (`updated_by`) REFERENCES `users` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Read-only support access (PEP-485): a platform admin opened this company for a limited time with a reason; the company''s owners are told and the start and end are in its audit log. While it lasts the admin may only read (every change is refused with support_read_only).';
+
+-- 92. lc_amendment_lines (level 8)
+CREATE TABLE `lc_amendment_lines` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT COMMENT 'Primary key, auto-increment',
+  `lc_amendment_id` bigint unsigned NOT NULL,
+  `action` varchar(30) NOT NULL COMMENT 'One of: add, change, remove',
+  `purchase_order_line_id` bigint unsigned NULL COMMENT 'The LC item changed or removed; the new line once an added item is applied',
+  `product_id` bigint unsigned NOT NULL,
+  `unit_id` bigint unsigned NULL COMMENT 'Unit of an added item; NULL = the product''s base unit',
+  `description` varchar(255) NULL,
+  `old_quantity` decimal(18,3) NULL COMMENT 'Before the amendment',
+  `quantity` decimal(18,3) NULL COMMENT 'New quantity; NULL = unchanged or removed',
+  `old_unit_cost` decimal(18,4) NULL COMMENT 'Before the amendment, LC currency',
+  `unit_cost` decimal(18,4) NULL COMMENT 'New unit cost in the LC currency; NULL = unchanged or removed',
+  `created_at` datetime NULL COMMENT 'Set by Laravel',
+  `updated_at` datetime NULL COMMENT 'Set by Laravel',
+  PRIMARY KEY (`id`),
+  KEY `lc_amendment_lines_lc_amendment_id_index` (`lc_amendment_id`),
+  KEY `lc_amendment_lines_purchase_order_line_id_index` (`purchase_order_line_id`),
+  KEY `lc_amendment_lines_product_id_index` (`product_id`),
+  KEY `lc_amendment_lines_unit_id_index` (`unit_id`),
+  CONSTRAINT `lc_amendment_lines_lc_amendment_id_foreign` FOREIGN KEY (`lc_amendment_id`) REFERENCES `lc_amendments` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT,
+  CONSTRAINT `lc_amendment_lines_purchase_order_line_id_foreign` FOREIGN KEY (`purchase_order_line_id`) REFERENCES `purchase_order_lines` (`id`) ON DELETE SET NULL ON UPDATE RESTRICT,
+  CONSTRAINT `lc_amendment_lines_product_id_foreign` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  CONSTRAINT `lc_amendment_lines_unit_id_foreign` FOREIGN KEY (`unit_id`) REFERENCES `units` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  CONSTRAINT `lc_amendment_lines_action_check` CHECK (`action` IN ('add', 'change', 'remove'))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Item change of an amendment (PEP-487): add, change or remove an item of the LC. An accepted amendment applies them to the linked purchase order''s lines.';

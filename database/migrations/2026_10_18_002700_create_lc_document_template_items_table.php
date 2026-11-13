@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Table `lc_document_template_items` (LC): migration 27 of 90, dependency level 3.
+ * Table `lc_document_template_items` (LC): migration 27 of 92, dependency level 3.
  * Document line of a template.
  * Depends on: lc_document_templates.
  *

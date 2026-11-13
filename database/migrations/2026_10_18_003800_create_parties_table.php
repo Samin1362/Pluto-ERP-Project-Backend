@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Table `parties` (Parties): migration 38 of 90, dependency level 4.
+ * Table `parties` (Parties): migration 38 of 92, dependency level 4.
  * Customer, prospect or supplier (local or international). Each has its own control-group ledger.
  * Depends on: companies, currencies, ledgers, party_groups, payment_terms, users.
  *

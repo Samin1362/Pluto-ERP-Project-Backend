@@ -77,6 +77,7 @@ final class ErrorCatalogue
         'seat_limit_reached' => [409, 'All seats are in use'],
         'self_approval_forbidden' => [403, 'You cannot approve a voucher you submitted'],
         'server_error' => [500, 'Something went wrong; quote the request id'],
+        'support_read_only' => [403, 'This is a read-only support view; nothing can be changed'],
         'system_role' => [403, 'The Owner role cannot be changed or deleted'],
         'token_expired' => [401, 'The access token has expired; refresh and retry'],
         'token_invalid' => [401, 'The access token is not valid'],

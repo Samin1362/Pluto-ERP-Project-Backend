@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Table `party_groups` (Parties): migration 19 of 90, dependency level 2.
+ * Table `party_groups` (Parties): migration 19 of 92, dependency level 2.
  * Customer or supplier group used for filtering and reports (Wholesale, Edible oils, ...).
  * Depends on: companies, users.
  *

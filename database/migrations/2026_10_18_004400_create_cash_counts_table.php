@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Table `cash_counts` (Money): migration 44 of 90, dependency level 5.
+ * Table `cash_counts` (Money): migration 44 of 92, dependency level 5.
  * Physical cash count by denomination (G2); a difference posts to Cash short/over.
  * Depends on: companies, journal_entries, money_accounts, users.
  *

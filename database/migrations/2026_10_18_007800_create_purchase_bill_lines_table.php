@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Table `purchase_bill_lines` (Purchases): migration 78 of 90, dependency level 9.
+ * Table `purchase_bill_lines` (Purchases): migration 78 of 92, dependency level 9.
  * Bill line: stocked product (debits inventory) or non-stock/service (debits expense ledger).
  * Depends on: ledgers, products, purchase_bills, purchase_order_lines, tax_rules, units.
  *

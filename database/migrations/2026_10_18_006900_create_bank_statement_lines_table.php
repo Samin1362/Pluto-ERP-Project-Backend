@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Table `bank_statement_lines` (Money): migration 69 of 90, dependency level 8.
+ * Table `bank_statement_lines` (Money): migration 69 of 92, dependency level 8.
  * A statement line and how it was matched to the books.
  * Depends on: bank_reconciliations, bank_statement_imports, companies, journal_lines, money_accounts, users. Self-reference: paired_line_id.
  *

@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Table `products` (Inventory): migration 48 of 90, dependency level 5.
+ * Table `products` (Inventory): migration 48 of 92, dependency level 5.
  * A physical product (stock-tracked) or a service (never stocked).
  * Depends on: companies, ledgers, parties, product_categories, stock_groups, tax_rules, units, users.
  *

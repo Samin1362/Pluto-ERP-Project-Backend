@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Table `purchase_return_lines` (Purchases): migration 83 of 90, dependency level 10.
+ * Table `purchase_return_lines` (Purchases): migration 83 of 92, dependency level 10.
  * Returned quantity per original bill line.
  * Depends on: products, purchase_bill_lines, purchase_returns.
  *

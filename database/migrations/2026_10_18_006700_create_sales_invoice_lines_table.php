@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Table `sales_invoice_lines` (Sales): migration 67 of 90, dependency level 7.
+ * Table `sales_invoice_lines` (Sales): migration 67 of 92, dependency level 7.
  * Invoice line with price, discount, tax and the cost snapshot used for COGS.
  * Depends on: ledgers, products, sales_invoices, tax_rules, units.
  *

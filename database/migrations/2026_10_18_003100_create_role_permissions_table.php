@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Table `role_permissions` (Access): migration 31 of 90, dependency level 3.
+ * Table `role_permissions` (Access): migration 31 of 92, dependency level 3.
  * Junction: which permissions a role grants (many-to-many roles to permissions).
  * Depends on: permissions, roles.
  *

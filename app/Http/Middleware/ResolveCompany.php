@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Domain\Access\TwoFactorService;
+use App\Domain\Platform\SupportAccessService;
 use App\Models\Company;
 use App\Models\CompanyUser;
 use App\Support\CurrentCompany;
@@ -18,7 +19,15 @@ use Symfony\Component\HttpFoundation\Response;
  */
 class ResolveCompany
 {
-    public function __construct(private readonly CurrentCompany $current) {}
+    public function __construct(private readonly CurrentCompany $current, private readonly SupportAccessService $support) {}
+
+    private function supportGrant(Request $request, int $companyId, $user): ?object
+    {
+        $admin = in_array(strtolower((string) $user->email), (array) config('pluto.platform_admins', []), true)
+            && in_array('otp', (array) $request->attributes->get('auth_amr', []), true);
+
+        return $admin ? $this->support->active($companyId, $user->id) : null;
+    }
 
     public function handle(Request $request, Closure $next, string $mode = 'required'): Response
     {
@@ -37,6 +46,14 @@ class ResolveCompany
         $company = Company::find((int) $raw);
         $membership = $company ? CompanyUser::withoutGlobalScope('company')
             ->where('company_id', $company->id)->where('user_id', $user->id)->where('status', 'active')->first() : null;
+        // PEP-485: a platform admin on a 2-step sign-in with an open support grant may read the company, never change it.
+        if ($company && ! $membership && $company->status === 'active' && ($grant = $this->supportGrant($request, $company->id, $user))) {
+            if (! in_array($request->getMethod(), ['GET', 'HEAD'], true)) {
+                throw new ApiProblem('support_read_only');
+            }
+            $membership = $this->support->membership($company, $user->id);
+            $request->attributes->set('support_access', SupportAccessService::resource($grant, $company));
+        }
         if (! $company || ! $membership || $company->status !== 'active') {
             throw new ApiProblem('not_a_member');
         }

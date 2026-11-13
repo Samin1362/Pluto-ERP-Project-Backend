@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Table `bank_statement_imports` (Money): migration 43 of 90, dependency level 5.
+ * Table `bank_statement_imports` (Money): migration 43 of 92, dependency level 5.
  * An imported CSV/Excel statement file.
  * Depends on: companies, money_accounts, users.
  *

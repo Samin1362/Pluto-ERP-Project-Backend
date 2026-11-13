@@ -30,6 +30,8 @@ class MeResource extends JsonResource
             'companies' => $memberships->map(fn ($m) => ['company_id' => $m->company_id, 'company_name' => $companies[$m->company_id] ?? '',
                 'role' => $roles[$m->role_id] ?? '', 'status' => $m->status])->values()->all(),
             'active_company_id' => $current->has() ? $current->id() : null,
+            // PEP-485: set while the current company is a platform admin's read-only support view (the app shows a banner).
+            'support_access' => $request->attributes->get('support_access'),
         ];
         if ($current->has() && ($m = $current->membership())) {
             $role = Role::withoutGlobalScope('company')->find($m->role_id);

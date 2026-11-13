@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Table `lc_shipments` (LC): migration 66 of 90, dependency level 7.
+ * Table `lc_shipments` (LC): migration 66 of 92, dependency level 7.
  * Shipment lot of an LC (lives inside LC Details; not a separate module).
  * Depends on: companies, letters_of_credit, users.
  *

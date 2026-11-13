@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Table `product_units` (Inventory): migration 90 of 90, dependency level 6.
+ * Table `product_units` (Inventory): migration 90 of 92, dependency level 6.
  * Extra units an item is bought or sold in, each worth `factor` of its base unit (products.unit_id), e.g. 1 box = 12 pcs (BR-069). Stock is always kept in the base unit.
  * Depends on: companies, products, units, users.
  *

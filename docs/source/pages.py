@@ -541,7 +541,7 @@ K = [
   ["Prepare export pack", "Download backup", "Back up now", "Restore… (dialog)"], ["FR-087"]),
  ("K17", "Platform console", "List", "auth.self", "Platform admins only (PLUTO_PLATFORM_ADMINS e-mail and a 2-step sign-in): every customer company with its owner, members, status and last activity; create a company for a customer (the Owner gets an invitation); suspend or reactivate a company with a reason.",
   ["Search companies | text | opt | name or owner e-mail", "Status | segmented | opt | all/active/suspended", "Company name, business type, owner e-mail, owner name | text | req | create dialog"],
-  ["Create company", "Suspend (reason)", "Reactivate (reason)"], ["FR-005"]),
+  ["Create company", "Suspend (reason)", "Reactivate (reason)", "Open read-only (reason, time)", "End support view"], ["FR-005"]),
 ]
 for code, name, tmpl, perm, desc, fields, actions, fr in K:
     page(code, name, "Settings", tmpl, perm, desc, "Settings layout: section rail (Business, People, You, Data) on the left, grouped cards on the right, sticky unsaved-changes bar.",
@@ -624,7 +624,8 @@ ADDED_ACTIONS = {
     "F4": ["Apply advance or credit (NEW, R-08)", "Remove allocation (NEW, R-08)"],
     "G2": ["Reverse cash-count adjustment (NEW, R-03)"],
     "M4": ["Reverse payment, charge or landed-cost allocation (NEW, R-03)", "Pay a charge (NEW, row)", "Remove attachment (NEW)",
-           "Repay a PAD/LTR loan (NEW, P16 LC finance)", "Convert PAD to LTR (NEW, P16 LC finance)", "Reverse a loan repayment (NEW, P16 LC finance)"],
+           "Repay a PAD/LTR loan (NEW, P16 LC finance)", "Convert PAD to LTR (NEW, P16 LC finance)", "Reverse a loan repayment (NEW, P16 LC finance)",
+           "Add items to an LC without items (NEW, PEP-487)"],
     "M7": ["Pay a charge (NEW, row)"],
     "M8": ["Set a bank's LC and loan limits (NEW, P16 LC finance)", "Revalue foreign currency at closing rates (NEW, P16 LC finance)", "Reverse a revaluation (NEW, P16 LC finance)"],
     "S0": ["Create a company (NEW, company switcher)"],
@@ -639,7 +640,7 @@ ADDED_ACTIONS = {
     "E5": ["Apply advance or credit (NEW, R-08)", "Remove allocation (NEW, R-08)", "Edit delivery details (NEW)", "E-mail to customer (NEW)"],
     "F3": ["Delete draft (NEW)"],
     "G5": ["Edit account (NEW)"],
-    "M3": ["Delete draft (NEW)"],
+    "M3": ["Delete draft (NEW)", "Enter the items (NEW, PEP-487: product, quantity, unit, unit cost; arrival warehouse)"],
 }
 # Actions the design shows (in the component description) but the inventory did not list.
 DESIGN_ACTIONS = {

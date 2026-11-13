@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Table `credit_notes` (Sales): migration 70 of 90, dependency level 8.
+ * Table `credit_notes` (Sales): migration 70 of 92, dependency level 8.
  * Reduces what a customer owes (E9): applied to an invoice, kept as credit, or refunded.
  * Depends on: branches, companies, journal_entries, parties, sales_invoices, sales_returns, users.
  *
