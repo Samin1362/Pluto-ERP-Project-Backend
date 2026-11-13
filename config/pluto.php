@@ -69,6 +69,10 @@ return [
     'allowed_origins' => array_values(array_filter(array_map('trim', explode(',', (string) env('PLUTO_ALLOWED_ORIGINS', env('APP_URL', '')))))),
     // Comma-separated patterns where `*` matches part of one DNS label, e.g. Vercel preview URLs (backlog P0.3-BE-01).
     'allowed_origin_patterns' => array_values(array_filter(array_map('trim', explode(',', (string) env('PLUTO_ALLOWED_ORIGIN_PATTERNS', ''))))),
+    // Platform admins (PEP-483): e-mails (comma-separated) that may use /platform/* — the platform console where the
+    // owner of this Pluto installation creates, lists and suspends customer companies. A server setting, never a company
+    // role, so no company member can grant it; a 2-step sign-in is also required.
+    'platform_admins' => array_values(array_filter(array_map(fn ($e) => strtolower(trim($e)), explode(',', (string) env('PLUTO_PLATFORM_ADMINS', ''))))),
     // Daily operations check (pluto:ops:check, P17.1-BE-06): the host's nightly backup folder (mounted read-only in the
     // live scheduler) and who is told when it fails. Empty values switch that part off.
     'ops' => [

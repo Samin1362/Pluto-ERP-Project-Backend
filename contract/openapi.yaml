@@ -39,6 +39,8 @@ tags:
   description: Customers and suppliers
 - name: Platform
   description: Search, notifications, approvals, attachments, audit, dashboard, backups, exports
+- name: Platform console
+  description: Platform console
 - name: Purchases
   description: Purchase orders, bills, payments, returns, debit notes
 - name: Reports
@@ -3403,6 +3405,449 @@ paths:
               schema:
                 type: integer
               description: Seconds to wait
+        default:
+          description: Unexpected error (`server_error`)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /api/v1/platform/companies:
+    get:
+      operationId: getPlatformCompanies
+      summary: Every customer company with its owner, members, status and last activity (platform console)
+      tags:
+      - Platform console
+      description: "Platform admins only: the e-mail is in PLUTO_PLATFORM_ADMINS (server setting, never a company role) and this sign-in used 2-step verification;\
+        \ otherwise 403 platform_admin_only / platform_two_factor_required. Every change is written to the company's audit log.\n\n**Permission:** any signed-in user\
+        \  \n**Database:** read: audit_logs, companies, company_users, user_invitations, users  \n**Rules:** —"
+      x-permission: auth
+      x-business-rules: []
+      x-requirements:
+      - FR-005
+      x-pages:
+      - K17
+      x-page-actions:
+      - 'K17: Create company'
+      x-tables:
+      - companies
+      - company_users
+      - users
+      - user_invitations
+      - audit_logs
+      x-db-operations:
+        companies: R
+        company_users: R
+        users: R
+        user_invitations: R
+        audit_logs: R
+      x-error-codes:
+      - platform_admin_only
+      - platform_two_factor_required
+      - server_error
+      - token_expired
+      - token_invalid
+      - unauthenticated
+      - validation_failed
+      x-contract-change: PEP-483 platform console
+      parameters:
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+        description: Page number
+      - name: per_page
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 25
+        description: Rows per page (max 100)
+      - name: q
+        in: query
+        required: false
+        schema:
+          type: string
+          maxLength: 100
+        description: Free-text search
+      - name: status
+        in: query
+        required: false
+        schema:
+          type: string
+          maxLength: 30
+        description: Status filter (values as in the resource's status enum)
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                - meta
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/PlatformCompany'
+                  meta:
+                    $ref: '#/components/schemas/PageMeta'
+        '401':
+          description: 'Not authenticated: `token_expired`, `token_invalid`, `unauthenticated`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: 'Not permitted: `platform_admin_only`, `platform_two_factor_required`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: 'Validation or business-rule failure: `validation_failed`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        default:
+          description: Unexpected error (`server_error`)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    post:
+      operationId: postPlatformCompanies
+      summary: Create a company for a customer and e-mail its Owner an invitation (the platform admin is not added)
+      tags:
+      - Platform console
+      description: "Platform admins only: the e-mail is in PLUTO_PLATFORM_ADMINS (server setting, never a company role) and this sign-in used 2-step verification;\
+        \ otherwise 403 platform_admin_only / platform_two_factor_required. Every change is written to the company's audit log.\n\n**Permission:** any signed-in user\
+        \  \n**Database:** insert: audit_logs, companies, idempotency_keys; read: account_groups, account_mappings, accounting_periods, branches, company_settings,\
+        \ company_users, fiscal_years, ledgers, number_sequences, payment_terms, role_permissions, roles, user_invitations, warehouses  \n**Rules:** —  \n**Transaction:**\
+        \ CompanyProvisioner and the invitation in one transaction."
+      x-permission: auth
+      x-business-rules: []
+      x-requirements:
+      - FR-005
+      x-pages:
+      - K17
+      x-page-actions:
+      - 'K17: Create company'
+      x-tables:
+      - companies
+      - company_settings
+      - company_users
+      - roles
+      - role_permissions
+      - fiscal_years
+      - accounting_periods
+      - account_groups
+      - ledgers
+      - account_mappings
+      - number_sequences
+      - payment_terms
+      - branches
+      - warehouses
+      - user_invitations
+      - audit_logs
+      x-db-operations:
+        companies: C
+        company_settings: R
+        company_users: R
+        roles: R
+        role_permissions: R
+        fiscal_years: R
+        accounting_periods: R
+        account_groups: R
+        ledgers: R
+        account_mappings: R
+        number_sequences: R
+        payment_terms: R
+        branches: R
+        warehouses: R
+        user_invitations: R
+        audit_logs: C
+        idempotency_keys: C
+      x-error-codes:
+      - idempotency_in_progress
+      - idempotency_key_reused
+      - malformed_json
+      - platform_admin_only
+      - platform_two_factor_required
+      - server_error
+      - token_expired
+      - token_invalid
+      - unauthenticated
+      - validation_failed
+      x-contract-change: PEP-483 platform console
+      parameters:
+      - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PlatformCompanyCreate'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                properties:
+                  data:
+                    $ref: '#/components/schemas/PlatformCompany'
+          headers:
+            Location:
+              schema:
+                type: string
+              description: URL of the created resource
+        '400':
+          description: 'Malformed request: `malformed_json`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: 'Not authenticated: `token_expired`, `token_invalid`, `unauthenticated`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: 'Not permitted: `platform_admin_only`, `platform_two_factor_required`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: 'Conflict (version mismatch, state not allowed, duplicate): `idempotency_in_progress`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: 'Validation or business-rule failure: `idempotency_key_reused`, `validation_failed`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        default:
+          description: Unexpected error (`server_error`)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /api/v1/platform/companies/{id}/suspend:
+    post:
+      operationId: postPlatformCompaniesIdSuspend
+      summary: 'Suspend a company: nobody can open it until it is reactivated (data is kept)'
+      tags:
+      - Platform console
+      description: "Platform admins only: the e-mail is in PLUTO_PLATFORM_ADMINS (server setting, never a company role) and this sign-in used 2-step verification;\
+        \ otherwise 403 platform_admin_only / platform_two_factor_required. Every change is written to the company's audit log.\n\n**Permission:** any signed-in user\
+        \  \n**Database:** lock: companies; insert: audit_logs; update: companies  \n**Rules:** —"
+      x-permission: auth
+      x-business-rules: []
+      x-requirements:
+      - FR-005
+      x-pages:
+      - K17
+      x-page-actions:
+      - 'K17: Suspend (reason)'
+      x-tables:
+      - companies
+      - audit_logs
+      x-db-operations:
+        companies: LU
+        audit_logs: C
+      x-error-codes:
+      - invalid_transition
+      - malformed_json
+      - not_found
+      - platform_admin_only
+      - platform_two_factor_required
+      - server_error
+      - token_expired
+      - token_invalid
+      - unauthenticated
+      - validation_failed
+      x-contract-change: PEP-483 platform console
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+          minimum: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReasonRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                properties:
+                  data:
+                    $ref: '#/components/schemas/PlatformCompany'
+        '400':
+          description: 'Malformed request: `malformed_json`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: 'Not authenticated: `token_expired`, `token_invalid`, `unauthenticated`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: 'Not permitted: `platform_admin_only`, `platform_two_factor_required`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: 'Not found (also for other companies'' records): `not_found`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: 'Conflict (version mismatch, state not allowed, duplicate): `invalid_transition`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: 'Validation or business-rule failure: `validation_failed`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        default:
+          description: Unexpected error (`server_error`)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /api/v1/platform/companies/{id}/reactivate:
+    post:
+      operationId: postPlatformCompaniesIdReactivate
+      summary: Reactivate a suspended company
+      tags:
+      - Platform console
+      description: "Platform admins only: the e-mail is in PLUTO_PLATFORM_ADMINS (server setting, never a company role) and this sign-in used 2-step verification;\
+        \ otherwise 403 platform_admin_only / platform_two_factor_required. Every change is written to the company's audit log.\n\n**Permission:** any signed-in user\
+        \  \n**Database:** lock: companies; insert: audit_logs; update: companies  \n**Rules:** —"
+      x-permission: auth
+      x-business-rules: []
+      x-requirements:
+      - FR-005
+      x-pages:
+      - K17
+      x-page-actions:
+      - 'K17: Reactivate (reason)'
+      x-tables:
+      - companies
+      - audit_logs
+      x-db-operations:
+        companies: LU
+        audit_logs: C
+      x-error-codes:
+      - invalid_transition
+      - malformed_json
+      - not_found
+      - platform_admin_only
+      - platform_two_factor_required
+      - server_error
+      - token_expired
+      - token_invalid
+      - unauthenticated
+      - validation_failed
+      x-contract-change: PEP-483 platform console
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+          minimum: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReasonRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                properties:
+                  data:
+                    $ref: '#/components/schemas/PlatformCompany'
+        '400':
+          description: 'Malformed request: `malformed_json`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: 'Not authenticated: `token_expired`, `token_invalid`, `unauthenticated`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: 'Not permitted: `platform_admin_only`, `platform_two_factor_required`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: 'Not found (also for other companies'' records): `not_found`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: 'Conflict (version mismatch, state not allowed, duplicate): `invalid_transition`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: 'Validation or business-rule failure: `validation_failed`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
         default:
           description: Unexpected error (`server_error`)
           content:
@@ -38687,6 +39132,8 @@ components:
           - order_qty_exceeded
           - period_locked
           - permission_denied
+          - platform_admin_only
+          - platform_two_factor_required
           - purpose_required
           - rate_limited
           - refresh_reuse_detected
@@ -39538,6 +39985,92 @@ components:
       - in_app
       - email
       - sms
+    PlatformCompany:
+      type: object
+      description: A customer company as the platform console lists it.
+      properties:
+        id:
+          type: integer
+          format: int64
+          minimum: 1
+        legal_name:
+          type: string
+        trading_name:
+          type:
+          - string
+          - 'null'
+        status:
+          type: string
+          enum:
+          - active
+          - suspended
+          - archived
+        created_at:
+          type: string
+          format: date-time
+        owner_name:
+          type:
+          - string
+          - 'null'
+        owner_email:
+          type:
+          - string
+          - 'null'
+        owner_pending:
+          type: boolean
+        members:
+          type: integer
+        last_activity_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+      required:
+      - id
+      - legal_name
+      - status
+      - created_at
+      - owner_pending
+      - members
+    PlatformCompanyCreate:
+      type: object
+      description: A new customer company and the person who will own it.
+      properties:
+        legal_name:
+          type: string
+          maxLength: 190
+        trading_name:
+          type:
+          - string
+          - 'null'
+          maxLength: 190
+        business_type:
+          type: string
+          enum:
+          - private_limited
+          - sole_proprietorship
+          - partnership
+          - public_limited
+        fy_start_month:
+          type: integer
+        base_currency_code:
+          type: string
+          pattern: ^[A-Z]{3}$
+          example: BDT
+        owner_email:
+          type: string
+          format: email
+          maxLength: 190
+        owner_name:
+          type:
+          - string
+          - 'null'
+          maxLength: 120
+      required:
+      - legal_name
+      - business_type
+      - owner_email
+      additionalProperties: false
     CompanyCreate:
       type: object
       description: New company.
@@ -42586,6 +43119,8 @@ components:
           - order_qty_exceeded
           - period_locked
           - permission_denied
+          - platform_admin_only
+          - platform_two_factor_required
           - purpose_required
           - rate_limited
           - refresh_reuse_detected

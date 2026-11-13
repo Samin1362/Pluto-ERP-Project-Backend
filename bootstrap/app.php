@@ -7,6 +7,7 @@ use App\Http\Middleware\ForceJsonApi;
 use App\Http\Middleware\Idempotency;
 use App\Http\Middleware\RequestId;
 use App\Http\Middleware\RequirePermission;
+use App\Http\Middleware\RequirePlatformAdmin;
 use App\Http\Middleware\ResolveCompany;
 use App\Http\Middleware\SecurityHeaders;
 use App\Http\Middleware\TrustPlutoProxy;
@@ -43,6 +44,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'company' => ResolveCompany::class,
             'perm' => RequirePermission::class,
             'idempotent' => Idempotency::class,
+            'platform' => RequirePlatformAdmin::class,
         ]);
         // Route middleware runs in the order it is declared in routes/api.php (jwt -> company -> perm -> idempotent).
     })

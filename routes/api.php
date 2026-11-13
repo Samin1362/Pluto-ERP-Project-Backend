@@ -35,6 +35,7 @@ use App\Http\Controllers\Api\V1\Platform\DashboardController;
 use App\Http\Controllers\Api\V1\Platform\ExportJobController;
 use App\Http\Controllers\Api\V1\Platform\PlatformLookupController;
 use App\Http\Controllers\Api\V1\Platform\SearchController;
+use App\Http\Controllers\Api\V1\PlatformConsole\PlatformCompanyController;
 use App\Http\Controllers\Api\V1\Purchases\DebitNoteController;
 use App\Http\Controllers\Api\V1\Purchases\PurchaseBillController;
 use App\Http\Controllers\Api\V1\Purchases\PurchaseOrderController;
@@ -89,6 +90,13 @@ Route::middleware(['jwt', 'throttle:api-user'])->group(function () {
     Route::get('me/preferences', [AccountController::class, 'preferences']);
     Route::put('me/preferences', [AccountController::class, 'savePreferences']);
     Route::post('companies', [CompanyController::class, 'store'])->middleware('idempotent');
+    // Platform console (K17; PEP-483): platform admins only (PLUTO_PLATFORM_ADMINS + 2-step sign-in), across companies.
+    Route::prefix('platform')->middleware('platform')->group(function () {
+        Route::get('companies', [PlatformCompanyController::class, 'index']);
+        Route::post('companies', [PlatformCompanyController::class, 'store'])->middleware('idempotent');
+        Route::post('companies/{id}/suspend', [PlatformCompanyController::class, 'suspend'])->whereNumber('id');
+        Route::post('companies/{id}/reactivate', [PlatformCompanyController::class, 'reactivate'])->whereNumber('id');
+    });
 
     Route::middleware('company')->group(function () {
         // Platform lookups for every member (P1.1-BE-01).

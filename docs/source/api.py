@@ -102,6 +102,19 @@ E("POST", "/tax-rules", "Add a tax rule (user-entered rate)", "settings.edit", [
 E("PATCH", "/tax-rules/{id}", "Edit or deactivate a tax rule (rate changes apply to new documents only)", "settings.edit", ["tax_rules"], ["K6"], rules=["BR-036"], req="TaxRuleInput", resp="TaxRule", ifmatch=True, tag=T, fr=["FR-084"])
 E("GET", "/account-mappings", "Posting-rule ledger mappings", "accounting.view", ["account_mappings", "ledgers", "account_groups"], ["K16"], resp="AccountMappings", tag=T, fr=["FR-075"])
 E("PUT", "/account-mappings", "Save mappings (nature-checked per key)", "settings.edit", ["account_mappings", "audit_logs"], ["K16"], rules=["BR-064"], req="AccountMappings", resp="AccountMappings", tag=T, fr=["FR-075"])
+T = "Platform console"
+PLAT = "Platform admins only: the e-mail is in PLUTO_PLATFORM_ADMINS (server setting, never a company role) and this sign-in used 2-step verification; otherwise 403 platform_admin_only / platform_two_factor_required. Every change is written to the company's audit log."
+E("GET", "/platform/companies", "Every customer company with its owner, members, status and last activity (platform console)", "auth",
+  ["companies", "company_users", "users", "user_invitations", "audit_logs"], ["K17"], params=["page", "per_page", "q", "status"], resp="Page<PlatformCompany>", tag=T, fr=["FR-005"],
+  desc=PLAT, errors=["platform_admin_only", "platform_two_factor_required"], added="PEP-483 platform console")
+E("POST", "/platform/companies", "Create a company for a customer and e-mail its Owner an invitation (the platform admin is not added)", "auth",
+  ["companies", "company_settings", "company_users", "roles", "role_permissions", "fiscal_years", "accounting_periods", "account_groups", "ledgers", "account_mappings", "number_sequences", "payment_terms", "branches", "warehouses", "user_invitations", "audit_logs"],
+  ["K17"], req="PlatformCompanyCreate", resp="PlatformCompany", idem=True, tag=T, fr=["FR-005"], codes=[201, 422], tx="CompanyProvisioner and the invitation in one transaction.",
+  desc=PLAT, errors=["platform_admin_only", "platform_two_factor_required"], added="PEP-483 platform console")
+E("POST", "/platform/companies/{id}/suspend", "Suspend a company: nobody can open it until it is reactivated (data is kept)", "auth", ["companies", "audit_logs"], ["K17"],
+  req="ReasonRequest", resp="PlatformCompany", tag=T, fr=["FR-005"], desc=PLAT, errors=["platform_admin_only", "platform_two_factor_required", "invalid_transition"], added="PEP-483 platform console")
+E("POST", "/platform/companies/{id}/reactivate", "Reactivate a suspended company", "auth", ["companies", "audit_logs"], ["K17"],
+  req="ReasonRequest", resp="PlatformCompany", tag=T, fr=["FR-005"], desc=PLAT, errors=["platform_admin_only", "platform_two_factor_required", "invalid_transition"], added="PEP-483 platform console")
 T = "Fiscal years"
 E("GET", "/fiscal-years", "Financial years with period status", "auth.self", ["fiscal_years", "accounting_periods"], ["K4", "S0"], resp="Page<FiscalYear>", tag=T, fr=["FR-082"])
 E("POST", "/accounting-periods/{id}/lock", "Lock a period (earlier periods must be locked)", "accounting.lock_period", ["accounting_periods", "company_backups", "audit_logs"], ["K4"], rules=["BR-033"],

@@ -100,7 +100,7 @@ Approval limits (defaults): Finance manager pays up to ৳ 5,00,000 without appr
 | FR-002 | Auth | Users can sign out of the current session, or of every session except the current one. | K14 | 2 |
 | FR-003 | Auth | Users can reset a forgotten password by e-mail link (single use, 60 min). | S2 | 2 |
 | FR-004 | Auth | Users can enable or disable 2-step verification and regenerate recovery codes. | K14 | 3 |
-| FR-005 | Auth | A user belonging to several companies can switch the active company; every screen then shows only that company's data. | S0 | 2 |
+| FR-005 | Auth | A user belonging to several companies can switch the active company; every screen then shows only that company's data. | S0, K17 | 6 |
 | FR-006 | Access | Owners invite users by e-mail with a role; invitations expire after 7 days. | S3, K8, K9 | 7 |
 | FR-007 | Access | Owners create, duplicate and edit roles, ticking View/Create/Edit/Approve/Delete per module, and set approval limits. | K11 | 7 |
 | FR-008 | Access | Owners deactivate and reactivate users. | K10 | 3 |

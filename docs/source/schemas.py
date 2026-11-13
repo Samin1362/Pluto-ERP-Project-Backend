@@ -67,6 +67,8 @@ s("NotificationPreferences", "Per-event channels.", events="[ref:NotificationPre
 s("NotificationPreference", "Channels for one event.", event_key="str!", in_app="bool!", email="bool!", sms="bool!")
 
 # ---------------------------------------------------------------- company & settings
+s("PlatformCompany", "A customer company as the platform console lists it.", id="id!", legal_name="str!", trading_name="str?", status="enum:active|suspended|archived!", created_at="datetime!", owner_name="str?", owner_email="str?", owner_pending="bool!", members="int!", last_activity_at="datetime?")
+s("PlatformCompanyCreate", "A new customer company and the person who will own it.", legal_name="str:190!", trading_name="str:190?", business_type="enum:private_limited|sole_proprietorship|partnership|public_limited!", fy_start_month="int", base_currency_code="ccy", owner_email="email!", owner_name="str:120?")
 s("CompanyCreate", "New company.", legal_name="str:190!", trading_name="str:190?", business_type="enum:private_limited|sole_proprietorship|partnership|public_limited!", fy_start_month="int", base_currency_code="ccy")
 s("Company", "Company profile.", id="id!", legal_name="str!", trading_name="str?", business_type="str!", trade_licence_no="str?", tax_registration_no="str?", incorporated_on="date?",
   registered_address="str?", phone="str?", email="email?", website="str?", logo_url="str?", base_currency_code="ccy!", fy_start_month="int!", timezone="str!", branches="[ref:Branch]", seats_used="int", seat_limit="int", version="int!")

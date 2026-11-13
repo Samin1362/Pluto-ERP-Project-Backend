@@ -62,6 +62,8 @@ final class ErrorCatalogue
         'order_qty_exceeded' => [422, 'More than the purchase order still expects (plus the LC\'s tolerance)'],
         'period_locked' => [422, 'The date is in a locked period or outside an open financial year'],
         'permission_denied' => [403, 'Your role does not allow this action'],
+        'platform_admin_only' => [403, 'Only a platform admin can do this'],
+        'platform_two_factor_required' => [403, 'Platform admins must sign in with 2-step verification'],
         'purpose_required' => [422, 'Choose what the ledger is for'],
         'rate_limited' => [429, 'Too many requests; try again later'],
         'refresh_reuse_detected' => [401, 'A refresh token was reused; every session of this sign-in was revoked'],
