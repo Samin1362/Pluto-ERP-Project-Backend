@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Table `purchase_order_lines` (Purchases): migration 57 of 90, dependency level 6.
+ * Table `purchase_order_lines` (Purchases): migration 57 of 91, dependency level 6.
  * Items ordered and quantity received so far.
  * Depends on: products, purchase_orders, tax_rules, units.
  *

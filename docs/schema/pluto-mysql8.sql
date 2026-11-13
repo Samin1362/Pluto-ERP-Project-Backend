@@ -2944,3 +2944,26 @@ CREATE TABLE `product_units` (
   CONSTRAINT `product_units_updated_by_foreign` FOREIGN KEY (`updated_by`) REFERENCES `users` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `product_units_rule1_check` CHECK (`factor` > 0)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Extra units an item is bought or sold in, each worth `factor` of its base unit (products.unit_id), e.g. 1 box = 12 pcs (BR-069). Stock is always kept in the base unit.';
+
+-- 91. support_access_grants (level 2)
+CREATE TABLE `support_access_grants` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT COMMENT 'Primary key, auto-increment',
+  `company_id` bigint unsigned NOT NULL COMMENT 'Tenant owner. Every query is scoped by it.',
+  `user_id` bigint unsigned NOT NULL COMMENT 'The platform admin',
+  `reason` varchar(255) NOT NULL,
+  `expires_at` datetime NOT NULL,
+  `ended_at` datetime NULL COMMENT 'Ended early by the admin',
+  `created_by` bigint unsigned NULL COMMENT 'User who created the row',
+  `updated_by` bigint unsigned NULL COMMENT 'User who last changed the row',
+  `created_at` datetime NULL COMMENT 'Set by Laravel',
+  `updated_at` datetime NULL COMMENT 'Set by Laravel',
+  PRIMARY KEY (`id`),
+  KEY `support_access_grants_company_id_user_id_expires_at_index` (`company_id`, `user_id`, `expires_at`),
+  KEY `support_access_grants_user_id_index` (`user_id`),
+  KEY `support_access_grants_created_by_index` (`created_by`),
+  KEY `support_access_grants_updated_by_index` (`updated_by`),
+  CONSTRAINT `support_access_grants_company_id_foreign` FOREIGN KEY (`company_id`) REFERENCES `companies` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  CONSTRAINT `support_access_grants_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  CONSTRAINT `support_access_grants_created_by_foreign` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  CONSTRAINT `support_access_grants_updated_by_foreign` FOREIGN KEY (`updated_by`) REFERENCES `users` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Read-only support access (PEP-485): a platform admin opened this company for a limited time with a reason; the company''s owners are told and the start and end are in its audit log. While it lasts the admin may only read (every change is refused with support_read_only).';

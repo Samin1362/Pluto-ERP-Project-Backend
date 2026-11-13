@@ -59,7 +59,7 @@ s("TwoFactorConfirm", "Confirm TOTP.", code="str:6!")
 s("RecoveryCodes", "Shown once.", recovery_codes="[str]!")
 s("InvitationPublic", "Invitation seen before accepting.", company_name="str!", role_name="str!", email="email!", expires_at="datetime!", existing_user="bool!")
 s("AcceptInvitationRequest", "Accept an invitation.", name="str:120?", password="str:200?", password_confirmation="str:200?")
-s("Me", "Current user.", id="id!", name="str!", email="email!", phone="str?", two_factor_enabled="bool!", platform_admin="bool", companies="[ref:Membership]!", active_company_id="id?", permissions="[str]", approval_limits="obj?", branch_ids="[id]")
+s("Me", "Current user.", id="id!", name="str!", email="email!", phone="str?", two_factor_enabled="bool!", platform_admin="bool", support_access="ref:SupportAccess?", companies="[ref:Membership]!", active_company_id="id?", permissions="[str]", approval_limits="obj?", branch_ids="[id]")
 s("Membership", "Company membership.", company_id="id!", company_name="str!", role="str!", status="enum:active|invited|deactivated!")
 s("Session", "Signed-in device.", id="id!", device_label="str?", user_agent="str?", ip_address="str?", last_seen_at="datetime?", current="bool!")
 s("UserPreferences", "Appearance.", theme="enum:light|dark|system", density="enum:default|compact", text_size="enum:s|m|l", reduce_motion="bool", sidebar_collapsed="bool")
@@ -68,6 +68,8 @@ s("NotificationPreference", "Channels for one event.", event_key="str!", in_app=
 
 # ---------------------------------------------------------------- company & settings
 s("PlatformCompany", "A customer company as the platform console lists it.", id="id!", legal_name="str!", trading_name="str?", status="enum:active|suspended|archived!", created_at="datetime!", owner_name="str?", owner_email="str?", owner_pending="bool!", members="int!", last_activity_at="datetime?")
+s("SupportAccessRequest", "Open a company read-only for support.", reason="str:255!", minutes="int")
+s("SupportAccess", "A read-only support session: which company, why and until when.", company_id="id!", company_name="str!", reason="str!", expires_at="datetime!")
 s("PlatformCompanyCreate", "A new customer company and the person who will own it.", legal_name="str:190!", trading_name="str:190?", business_type="enum:private_limited|sole_proprietorship|partnership|public_limited!", fy_start_month="int", base_currency_code="ccy", owner_email="email!", owner_name="str:120?")
 s("CompanyCreate", "New company.", legal_name="str:190!", trading_name="str:190?", business_type="enum:private_limited|sole_proprietorship|partnership|public_limited!", fy_start_month="int", base_currency_code="ccy")
 s("Company", "Company profile.", id="id!", legal_name="str!", trading_name="str?", business_type="str!", trade_licence_no="str?", tax_registration_no="str?", incorporated_on="date?",

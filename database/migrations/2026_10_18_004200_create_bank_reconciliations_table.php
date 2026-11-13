@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Table `bank_reconciliations` (Money): migration 42 of 90, dependency level 5.
+ * Table `bank_reconciliations` (Money): migration 42 of 91, dependency level 5.
  * One reconciliation session per bank account and statement date.
  * Depends on: companies, money_accounts, users.
  *

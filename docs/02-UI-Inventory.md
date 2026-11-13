@@ -163,7 +163,7 @@
 | [K13](#page-k13) | Appearance | Settings | Settings | `auth.self` | 2 | Settings.dc.html (K13) |
 | [K14](#page-k14) | Security | Settings | Settings | `auth.self` | 9 | Settings.dc.html (K14) |
 | [K15](#page-k15) | Backup and export | Settings | Settings | `settings.backup` | 10 | Settings.dc.html (K15) |
-| [K17](#page-k17) | Platform console | Settings | List | `auth.self` | 4 | Settings.dc.html (K17) |
+| [K17](#page-k17) | Platform console | Settings | List | `auth.self` | 7 | Settings.dc.html (K17) |
 | [L1](#page-l1) | Global search results | States | List | `auth.self` | 1 | States.dc.html (L1) |
 | [L2](#page-l2) | Command palette | States | Overlay | `auth.self` | 1 | States.dc.html (L2) |
 | [L3](#page-l3) | Notifications center | States | List | `auth.self` | 4 | States.dc.html (L3) |
@@ -3186,12 +3186,12 @@ Each entry follows the 13 points of the brief: (1) purpose · (2) components and
    | Search companies | text | opt | name or owner e-mail |
    | Status | segmented | opt | all/active/suspended |
    | Company name, business type, owner e-mail, owner name | text | req | create dialog |
-5. **Actions → API** ([full map](05-API-Specification.md#actions-k17)): Create company → POST /platform/companies → GET /platform/companies<br>Suspend (reason) → POST /platform/companies/{id}/suspend<br>Reactivate (reason) → POST /platform/companies/{id}/reactivate
+5. **Actions → API** ([full map](05-API-Specification.md#actions-k17)): Create company → POST /platform/companies → GET /platform/companies<br>Suspend (reason) → POST /platform/companies/{id}/suspend<br>Reactivate (reason) → POST /platform/companies/{id}/reactivate<br>Open read-only (reason, time) → POST /platform/companies/{id}/support-access → GET /me (with its X-Company-Id) → nav:A1<br>End support view → DELETE /platform/companies/{id}/support-access → nav:K17
 6. **Tables:** —
 7. **Validation and rules:** Standard server validation (422).
 8. **Roles allowed:** `auth.self` → Owner, Finance manager, Accountant, Sales staff, Store keeper, Viewer. Actions additionally check their own permission (see endpoints).
-9. **APIs:** [`GET /platform/companies`](05-API-Specification.md#getplatformcompanies), [`POST /platform/companies`](05-API-Specification.md#postplatformcompanies), [`POST /platform/companies/{id}/suspend`](05-API-Specification.md#postplatformcompaniesidsuspend), [`POST /platform/companies/{id}/reactivate`](05-API-Specification.md#postplatformcompaniesidreactivate)
-10. **Entities:** `account_groups`, `account_mappings`, `accounting_periods`, `audit_logs`, `branches`, `companies`, `company_settings`, `company_users`, `fiscal_years`, `ledgers`, `number_sequences`, `payment_terms`, `role_permissions`, `roles`, `user_invitations`, `users`, `warehouses`
+9. **APIs:** [`GET /me`](05-API-Specification.md#getme), [`GET /platform/companies`](05-API-Specification.md#getplatformcompanies), [`POST /platform/companies`](05-API-Specification.md#postplatformcompanies), [`POST /platform/companies/{id}/suspend`](05-API-Specification.md#postplatformcompaniesidsuspend), [`POST /platform/companies/{id}/reactivate`](05-API-Specification.md#postplatformcompaniesidreactivate), [`POST /platform/companies/{id}/support-access`](05-API-Specification.md#postplatformcompaniesidsupportaccess), [`DELETE /platform/companies/{id}/support-access`](05-API-Specification.md#deleteplatformcompaniesidsupportaccess)
+10. **Entities:** `account_groups`, `account_mappings`, `accounting_periods`, `audit_logs`, `branches`, `companies`, `company_settings`, `company_users`, `fiscal_years`, `ledgers`, `notifications`, `number_sequences`, `payment_terms`, `permissions`, `role_permissions`, `roles`, `support_access_grants`, `user_invitations`, `users`, `warehouses`
 11. **Workflows:** — · FR: FR-005
 12. **States:** Loading: skeleton rows matching columns (L10). Empty: first-use empty state with primary action, or 'No matches' with Clear filters (L9). Error: inline banner with Retry; offline banner (L11). Success: toast after bulk actions (L12). 403 page if view permission missing (L14).
 13. **Depends on:** —

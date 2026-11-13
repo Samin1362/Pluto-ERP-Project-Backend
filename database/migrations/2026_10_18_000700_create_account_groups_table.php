@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Table `account_groups` (Accounting): migration 7 of 90, dependency level 2.
+ * Table `account_groups` (Accounting): migration 7 of 91, dependency level 2.
  * Hierarchical chart-of-accounts groups (Primary > Group > Sub-group). Nature drives reports.
  * Depends on: companies, users. Self-reference: parent_id.
  *

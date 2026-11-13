@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Table `fx_revaluation_lines` (LC): migration 86 of 90, dependency level 9.
+ * Table `fx_revaluation_lines` (LC): migration 86 of 91, dependency level 9.
  * One revalued item: an open foreign purchase bill or an open usance acceptance.
  * Depends on: currencies, fx_revaluations, letters_of_credit, parties, purchase_bills.
  *

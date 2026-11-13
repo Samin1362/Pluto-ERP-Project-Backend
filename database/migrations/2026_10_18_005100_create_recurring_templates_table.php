@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Table `recurring_templates` (Money): migration 51 of 90, dependency level 5.
+ * Table `recurring_templates` (Money): migration 51 of 91, dependency level 5.
  * Repeating expense/income/journal; each run creates a draft for confirmation (never auto-posts).
  * Depends on: companies, journal_entries, users.
  *

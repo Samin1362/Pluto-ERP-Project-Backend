@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Table `user_sessions` (Access): migration 6 of 90, dependency level 1.
+ * Table `user_sessions` (Access): migration 6 of 91, dependency level 1.
  * Refresh-token session per device. Enables 'Where you're signed in' and 'Sign out everywhere'.
  * Depends on: users. Self-reference: replaced_by_id.
  *

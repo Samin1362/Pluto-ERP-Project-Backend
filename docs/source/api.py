@@ -115,6 +115,12 @@ E("POST", "/platform/companies/{id}/suspend", "Suspend a company: nobody can ope
   req="ReasonRequest", resp="PlatformCompany", tag=T, fr=["FR-005"], desc=PLAT, errors=["platform_admin_only", "platform_two_factor_required", "invalid_transition"], added="PEP-483 platform console")
 E("POST", "/platform/companies/{id}/reactivate", "Reactivate a suspended company", "auth", ["companies", "audit_logs"], ["K17"],
   req="ReasonRequest", resp="PlatformCompany", tag=T, fr=["FR-005"], desc=PLAT, errors=["platform_admin_only", "platform_two_factor_required", "invalid_transition"], added="PEP-483 platform console")
+E("POST", "/platform/companies/{id}/support-access", "Open a company read-only for support (reason, 15–240 minutes; the owners are told)", "auth",
+  ["support_access_grants", "companies", "company_users", "notifications", "audit_logs"], ["K17"], req="SupportAccessRequest", resp="SupportAccess", tag="Platform console", fr=["FR-005"],
+  codes=[201, 422], desc=PLAT + " Then call the company's GET endpoints with its X-Company-Id until expires_at; any change answers 403 support_read_only.",
+  errors=["platform_admin_only", "platform_two_factor_required"], added="PEP-485 support access")
+E("DELETE", "/platform/companies/{id}/support-access", "End the read-only support view now", "auth", ["support_access_grants", "audit_logs"], ["K17"],
+  tag="Platform console", fr=["FR-005"], codes=[204], desc=PLAT, errors=["platform_admin_only", "platform_two_factor_required"], added="PEP-485 support access")
 T = "Fiscal years"
 E("GET", "/fiscal-years", "Financial years with period status", "auth.self", ["fiscal_years", "accounting_periods"], ["K4", "S0"], resp="Page<FiscalYear>", tag=T, fr=["FR-082"])
 E("POST", "/accounting-periods/{id}/lock", "Lock a period (earlier periods must be locked)", "accounting.lock_period", ["accounting_periods", "company_backups", "audit_logs"], ["K4"], rules=["BR-033"],

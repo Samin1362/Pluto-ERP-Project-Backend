@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Table `password_reset_tokens` (Access): migration 5 of 90, dependency level 1.
+ * Table `password_reset_tokens` (Access): migration 5 of 91, dependency level 1.
  * Single-use password reset tokens (60 minutes).
  * Depends on: users.
  *

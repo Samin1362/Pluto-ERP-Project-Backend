@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Table `lc_document_templates` (LC): migration 16 of 90, dependency level 2.
+ * Table `lc_document_templates` (LC): migration 16 of 91, dependency level 2.
  * Named checklist template (Default import checklist, Agricultural goods, ...).
  * Depends on: companies, users.
  *

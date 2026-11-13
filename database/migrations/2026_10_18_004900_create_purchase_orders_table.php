@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Table `purchase_orders` (Purchases): migration 49 of 90, dependency level 5.
+ * Table `purchase_orders` (Purchases): migration 49 of 91, dependency level 5.
  * Order to a supplier (F8), local (BDT) or import (foreign currency). Never posts.
  * Depends on: branches, companies, currencies, parties, payment_terms, users, warehouses.
  *

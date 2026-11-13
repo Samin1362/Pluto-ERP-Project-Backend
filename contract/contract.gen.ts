@@ -73,6 +73,7 @@ export type ErrorCode =
   | 'seat_limit_reached'
   | 'self_approval_forbidden'
   | 'server_error'
+  | 'support_read_only'
   | 'system_role'
   | 'token_expired'
   | 'token_invalid'
@@ -1281,6 +1282,7 @@ export interface Me {
   phone?: string | null
   two_factor_enabled: boolean
   platform_admin?: boolean
+  support_access?: SupportAccess | null
   companies: Array<Membership>
   active_company_id?: number | null
   permissions?: Array<string>
@@ -2426,6 +2428,20 @@ export interface StockTransferInput {
   driver?: string | null
   notes?: string | null
   lines: Array<TransferLineInput>
+}
+
+/** A read-only support session: which company, why and until when. */
+export interface SupportAccess {
+  company_id: number
+  company_name: string
+  reason: string
+  expires_at: string
+}
+
+/** Open a company read-only for support. */
+export interface SupportAccessRequest {
+  reason: string
+  minutes?: number
 }
 
 /** Tax rule. */

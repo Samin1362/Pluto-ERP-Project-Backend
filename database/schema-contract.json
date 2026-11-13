@@ -17835,6 +17835,145 @@
    "check": {
     "product_units_rule1_check": "`factor` > 0"
    }
+  },
+  "support_access_grants": {
+   "seq": 91,
+   "level": 2,
+   "migration": "2026_10_18_009100_create_support_access_grants_table.php",
+   "module": "Access",
+   "columns": [
+    {
+     "name": "id",
+     "type": "bigint unsigned",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": true
+    },
+    {
+     "name": "company_id",
+     "type": "bigint unsigned",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "user_id",
+     "type": "bigint unsigned",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "reason",
+     "type": "varchar(255)",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "expires_at",
+     "type": "datetime",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "ended_at",
+     "type": "datetime",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "created_by",
+     "type": "bigint unsigned",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "updated_by",
+     "type": "bigint unsigned",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "created_at",
+     "type": "datetime",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "updated_at",
+     "type": "datetime",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    }
+   ],
+   "primary": [
+    "id"
+   ],
+   "unique": {},
+   "index": {
+    "support_access_grants_company_id_user_id_expires_at_index": [
+     "company_id",
+     "user_id",
+     "expires_at"
+    ],
+    "support_access_grants_user_id_index": [
+     "user_id"
+    ],
+    "support_access_grants_created_by_index": [
+     "created_by"
+    ],
+    "support_access_grants_updated_by_index": [
+     "updated_by"
+    ]
+   },
+   "foreign": {
+    "support_access_grants_company_id_foreign": {
+     "column": "company_id",
+     "references_table": "companies",
+     "references_column": "id",
+     "on_delete": "RESTRICT",
+     "on_update": "RESTRICT"
+    },
+    "support_access_grants_user_id_foreign": {
+     "column": "user_id",
+     "references_table": "users",
+     "references_column": "id",
+     "on_delete": "RESTRICT",
+     "on_update": "RESTRICT"
+    },
+    "support_access_grants_created_by_foreign": {
+     "column": "created_by",
+     "references_table": "users",
+     "references_column": "id",
+     "on_delete": "RESTRICT",
+     "on_update": "RESTRICT"
+    },
+    "support_access_grants_updated_by_foreign": {
+     "column": "updated_by",
+     "references_table": "users",
+     "references_column": "id",
+     "on_delete": "RESTRICT",
+     "on_update": "RESTRICT"
+    }
+   },
+   "check": {}
   }
  }
 }

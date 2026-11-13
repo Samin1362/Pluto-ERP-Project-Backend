@@ -96,6 +96,8 @@ Route::middleware(['jwt', 'throttle:api-user'])->group(function () {
         Route::post('companies', [PlatformCompanyController::class, 'store'])->middleware('idempotent');
         Route::post('companies/{id}/suspend', [PlatformCompanyController::class, 'suspend'])->whereNumber('id');
         Route::post('companies/{id}/reactivate', [PlatformCompanyController::class, 'reactivate'])->whereNumber('id');
+        Route::post('companies/{id}/support-access', [PlatformCompanyController::class, 'openSupport'])->whereNumber('id');
+        Route::delete('companies/{id}/support-access', [PlatformCompanyController::class, 'endSupport'])->whereNumber('id');
     });
 
     Route::middleware('company')->group(function () {

@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Table `fx_revaluations` (LC): migration 85 of 90, dependency level 5.
+ * Table `fx_revaluations` (LC): migration 85 of 91, dependency level 5.
  * Period-end revaluation of open foreign-currency items at closing rates; reversed automatically the next day.
  * Depends on: companies, journal_entries, users.
  *

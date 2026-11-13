@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Table `ie_categories` (Money): migration 35 of 90, dependency level 4.
+ * Table `ie_categories` (Money): migration 35 of 91, dependency level 4.
  * Income or expense category with its own ledger and optional monthly budget (I7).
  * Depends on: companies, ledgers, users.
  *

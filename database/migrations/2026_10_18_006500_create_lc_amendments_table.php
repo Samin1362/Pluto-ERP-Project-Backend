@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Table `lc_amendments` (LC): migration 65 of 90, dependency level 7.
+ * Table `lc_amendments` (LC): migration 65 of 91, dependency level 7.
  * Bank amendment to LC terms (requested > issued > accepted/refused).
  * Depends on: companies, letters_of_credit, users.
  *

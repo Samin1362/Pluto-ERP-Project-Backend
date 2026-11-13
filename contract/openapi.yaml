@@ -667,9 +667,11 @@ paths:
       - FR-005
       x-pages:
       - S0
+      - K17
       x-page-actions:
       - 'S0: Switch company (reloads all data)'
       - 'S0: Create a company (NEW, company switcher)'
+      - 'K17: Open read-only (reason, time)'
       x-tables:
       - users
       - company_users
@@ -1379,6 +1381,7 @@ paths:
       - not_a_member
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -1421,7 +1424,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -1673,6 +1676,7 @@ paths:
       - not_a_member
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -1717,7 +1721,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -1787,6 +1791,7 @@ paths:
       - not_a_member
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -1831,7 +1836,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -1908,6 +1913,7 @@ paths:
       - not_a_member
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -1929,7 +1935,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -2173,6 +2179,7 @@ paths:
       - not_a_member
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -2217,7 +2224,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -2405,6 +2412,7 @@ paths:
       - not_a_member
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -2448,7 +2456,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -2511,6 +2519,7 @@ paths:
       - not_found
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -2562,7 +2571,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -2807,6 +2816,7 @@ paths:
       - not_found
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -2858,7 +2868,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -3023,6 +3033,7 @@ paths:
       - not_a_member
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -3066,7 +3077,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -3130,6 +3141,7 @@ paths:
       - not_found
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -3181,7 +3193,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -3341,6 +3353,7 @@ paths:
       - not_a_member
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -3383,7 +3396,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -3854,6 +3867,180 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/Error'
+  /api/v1/platform/companies/{id}/support-access:
+    post:
+      operationId: postPlatformCompaniesIdSupportAccess
+      summary: Open a company read-only for support (reason, 15–240 minutes; the owners are told)
+      tags:
+      - Platform console
+      description: "Platform admins only: the e-mail is in PLUTO_PLATFORM_ADMINS (server setting, never a company role) and this sign-in used 2-step verification;\
+        \ otherwise 403 platform_admin_only / platform_two_factor_required. Every change is written to the company's audit log. Then call the company's GET endpoints\
+        \ with its X-Company-Id until expires_at; any change answers 403 support_read_only.\n\n**Permission:** any signed-in user  \n**Database:** lock: support_access_grants;\
+        \ insert: audit_logs; update: support_access_grants; read: companies, company_users, notifications  \n**Rules:** —"
+      x-permission: auth
+      x-business-rules: []
+      x-requirements:
+      - FR-005
+      x-pages:
+      - K17
+      x-page-actions:
+      - 'K17: Open read-only (reason, time)'
+      x-tables:
+      - support_access_grants
+      - companies
+      - company_users
+      - notifications
+      - audit_logs
+      x-db-operations:
+        support_access_grants: LU
+        companies: R
+        company_users: R
+        notifications: R
+        audit_logs: C
+      x-error-codes:
+      - malformed_json
+      - not_found
+      - platform_admin_only
+      - platform_two_factor_required
+      - server_error
+      - token_expired
+      - token_invalid
+      - unauthenticated
+      - validation_failed
+      x-contract-change: PEP-485 support access
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+          minimum: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SupportAccessRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                properties:
+                  data:
+                    $ref: '#/components/schemas/SupportAccess'
+          headers:
+            Location:
+              schema:
+                type: string
+              description: URL of the created resource
+        '400':
+          description: 'Malformed request: `malformed_json`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: 'Not authenticated: `token_expired`, `token_invalid`, `unauthenticated`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: 'Not permitted: `platform_admin_only`, `platform_two_factor_required`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: 'Not found (also for other companies'' records): `not_found`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: 'Validation or business-rule failure: `validation_failed`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        default:
+          description: Unexpected error (`server_error`)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    delete:
+      operationId: deletePlatformCompaniesIdSupportAccess
+      summary: End the read-only support view now
+      tags:
+      - Platform console
+      description: "Platform admins only: the e-mail is in PLUTO_PLATFORM_ADMINS (server setting, never a company role) and this sign-in used 2-step verification;\
+        \ otherwise 403 platform_admin_only / platform_two_factor_required. Every change is written to the company's audit log.\n\n**Permission:** any signed-in user\
+        \  \n**Database:** insert: audit_logs; delete: support_access_grants  \n**Rules:** —"
+      x-permission: auth
+      x-business-rules: []
+      x-requirements:
+      - FR-005
+      x-pages:
+      - K17
+      x-page-actions:
+      - 'K17: End support view'
+      x-tables:
+      - support_access_grants
+      - audit_logs
+      x-db-operations:
+        support_access_grants: D
+        audit_logs: C
+      x-error-codes:
+      - not_found
+      - platform_admin_only
+      - platform_two_factor_required
+      - server_error
+      - token_expired
+      - token_invalid
+      - unauthenticated
+      x-contract-change: PEP-485 support access
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+          minimum: 1
+      responses:
+        '204':
+          description: No content
+        '401':
+          description: 'Not authenticated: `token_expired`, `token_invalid`, `unauthenticated`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: 'Not permitted: `platform_admin_only`, `platform_two_factor_required`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: 'Not found (also for other companies'' records): `not_found`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        default:
+          description: Unexpected error (`server_error`)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
   /api/v1/fiscal-years:
     get:
       operationId: getFiscalYears
@@ -3974,6 +4161,7 @@ paths:
       - not_found
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -4018,7 +4206,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -4084,6 +4272,7 @@ paths:
       - not_found
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -4128,7 +4317,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -4206,6 +4395,7 @@ paths:
       - not_found
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -4245,7 +4435,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -4547,6 +4737,7 @@ paths:
       - permission_denied
       - role_in_use
       - server_error
+      - support_read_only
       - system_role
       - token_expired
       - token_invalid
@@ -4599,7 +4790,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `branch_restricted`, `not_a_member`, `permission_denied`, `system_role`'
+          description: 'Not permitted: `branch_restricted`, `not_a_member`, `permission_denied`, `support_read_only`, `system_role`'
           content:
             application/problem+json:
               schema:
@@ -4680,6 +4871,7 @@ paths:
       - permission_denied
       - role_in_use
       - server_error
+      - support_read_only
       - system_role
       - token_expired
       - token_invalid
@@ -4718,7 +4910,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`, `system_role`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`, `system_role`'
           content:
             application/problem+json:
               schema:
@@ -4781,6 +4973,7 @@ paths:
       - permission_denied
       - seat_limit_reached
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -4818,7 +5011,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -4973,6 +5166,7 @@ paths:
       - permission_denied
       - seat_limit_reached
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -5016,7 +5210,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -5077,6 +5271,7 @@ paths:
       - not_found
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -5114,7 +5309,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -5170,6 +5365,7 @@ paths:
       - not_found
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -5198,7 +5394,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -5342,6 +5538,7 @@ paths:
       - not_a_member
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -5385,7 +5582,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -5552,6 +5749,7 @@ paths:
       - permission_denied
       - role_in_use
       - server_error
+      - support_read_only
       - system_role
       - token_expired
       - token_invalid
@@ -5604,7 +5802,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`, `system_role`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`, `system_role`'
           content:
             application/problem+json:
               schema:
@@ -5678,6 +5876,7 @@ paths:
       - not_found
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -5706,7 +5905,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -6092,6 +6291,7 @@ paths:
       - not_found
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -6120,7 +6320,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -6174,6 +6374,7 @@ paths:
       - not_a_member
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -6195,7 +6396,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -6486,6 +6687,7 @@ paths:
       - permission_denied
       - self_approval_forbidden
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -6547,7 +6749,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`, `self_approval_forbidden`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `self_approval_forbidden`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -6627,6 +6829,7 @@ paths:
       - permission_denied
       - self_approval_forbidden
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -6675,7 +6878,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`, `self_approval_forbidden`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `self_approval_forbidden`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -6754,6 +6957,7 @@ paths:
       - not_a_member
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -6800,7 +7004,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -7175,6 +7379,7 @@ paths:
       - not_found
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -7206,7 +7411,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -7713,6 +7918,7 @@ paths:
       - not_a_member
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -7744,7 +7950,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -7998,6 +8204,7 @@ paths:
       - permission_denied
       - restore_confirmation_required
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -8043,7 +8250,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -8160,6 +8367,7 @@ paths:
       - not_a_member
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -8198,7 +8406,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -8698,6 +8906,7 @@ paths:
       - not_a_member
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -8741,7 +8950,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -8923,6 +9132,7 @@ paths:
       - not_found
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -8974,7 +9184,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -9056,6 +9266,7 @@ paths:
       - not_found
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -9084,7 +9295,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -9155,6 +9366,7 @@ paths:
       - not_found
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -9192,7 +9404,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -9263,6 +9475,7 @@ paths:
       - not_found
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -9300,7 +9513,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -9363,6 +9576,7 @@ paths:
       - not_a_member
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -9401,7 +9615,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -10317,6 +10531,7 @@ paths:
       - not_a_member
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -10355,7 +10570,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -10517,6 +10732,7 @@ paths:
       - not_a_member
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -10560,7 +10776,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -10814,6 +11030,7 @@ paths:
       - not_a_member
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -10857,7 +11074,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -10939,6 +11156,7 @@ paths:
       - not_a_member
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -11001,7 +11219,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -11192,6 +11410,7 @@ paths:
       - not_found
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -11243,7 +11462,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -11324,6 +11543,7 @@ paths:
       - not_found
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -11352,7 +11572,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -11687,6 +11907,7 @@ paths:
       - not_a_member
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -11729,7 +11950,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -11786,6 +12007,7 @@ paths:
       - not_found
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -11835,7 +12057,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -11899,6 +12121,7 @@ paths:
       - not_found
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -11927,7 +12150,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -12106,6 +12329,7 @@ paths:
       - not_a_member
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -12148,7 +12372,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -12204,6 +12428,7 @@ paths:
       - not_found
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -12253,7 +12478,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -12317,6 +12542,7 @@ paths:
       - not_found
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -12345,7 +12571,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -12524,6 +12750,7 @@ paths:
       - not_a_member
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -12566,7 +12793,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -12719,6 +12946,7 @@ paths:
       - not_a_member
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -12762,7 +12990,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -12921,6 +13149,7 @@ paths:
       - not_found
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -12972,7 +13201,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -13353,6 +13582,7 @@ paths:
       - period_locked
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -13396,7 +13626,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -13564,6 +13794,7 @@ paths:
       - not_found
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -13615,7 +13846,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -13695,6 +13926,7 @@ paths:
       - not_found
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -13723,7 +13955,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -13948,6 +14180,7 @@ paths:
       - permission_denied
       - same_warehouse
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -13991,7 +14224,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -14158,6 +14391,7 @@ paths:
       - not_found
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -14209,7 +14443,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -14288,6 +14522,7 @@ paths:
       - not_found
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -14316,7 +14551,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -14404,6 +14639,7 @@ paths:
       - period_locked
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -14443,7 +14679,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -14533,6 +14769,7 @@ paths:
       - period_locked
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -14579,7 +14816,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -14648,6 +14885,7 @@ paths:
       - not_a_member
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -14685,7 +14923,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -14780,6 +15018,7 @@ paths:
       - permission_denied
       - same_warehouse
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -14818,7 +15057,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -14912,6 +15151,7 @@ paths:
       - permission_denied
       - same_warehouse
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -14957,7 +15197,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -15043,6 +15283,7 @@ paths:
       - not_found
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -15089,7 +15330,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -15610,6 +15851,7 @@ paths:
       - permission_denied
       - rounding_ledger_missing
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -15647,7 +15889,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -15889,6 +16131,7 @@ paths:
       - not_a_member
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -15932,7 +16175,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -16111,6 +16354,7 @@ paths:
       - not_found
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -16162,7 +16406,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -16242,6 +16486,7 @@ paths:
       - not_found
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -16270,7 +16515,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -16334,6 +16579,7 @@ paths:
       - not_found
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -16385,7 +16631,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -16512,6 +16758,7 @@ paths:
       - permission_denied
       - rounding_ledger_missing
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -16558,7 +16805,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -16654,6 +16901,7 @@ paths:
       - not_a_member
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -16693,7 +16941,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -16781,6 +17029,7 @@ paths:
       - period_locked
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -16827,7 +17076,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -17013,6 +17262,7 @@ paths:
       - not_found
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -17049,7 +17299,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -17151,6 +17401,7 @@ paths:
       - period_locked
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -17195,7 +17446,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -17652,6 +17903,7 @@ paths:
       - period_locked
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -17700,7 +17952,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -17782,6 +18034,7 @@ paths:
       - period_locked
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -17815,7 +18068,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -18042,6 +18295,7 @@ paths:
       - not_a_member
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -18085,7 +18339,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -18248,6 +18502,7 @@ paths:
       - not_found
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -18299,7 +18554,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -18378,6 +18633,7 @@ paths:
       - not_found
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -18407,7 +18663,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -18472,6 +18728,7 @@ paths:
       - not_found
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -18516,7 +18773,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -18601,6 +18858,7 @@ paths:
       - period_locked
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -18644,7 +18902,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -18715,6 +18973,7 @@ paths:
       - not_found
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -18759,7 +19018,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -19090,6 +19349,7 @@ paths:
       - permission_denied
       - return_qty_exceeds
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -19133,7 +19393,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -19300,6 +19560,7 @@ paths:
       - permission_denied
       - return_qty_exceeds
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -19351,7 +19612,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -19430,6 +19691,7 @@ paths:
       - not_found
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -19459,7 +19721,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -19553,6 +19815,7 @@ paths:
       - permission_denied
       - return_qty_exceeds
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -19592,7 +19855,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -19693,6 +19956,7 @@ paths:
       - period_locked
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -19740,7 +20004,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -19908,6 +20172,7 @@ paths:
       - not_found
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -19959,7 +20224,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -20036,6 +20301,7 @@ paths:
       - not_found
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -20065,7 +20331,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -20136,6 +20402,7 @@ paths:
       - not_a_member
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -20179,7 +20446,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -20424,6 +20691,7 @@ paths:
       - period_locked
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -20463,7 +20731,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -20557,6 +20825,7 @@ paths:
       - period_locked
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -20604,7 +20873,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -20869,6 +21138,7 @@ paths:
       - not_a_member
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -20906,7 +21176,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -21156,6 +21426,7 @@ paths:
       - order_qty_exceeded
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -21199,7 +21470,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -21375,6 +21646,7 @@ paths:
       - order_qty_exceeded
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -21426,7 +21698,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -21503,6 +21775,7 @@ paths:
       - not_found
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -21531,7 +21804,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -21633,6 +21906,7 @@ paths:
       - period_locked
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -21679,7 +21953,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -21772,6 +22046,7 @@ paths:
       - not_found
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -21818,7 +22093,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -21927,6 +22202,7 @@ paths:
       - period_locked
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -21982,7 +22258,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -22579,6 +22855,7 @@ paths:
       - not_a_member
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -22622,7 +22899,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -22696,6 +22973,7 @@ paths:
       - not_a_member
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -22739,7 +23017,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -22903,6 +23181,7 @@ paths:
       - not_found
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -22954,7 +23233,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -23033,6 +23312,7 @@ paths:
       - not_found
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -23062,7 +23342,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -23126,6 +23406,7 @@ paths:
       - not_found
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -23170,7 +23451,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -23258,6 +23539,7 @@ paths:
       - period_locked
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -23301,7 +23583,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -23373,6 +23655,7 @@ paths:
       - not_found
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -23417,7 +23700,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -23736,6 +24019,7 @@ paths:
       - permission_denied
       - return_qty_exceeds
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -23779,7 +24063,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -23945,6 +24229,7 @@ paths:
       - permission_denied
       - return_qty_exceeds
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -23996,7 +24281,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -24076,6 +24361,7 @@ paths:
       - not_found
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -24105,7 +24391,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -24209,6 +24495,7 @@ paths:
       - permission_denied
       - return_qty_exceeds
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -24248,7 +24535,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -24351,6 +24638,7 @@ paths:
       - period_locked
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -24398,7 +24686,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -24565,6 +24853,7 @@ paths:
       - not_found
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -24616,7 +24905,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -24693,6 +24982,7 @@ paths:
       - not_found
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -24722,7 +25012,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -24792,6 +25082,7 @@ paths:
       - not_a_member
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -24835,7 +25126,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -25078,6 +25369,7 @@ paths:
       - period_locked
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -25117,7 +25409,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -25212,6 +25504,7 @@ paths:
       - period_locked
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -25259,7 +25552,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -25647,6 +25940,7 @@ paths:
       - not_a_member
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -25690,7 +25984,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -25855,6 +26149,7 @@ paths:
       - not_found
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -25906,7 +26201,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -26284,6 +26579,7 @@ paths:
       - not_a_member
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -26327,7 +26623,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -26406,6 +26702,7 @@ paths:
       - period_locked
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -26453,7 +26750,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -26532,6 +26829,7 @@ paths:
       - not_a_member
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -26575,7 +26873,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -26657,6 +26955,7 @@ paths:
       - not_a_member
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -26710,7 +27009,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -26884,6 +27183,7 @@ paths:
       - not_found
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -26935,7 +27235,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -27022,6 +27322,7 @@ paths:
       - period_locked
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -27075,7 +27376,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -27144,6 +27445,7 @@ paths:
       - not_found
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -27188,7 +27490,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -27250,6 +27552,7 @@ paths:
       - not_found
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -27294,7 +27597,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -27352,6 +27655,7 @@ paths:
       - not_found
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -27389,7 +27693,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -27453,6 +27757,7 @@ paths:
       - not_found
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -27490,7 +27795,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -27661,6 +27966,7 @@ paths:
       - not_a_member
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -27703,7 +28009,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -27759,6 +28065,7 @@ paths:
       - not_found
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -27808,7 +28115,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -28062,6 +28369,7 @@ paths:
       - period_locked
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -28117,7 +28425,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -28304,6 +28612,7 @@ paths:
       - not_found
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -28355,7 +28664,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -28734,6 +29043,7 @@ paths:
       - not_a_member
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -28776,7 +29086,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -28934,6 +29244,7 @@ paths:
       - not_found
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -28985,7 +29296,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -29252,6 +29563,7 @@ paths:
       - not_a_member
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -29295,7 +29607,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -29462,6 +29774,7 @@ paths:
       - not_found
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -29513,7 +29826,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -29591,6 +29904,7 @@ paths:
       - not_found
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -29628,7 +29942,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -30043,6 +30357,7 @@ paths:
       - period_locked
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -30102,7 +30417,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -30290,6 +30605,7 @@ paths:
       - not_found
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -30346,7 +30662,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -30425,6 +30741,7 @@ paths:
       - not_found
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -30454,7 +30771,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -30522,6 +30839,7 @@ paths:
       - not_found
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -30574,7 +30892,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -30658,6 +30976,7 @@ paths:
       - period_locked
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -30719,7 +31038,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -30810,6 +31129,7 @@ paths:
       - period_locked
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -30861,7 +31181,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -30955,6 +31275,7 @@ paths:
       - not_a_member
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -30997,7 +31318,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -33687,6 +34008,7 @@ paths:
       - not_a_member
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -33730,7 +34052,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -33911,6 +34233,7 @@ paths:
       - not_found
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -33962,7 +34285,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -34040,6 +34363,7 @@ paths:
       - not_found
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -34068,7 +34392,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -34138,6 +34462,7 @@ paths:
       - not_found
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -34189,7 +34514,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -34287,6 +34612,7 @@ paths:
       - not_found
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -34333,7 +34659,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -34499,6 +34825,7 @@ paths:
       - not_found
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -34548,7 +34875,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -34613,6 +34940,7 @@ paths:
       - not_found
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -34664,7 +34992,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -34906,6 +35234,7 @@ paths:
       - not_a_member
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -34948,7 +35277,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -35007,6 +35336,7 @@ paths:
       - not_found
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -35056,7 +35386,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -35261,6 +35591,7 @@ paths:
       - not_found
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -35311,7 +35642,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -35388,6 +35719,7 @@ paths:
       - not_found
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -35439,7 +35771,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -35513,6 +35845,7 @@ paths:
       - not_found
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -35562,7 +35895,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -35628,6 +35961,7 @@ paths:
       - not_found
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -35679,7 +36013,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -35914,6 +36248,7 @@ paths:
       - period_locked
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -35958,7 +36293,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -36042,6 +36377,7 @@ paths:
       - period_locked
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -36089,7 +36425,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -36178,6 +36514,7 @@ paths:
       - period_locked
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -36224,7 +36561,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -36325,6 +36662,7 @@ paths:
       - period_locked
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -36376,7 +36714,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -36569,6 +36907,7 @@ paths:
       - period_locked
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -36616,7 +36955,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -36691,6 +37030,7 @@ paths:
       - not_found
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -36735,7 +37075,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -36829,6 +37169,7 @@ paths:
       - period_locked
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -36880,7 +37221,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -36979,6 +37320,7 @@ paths:
       - period_locked
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -37026,7 +37368,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -37394,6 +37736,7 @@ paths:
       - not_a_member
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -37437,7 +37780,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -37499,6 +37842,7 @@ paths:
       - not_found
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -37551,7 +37895,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -38014,6 +38358,7 @@ paths:
       - permission_denied
       - repayment_exceeds_outstanding
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -38066,7 +38411,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -38140,6 +38485,7 @@ paths:
       - permission_denied
       - repayment_exceeds_outstanding
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -38192,7 +38538,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -38290,6 +38636,7 @@ paths:
       - period_locked
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -38337,7 +38684,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -38414,6 +38761,7 @@ paths:
       - nothing_to_revalue
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -38452,7 +38800,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -38528,6 +38876,7 @@ paths:
       - period_locked
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -38573,7 +38922,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -38774,6 +39123,7 @@ paths:
       - period_locked
       - permission_denied
       - server_error
+      - support_read_only
       - token_expired
       - token_invalid
       - unauthenticated
@@ -38821,7 +39171,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -39147,6 +39497,7 @@ components:
           - seat_limit_reached
           - self_approval_forbidden
           - server_error
+          - support_read_only
           - system_role
           - token_expired
           - token_invalid
@@ -39847,6 +40198,10 @@ components:
           type: boolean
         platform_admin:
           type: boolean
+        support_access:
+          oneOf:
+          - $ref: '#/components/schemas/SupportAccess'
+          - type: 'null'
         companies:
           type: array
           items:
@@ -40034,6 +40389,38 @@ components:
       - created_at
       - owner_pending
       - members
+    SupportAccessRequest:
+      type: object
+      description: Open a company read-only for support.
+      properties:
+        reason:
+          type: string
+          maxLength: 255
+        minutes:
+          type: integer
+      required:
+      - reason
+      additionalProperties: false
+    SupportAccess:
+      type: object
+      description: 'A read-only support session: which company, why and until when.'
+      properties:
+        company_id:
+          type: integer
+          format: int64
+          minimum: 1
+        company_name:
+          type: string
+        reason:
+          type: string
+        expires_at:
+          type: string
+          format: date-time
+      required:
+      - company_id
+      - company_name
+      - reason
+      - expires_at
     PlatformCompanyCreate:
       type: object
       description: A new customer company and the person who will own it.
@@ -43136,6 +43523,7 @@ components:
           - seat_limit_reached
           - self_approval_forbidden
           - server_error
+          - support_read_only
           - system_role
           - token_expired
           - token_invalid

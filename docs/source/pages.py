@@ -541,7 +541,7 @@ K = [
   ["Prepare export pack", "Download backup", "Back up now", "Restore… (dialog)"], ["FR-087"]),
  ("K17", "Platform console", "List", "auth.self", "Platform admins only (PLUTO_PLATFORM_ADMINS e-mail and a 2-step sign-in): every customer company with its owner, members, status and last activity; create a company for a customer (the Owner gets an invitation); suspend or reactivate a company with a reason.",
   ["Search companies | text | opt | name or owner e-mail", "Status | segmented | opt | all/active/suspended", "Company name, business type, owner e-mail, owner name | text | req | create dialog"],
-  ["Create company", "Suspend (reason)", "Reactivate (reason)"], ["FR-005"]),
+  ["Create company", "Suspend (reason)", "Reactivate (reason)", "Open read-only (reason, time)", "End support view"], ["FR-005"]),
 ]
 for code, name, tmpl, perm, desc, fields, actions, fr in K:
     page(code, name, "Settings", tmpl, perm, desc, "Settings layout: section rail (Business, People, You, Data) on the left, grouped cards on the right, sticky unsaved-changes bar.",

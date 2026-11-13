@@ -190,6 +190,8 @@ def error_codes(e):
         c.update(["unauthenticated", "token_expired", "token_invalid"])
         if e["perm"] != "auth":
             c.update(["permission_denied", "company_required", "not_a_member", "company_maintenance"])
+            if e["method"] != "GET":
+                c.add("support_read_only")  # PEP-485: a platform admin's read-only support view refuses every change
     if path_params(e["path"]) and e["path"] not in ("/invitations/{token}",):
         c.add("not_found")
     if e["req"] or e["params"]:

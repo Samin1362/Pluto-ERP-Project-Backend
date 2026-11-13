@@ -3,25 +3,25 @@
   {
    "id": "V01",
    "title": "Every table has a primary key",
-   "checked": 90,
+   "checked": 91,
    "failures": []
   },
   {
    "id": "V02",
    "title": "Every FK references an existing primary or unique key",
-   "checked": 426,
+   "checked": 430,
    "failures": []
   },
   {
    "id": "V03",
    "title": "FK column type equals referenced column type exactly (incl. UNSIGNED, CHAR length)",
-   "checked": 426,
+   "checked": 430,
    "failures": []
   },
   {
    "id": "V04",
    "title": "ON DELETE SET NULL only on nullable columns; self-references nullable",
-   "checked": 426,
+   "checked": 430,
    "failures": []
   },
   {
@@ -45,31 +45,31 @@
   {
    "id": "V08",
    "title": "Identifiers ≤ 64 chars; FK and CHECK names unique schema-wide; index names unique per table",
-   "checked": 2583,
+   "checked": 2602,
    "failures": []
   },
   {
    "id": "V09",
    "title": "Every FK column is the leftmost column of an index (no implicit InnoDB index)",
-   "checked": 426,
+   "checked": 430,
    "failures": []
   },
   {
    "id": "V10",
    "title": "No redundant index (left prefix of another key)",
-   "checked": 364,
+   "checked": 368,
    "failures": []
   },
   {
    "id": "V11",
    "title": "Index key length ≤ 3072 bytes (utf8mb4, DYNAMIC rows); no TEXT/JSON keys",
-   "checked": 547,
+   "checked": 552,
    "failures": []
   },
   {
    "id": "V12",
    "title": "Maximum row size < 65,535 bytes",
-   "checked": 90,
+   "checked": 91,
    "failures": []
   },
   {
@@ -111,13 +111,13 @@
   {
    "id": "V19",
    "title": "ON UPDATE RESTRICT on every FK (surrogate keys are immutable)",
-   "checked": 426,
+   "checked": 430,
    "failures": []
   },
   {
    "id": "V20",
    "title": "Dependency graph is acyclic (12 migration levels; self-references created in the same migration)",
-   "checked": 90,
+   "checked": 91,
    "failures": []
   },
   {
@@ -129,7 +129,7 @@
   {
    "id": "V22",
    "title": "Every tenant table has an index or unique key led by company_id",
-   "checked": 65,
+   "checked": 66,
    "failures": []
   },
   {
@@ -146,11 +146,11 @@
   }
  ],
  "summary": {
-  "tables": 90,
-  "columns": 1439,
-  "fks": 426,
+  "tables": 91,
+  "columns": 1449,
+  "fks": 430,
   "uniques": 93,
-  "indexes": 364,
+  "indexes": 368,
   "checks": 171,
   "levels": 12,
   "decimal_inventory": {

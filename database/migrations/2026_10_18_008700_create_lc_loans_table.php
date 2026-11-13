@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Table `lc_loans` (LC): migration 87 of 90, dependency level 10.
+ * Table `lc_loans` (LC): migration 87 of 91, dependency level 10.
  * PAD or LTR loan: the bank paid the supplier for an LC and the company repays it with interest.
  * Depends on: companies, lc_payments, letters_of_credit, money_accounts, users.
  *

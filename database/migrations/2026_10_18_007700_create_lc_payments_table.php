@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Table `lc_payments` (LC): migration 77 of 90, dependency level 9.
+ * Table `lc_payments` (LC): migration 77 of 91, dependency level 9.
  * Payment to the beneficiary through the bank, at the bank's rate (sight or usance maturity).
  * Depends on: companies, journal_entries, lc_shipments, letters_of_credit, money_accounts, purchase_bills, users.
  *

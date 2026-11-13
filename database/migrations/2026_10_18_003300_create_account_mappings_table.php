@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Table `account_mappings` (Accounting): migration 33 of 90, dependency level 4.
+ * Table `account_mappings` (Accounting): migration 33 of 91, dependency level 4.
  * Configurable posting rules: maps a posting role (e.g. cogs, sales_returns) to a ledger or group. Replaces hard-coded account IDs.
  * Depends on: account_groups, companies, ledgers, users.
  *

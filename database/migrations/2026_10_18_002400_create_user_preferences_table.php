@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Table `user_preferences` (Access): migration 24 of 90, dependency level 2.
+ * Table `user_preferences` (Access): migration 24 of 91, dependency level 2.
  * Per-user appearance settings (K13) and last company used.
  * Depends on: companies, users.
  *

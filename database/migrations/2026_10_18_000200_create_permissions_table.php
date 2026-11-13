@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Table `permissions` (Access): migration 2 of 90, dependency level 0.
+ * Table `permissions` (Access): migration 2 of 91, dependency level 0.
  * Global catalogue of permission keys, e.g. sales.create, accounting.approve, inventory.view_costs.
  * Depends on: nothing.
  *

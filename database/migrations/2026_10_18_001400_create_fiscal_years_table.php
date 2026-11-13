@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Table `fiscal_years` (Accounting): migration 14 of 90, dependency level 2.
+ * Table `fiscal_years` (Accounting): migration 14 of 91, dependency level 2.
  * Financial year (FY 2026-27 = 1 Jul 2026 - 30 Jun 2027).
  * Depends on: companies, users.
  *

@@ -25,6 +25,7 @@ E = {
     "two_factor_required_by_company": (403, "Your company requires 2-step verification", ["FR-004"]),
     "platform_admin_only": (403, "Only a platform admin can do this", ["FR-005"]),
     "platform_two_factor_required": (403, "Platform admins must sign in with 2-step verification", ["FR-004"]),
+    "support_read_only": (403, "This is a read-only support view; nothing can be changed", ["FR-005"]),
     "not_found": (404, "Not found (or it belongs to another company)", ["BR-037"]),
     "version_conflict": (409, "Someone else changed this record; reload to see their changes", ["BR-049"]),
     "not_draft": (409, "Only a draft can be changed, posted or deleted", ["BR-025"]),

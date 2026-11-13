@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Table `payment_terms` (Platform): migration 20 of 90, dependency level 2.
+ * Table `payment_terms` (Platform): migration 20 of 91, dependency level 2.
  * Named credit terms (Cash, Net 7, Net 14, Net 15, Net 30, Net 45).
  * Depends on: companies, users.
  *
