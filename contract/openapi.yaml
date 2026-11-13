@@ -39845,6 +39845,8 @@ components:
           - 'null'
         two_factor_enabled:
           type: boolean
+        platform_admin:
+          type: boolean
         companies:
           type: array
           items:

@@ -25,6 +25,8 @@ class MeResource extends JsonResource
             'email' => $u->email,
             'phone' => $u->phone,
             'two_factor_enabled' => $u->two_factor_confirmed_at !== null,
+            // Platform console (K17, PEP-484): shows the Platform link; the /platform API checks it again with the 2-step sign-in.
+            'platform_admin' => in_array(strtolower((string) $u->email), (array) config('pluto.platform_admins', []), true),
             'companies' => $memberships->map(fn ($m) => ['company_id' => $m->company_id, 'company_name' => $companies[$m->company_id] ?? '',
                 'role' => $roles[$m->role_id] ?? '', 'status' => $m->status])->values()->all(),
             'active_company_id' => $current->has() ? $current->id() : null,
