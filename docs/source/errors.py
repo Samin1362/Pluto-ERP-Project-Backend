@@ -23,6 +23,8 @@ E = {
     "branch_restricted": (403, "This record belongs to a branch you cannot access", ["BR-038"]),
     "self_approval_forbidden": (403, "You cannot approve a voucher you submitted", ["BR-008"]),
     "two_factor_required_by_company": (403, "Your company requires 2-step verification", ["FR-004"]),
+    "platform_admin_only": (403, "Only a platform admin can do this", ["FR-005"]),
+    "platform_two_factor_required": (403, "Platform admins must sign in with 2-step verification", ["FR-004"]),
     "not_found": (404, "Not found (or it belongs to another company)", ["BR-037"]),
     "version_conflict": (409, "Someone else changed this record; reload to see their changes", ["BR-049"]),
     "not_draft": (409, "Only a draft can be changed, posted or deleted", ["BR-025"]),

@@ -2,7 +2,7 @@
 
 > **Source of truth:** the Claude Design canvas "Pluto ERP" (13 module prototypes, about 180 state artboards, the design system).
 >
-> **Generated file.** The per-page sections come from `docs/source/pages.py`. The APIs, entities and allowed roles for each page are **derived** from the API registry and the role matrix, so they can't drift from 05 and 01. Coverage: 162 page entries (incl. dialogs, 4 new auth/settings screens and 7 new list screens, GAP-24/25) + 15 reused report entries.
+> **Generated file.** The per-page sections come from `docs/source/pages.py`. The APIs, entities and allowed roles for each page are **derived** from the API registry and the role matrix, so they can't drift from 05 and 01. Coverage: 163 page entries (incl. dialogs, 4 new auth/settings screens and 7 new list screens, GAP-24/25) + 15 reused report entries.
 
 ## 1. Design system to preserve
 
@@ -163,6 +163,7 @@
 | [K13](#page-k13) | Appearance | Settings | Settings | `auth.self` | 2 | Settings.dc.html (K13) |
 | [K14](#page-k14) | Security | Settings | Settings | `auth.self` | 9 | Settings.dc.html (K14) |
 | [K15](#page-k15) | Backup and export | Settings | Settings | `settings.backup` | 10 | Settings.dc.html (K15) |
+| [K17](#page-k17) | Platform console | Settings | List | `auth.self` | 4 | Settings.dc.html (K17) |
 | [L1](#page-l1) | Global search results | States | List | `auth.self` | 1 | States.dc.html (L1) |
 | [L2](#page-l2) | Command palette | States | Overlay | `auth.self` | 1 | States.dc.html (L2) |
 | [L3](#page-l3) | Notifications center | States | List | `auth.self` | 4 | States.dc.html (L3) |
@@ -3171,6 +3172,28 @@ Each entry follows the 13 points of the brief: (1) purpose · (2) components and
 10. **Entities:** `audit_logs`, `company_backups`, `company_settings`, `export_jobs`, `journal_entries`
 11. **Workflows:** — · FR: FR-087
 12. **States:** Loading skeleton cards; sticky 'Unsaved changes' bar; 409 on concurrent edits; success toast.
+13. **Depends on:** —
+
+<a id="page-k17"></a>
+#### K17 · Platform console
+
+1. **Purpose:** Platform admins only (PLUTO_PLATFORM_ADMINS e-mail and a 2-step sign-in): every customer company with its owner, members, status and last activity; create a company for a customer (the Owner gets an invitation); suspend or reactivate a company with a reason.
+2. **Components and layout:** Settings layout: section rail (Business, People, You, Data) on the left, grouped cards on the right, sticky unsaved-changes bar. _Source: Settings.dc.html (K17)._
+3. **Inputs** (and 4. required/optional):
+
+   | Field | Type | Req. | Rule |
+   |---|---|---|---|
+   | Search companies | text | opt | name or owner e-mail |
+   | Status | segmented | opt | all/active/suspended |
+   | Company name, business type, owner e-mail, owner name | text | req | create dialog |
+5. **Actions → API** ([full map](05-API-Specification.md#actions-k17)): Create company → POST /platform/companies → GET /platform/companies<br>Suspend (reason) → POST /platform/companies/{id}/suspend<br>Reactivate (reason) → POST /platform/companies/{id}/reactivate
+6. **Tables:** —
+7. **Validation and rules:** Standard server validation (422).
+8. **Roles allowed:** `auth.self` → Owner, Finance manager, Accountant, Sales staff, Store keeper, Viewer. Actions additionally check their own permission (see endpoints).
+9. **APIs:** [`GET /platform/companies`](05-API-Specification.md#getplatformcompanies), [`POST /platform/companies`](05-API-Specification.md#postplatformcompanies), [`POST /platform/companies/{id}/suspend`](05-API-Specification.md#postplatformcompaniesidsuspend), [`POST /platform/companies/{id}/reactivate`](05-API-Specification.md#postplatformcompaniesidreactivate)
+10. **Entities:** `account_groups`, `account_mappings`, `accounting_periods`, `audit_logs`, `branches`, `companies`, `company_settings`, `company_users`, `fiscal_years`, `ledgers`, `number_sequences`, `payment_terms`, `role_permissions`, `roles`, `user_invitations`, `users`, `warehouses`
+11. **Workflows:** — · FR: FR-005
+12. **States:** Loading: skeleton rows matching columns (L10). Empty: first-use empty state with primary action, or 'No matches' with Clear filters (L9). Error: inline banner with Retry; offline banner (L11). Success: toast after bulk actions (L12). 403 page if view permission missing (L14).
 13. **Depends on:** —
 
 ### States

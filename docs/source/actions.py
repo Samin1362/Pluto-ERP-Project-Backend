@@ -180,6 +180,7 @@ A = {
     "K7": [DISCARD, "PATCH /company/settings"],
     "K8": ["dlg:K9", "nav:K10"],
     "K9": ["ui:close the dialog", "POST /invitations"],
+    "K17": ["POST /platform/companies → GET /platform/companies", "POST /platform/companies/{id}/suspend", "POST /platform/companies/{id}/reactivate"],
     "K10": ["nav:K11", "PATCH /users/{id}", "dlg:L6 → POST /users/{id}/deactivate", "POST /users/{id}/reactivate", "POST /invitations/{id}/resend",
             "dlg:L6 → DELETE /invitations/{id}"],
     "K11": ["POST /roles", "POST /roles (copy_from_role_id)", DISCARD, "PUT /roles/{id} (each changed role)", "dlg:L7 → DELETE /roles/{id}"],

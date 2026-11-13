@@ -96,7 +96,8 @@ final class CompanyProvisioner
     public function __construct(private readonly CurrentCompany $current) {}
 
     /** @param  array{trading_name?: string, business_type?: string, fy_start_month?: int, base_currency_code?: string}  $attrs  (POST /companies, S0) */
-    public function provision(string $legalName, User $owner, ?CarbonImmutable $today = null, array $attrs = []): Company
+    /** $owner null (platform console, PEP-483): nobody joins; the caller invites the Owner. */
+    public function provision(string $legalName, ?User $owner, ?CarbonImmutable $today = null, array $attrs = []): Company
     {
         $today ??= CarbonImmutable::now('Asia/Dhaka');
 
@@ -117,7 +118,7 @@ final class CompanyProvisioner
         });
     }
 
-    private function seedCompany(Company $company, User $owner, CarbonImmutable $today): void
+    private function seedCompany(Company $company, ?User $owner, CarbonImmutable $today): void
     {
         CompanySetting::create([]);
         foreach ([['Cash', 0], ['Net 7', 7], ['Net 14', 14], ['Net 15', 15], ['Net 30', 30], ['Net 45', 45]] as [$name, $days]) {
@@ -134,7 +135,9 @@ final class CompanyProvisioner
             $role->permissions()->sync($slug === 'owner' ? $permIds->values()->all() : $permIds->only($perms)->values()->all());
             $ownerRole = $slug === 'owner' ? $role : $ownerRole;
         }
-        CompanyUser::create(['user_id' => $owner->id, 'role_id' => $ownerRole->id, 'status' => 'active', 'joined_at' => now()]);
+        if ($owner) {
+            CompanyUser::create(['user_id' => $owner->id, 'role_id' => $ownerRole->id, 'status' => 'active', 'joined_at' => now()]);
+        }
 
         $groups = [];
         $order = 0;

@@ -58,6 +58,8 @@ export type ErrorCode =
   | 'order_qty_exceeded'
   | 'period_locked'
   | 'permission_denied'
+  | 'platform_admin_only'
+  | 'platform_two_factor_required'
   | 'purpose_required'
   | 'rate_limited'
   | 'refresh_reuse_detected'
@@ -1687,6 +1689,31 @@ export interface PeriodLockRequest {
 /** Permission catalogue grouped by module. */
 export interface PermissionList {
   modules: Array<Record<string, unknown>>
+}
+
+/** A customer company as the platform console lists it. */
+export interface PlatformCompany {
+  id: number
+  legal_name: string
+  trading_name?: string | null
+  status: 'active' | 'suspended' | 'archived'
+  created_at: string
+  owner_name?: string | null
+  owner_email?: string | null
+  owner_pending: boolean
+  members: number
+  last_activity_at?: string | null
+}
+
+/** A new customer company and the person who will own it. */
+export interface PlatformCompanyCreate {
+  legal_name: string
+  trading_name?: string | null
+  business_type: 'private_limited' | 'sole_proprietorship' | 'partnership' | 'public_limited'
+  fy_start_month?: number
+  base_currency_code?: string
+  owner_email: string
+  owner_name?: string | null
 }
 
 /** Post a document. confirm_backdated is required when the date is older than the warning window (BR-053). `receipt` (sales invoices only) records the cash received in the same transaction (R-28). */
