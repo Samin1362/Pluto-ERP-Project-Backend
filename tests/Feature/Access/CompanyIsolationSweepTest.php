@@ -16,7 +16,8 @@ use Tests\TestCase;
  *  - every operation with an {id}: the rival's id of the operation's first table → never a 2xx answer, and the rival's
  *    rows in that table are unchanged after a write;
  *  - every list/report without path parameters: the answer never contains the marker.
- * Operations whose table has no rival row are listed as skipped; the sweep must still cover most of the contract.
+ * Record kinds the API seed does not make get one minimal rival row from database/schema-contract.json (rivalRow), so the
+ * sweep covers 155 of the 156 {id} operations (13 Nov 2026); a kind a plain row cannot satisfy is skipped.
  */
 class CompanyIsolationSweepTest extends TestCase
 {
@@ -105,6 +106,63 @@ class CompanyIsolationSweepTest extends TestCase
         return $ops;
     }
 
+    private static ?array $schema = null;
+
+    /**
+     * A rival row of `$table` for operations the API seed does not reach (returns, notes, loans, …): one minimal row built
+     * from database/schema-contract.json — required foreign keys point at the rival's own rows (made the same way),
+     * values allowed by the table's CHECK constraints, everything else a plain default. The row only has to exist and
+     * belong to the rival: the sweep checks that Meghna cannot reach it.
+     */
+    private function rivalRow(string $table, int $depth = 0): ?int
+    {
+        $id = DB::table($table)->where('company_id', $this->rival)->orderBy('id')->value('id');
+        if ($id || $depth > 6) {
+            return $id ? (int) $id : null;
+        }
+        $t = (self::$schema ??= json_decode(file_get_contents(base_path('database/schema-contract.json')), true))['tables'][$table] ?? null;
+        if (! $t) {
+            return null;
+        }
+        $fks = array_column($t['foreign'] ?? [], 'references_table', 'column');
+        $checks = implode(' ', (array) ($t['check'] ?? []));
+        $row = ['company_id' => $this->rival];
+        foreach ($t['columns'] as $c) {
+            $n = $c['name'];
+            if ($n === 'id' || $n === 'company_id' || $c['generated'] || $c['nullable'] || $c['default'] !== null) {
+                continue;
+            }
+            if (isset($fks[$n])) {
+                $ref = $fks[$n];
+                $row[$n] = match ($ref) {
+                    'users' => (int) DB::table('company_users')->where('company_id', $this->rival)->value('user_id'),
+                    'companies' => $this->rival,
+                    default => DB::getSchemaBuilder()->hasColumn($ref, 'company_id') ? $this->rivalRow($ref, $depth + 1) : (int) DB::table($ref)->orderBy('id')->value('id'),
+                };
+                if (! $row[$n]) {
+                    return null;
+                }
+
+                continue;
+            }
+            $type = strtolower($c['type']);
+            $row[$n] = match (true) {
+                preg_match("/`?{$n}`? IN \\('([^']+)'/i", $checks, $m) === 1 => $m[1],
+                str_starts_with($type, 'decimal'), str_contains($type, 'int') => 1,
+                $type === 'date' => CarbonImmutable::now('Asia/Dhaka')->toDateString(),
+                str_starts_with($type, 'timestamp'), str_starts_with($type, 'datetime') => now(),
+                $type === 'json' => '{}',
+                str_starts_with($type, 'char(') => str_pad(substr(md5($table.$n), 0, (int) filter_var($type, FILTER_SANITIZE_NUMBER_INT)), (int) filter_var($type, FILTER_SANITIZE_NUMBER_INT), '0'),
+                default => substr(self::MARK.'-'.$table, 0, max(4, (int) filter_var($type, FILTER_SANITIZE_NUMBER_INT) ?: 30)),
+            };
+        }
+        try {
+            return (int) DB::table($table)->insertGetId($row);
+        } catch (\Throwable) {
+            return null; // a table whose rules a plain row cannot meet stays skipped (reported)
+        }
+    }
+
     /** Paths whose resource name is not its table (the {id} is a row of the table on the right). */
     private const ALIASES = ['letters-of-credit' => 'letters_of_credit', 'customers' => 'parties', 'suppliers' => 'parties', 'vouchers' => 'journal_entries',
         'customer-receipts' => 'journal_entries', 'supplier-payments' => 'journal_entries', 'ie-entries' => 'journal_entries', 'money-transactions' => 'journal_entries',
@@ -137,7 +195,7 @@ class CompanyIsolationSweepTest extends TestCase
             }
             $table = self::idTable($path) ?? ($op['x-tables'][0] ?? null);
             $hasCompany = $table && DB::getSchemaBuilder()->hasColumn($table, 'company_id');
-            $id = $hasCompany ? DB::table($table)->where('company_id', $this->rival)->orderBy('id')->value('id') : null;
+            $id = $hasCompany ? $this->rivalRow($table) : null;
             if (! $id || preg_match('/\{(?!id\})[a-z_]+\}/', $path)) {
                 $skipped++;
 
