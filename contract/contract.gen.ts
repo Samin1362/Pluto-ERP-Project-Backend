@@ -564,6 +564,7 @@ export interface DocumentCalculation {
   party_balance_after?: Decimal | null
   credit_limit?: Decimal | null
   effects?: Array<string>
+  checks?: Array<PostingCheck>
   subtotal: Decimal
   discount_total: Decimal
   tax_total: Decimal
@@ -1693,6 +1694,14 @@ export interface PostRequest {
   confirm_backdated?: boolean
   acknowledge_warnings?: Array<string>
   receipt?: CashReceiptInput | null
+}
+
+/** One check run before posting (E3/F3 Checks before posting): passed, needs attention, or will refuse the post. */
+export interface PostingCheck {
+  key: 'period_open' | 'stock' | 'credit_limit' | 'party_overdue' | 'backdated' | 'order_quantity'
+  status: 'pass' | 'warn' | 'block'
+  label: string
+  line_no?: number | null
 }
 
 /** Journal line preview or actual. */

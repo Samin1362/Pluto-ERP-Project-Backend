@@ -2,7 +2,7 @@
 
 > Status: **Release candidate 1.0.0-rc.1 for approval** (18 Oct 2026), Laravel + Eloquent. **No endpoint is to be implemented until this contract is approved.** ⚑ Auth details (DEC-02) and the items in §12.7 are still open.
 >
-> **Generated file.** The endpoint reference (§9), schemas (§10), page action map (§11) and contract review (§12) come from `docs/source/api.py`, `schemas.py`, `actions.py`, `errors.py` and `contract_review.py`. The machine-readable contract is [`openapi.yaml`](openapi.yaml) (OpenAPI 3.1), validated against the official OpenAPI 3.1 schema (§8). Size: 328 endpoints, 210 schemas, 76 error codes, 162 pages with 528 mapped actions.
+> **Generated file.** The endpoint reference (§9), schemas (§10), page action map (§11) and contract review (§12) come from `docs/source/api.py`, `schemas.py`, `actions.py`, `errors.py` and `contract_review.py`. The machine-readable contract is [`openapi.yaml`](openapi.yaml) (OpenAPI 3.1), validated against the official OpenAPI 3.1 schema (§8). Size: 328 endpoints, 211 schemas, 76 error codes, 162 pages with 528 mapped actions.
 
 ## 1. Conventions
 
@@ -589,8 +589,8 @@ Last run: 24 rules, **24 passed, 0 failed**; 6 negative tests, 6 detected. Offic
 | Rule | Check | Items | Result |
 |---|---|---|---|
 | A01 | Document validates against the official OpenAPI 3.1 schema (schema-base: documents incl. Schema Objects) | 1 | ✅ pass |
-| A02 | Every component schema is valid JSON Schema 2020-12 (meta-schema check) | 210 | ✅ pass |
-| A03 | All $refs resolve and every component schema is used | 213 | ✅ pass |
+| A02 | Every component schema is valid JSON Schema 2020-12 (meta-schema check) | 211 | ✅ pass |
+| A03 | All $refs resolve and every component schema is used | 214 | ✅ pass |
 | A04 | Operations have unique camelCase operationIds, summary, description, tags, a 2xx, a default, and problem+json errors | 328 | ✅ pass |
 | A05 | Path templates and declared path parameters match; path parameters are required | 328 | ✅ pass |
 | A06 | Security: public only for sign-in flows, cookie only for refresh/logout, X-Company-Id on company-scoped calls, known permissions | 328 | ✅ pass |
@@ -9691,6 +9691,7 @@ Server-side totals for an unsaved document.
 | `party_balance_after` | `money \| null` | no |
 | `credit_limit` | `money \| null` | no |
 | `effects` | `[str]` | no |
+| `checks` | `[ref:PostingCheck]` | no |
 | `subtotal` | `money` | yes |
 | `discount_total` | `money` | yes |
 | `tax_total` | `money` | yes |
@@ -10043,6 +10044,18 @@ Apply an open settling line to a document of the same party (R-08). journal_line
 | `document_id` | `id` | yes |
 | `amount` | `money` | yes |
 | `allocated_on` | `date \| null` | no |
+
+<a id="schema-postingcheck"></a>
+#### `PostingCheck`
+
+One check run before posting (E3/F3 Checks before posting): passed, needs attention, or will refuse the post.
+
+| Property | Type | Required |
+|---|---|---|
+| `key` | `enum:period_open\|stock\|credit_limit\|party_overdue\|backdated\|order_quantity` | yes |
+| `status` | `enum:pass\|warn\|block` | yes |
+| `label` | `str` | yes |
+| `line_no` | `int \| null` | no |
 
 <a id="schema-allocation"></a>
 #### `Allocation`
@@ -13143,7 +13156,7 @@ View permission `lc.create`. **Loads:** nothing of its own (host page data).
 | | Before review | Contract |
 |---|---|---|
 | Endpoints | 280 | 328 |
-| Schemas | 191 | 210 |
+| Schemas | 191 | 211 |
 | Pages | 155 | 162 |
 | Page actions mapped to API or client behaviour | 0 of 448 | 528 of 528 |
 
@@ -13264,6 +13277,7 @@ View permission `lc.create`. **Loads:** nothing of its own (host page data).
 | Settings, users and security (P15) | GET /invitations lists the open invitations for K8 (they are not members yet, so GET /users cannot carry them); notification_preferences.send_at keeps the daily summary time of K12. Additive (P15.0-SETUP-01, 1 Nov 2026). |
 | Dashboards and exports (P14) | DashboardSummary adds widget_errors (a widget that failed, ERR-8); ExportJobCreate.kind adds report (one report by operationId); ExportJob adds source, format, file_name and created_at for the download list; LensData adds period (as DashboardSummary); Kpi adds trend_pct (sparkline positions 0–100, so the SPA never scales money) and link (the page the tile opens); lens permissions spelled out per DEC-13 (profit and balance lenses need reports.financial). Additive (P14.0-SETUP-01, 1 Nov 2026). |
 | Dashboard Today feed (UI redesign A+) | DashboardSummary adds today: { date, count, items } — the vouchers posted since midnight in Dhaka (time, type, voucher number, party, amount, who posted it, link), newest first, for the A1 Today feed. Same permission and rows as recent_transactions (accounting.view). PEP-478, 12 Nov 2026. Additive. |
+| Checks before posting (UI redesign A+) | DocumentCalculation adds checks: [PostingCheck { key, status pass\|warn\|block, label, line_no }] for sales invoices and purchase bills — the period is open, stock, credit limit, overdue invoices, back-dating, purchase-order quantities — so E3/F3 show what passed as well as what needs attention. Built from the same warnings and PeriodGuard the post uses. PEP-480, 12 Nov 2026. Additive. |
 | GET /reports/income, GET /reports/expenses | Need reports.financial instead of reports.view: they are profit-and-loss figures, which owner decision DEC-13 / C7 keeps from Sales staff and Viewer (P13.1-BE-05). |
 | Dashboard lenses A2–A8 | Load only `GET /dashboard/lenses/{lens}`; the overlapping report and list endpoints were removed from their page lists. |
 

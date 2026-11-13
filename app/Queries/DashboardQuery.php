@@ -303,7 +303,8 @@ final class DashboardQuery
         $now ??= CarbonImmutable::now('Asia/Dhaka');
         $from = $now->setTimezone('Asia/Dhaka')->startOfDay();
         $range = [$from->utc()->toDateTimeString(), $from->addDay()->utc()->toDateTimeString()];
-        $base = DB::table('journal_entries')->where('company_id', $c)->where('status', 'posted')->where('posted_at', '>=', $range[0])->where('posted_at', '<', $range[1]);
+        $base = DB::table('journal_entries')->where('journal_entries.company_id', $c)->where('journal_entries.status', 'posted') // qualified: users also has status
+            ->where('journal_entries.posted_at', '>=', $range[0])->where('journal_entries.posted_at', '<', $range[1]);
         $count = (clone $base)->count();
         $rows = (clone $base)->leftJoin('users as u', 'u.id', '=', 'journal_entries.posted_by')
             ->orderByDesc('journal_entries.posted_at')->orderByDesc('journal_entries.id')->limit($limit)

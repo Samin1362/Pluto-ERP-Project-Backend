@@ -153,6 +153,35 @@ class SalesInvoiceCalculateTest extends TestCase
         $this->calc(['lines' => [['product_id' => $this->oil->id, 'quantity' => '18']]])->assertJsonPath('data.warnings', []);
     }
 
+    public function test_checks_before_posting_say_what_passes_what_needs_attention_and_what_blocks(): void
+    {
+        $this->stock($this->oil, '18');
+        $checks = fn ($r) => array_column($r->json('data.checks'), 'status', 'key');
+        $r = $this->calc()->assertOk();
+        $this->assertSame(['period_open' => 'pass', 'stock' => 'pass', 'credit_limit' => 'pass', 'party_overdue' => 'pass', 'backdated' => 'pass'], $checks($r));
+        $this->assertSame('No credit limit set for this customer', $r->json('data.checks.2.label'));
+        $this->assertStringEndsWith('is open for posting', $r->json('data.checks.0.label'));
+
+        // Posting refuses a shortfall (BR-014) unless the company allows negative stock; then it only needs attention.
+        $short = $this->calc(['lines' => [['product_id' => $this->oil->id, 'quantity' => '24']]]);
+        $this->assertSame('block', $checks($short)['stock']);
+        $short->assertJsonPath('data.checks.1.line_no', 1);
+        CompanySetting::query()->update(['allow_negative_stock' => true]);
+        $this->assertSame('warn', $checks($this->calc(['lines' => [['product_id' => $this->oil->id, 'quantity' => '24']]]))['stock']);
+
+        $this->karim->update(['credit_limit' => '5000.00']);
+        $this->postedInvoice('1000.00', 5);
+        $c = $checks($this->calc());
+        $this->assertSame(['warn', 'warn'], [$c['credit_limit'], $c['party_overdue']]);
+
+        // The same PeriodGuard as posting: a locked month blocks.
+        $today = CarbonImmutable::now('Asia/Dhaka')->toDateString();
+        DB::table('accounting_periods')->where('company_id', $this->books->id)->where('start_date', '<=', $today)->where('end_date', '>=', $today)->update(['status' => 'locked']);
+        $locked = $this->calc();
+        $this->assertSame('block', $checks($locked)['period_open']);
+        $this->assertStringContainsString('is locked', $locked->json('data.checks.0.label'));
+    }
+
     public function test_due_date_defaults_from_the_payment_term_and_backdating_warns(): void
     {
         $net30 = DB::table('payment_terms')->where('company_id', $this->books->id)->where('name', 'Net 30')->value('id');

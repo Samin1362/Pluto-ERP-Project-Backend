@@ -151,15 +151,13 @@ class DashboardTest extends TestCase
         $this->assertNotEmpty($r->json('data.today.items.0.by'));
         $this->assertSame($this->karim->name, collect($r->json('data.today.items'))->firstWhere('type', 'sales_invoice')['party']);
 
-        // posted_at is UTC: 23:59 Dhaka yesterday is 17:59 UTC the day before; 00:00 Dhaka today counts.
-        $start = CarbonImmutable::now('Asia/Dhaka')->startOfDay();
-        $ids = DB::table('journal_entries')->where('company_id', $this->books->id)->where('status', 'posted')->orderBy('id')->pluck('id');
-        DB::table('journal_entries')->where('id', $ids[0])->update(['posted_at' => $start->subMinute()->utc()->toDateTimeString()]);
-        DB::table('journal_entries')->where('id', $ids[1])->update(['posted_at' => $start->utc()->toDateTimeString()]);
-        $q = app(DashboardQuery::class)->today($this->books->id);
-        $this->assertSame(3, $q['count']);
-        $this->assertNotContains($ids[0], array_column($q['items'], 'id'));
-        $this->assertSame('00:00', collect($q['items'])->firstWhere('id', $ids[1])['time']);
+        // posted_at is UTC; the day is Dhaka's. Posted entries can't be edited (BR-003), so move "today" instead.
+        $at = CarbonImmutable::parse(DB::table('journal_entries')->where('company_id', $this->books->id)->where('status', 'posted')->max('posted_at'), 'UTC')->setTimezone('Asia/Dhaka');
+        $q = app(DashboardQuery::class);
+        $this->assertSame(4, $q->today($this->books->id, now: $at->endOfDay())['count'], 'the last second of the same Dhaka day');
+        $this->assertSame(0, $q->today($this->books->id, now: $at->addDay()->startOfDay())['count'], 'midnight in Dhaka starts a new day');
+        $this->assertSame(0, $q->today($this->books->id, now: $at->subDay()->endOfDay())['count']);
+        $this->assertSame($at->format('H:i'), $q->today($this->books->id, now: $at)['items'][0]['time']);
 
         // Another company's postings never show.
         $this->assertSame(0, app(DashboardQuery::class)->today($this->books->id + 999)['count']);

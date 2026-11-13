@@ -43224,6 +43224,10 @@ components:
           type: array
           items:
             type: string
+        checks:
+          type: array
+          items:
+            $ref: '#/components/schemas/PostingCheck'
         subtotal:
           type: string
           pattern: ^-?\d{1,16}(\.\d{1,2})?$
@@ -44428,6 +44432,35 @@ components:
       - document_id
       - amount
       additionalProperties: false
+    PostingCheck:
+      type: object
+      description: 'One check run before posting (E3/F3 Checks before posting): passed, needs attention, or will refuse the post.'
+      properties:
+        key:
+          type: string
+          enum:
+          - period_open
+          - stock
+          - credit_limit
+          - party_overdue
+          - backdated
+          - order_quantity
+        status:
+          type: string
+          enum:
+          - pass
+          - warn
+          - block
+        label:
+          type: string
+        line_no:
+          type:
+          - integer
+          - 'null'
+      required:
+      - key
+      - status
+      - label
     Allocation:
       type: object
       description: Settlement applied to a document.
