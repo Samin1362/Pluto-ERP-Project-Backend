@@ -8400,6 +8400,7 @@ Current user.
 | `email` | `email` | yes |
 | `phone` | `str \| null` | no |
 | `two_factor_enabled` | `bool` | yes |
+| `platform_admin` | `bool` | no |
 | `companies` | `[ref:Membership]` | yes |
 | `active_company_id` | `id \| null` | no |
 | `permissions` | `[str]` | no |
@@ -13423,7 +13424,7 @@ View permission `lc.create`. **Loads:** nothing of its own (host page data).
 | Dashboards and exports (P14) | DashboardSummary adds widget_errors (a widget that failed, ERR-8); ExportJobCreate.kind adds report (one report by operationId); ExportJob adds source, format, file_name and created_at for the download list; LensData adds period (as DashboardSummary); Kpi adds trend_pct (sparkline positions 0–100, so the SPA never scales money) and link (the page the tile opens); lens permissions spelled out per DEC-13 (profit and balance lenses need reports.financial). Additive (P14.0-SETUP-01, 1 Nov 2026). |
 | Dashboard Today feed (UI redesign A+) | DashboardSummary adds today: { date, count, items } — the vouchers posted since midnight in Dhaka (time, type, voucher number, party, amount, who posted it, link), newest first, for the A1 Today feed. Same permission and rows as recent_transactions (accounting.view). PEP-478, 12 Nov 2026. Additive. |
 | Checks before posting (UI redesign A+) | DocumentCalculation adds checks: [PostingCheck { key, status pass\|warn\|block, label, line_no }] for sales invoices and purchase bills — the period is open, stock, credit limit, overdue invoices, back-dating, purchase-order quantities — so E3/F3 show what passed as well as what needs attention. Built from the same warnings and PeriodGuard the post uses. PEP-480, 12 Nov 2026. Additive. |
-| Platform console (PEP-483) | New /platform/companies endpoints (list, create with an Owner invitation, suspend, reactivate) for platform admins: e-mails in PLUTO_PLATFORM_ADMINS with 2-step sign-in, never a company role, so selling Pluto to many companies needs no shared membership. Schemas PlatformCompany, PlatformCompanyCreate; errors platform_admin_only, platform_two_factor_required. Owner request 12-13 Nov 2026. Additive. |
+| Platform console (PEP-483) | New /platform/companies endpoints (list, create with an Owner invitation, suspend, reactivate) for platform admins: e-mails in PLUTO_PLATFORM_ADMINS with 2-step sign-in, never a company role, so selling Pluto to many companies needs no shared membership. Me adds platform_admin (shows the console link; PEP-484). Schemas PlatformCompany, PlatformCompanyCreate; errors platform_admin_only, platform_two_factor_required. Owner request 12-13 Nov 2026. Additive. |
 | GET /reports/income, GET /reports/expenses | Need reports.financial instead of reports.view: they are profit-and-loss figures, which owner decision DEC-13 / C7 keeps from Sales staff and Viewer (P13.1-BE-05). |
 | Dashboard lenses A2–A8 | Load only `GET /dashboard/lenses/{lens}`; the overlapping report and list endpoints were removed from their page lists. |
 

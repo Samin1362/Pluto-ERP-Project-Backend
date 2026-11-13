@@ -101,6 +101,12 @@ class PlatformCompanyTest extends TestCase
         $this->assertProblem($this->api('GET', '/api/v1/platform/companies', $this->admin), 403, 'platform_admin_only');
     }
 
+    public function test_me_says_who_is_a_platform_admin(): void
+    {
+        $this->api('GET', '/api/v1/me', $this->admin)->assertOk()->assertJsonPath('data.platform_admin', true);
+        $this->api('GET', '/api/v1/me', $this->login('owner@meghna.example'))->assertOk()->assertJsonPath('data.platform_admin', false);
+    }
+
     public function test_create_validation(): void
     {
         $r = $this->send('/api/v1/platform/companies', ['legal_name' => '', 'business_type' => 'club', 'owner_email' => 'not-an-email', 'colour' => 'red']);

@@ -1280,6 +1280,7 @@ export interface Me {
   email: string
   phone?: string | null
   two_factor_enabled: boolean
+  platform_admin?: boolean
   companies: Array<Membership>
   active_company_id?: number | null
   permissions?: Array<string>
