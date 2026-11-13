@@ -147,6 +147,16 @@ class PurchaseBillCalculateTest extends TestCase
         $this->assertStringEndsWith('due '.$date->addDays(15)->format('j M Y'), end($effects));
     }
 
+    public function test_checks_before_posting_for_a_bill(): void
+    {
+        $r = $this->calc()->assertOk();
+        $this->assertSame(['period_open' => 'pass', 'backdated' => 'pass'], array_column($r->json('data.checks'), 'status', 'key'), 'no order check without an order');
+        $this->useBooks();
+        CompanySetting::query()->update(['backdate_warning_days' => 7]);
+        $old = $this->calc(['bill_date' => CarbonImmutable::now('Asia/Dhaka')->subDays(10)->toDateString()]);
+        $this->assertSame('warn', array_column($old->json('data.checks'), 'status', 'key')['backdated']);
+    }
+
     public function test_permissions_and_isolation(): void
     {
         $this->userWithRole('store');

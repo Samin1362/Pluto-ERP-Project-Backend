@@ -190,7 +190,7 @@ s("SalesInvoice", "Sales invoice.", id="id!", number="str!", status="enum:draft|
 s("SalesLine", "Invoice line out. Cost fields need inventory.view_costs.", unit_price="money!", unit_cost="cost?", cost_amount="money?", returned_quantity="qty!", **LINE_OUT)
 s("DeliveryUpdate", "Delivery details.", challan_no="str:30?", vehicle_no="str:40?", delivered_at="datetime?")
 s("DocumentCalculation", "Server-side totals for an unsaved document.", lines="[ref:CalculatedLine]!", warnings="[ref:Warning]!", party_balance_before="money?", party_balance_after="money?",
-  credit_limit="money?", effects="[str]", **TOTALS)
+  credit_limit="money?", effects="[str]", checks="[ref:PostingCheck]", **TOTALS)
 s("CalculatedLine", "Calculated line.", line_no="int!", gross="money!", discount_amount="money!", tax_amount="money!", line_total="money!", available_qty="qty?")
 s("Warning", "Non-blocking warning.", code="enum:CREDIT_LIMIT_EXCEEDED|PARTY_OVERDUE|LOW_STOCK|BACKDATED|BUDGET_NEAR_LIMIT|DUPLICATE_PARTY|INSUFFICIENT_FUNDS|APPROVAL_REQUIRED|LC_EXPIRING|LC_DOCUMENTS_MISSING|LC_UNPAID_CHARGES|NOTHING_TO_ALLOCATE|LC_LIMIT_EXCEEDED|LOAN_LIMIT_EXCEEDED|LOAN_DUE!", message="str!", line_no="int?")
 s("QuotationInput", "Create or replace a quotation.", party_id="id!", quotation_date="date!", valid_until="date!", warehouse_id="id?", payment_term_id="id?", notes="text?", internal_note="text?", lines="[ref:SalesLineInput]!")
@@ -224,6 +224,7 @@ s("Note", "Credit or debit note.", id="id!", number="str!", kind="enum:credit_no
   refund="obj?", allocations="[ref:Allocation]", posted_at="datetime?", cancel_reason="str?", effects="[obj]", journal="[ref:PostingLine]",
   amount_in_words="str?", created_at="datetime?", created_by="ref:UserRef?", version="int!")
 s("AllocationCreate", "Apply an open settling line to a document of the same party (R-08). journal_line_id is the party-ledger line of a receipt, payment, advance or posted credit/debit note.", journal_line_id="id!", document_type="enum:sales_invoice|purchase_bill!", document_id="id!", amount="money!", allocated_on="date?")
+s("PostingCheck", "One check run before posting (E3/F3 Checks before posting): passed, needs attention, or will refuse the post.", key="enum:period_open|stock|credit_limit|party_overdue|backdated|order_quantity!", status="enum:pass|warn|block!", label="str!", line_no="int?")
 s("Allocation", "Settlement applied to a document.", id="id!", voucher_id="id!", voucher_number="str!", date="date!", amount="money!", kind="enum:receipt|payment|credit_note|debit_note|advance!", reversed="bool!")
 s("PostingLine", "Journal line preview or actual.", ledger_id="id!", ledger_code="str!", ledger_name="str!", debit="money!", credit="money!")
 

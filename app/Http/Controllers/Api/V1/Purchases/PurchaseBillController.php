@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V1\Purchases;
 
+use App\Domain\Documents\PostingChecks;
 use App\Domain\Purchases\PurchaseBillCancellationService;
 use App\Domain\Purchases\PurchaseBillPostingService;
 use App\Domain\Purchases\PurchaseBillPreparer;
@@ -25,7 +26,7 @@ class PurchaseBillController extends Controller
 {
     use ReadsIfMatch;
 
-    public function __construct(private readonly PurchaseBillPreparer $preparer, private readonly PurchaseBillService $bills) {}
+    public function __construct(private readonly PurchaseBillPreparer $preparer, private readonly PurchaseBillService $bills, private readonly PostingChecks $checks) {}
 
     /** DocumentCalculation (05): authoritative totals for an unsaved bill; the UI renders only these (DEC-09). */
     public function calculate(PurchaseBillRequest $request): JsonResponse
@@ -43,6 +44,7 @@ class PurchaseBillController extends Controller
             'party_balance_after' => (string) $b->partyBalanceBefore->plus($c->baseTotal),
             'credit_limit' => $b->party->credit_limit,
             'effects' => $b->effects,
+            'checks' => $this->checks->forBill($b, ! empty($request->validated()['purchase_order_id']) || ! empty($request->validated()['letter_of_credit_id'])),
             'subtotal' => (string) $c->subtotal,
             'discount_total' => (string) $c->discountTotal,
             'tax_total' => (string) $c->taxTotal,

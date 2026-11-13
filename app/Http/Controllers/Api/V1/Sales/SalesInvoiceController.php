@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1\Sales;
 
 use App\Domain\Access\PermissionResolver;
+use App\Domain\Documents\PostingChecks;
 use App\Domain\Sales\InvoicePdf;
 use App\Domain\Sales\SalesInvoiceCancellationService;
 use App\Domain\Sales\SalesInvoiceMailer;
@@ -37,6 +38,7 @@ class SalesInvoiceController extends Controller
         private readonly SalesInvoiceService $invoices,
         private readonly CurrentCompany $current,
         private readonly PermissionResolver $permissions,
+        private readonly PostingChecks $checks,
     ) {}
 
     /** DocumentCalculation (05): authoritative totals for an unsaved invoice; the UI renders only these (DEC-09). */
@@ -55,6 +57,7 @@ class SalesInvoiceController extends Controller
             'party_balance_after' => (string) $inv->partyBalanceAfter(),
             'credit_limit' => $inv->party->credit_limit,
             'effects' => $inv->effects,
+            'checks' => $this->checks->forInvoice($inv),
             'subtotal' => (string) $c->subtotal,
             'discount_total' => (string) $c->discountTotal,
             'tax_total' => (string) $c->taxTotal,

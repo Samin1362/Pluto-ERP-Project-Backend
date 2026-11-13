@@ -111,6 +111,7 @@ t("TC-INV-004", S, F, "Transfer from = to; qty > available; valid transfer same 
 t("TC-INV-005", S, F, "Edit a product's on-hand quantity via PATCH", "Field ignored/422 read_only; quantities only change via documents", ["BR-003", "FR-031"])
 t("TC-INV-006", S, F, "Delete a product with movements", "409 has_history; deactivate works; inactive product rejected on new invoice", ["BR-026"])
 t("TC-INV-007", S, F, "Stock valuation as of date = inventory group balance in TB", "Equal to the paisa", ["BR-016", "FR-037"])
+t("TC-INV-008", S, F, "Bill and invoice in boxes (1 box = 12 pcs); returns of those lines; a bill from an order in the order line's unit", "Stock moves quantity x 12 pcs; average cost per piece; cost of sales per box = 12 x average; returns move the source line's unit (tests/Feature/Documents/LineUnitPostingTest)", ["BR-069"])
 
 # ---------------------------------------------------------------- banking
 S = "Cash and bank"

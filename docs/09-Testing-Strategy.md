@@ -1,6 +1,6 @@
 # 09 · Testing strategy
 
-> 152 test cases with unique IDs (generated table in §11). Every business rule BR-001…BR-065 has at least one test case; the doc build fails otherwise.
+> 153 test cases with unique IDs (generated table in §11). Every business rule BR-001…BR-065 has at least one test case; the doc build fails otherwise.
 
 ## 1. Principles
 1. **Money and stock are proven, not eyeballed.** Every posting rule has a test asserting the exact journal lines, that debits equal credits, and the exact stock movement.
@@ -172,6 +172,7 @@ Seven Playwright journeys (TC-E2E-001…007) mirror the six designed journeys pl
 | TC-INV-005 | Feature/API | Edit a product's on-hand quantity via PATCH | Field ignored/422 read_only; quantities only change via documents | BR-003, FR-031 |
 | TC-INV-006 | Feature/API | Delete a product with movements | 409 has_history; deactivate works; inactive product rejected on new invoice | BR-026 |
 | TC-INV-007 | Feature/API | Stock valuation as of date = inventory group balance in TB | Equal to the paisa | BR-016, FR-037 |
+| TC-INV-008 | Feature/API | Bill and invoice in boxes (1 box = 12 pcs); returns of those lines; a bill from an order in the order line's unit | Stock moves quantity x 12 pcs; average cost per piece; cost of sales per box = 12 x average; returns move the source line's unit (tests/Feature/Documents/LineUnitPostingTest) | BR-069 |
 
 ### Cash and bank
 

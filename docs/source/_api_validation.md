@@ -3,8 +3,8 @@ Last run: 24 rules, **24 passed, 0 failed**; 6 negative tests, 6 detected. Offic
 | Rule | Check | Items | Result |
 |---|---|---|---|
 | A01 | Document validates against the official OpenAPI 3.1 schema (schema-base: documents incl. Schema Objects) | 1 | ✅ pass |
-| A02 | Every component schema is valid JSON Schema 2020-12 (meta-schema check) | 210 | ✅ pass |
-| A03 | All $refs resolve and every component schema is used | 213 | ✅ pass |
+| A02 | Every component schema is valid JSON Schema 2020-12 (meta-schema check) | 211 | ✅ pass |
+| A03 | All $refs resolve and every component schema is used | 214 | ✅ pass |
 | A04 | Operations have unique camelCase operationIds, summary, description, tags, a 2xx, a default, and problem+json errors | 328 | ✅ pass |
 | A05 | Path templates and declared path parameters match; path parameters are required | 328 | ✅ pass |
 | A06 | Security: public only for sign-in flows, cookie only for refresh/logout, X-Company-Id on company-scoped calls, known permissions | 328 | ✅ pass |
