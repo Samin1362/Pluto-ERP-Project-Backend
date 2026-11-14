@@ -193,6 +193,7 @@ erDiagram
         varchar timezone
         varchar status
         smallint seat_limit
+        char brand_color
     }
     branches {
         bigint id PK
@@ -1984,6 +1985,7 @@ Standard columns are listed in each table: `id` (PK), `company_id` (tenant), `lo
 | `timezone` | VARCHAR(40) | no | 'Asia/Dhaka' | — | — |  |
 | `status` | VARCHAR(30) | no | 'active' | — | — | enum: active \| suspended \| archived |
 | `seat_limit` | SMALLINT UNSIGNED | no | 10 | — | — | Users allowed (K8 shows 7 of 10) |
+| `brand_color` | CHAR(7) | yes | NULL | — | — | Company brand colour as #rrggbb (PEP-497); NULL = the Pluto default. The app and the PDFs of this company follow it |
 | `lock_version` | INT UNSIGNED | no | 1 | — | — | Optimistic concurrency counter; incremented on every update (If-Match) |
 | `created_by` | BIGINT UNSIGNED | yes | NULL | FK → `users.id` | ON DELETE RESTRICT / ON UPDATE RESTRICT | User who created the row |
 | `updated_by` | BIGINT UNSIGNED | yes | NULL | FK → `users.id` | ON DELETE RESTRICT / ON UPDATE RESTRICT | User who last changed the row |

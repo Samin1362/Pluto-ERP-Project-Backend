@@ -434,6 +434,14 @@
      "auto_increment": false
     },
     {
+     "name": "brand_color",
+     "type": "char(7)",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
      "name": "lock_version",
      "type": "int unsigned",
      "nullable": false,

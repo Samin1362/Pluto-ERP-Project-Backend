@@ -72,6 +72,21 @@ class SalesInvoicePdfTest extends TestCase
         }
     }
 
+    /** PEP-497: headings and rules follow the company's brand colour; an accent chosen for invoices still wins. */
+    public function test_the_template_uses_the_company_brand_colour(): void
+    {
+        $render = fn () => view('pdf.sales-invoice', ['invoice' => $this->invoice->load(['lines', 'party', 'warehouse']), 'variant' => 'invoice',
+            'company' => $this->books->refresh(), 'settings' => CompanySetting::first()])->render();
+        $this->assertStringContainsString('background: #0b6b5e', $render(), 'no brand colour: as before');
+        $this->books->forceFill(['brand_color' => '#7f1d1d'])->save();
+        $this->assertStringContainsString('background: #7f1d1d', $html = $render());
+        $this->assertStringNotContainsString('#0b6b5e', $html);
+        $this->books->forceFill(['brand_color' => '#ffd400'])->save();
+        $this->assertStringNotContainsString('#ffd400', $render(), 'a light colour is darkened so white heading text stays readable');
+        CompanySetting::first()->forceFill(['invoice_accent_color' => '#1a4d8f'])->save();
+        $this->assertStringContainsString('background: #1a4d8f', $render(), 'the invoice accent of K5 wins');
+    }
+
     public function test_validation_permissions_and_isolation(): void
     {
         $this->assertProblem($this->pdf('?variant=receipt'), 422, 'validation_failed');

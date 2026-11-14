@@ -336,6 +336,23 @@ export interface BranchInput {
   is_active?: boolean
 }
 
+/** The company's brand colour and the colours the app derives from it for the light and the dark theme (PEP-497). Worked out by the server so every screen and PDF agrees; null on Company/Me = the Pluto default. */
+export interface BrandPalette {
+  color: string
+  light: BrandTokens
+  dark: BrandTokens
+}
+
+/** Brand colours for one theme, each #rrggbb: brand (buttons, active items), brand_hover, on_brand (text on brand), brand_ink (brand-coloured text and links), brand_soft (tinted background), focus (focus ring). */
+export interface BrandTokens {
+  brand: string
+  brand_hover: string
+  on_brand: string
+  brand_ink: string
+  brand_soft: string
+  focus: string
+}
+
 /** One failed item. */
 export interface BulkFailure {
   id: number
@@ -440,6 +457,7 @@ export interface Company {
   branches?: Array<Branch>
   seats_used?: number
   seat_limit?: number
+  brand?: BrandPalette | null
   version: number
 }
 
@@ -515,6 +533,7 @@ export interface CompanyUpdate {
   phone?: string | null
   email?: string | null
   website?: string | null
+  brand_color?: string | null
 }
 
 /** Parsed count sheet. */
@@ -1353,6 +1372,7 @@ export interface Me {
   permissions?: Array<string>
   approval_limits?: Record<string, unknown> | null
   branch_ids?: Array<number>
+  brand?: BrandPalette | null
 }
 
 /** Company member. */

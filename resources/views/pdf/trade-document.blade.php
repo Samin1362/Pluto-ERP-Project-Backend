@@ -4,7 +4,8 @@
      * passes the title, the document (lines + totals as stored), the party block label and the meta rows.
      * @var \Illuminate\Database\Eloquent\Model $doc
      */
-    $accent = $settings?->invoice_accent_color ?: '#0b6b5e';
+    // PEP-497: an accent chosen for invoices wins; left at its default, the company's brand colour is used (darkened if too light to read).
+    $accent = in_array($settings?->invoice_accent_color, [null, '', '#0b6b5e'], true) ? \App\Domain\Company\BrandPalette::printColor($company->brand_color ?? null, '#0b6b5e') : $settings->invoice_accent_color;
     $money = fn ($m) => \App\Domain\Shared\Taka::format(\App\Domain\Shared\Money::of((string) $m), symbol: false);
     $qty = fn ($q) => str_contains((string) $q, '.') ? rtrim(rtrim((string) $q, '0'), '.') : (string) $q;
     $party = $doc->party_snapshot ?? ['name' => $doc->party?->name, 'code' => $doc->party?->code, 'address' => $doc->party?->address, 'mobile' => $doc->party?->mobile];

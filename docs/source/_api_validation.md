@@ -3,8 +3,8 @@ Last run: 24 rules, **24 passed, 0 failed**; 6 negative tests, 6 detected. Offic
 | Rule | Check | Items | Result |
 |---|---|---|---|
 | A01 | Document validates against the official OpenAPI 3.1 schema (schema-base: documents incl. Schema Objects) | 1 | ✅ pass |
-| A02 | Every component schema is valid JSON Schema 2020-12 (meta-schema check) | 222 | ✅ pass |
-| A03 | All $refs resolve and every component schema is used | 225 | ✅ pass |
+| A02 | Every component schema is valid JSON Schema 2020-12 (meta-schema check) | 224 | ✅ pass |
+| A03 | All $refs resolve and every component schema is used | 227 | ✅ pass |
 | A04 | Operations have unique camelCase operationIds, summary, description, tags, a 2xx, a default, and problem+json errors | 337 | ✅ pass |
 | A05 | Path templates and declared path parameters match; path parameters are required | 337 | ✅ pass |
 | A06 | Security: public only for sign-in flows, cookie only for refresh/logout, X-Company-Id on company-scoped calls, known permissions | 337 | ✅ pass |
@@ -15,7 +15,7 @@ Last run: 24 rules, **24 passed, 0 failed**; 6 negative tests, 6 detected. Offic
 | A11 | Request-only schemas reject unknown properties (additionalProperties: false) | 103 | ✅ pass |
 | A12 | Money, quantity, cost and rate fields are decimal strings (never JSON numbers) | 237 | ✅ pass |
 | A13 | PUT/PATCH on a versioned table requires If-Match, and If-Match is only required where a version exists | 40 | ✅ pass |
-| A14 | Request fields are stored: each maps to a column (or is declared virtual) with a compatible length, enum values and nullability | 403 | ✅ pass |
+| A14 | Request fields are stored: each maps to a column (or is declared virtual) with a compatible length, enum values and nullability | 404 | ✅ pass |
 | A15 | Response enum fields have exactly the values the database allows | 29 | ✅ pass |
 | A16 | Every action of every page maps to API calls, a dialog, navigation or explicit client behaviour, and every target exists | 537 | ✅ pass |
 | A17 | Every data-changing endpoint is triggered by at least one page action (only token refresh is system-driven) | 191 | ✅ pass |

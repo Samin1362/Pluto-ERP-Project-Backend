@@ -3,6 +3,8 @@
     $p = $v['payment'];
     $money = fn ($m) => \App\Domain\Shared\Taka::format(\App\Domain\Shared\Money::of((string) $m), symbol: false);
     $methods = ['cash' => 'Cash', 'cheque' => 'Cheque', 'bank_transfer' => 'Bank transfer', 'beftn' => 'BEFTN', 'rtgs' => 'RTGS', 'npsb' => 'NPSB', 'bkash' => 'bKash', 'nagad' => 'Nagad', 'card' => 'Card'];
+    // PEP-497: headings and rules in the company's brand colour (darkened if too light to read on white); body text stays as it is.
+    $brand = \App\Domain\Company\BrandPalette::printColor($company->brand_color ?? null, '#0b6b5e');
 @endphp
 <!doctype html>
 <html lang="en">
@@ -15,8 +17,8 @@
     h1 { font-size: 13pt; margin: 0; }
     .muted { color: #5f6670; }
     .title { text-align: right; }
-    .title .doc { font-size: 14pt; font-weight: bold; color: #0b6b5e; text-transform: uppercase; letter-spacing: 1px; }
-    .band { margin: 4mm 0; border-top: 2px solid #0b6b5e; }
+    .title .doc { font-size: 14pt; font-weight: bold; color: {{ $brand }}; text-transform: uppercase; letter-spacing: 1px; }
+    .band { margin: 4mm 0; border-top: 2px solid {{ $brand }}; }
     table { border-collapse: collapse; width: 100%; }
     .rows td { padding: 3px 0; vertical-align: top; }
     .rows .k { color: #5f6670; width: 40mm; }

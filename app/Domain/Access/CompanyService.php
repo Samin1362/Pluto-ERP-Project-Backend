@@ -3,6 +3,7 @@
 namespace App\Domain\Access;
 
 use App\Domain\Accounting\LedgerService;
+use App\Domain\Company\BrandPalette;
 use App\Domain\Shared\AuditLogger;
 use App\Models\AccountGroup;
 use App\Models\Branch;
@@ -59,7 +60,7 @@ final class CompanyService
             'logo_url' => $c->logo_path ? URL::temporarySignedRoute('company.logo', now()->addDay(), ['id' => $c->id, 'v' => $c->lock_version], absolute: false) : null,
             'base_currency_code' => $c->base_currency_code, 'fy_start_month' => (int) $c->fy_start_month, 'timezone' => $c->timezone,
             'branches' => Branch::where('company_id', $c->id)->orderByDesc('is_head_office')->orderBy('name')->get()->map(fn (Branch $b) => self::branch($b))->all(),
-            'seats_used' => self::seatsUsed($c->id), 'seat_limit' => (int) $c->seat_limit, 'version' => (int) $c->lock_version];
+            'seats_used' => self::seatsUsed($c->id), 'seat_limit' => (int) $c->seat_limit, 'brand' => BrandPalette::for($c->brand_color), 'version' => (int) $c->lock_version];
     }
 
     public static function branch(Branch $b): array
@@ -81,6 +82,9 @@ final class CompanyService
         return DB::transaction(function () use ($in, $version) {
             $c = Company::whereKey($this->current->id())->lockForUpdate()->firstOrFail();
             $this->assertVersion($c->lock_version, $version);
+            if (isset($in['brand_color'])) {
+                $in['brand_color'] = strtolower($in['brand_color']); // one spelling in the books and the audit log (PEP-497)
+            }
             $old = $c->only(array_keys($in));
             $c->fill($in)->save();
             $this->audit->record('updated', $c, $old, $c->only(array_keys($in)), type: 'companies');

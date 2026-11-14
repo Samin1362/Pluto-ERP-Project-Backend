@@ -1,8 +1,12 @@
+@php
+    // PEP-497: headings and rules in the company's brand colour (darkened if too light to read on white); without one they stay as before.
+    $brand = \App\Domain\Company\BrandPalette::printColor($company->brand_color ?? null, '#1d2329');
+@endphp
 <!doctype html>
 <html><head><meta charset="utf-8"><title>{{ $lc['lc_number'] }}</title>
 <style>
 body { font-family: DejaVu Sans, sans-serif; font-size: 10px; color: #1d2329; }
-h1 { font-size: 16px; margin: 0 0 4px; } h2 { font-size: 12px; margin: 14px 0 6px; border-bottom: 1px solid #ccc; padding-bottom: 2px; }
+h1 { font-size: 16px; margin: 0 0 4px; color: {{ $brand }}; } h2 { font-size: 12px; margin: 14px 0 6px; border-bottom: 1px solid {{ $brand }}; padding-bottom: 2px; }
 table { width: 100%; border-collapse: collapse; } td, th { padding: 3px 4px; border-bottom: 1px solid #eee; text-align: left; vertical-align: top; }
 th { color: #555; font-weight: normal; width: 30%; } .num { text-align: right; } .muted { color: #666; }
 </style></head><body>

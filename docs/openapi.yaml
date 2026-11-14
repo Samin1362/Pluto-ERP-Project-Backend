@@ -1654,7 +1654,8 @@ paths:
       summary: Edit company identity and contact
       tags:
       - Company
-      description: "**Permission:** `settings.edit`  \n**Database:** insert: audit_logs; update: companies  \n**Rules:** —"
+      description: "brand_color (PEP-497) is #rrggbb or null (the Pluto default). A colour that cannot reach WCAG AA contrast (4.5:1) as a button or as text on the\
+        \ page is refused with 422 on brand_color.\n\n**Permission:** `settings.edit`  \n**Database:** insert: audit_logs; update: companies  \n**Rules:** —"
       x-permission: settings.edit
       x-business-rules: []
       x-requirements:
@@ -40628,6 +40629,10 @@ components:
             type: integer
             format: int64
             minimum: 1
+        brand:
+          oneOf:
+          - $ref: '#/components/schemas/BrandPalette'
+          - type: 'null'
       required:
       - id
       - name
@@ -40993,6 +40998,10 @@ components:
           type: integer
         seat_limit:
           type: integer
+        brand:
+          oneOf:
+          - $ref: '#/components/schemas/BrandPalette'
+          - type: 'null'
         version:
           type: integer
       required:
@@ -41003,6 +41012,45 @@ components:
       - fy_start_month
       - timezone
       - version
+    BrandPalette:
+      type: object
+      description: The company's brand colour and the colours the app derives from it for the light and the dark theme (PEP-497). Worked out by the server so every
+        screen and PDF agrees; null on Company/Me = the Pluto default.
+      properties:
+        color:
+          type: string
+        light:
+          $ref: '#/components/schemas/BrandTokens'
+        dark:
+          $ref: '#/components/schemas/BrandTokens'
+      required:
+      - color
+      - light
+      - dark
+    BrandTokens:
+      type: object
+      description: 'Brand colours for one theme, each #rrggbb: brand (buttons, active items), brand_hover, on_brand (text on brand), brand_ink (brand-coloured text
+        and links), brand_soft (tinted background), focus (focus ring).'
+      properties:
+        brand:
+          type: string
+        brand_hover:
+          type: string
+        on_brand:
+          type: string
+        brand_ink:
+          type: string
+        brand_soft:
+          type: string
+        focus:
+          type: string
+      required:
+      - brand
+      - brand_hover
+      - on_brand
+      - brand_ink
+      - brand_soft
+      - focus
     CompanyUpdate:
       type: object
       description: Editable company fields.
@@ -41058,6 +41106,11 @@ components:
           - string
           - 'null'
           maxLength: 190
+        brand_color:
+          type:
+          - string
+          - 'null'
+          maxLength: 7
       additionalProperties: false
     CompanySettings:
       type: object

@@ -1,6 +1,8 @@
 @php
     /** @var array $r ReportData; $rows from ReportExporter::tableRows */
     $numeric = array_map(fn ($c) => in_array($c['type'], ['amount', 'qty', 'pct'], true), $r['columns']);
+    // PEP-497: headings and rules in the company's brand colour (darkened if too light to read on white); body text stays as it is.
+    $brand = \App\Domain\Company\BrandPalette::printColor($company->brand_color ?? null, '#0b6b5e');
 @endphp
 <!doctype html>
 <html lang="en">
@@ -13,10 +15,10 @@
     h1 { font-size: 13pt; margin: 0; }
     .muted { color: #5f6670; }
     .title { text-align: right; }
-    .title .doc { font-size: 13pt; font-weight: bold; color: #0b6b5e; }
-    .band { margin: 4mm 0 3mm; border-top: 2px solid #0b6b5e; }
+    .title .doc { font-size: 13pt; font-weight: bold; color: {{ $brand }}; }
+    .band { margin: 4mm 0 3mm; border-top: 2px solid {{ $brand }}; }
     table { border-collapse: collapse; width: 100%; }
-    .lines th { background: #0b6b5e; color: #fff; text-align: left; padding: 4px 5px; font-size: 8pt; }
+    .lines th { background: {{ $brand }}; color: #fff; text-align: left; padding: 4px 5px; font-size: 8pt; }
     .lines td { padding: 2.5px 5px; border-bottom: 1px solid #e3e6ea; vertical-align: top; }
     .num, .lines th.num { text-align: right; white-space: nowrap; }
     .strong td { font-weight: bold; }

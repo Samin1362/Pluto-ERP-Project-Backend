@@ -40,6 +40,7 @@ return new class extends Migration
             $table->string('timezone', 40)->default('Asia/Dhaka');
             $table->string('status', 30)->default('active')->comment('One of: active, suspended, archived');
             $table->unsignedSmallInteger('seat_limit')->default(10)->comment('Users allowed (K8 shows 7 of 10)');
+            $table->char('brand_color', 7)->nullable()->comment('Company brand colour as #rrggbb (PEP-497); NULL = the Pluto default. The app and the PDFs of this company follow it');
             $table->unsignedInteger('lock_version')->default(1)->comment('Optimistic concurrency counter; incremented on every update (If-Match)');
             $table->unsignedBigInteger('created_by')->nullable()->comment('User who created the row');
             $table->unsignedBigInteger('updated_by')->nullable()->comment('User who last changed the row');
