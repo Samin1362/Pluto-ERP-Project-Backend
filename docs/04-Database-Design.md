@@ -374,6 +374,7 @@ erDiagram
         datetime joined_at
         datetime deactivated_at
         bigint deactivated_by FK
+        varchar joined_via
     }
     company_user_branches {
         bigint company_user_id PK, FK
@@ -2389,6 +2390,7 @@ Standard columns are listed in each table: `id` (PK), `company_id` (tenant), `lo
 | `joined_at` | DATETIME | yes | NULL | — | — |  |
 | `deactivated_at` | DATETIME | yes | NULL | — | — |  |
 | `deactivated_by` | BIGINT UNSIGNED | yes | NULL | FK → `users.id` | ON DELETE RESTRICT / ON UPDATE RESTRICT |  |
+| `joined_via` | VARCHAR(30) | no | 'member' | — | — | enum: member \| platform_admin. platform_admin: Pluto support joined as Owner from the platform console (PEP-496); shown as such to the company and never counted as a seat |
 | `lock_version` | INT UNSIGNED | no | 1 | — | — | Optimistic concurrency counter; incremented on every update (If-Match) |
 | `created_by` | BIGINT UNSIGNED | yes | NULL | FK → `users.id` | ON DELETE RESTRICT / ON UPDATE RESTRICT | User who created the row |
 | `updated_by` | BIGINT UNSIGNED | yes | NULL | FK → `users.id` | ON DELETE RESTRICT / ON UPDATE RESTRICT | User who last changed the row |
@@ -2402,6 +2404,7 @@ Standard columns are listed in each table: `id` (PK), `company_id` (tenant), `lo
 - Index (created_by)
 - Index (updated_by)
 - **Check** `status IN ('active', 'invited', 'deactivated')`
+- **Check** `joined_via IN ('member', 'platform_admin')`
 
 **Relationships:**
 - `user_id` → `users`: many-to-many (via junction)

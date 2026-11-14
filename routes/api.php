@@ -98,6 +98,9 @@ Route::middleware(['jwt', 'throttle:api-user'])->group(function () {
         Route::post('companies/{id}/reactivate', [PlatformCompanyController::class, 'reactivate'])->whereNumber('id');
         Route::post('companies/{id}/support-access', [PlatformCompanyController::class, 'openSupport'])->whereNumber('id');
         Route::delete('companies/{id}/support-access', [PlatformCompanyController::class, 'endSupport'])->whereNumber('id');
+        // PEP-496: the software owner joins a company as a real Owner member (and leaves again).
+        Route::post('companies/{id}/owner-access', [PlatformCompanyController::class, 'joinAsOwner'])->whereNumber('id')->middleware('idempotent');
+        Route::delete('companies/{id}/owner-access', [PlatformCompanyController::class, 'leaveAsOwner'])->whereNumber('id');
     });
 
     Route::middleware('company')->group(function () {

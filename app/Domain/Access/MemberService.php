@@ -41,7 +41,7 @@ final class MemberService
         $lastSeen = DB::table('user_sessions')->where('user_id', $m->user_id)->max('last_seen_at');
         $out = ['id' => $m->id, 'user_id' => $m->user_id, 'name' => $m->user->name, 'email' => $m->user->email, 'role_id' => $m->role_id, 'role_name' => $m->role->name,
             'status' => $m->status, 'last_active_at' => $lastSeen ? CarbonImmutable::parse($lastSeen)->toIso8601String() : $m->user->last_login_at?->toIso8601String(),
-            'two_factor_enabled' => $m->user->two_factor_confirmed_at !== null,
+            'two_factor_enabled' => $m->user->two_factor_confirmed_at !== null, 'platform_admin' => $m->joined_via === 'platform_admin',
             'branch_ids' => DB::table('company_user_branches')->where('company_user_id', $m->id)->orderBy('branch_id')->pluck('branch_id')->map(fn ($v) => (int) $v)->all(),
             'version' => (int) $m->lock_version];
         if ($detail) {
@@ -121,6 +121,20 @@ final class MemberService
 
             return $m;
         });
+    }
+
+    /**
+     * The one place a user becomes an active member of a company: a new membership, or an earlier one made active
+     * again with this role. Used by accepting an invitation and by the platform console's owner access (PEP-496;
+     * `$via` platform_admin, which uses no seat). Call it inside the caller's transaction.
+     */
+    public function enrol(int $companyId, int $userId, int $roleId, string $via = 'member'): CompanyUser
+    {
+        $m = CompanyUser::withoutGlobalScope('company')->where('company_id', $companyId)->where('user_id', $userId)->lockForUpdate()->first() ?? new CompanyUser;
+        $m->forceFill(['company_id' => $companyId, 'user_id' => $userId, 'role_id' => $roleId, 'status' => 'active', 'joined_at' => now(),
+            'deactivated_at' => null, 'deactivated_by' => null, 'joined_via' => $via])->save();
+
+        return $m;
     }
 
     private function assertNotLastOwner(CompanyUser $m): void
@@ -290,13 +304,10 @@ final class MemberService
             if (CompanyService::seatsUsed($i->company_id) > $limit) {
                 throw new ApiProblem('seat_limit_reached', 'The company has no free seat; ask an Owner to free one.');
             }
-            $existing = CompanyUser::where('user_id', $user->id)->first();
-            if ($existing && $existing->status === 'active') {
+            if (CompanyUser::where('user_id', $user->id)->where('status', 'active')->exists()) {
                 throw new ApiProblem('duplicate', 'You are already a member of this company; sign in.');
             }
-            $m = $existing ?? new CompanyUser;
-            $m->forceFill(['company_id' => $i->company_id, 'user_id' => $user->id, 'role_id' => $i->role_id, 'status' => 'active', 'joined_at' => now(),
-                'deactivated_at' => null, 'deactivated_by' => null])->save();
+            $m = $this->enrol((int) $i->company_id, $user->id, (int) $i->role_id);
             $branches = DB::table('user_invitation_branches')->where('user_invitation_id', $i->id)->pluck('branch_id')->all();
             DB::table('company_user_branches')->where('company_user_id', $m->id)->delete();
             DB::table('company_user_branches')->insert(array_map(fn ($b) => ['company_user_id' => $m->id, 'branch_id' => $b], $branches));

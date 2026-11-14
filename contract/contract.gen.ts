@@ -1366,6 +1366,7 @@ export interface Member {
   status: 'active' | 'invited' | 'deactivated'
   last_active_at?: string | null
   two_factor_enabled: boolean
+  platform_admin?: boolean
   branch_ids?: Array<number>
   permissions?: Array<string>
   recent_activity?: Array<AuditLog>
@@ -1566,6 +1567,20 @@ export interface OutstandingReport {
   buckets: Array<AgingBucket>
   rows: Array<Record<string, unknown>>
   totals: Record<string, unknown>
+}
+
+/** The platform admin's membership of a customer company (Owner role). */
+export interface OwnerAccess {
+  company_id: number
+  company_name: string
+  role: string
+  joined_at: string
+  already_member: boolean
+}
+
+/** Join a company as an Owner from the platform console. */
+export interface OwnerAccessInput {
+  reason: string
 }
 
 /** Pagination metadata. */
@@ -1771,6 +1786,7 @@ export interface PlatformCompany {
   owner_pending: boolean
   members: number
   last_activity_at?: string | null
+  owner_access?: boolean
 }
 
 /** A new customer company and the person who will own it. */

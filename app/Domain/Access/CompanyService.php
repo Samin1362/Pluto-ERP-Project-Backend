@@ -71,7 +71,8 @@ final class CompanyService
     /** Seats taken (BR-059): active and invited members plus invitations still open. */
     public static function seatsUsed(int $companyId): int
     {
-        return DB::table('company_users')->where('company_id', $companyId)->whereIn('status', ['active', 'invited'])->count()
+        // PEP-496: Pluto support joined from the platform console is not the customer's seat.
+        return DB::table('company_users')->where('company_id', $companyId)->whereIn('status', ['active', 'invited'])->where('joined_via', 'member')->count()
             + DB::table('user_invitations')->where('company_id', $companyId)->whereNull('accepted_at')->whereNull('revoked_at')->where('expires_at', '>', now())->count();
     }
 

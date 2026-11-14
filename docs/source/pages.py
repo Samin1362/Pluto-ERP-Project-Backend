@@ -539,9 +539,9 @@ K = [
  ("K15", "Backup and export", "Settings", "settings.backup", "Month-end export pack, automatic backups, history, restore (Owner, type RESTORE).",
   ["Period | select | req | ", "Format | segmented | req | xlsx/pdf/both", "Reports | checkbox | req | at least one", "Daily backup | switch | opt | ", "Keep for | select | opt | 30/90/365 days", "Type RESTORE | text | req | restore dialog"],
   ["Prepare export pack", "Download backup", "Back up now", "Restore… (dialog)"], ["FR-087"]),
- ("K17", "Platform console", "List", "auth.self", "Platform admins only (PLUTO_PLATFORM_ADMINS e-mail and a 2-step sign-in): every customer company with its owner, members, status and last activity; create a company for a customer (the Owner gets an invitation); suspend or reactivate a company with a reason.",
+ ("K17", "Platform console", "List", "auth.self", "Platform admins only (PLUTO_PLATFORM_ADMINS e-mail and a 2-step sign-in): every customer company with its owner, members, status and last activity; create a company for a customer (the Owner gets an invitation); suspend or reactivate a company with a reason; open a company as an Owner to work in it (a reason is asked, its Owners are told, every change is in its audit log under the admin's name) and leave it again.",
   ["Search companies | text | opt | name or owner e-mail", "Status | segmented | opt | all/active/suspended", "Company name, business type, owner e-mail, owner name | text | req | create dialog"],
-  ["Create company", "Suspend (reason)", "Reactivate (reason)", "Open read-only (reason, time)", "End support view"], ["FR-005"]),
+  ["Create company", "Suspend (reason)", "Reactivate (reason)", "Open read-only (reason, time)", "End support view", "Open as Owner (reason)", "Leave (confirm)"], ["FR-005"]),
 ]
 for code, name, tmpl, perm, desc, fields, actions, fr in K:
     page(code, name, "Settings", tmpl, perm, desc, "Settings layout: section rail (Business, People, You, Data) on the left, grouped cards on the right, sticky unsaved-changes bar.",

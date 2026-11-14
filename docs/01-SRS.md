@@ -100,7 +100,7 @@ Approval limits (defaults): Finance manager pays up to ৳ 5,00,000 without appr
 | FR-002 | Auth | Users can sign out of the current session, or of every session except the current one. | K14 | 2 |
 | FR-003 | Auth | Users can reset a forgotten password by e-mail link (single use, 60 min). | S2 | 2 |
 | FR-004 | Auth | Users can enable or disable 2-step verification and regenerate recovery codes. | K14 | 3 |
-| FR-005 | Auth | A user belonging to several companies can switch the active company; every screen then shows only that company's data. | S0, K17 | 8 |
+| FR-005 | Auth | A user belonging to several companies can switch the active company; every screen then shows only that company's data. | S0, K17 | 10 |
 | FR-006 | Access | Owners invite users by e-mail with a role; invitations expire after 7 days. | S3, K8, K9 | 7 |
 | FR-007 | Access | Owners create, duplicate and edit roles, ticking View/Create/Edit/Approve/Delete per module, and set approval limits. | K11 | 7 |
 | FR-008 | Access | Owners deactivate and reactivate users. | K10 | 3 |
@@ -287,7 +287,7 @@ Approval limits (defaults): Finance manager pays up to ৳ 5,00,000 without appr
 | BR-057 | A purchase return credits inventory at the original bill cost of the returned lines; the supplier is debited through the debit note. | 2 | TC-PUR-008, TC-PUR-011, TC-PUR-012 |
 | BR-058 | A cash-count difference posts to the cash short/over ledger and requires approval. | 2 | TC-BNK-006, TC-BNK-010 |
 | BR-059 | Active plus invited users cannot exceed the company's seat limit. | 3 | TC-AUTH-014 |
-| BR-060 | The Owner role always has every permission and a company always keeps at least one active Owner. | 3 | TC-AUTH-013, TC-AUTH-019 |
+| BR-060 | The Owner role always has every permission and a company always keeps at least one active Owner. | 4 | TC-AUTH-013, TC-AUTH-019 |
 | BR-061 | Deactivating a user or changing their password revokes all their sessions immediately. | 4 | TC-AUTH-011, TC-AUTH-012 |
 | BR-062 | Restore is Owner-only, requires typing RESTORE, and always takes a pre-restore snapshot first. | 1 | TC-AUTH-023, TC-NFR-006 |
 | BR-063 | Local party mobile numbers have 11 digits starting 01 (01XXX-XXXXXX); e-mail addresses must be valid when given. | 2 | TC-NFR-011 |

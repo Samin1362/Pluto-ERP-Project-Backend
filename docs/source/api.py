@@ -121,6 +121,16 @@ E("POST", "/platform/companies/{id}/support-access", "Open a company read-only f
   errors=["platform_admin_only", "platform_two_factor_required"], added="PEP-485 support access")
 E("DELETE", "/platform/companies/{id}/support-access", "End the read-only support view now", "auth", ["support_access_grants", "audit_logs"], ["K17"],
   tag="Platform console", fr=["FR-005"], codes=[204], desc=PLAT, errors=["platform_admin_only", "platform_two_factor_required"], added="PEP-485 support access")
+E("POST", "/platform/companies/{id}/owner-access", "Join a company as an Owner to work in it (a real membership; the owners are told)", "auth",
+  ["company_users", "companies", "roles", "notifications", "audit_logs"], ["K17"], req="OwnerAccessInput", resp="OwnerAccess", idem=True, tag="Platform console", fr=["FR-005"],
+  codes=[201, 422], tx="The membership, the audit entry and the notification in one transaction.",
+  desc=PLAT + " The platform admin becomes an active member with the company's Owner role (company_users.joined_via = platform_admin; no seat is used), so every"
+  " change is made and audited under their own name. An earlier membership is reactivated (already_member). A suspended company answers 409 invalid_transition: reactivate it first.",
+  errors=["platform_admin_only", "platform_two_factor_required", "invalid_transition"], added="PEP-496 owner access")
+E("DELETE", "/platform/companies/{id}/owner-access", "Leave a company joined from the platform console (the membership is deactivated)", "auth",
+  ["company_users", "companies", "roles", "audit_logs"], ["K17"], tag="Platform console", fr=["FR-005"], codes=[204], rules=["BR-060"],
+  desc=PLAT + " Refused with 409 last_owner while the platform admin is the company's only active Owner. Nothing happens when they are not an active member.",
+  errors=["platform_admin_only", "platform_two_factor_required", "last_owner"], added="PEP-496 owner access")
 T = "Fiscal years"
 E("GET", "/fiscal-years", "Financial years with period status", "auth.self", ["fiscal_years", "accounting_periods"], ["K4", "S0"], resp="Page<FiscalYear>", tag=T, fr=["FR-082"])
 E("POST", "/accounting-periods/{id}/lock", "Lock a period (earlier periods must be locked)", "accounting.lock_period", ["accounting_periods", "company_backups", "audit_logs"], ["K4"], rules=["BR-033"],

@@ -27,7 +27,7 @@
   {
    "id": "V05",
    "title": "No CHECK constraint uses a column whose FK has a CASCADE/SET NULL action (MySQL error 3823)",
-   "checked": 172,
+   "checked": 173,
    "failures": []
   },
   {
@@ -39,13 +39,13 @@
   {
    "id": "V07",
    "title": "CHECK expressions reference only existing, non-AUTO_INCREMENT columns",
-   "checked": 172,
+   "checked": 173,
    "failures": []
   },
   {
    "id": "V08",
    "title": "Identifiers ≤ 64 chars; FK and CHECK names unique schema-wide; index names unique per table",
-   "checked": 2626,
+   "checked": 2628,
    "failures": []
   },
   {
@@ -87,7 +87,7 @@
   {
    "id": "V15",
    "title": "Defaults are valid for their type; enum defaults and values fit",
-   "checked": 256,
+   "checked": 257,
    "failures": []
   },
   {
@@ -147,11 +147,11 @@
  ],
  "summary": {
   "tables": 92,
-  "columns": 1463,
+  "columns": 1464,
   "fks": 434,
   "uniques": 93,
   "indexes": 372,
-  "checks": 172,
+  "checks": 173,
   "levels": 12,
   "decimal_inventory": {
    "DECIMAL(18,2)": 109,
