@@ -2,15 +2,24 @@
 
 namespace App\Domain\Lc;
 
+use App\Domain\Documents\LineUnits;
+use App\Domain\Purchases\PurchaseOrderService;
 use App\Domain\Shared\AuditLogger;
 use App\Domain\Shared\DocumentNumberService;
 use App\Domain\Shared\Money;
+use App\Domain\Shared\Quantity;
+use App\Domain\Shared\UnitCost;
 use App\Http\Resources\MoneyAccountResource;
 use App\Models\LcAmendment;
 use App\Models\LcDocument;
 use App\Models\LcShipment;
 use App\Models\LetterOfCredit;
 use App\Models\Party;
+use App\Models\Product;
+use App\Models\PurchaseBill;
+use App\Models\PurchaseOrder;
+use App\Models\PurchaseOrderLine;
+use App\Models\Warehouse;
 use App\Support\CurrentCompany;
 use App\Support\Problem\ApiProblem;
 use Brick\Math\RoundingMode;
@@ -21,6 +30,13 @@ use Illuminate\Support\Facades\DB;
  * Letters of credit (M1–M6; FR-090–FR-096; 06 §12.1, §12.8; BR-039–BR-041; backlog P16.1-BE-01..04): create and edit
  * (draft or awaiting bank; an opened LC changes only through amendments), delete a draft, the status machine,
  * documents and checklist templates, shipment lots and amendments. Money postings live in LcPostingService.
+ *
+ * Items (PEP-487): the goods of an LC are kept as the lines of a linked purchase order, never as a second list. Items
+ * entered on the LC create that order in the same transaction (LC currency, planning rate, marked sent without an
+ * e-mail; `items_entered` = 1), so an import bill fills from what is still to come and BR-056 with the LC's tolerance
+ * applies. While the LC is draft or awaiting the bank the items are replaced with the LC; once opened they change
+ * only through an accepted amendment (lc_amendment_lines, applied by PurchaseOrderService::amendLines). An LC made
+ * before items existed gets them once through addItems.
  *
  * Status machine (06 §12.1): draft → awaiting_bank (submit: supplier, amount, issuing bank, expiry; BR-039) → opened
  * (bank reference and date) | back to draft (refused); opened → partly_shipped (a lot ships) → documents_presented →
@@ -39,24 +55,31 @@ final class LcService
         'tenor', 'usance_days', 'incoterm', 'currency_code', 'amount', 'tolerance_pct', 'planning_rate', 'partial_shipments', 'transhipment', 'confirmation_required',
         'issuing_bank_account_id', 'advising_bank', 'margin_pct', 'margin_account_id', 'application_date', 'latest_shipment_date', 'expiry_date', 'presentation_days', 'record_shipments'];
 
-    public function __construct(private readonly CurrentCompany $current, private readonly DocumentNumberService $numbers, private readonly AuditLogger $audit) {}
+    public function __construct(private readonly CurrentCompany $current, private readonly DocumentNumberService $numbers, private readonly AuditLogger $audit,
+        private readonly PurchaseOrderService $orders) {}
 
     public function create(array $in): LetterOfCredit
     {
         return DB::transaction(function () use ($in) {
             $this->assertSupplier((int) $in['party_id']);
+            if (! empty($in['lines']) && ! empty($in['purchase_order_id'])) {
+                throw $this->itemsOrOrder();
+            }
             $date = $in['application_date'] ?? CarbonImmutable::now('Asia/Dhaka')->toDateString();
             $fy = DB::table('fiscal_years')->where('company_id', $this->current->id())->where('start_date', '<=', $date)->where('end_date', '>=', $date)->value('id')
                 ?? throw new ApiProblem('validation_failed', errors: ['application_date' => ['No financial year covers this date']]);
             $lc = new LetterOfCredit;
             $lc->fill(array_intersect_key($in, array_flip(self::FIELDS)));
             $lc->forceFill(['lc_number' => $this->numbers->next('letter_of_credit', (int) $fy)['number'], 'status' => 'draft', 'opening_status' => 'not_applied',
-                'branch_id' => DB::table('branches')->where('company_id', $this->current->id())->orderByDesc('is_head_office')->orderBy('id')->value('id')])->save();
+                'branch_id' => $this->headOfficeId()]);
+            $po = empty($in['lines']) ? null : $this->createItemsOrder($lc, $in['lines'], $in['warehouse_id'] ?? null);
+            $lc->save();
             $this->replaceDocuments($lc, $in);
             if (! empty($in['shipment'])) {
                 $this->saveShipment($lc, $in['shipment'] + ['lot_no' => 1]);
             }
-            $this->audit->record('created', $lc, null, ['lc_number' => $lc->lc_number, 'amount' => (string) $lc->amount], type: 'letters_of_credit');
+            $this->audit->record('created', $lc, null, ['lc_number' => $lc->lc_number, 'amount' => (string) $lc->amount]
+                + ($po ? ['items' => $po->lines->count(), 'purchase_order' => $po->number] : []), type: 'letters_of_credit');
 
             return $lc->refresh();
         });
@@ -72,19 +95,247 @@ final class LcService
             if (isset($in['party_id'])) {
                 $this->assertSupplier((int) $in['party_id']);
             }
+            // PEP-487: the order created from the LC's own items stays linked unless another order is chosen.
+            $own = $lc->items_entered && $lc->purchase_order_id ? (int) $lc->purchase_order_id : null;
+            $chosen = empty($in['purchase_order_id']) ? null : (int) $in['purchase_order_id'];
+            if ($own && ($chosen === null || $chosen === $own)) {
+                unset($in['purchase_order_id']);
+                $chosen = null;
+            }
+            $lines = $in['lines'] ?? [];
+            if ($lines !== [] && ($chosen || (! $own && ! array_key_exists('purchase_order_id', $in) && $lc->purchase_order_id))) {
+                throw $this->itemsOrOrder();
+            }
             $old = $lc->only(array_keys(array_intersect_key($in, array_flip(self::FIELDS))));
             $lc->fill(array_intersect_key($in, array_flip(self::FIELDS)));
             if ($lc->status === 'awaiting_bank') {
                 $this->assertSubmittable($lc);
             }
+            $items = null;
+            if ($own && ($chosen || (array_key_exists('lines', $in) && $lines === []))) {
+                $this->dropItemsOrder($lc, $own);
+                $lc->forceFill(['purchase_order_id' => $chosen, 'items_entered' => false]);
+                $items = ['items' => 0];
+            } elseif ($own) {
+                $po = $this->updateItemsOrder($lc, $own, array_key_exists('lines', $in) ? $lines : null, $in['warehouse_id'] ?? null);
+                $items = $po ? ['items' => $po->lines->count(), 'purchase_order' => $po->number] : null;
+            } elseif ($lines !== []) {
+                $po = $this->createItemsOrder($lc, $lines, $in['warehouse_id'] ?? null);
+                $items = ['items' => $po->lines->count(), 'purchase_order' => $po->number];
+            }
+            if ($items !== null && ! $lc->isDirty()) {
+                $lc->lock_version = (int) $lc->lock_version + 1; // only the items changed: the LC's version still moves on (BR-049)
+            }
             $lc->save();
             if ($lc->status === 'draft' && (isset($in['document_template_id']) || isset($in['documents']))) {
                 $this->replaceDocuments($lc, $in);
             }
-            $this->audit->record('updated', $lc, $old, $lc->only(array_keys($old)), type: 'letters_of_credit');
+            $this->audit->record('updated', $lc, $old, $lc->only(array_keys($old)) + ($items ?? []), type: 'letters_of_credit');
 
             return $lc->refresh();
         });
+    }
+
+    // ---------------------------------------------------------------- items (PEP-487): kept on the linked purchase order
+
+    /**
+     * POST /letters-of-credit/{id}/items: catch-up for an LC made before items were kept on it. Only while it has no
+     * purchase order and no bill; afterwards a draft is edited and an opened LC is amended (BR-041).
+     */
+    public function addItems(int $id, array $in): LetterOfCredit
+    {
+        return DB::transaction(function () use ($id, $in) {
+            $lc = $this->lock($id);
+            $this->assertNotFinal($lc);
+            if ($lc->purchase_order_id) {
+                $how = in_array($lc->status, ['draft', 'awaiting_bank'], true) ? 'edit the LC to change them' : 'they change only through an amendment (BR-041)';
+                throw new ApiProblem('invalid_transition', "{$lc->lc_number} already has its items; {$how}.");
+            }
+            $bill = PurchaseBill::where('letter_of_credit_id', $lc->id)->where('status', '!=', 'cancelled')->value('number');
+            if ($bill) {
+                throw new ApiProblem('invalid_transition', "{$lc->lc_number} already has bill {$bill}; its items can no longer be added.");
+            }
+            $po = $this->createItemsOrder($lc, $in['lines'], $in['warehouse_id'] ?? null);
+            $lc->save();
+            $this->audit->record('items_added', $lc, null, ['items' => $po->lines->count(), 'purchase_order' => $po->number], type: 'letters_of_credit');
+
+            return $lc->refresh();
+        });
+    }
+
+    /** The order that keeps the LC's items: the supplier's, in the LC currency at the planning rate, sent (no e-mail). Sets the link on $lc without saving it. */
+    private function createItemsOrder(LetterOfCredit $lc, array $lines, ?int $warehouseId): PurchaseOrder
+    {
+        $date = $lc->application_date?->toDateString() ?? CarbonImmutable::now('Asia/Dhaka')->toDateString();
+        $po = $this->orders->markSent($this->orders->create($this->orderInput($lc, $lines, $warehouseId ?? $this->defaultWarehouseId(), $date)));
+        $lc->forceFill(['purchase_order_id' => $po->id, 'items_entered' => true]);
+
+        return $po;
+    }
+
+    /**
+     * Replaces the items (`$lines` null = keep them) and keeps the order in step with the LC's supplier, currency,
+     * planning rate and arrival warehouse. Null when nothing had to change.
+     */
+    private function updateItemsOrder(LetterOfCredit $lc, int $orderId, ?array $lines, ?int $warehouseId): ?PurchaseOrder
+    {
+        $po = PurchaseOrder::with('lines')->findOrFail($orderId);
+        $foreign = $lc->currency_code !== 'BDT';
+        $same = $lines === null && (int) $po->party_id === (int) $lc->party_id && $po->currencyCode() === $lc->currency_code
+            && ($warehouseId === null || $warehouseId === (int) $po->warehouse_id) && (! $foreign || $po->exchange_rate->isEqualTo($lc->planning_rate));
+        if ($same) {
+            return null;
+        }
+        $this->assertNoBill($lc, $po);
+        $lines ??= $po->lines->map(fn (PurchaseOrderLine $l) => ['product_id' => $l->product_id, 'unit_id' => $l->unit_id, 'description' => $l->description,
+            'quantity' => (string) $l->quantity, 'unit_cost' => (string) $l->unit_cost, 'discount_pct' => (string) $l->discount_pct, 'tax_rule_id' => $l->tax_rule_id])->all();
+
+        return $this->orders->update($po, $this->orderInput($lc, $lines, $warehouseId ?? (int) $po->warehouse_id, $po->order_date->toDateString(), $po), (int) $po->lock_version);
+    }
+
+    /** The items are taken off the LC: its own order is cancelled (the number is never reused, BR-006). */
+    private function dropItemsOrder(LetterOfCredit $lc, int $orderId): void
+    {
+        $po = PurchaseOrder::findOrFail($orderId);
+        $this->assertNoBill($lc, $po);
+        $this->orders->setStatus($po, 'cancelled', "Items removed from {$lc->lc_number}");
+    }
+
+    /** Once a bill uses the order the items no longer change by editing (a draft bill is deleted first; goods received stay). */
+    private function assertNoBill(LetterOfCredit $lc, PurchaseOrder $po): void
+    {
+        $bill = PurchaseBill::where('purchase_order_id', $po->id)->orderBy('id')->first(['number', 'status']);
+        if ($bill) {
+            throw new ApiProblem('invalid_transition', "{$lc->lc_number}: bill {$bill->number} ({$bill->status}) already uses its items on {$po->number}; the items cannot be changed here.");
+        }
+    }
+
+    private function orderInput(LetterOfCredit $lc, array $lines, int $warehouseId, string $orderDate, ?PurchaseOrder $po = null): array
+    {
+        return ['party_id' => (int) $lc->party_id, 'order_date' => $orderDate, 'expected_date' => $po?->expected_date?->toDateString(), 'warehouse_id' => $warehouseId,
+            'payment_term_id' => $po?->payment_term_id, 'currency_code' => $lc->currency_code, 'exchange_rate' => $lc->currency_code === 'BDT' ? null : (string) $lc->planning_rate,
+            'source_note' => "Items of {$lc->lc_number}", 'notes' => $po?->notes, 'internal_note' => $po?->internal_note, 'lines' => array_values($lines)];
+    }
+
+    private function itemsOrOrder(): ApiProblem
+    {
+        return new ApiProblem('validation_failed', errors: ['lines' => ['Choose an existing purchase order or enter the items, not both']]);
+    }
+
+    private function headOfficeId(): ?int
+    {
+        return DB::table('branches')->where('company_id', $this->current->id())->orderByDesc('is_head_office')->orderBy('id')->value('id');
+    }
+
+    /** Where the goods arrive when the user did not say: the head office's first active warehouse, else the company's first active one. */
+    private function defaultWarehouseId(): int
+    {
+        $id = Warehouse::where('status', 'active')->where('branch_id', $this->headOfficeId())->orderBy('id')->value('id') ?? Warehouse::where('status', 'active')->orderBy('id')->value('id');
+
+        return $id ?? throw new ApiProblem('validation_failed', errors: ['warehouse_id' => ['Choose the warehouse the goods will arrive at']]);
+    }
+
+    /** LcLine[] (05 schema): the linked order's lines, in the LC currency, with what has arrived and what is still to come. */
+    public static function lines(?PurchaseOrder $po): array
+    {
+        return $po === null ? [] : $po->lines()->get()->map(function (PurchaseOrderLine $l) {
+            $left = Quantity::of($l->quantity)->minus(Quantity::of($l->received_quantity));
+
+            return ['id' => $l->id, 'line_no' => (int) $l->line_no, 'product_id' => $l->product_id, 'product_code' => $l->product_code, 'product_name' => $l->product_name,
+                'unit' => (string) $l->unit_name, 'unit_id' => $l->unit_id, 'description' => $l->description, 'quantity' => (string) $l->quantity, 'unit_cost' => (string) $l->unit_cost,
+                'line_total' => (string) $l->line_total, 'received_quantity' => (string) $l->received_quantity,
+                'remaining_quantity' => (string) ($left->isNegative() ? Quantity::zero() : $left)];
+        })->all();
+    }
+
+    /**
+     * Checks an amendment's item changes against the LC's items as they are now and returns the lc_amendment_lines
+     * rows (with the values before). They are checked again, under the order lock, when the amendment is accepted.
+     *
+     * @return list<array<string, mixed>>
+     */
+    private function amendmentLineRows(LetterOfCredit $lc, array $lines): array
+    {
+        if ($lines === []) {
+            return [];
+        }
+        $po = $lc->purchase_order_id ? PurchaseOrder::find($lc->purchase_order_id) : null;
+        if (! $po) {
+            throw new ApiProblem('validation_failed', errors: ['lines' => ["{$lc->lc_number} has no items yet; add its items first"]]);
+        }
+        $orderLines = PurchaseOrderLine::where('purchase_order_id', $po->id)->get()->keyBy('id');
+        $taken = $this->orders->taken($po);
+        $adds = array_filter($lines, fn ($l) => $l['action'] === 'add');
+        $products = Product::with(['unit', 'units.unit'])->whereIn('id', array_filter(array_column($adds, 'product_id')))->get()->keyBy('id');
+        $errors = [];
+        $rows = [];
+        $seen = [];
+        $kept = $orderLines->count();
+        foreach ($lines as $i => $l) {
+            $row = ['action' => $l['action'], 'purchase_order_line_id' => null, 'description' => $l['description'] ?? null, 'old_quantity' => null, 'quantity' => null,
+                'old_unit_cost' => null, 'unit_cost' => null];
+            if ($l['action'] === 'add') {
+                $p = $products[$l['product_id'] ?? 0] ?? null;
+                foreach (['product_id' => 'Choose an item', 'quantity' => 'Enter the quantity', 'unit_cost' => 'Enter the unit cost'] as $f => $message) {
+                    if (! isset($l[$f])) {
+                        $errors["lines.{$i}.{$f}"] = [$message];
+                    }
+                }
+                if ($p && ! $p->is_active) {
+                    $errors["lines.{$i}.product_id"] = ["{$p->name} is inactive"];
+                }
+                if (! $p || isset($errors["lines.{$i}.quantity"]) || isset($errors["lines.{$i}.unit_cost"])) {
+                    continue;
+                }
+                $unitErrors = [];
+                $unit = LineUnits::resolve($products, [$l], $unitErrors)[0]; // BR-069
+                if ($unitErrors) {
+                    $errors["lines.{$i}.unit_id"] = $unitErrors['lines.0.unit_id'];
+                }
+                $rows[] = ['product_id' => $p->id, 'unit_id' => $unit['unit_id'], 'quantity' => (string) Quantity::of($l['quantity']), 'unit_cost' => (string) UnitCost::of($l['unit_cost'])] + $row;
+                $kept++;
+
+                continue;
+            }
+            $ol = $orderLines[$l['purchase_order_line_id'] ?? 0] ?? null;
+            if (! $ol) {
+                $errors["lines.{$i}.purchase_order_line_id"] = ["This is not an item of {$lc->lc_number}"];
+
+                continue;
+            }
+            if (isset($seen[$ol->id])) {
+                $errors["lines.{$i}.purchase_order_line_id"] = ["{$ol->product_name} is changed twice in this amendment"];
+
+                continue;
+            }
+            $seen[$ol->id] = true;
+            $has = $taken[$ol->id] ?? Quantity::zero();
+            $unit = $ol->unit_name ? " {$ol->unit_name}" : '';
+            $row = ['purchase_order_line_id' => $ol->id, 'product_id' => $ol->product_id, 'unit_id' => $ol->unit_id, 'old_quantity' => (string) $ol->quantity,
+                'old_unit_cost' => (string) $ol->unit_cost] + $row;
+            if ($l['action'] === 'remove') {
+                if ($has->isPositive()) {
+                    $errors["lines.{$i}.purchase_order_line_id"] = ["{$ol->product_name} cannot be removed: {$has}{$unit} is already received or on a bill"];
+                }
+                $kept--;
+            } else {
+                if (! isset($l['quantity']) && ! isset($l['unit_cost'])) {
+                    $errors["lines.{$i}.quantity"] = ['Enter the new quantity or unit cost'];
+                } elseif (isset($l['quantity']) && Quantity::of($l['quantity'])->isLessThan($has)) {
+                    $errors["lines.{$i}.quantity"] = ["{$ol->product_name} cannot go below {$has}{$unit}: that much is already received or on a bill"];
+                }
+                $row = ['quantity' => isset($l['quantity']) ? (string) Quantity::of($l['quantity']) : null, 'unit_cost' => isset($l['unit_cost']) ? (string) UnitCost::of($l['unit_cost']) : null] + $row;
+            }
+            $rows[] = $row;
+        }
+        if (! $errors && $kept < 1) {
+            $errors['lines'] = ["{$lc->lc_number} must keep at least one item"];
+        }
+        if ($errors) {
+            throw new ApiProblem('validation_failed', errors: $errors);
+        }
+
+        return $rows;
     }
 
     public function delete(int $id): void
@@ -99,6 +350,9 @@ final class LcService
             }
             DB::table('lc_documents')->where('letter_of_credit_id', $id)->delete();
             DB::table('lc_shipments')->where('letter_of_credit_id', $id)->delete();
+            if ($lc->items_entered && $lc->purchase_order_id) {
+                $this->dropItemsOrder($lc, (int) $lc->purchase_order_id); // the order made from its items goes with it (cancelled; refused once a bill uses it)
+            }
             $this->audit->record('deleted', $lc, ['lc_number' => $lc->lc_number], null, type: 'letters_of_credit');
             $lc->delete();
         });
@@ -149,6 +403,13 @@ final class LcService
             $lc->forceFill($patch)->save();
             if (in_array($in['action'], ['cancel', 'expire'], true)) {
                 app(LcPostingService::class)->releaseMargin($lc, $in['action'] === 'cancel' ? 'cancelled' : 'expired');
+            }
+            // A cancelled LC no longer expects its items: the order made from them is cancelled too, unless a bill already uses it.
+            if ($in['action'] === 'cancel' && $lc->items_entered && $lc->purchase_order_id && ! PurchaseBill::where('purchase_order_id', $lc->purchase_order_id)->exists()) {
+                $po = PurchaseOrder::find($lc->purchase_order_id);
+                if ($po && in_array($po->status, ['draft', 'sent'], true)) {
+                    $this->orders->setStatus($po, 'cancelled', "{$lc->lc_number} was cancelled");
+                }
             }
             if ($in['action'] === 'expire') {
                 DB::table('lc_shipments')->where('letter_of_credit_id', $lc->id)->where('status', 'not_shipped')->update(['status' => 'not_shipped_expired', 'updated_at' => now()]);
@@ -384,8 +645,12 @@ final class LcService
             $a = new LcAmendment(['letter_of_credit_id' => $lc->id, 'amendment_no' => (int) LcAmendment::where('letter_of_credit_id', $lc->id)->max('amendment_no') + 1,
                 'requested_on' => $in['requested_on'], 'status' => 'requested', 'reason' => $in['reason'] ?? null, 'other_change' => $in['other_change'] ?? null,
                 'bank_fee' => $in['bank_fee'] ?? '0']);
+            $lineRows = $this->amendmentLineRows($lc, $in['lines'] ?? []);
             $a->save();
-            foreach ($in['changes'] as $ch) {
+            foreach ($lineRows as $row) {
+                DB::table('lc_amendment_lines')->insert($row + ['lc_amendment_id' => $a->id, 'created_at' => now(), 'updated_at' => now()]);
+            }
+            foreach ($in['changes'] ?? [] as $ch) {
                 $old = $ch['field_key'] === 'other' ? null : self::fieldText($lc, $ch['field_key']);
                 DB::table('lc_amendment_changes')->insert(['lc_amendment_id' => $a->id, 'field_key' => $ch['field_key'], 'old_value' => $old, 'new_value' => $ch['new_value']]);
             }
@@ -393,7 +658,7 @@ final class LcService
                 $postings->addCharge(['letter_of_credit_id' => $lc->id, 'charge_type' => 'amendment_fee', 'charge_date' => $in['requested_on'], 'amount' => (string) $a->bank_fee,
                     'status' => 'unpaid', 'lc_amendment_id' => $a->id, 'paid_to' => $lc->issuingBank?->name]);
             }
-            $this->audit->record('amendment_requested', $lc, null, ['amendment_no' => $a->amendment_no], type: 'letters_of_credit');
+            $this->audit->record('amendment_requested', $lc, null, ['amendment_no' => $a->amendment_no] + ($lineRows ? ['item_changes' => count($lineRows)] : []), type: 'letters_of_credit');
             if (in_array($in['status'], ['issued', 'accepted'], true)) {
                 $a = $this->advanceAmendment($a, 'issued', $in['requested_on']);
             }
@@ -437,6 +702,21 @@ final class LcService
                 $new[$ch->field_key] = $ch->new_value;
             }
             $lc->save();
+            // PEP-487: item changes go to the LC's items (the linked order's lines), checked again under the order lock.
+            $rows = DB::table('lc_amendment_lines')->where('lc_amendment_id', $a->id)->orderBy('id')->get()->values();
+            if ($rows->isNotEmpty()) {
+                $po = $lc->purchase_order_id ? PurchaseOrder::find($lc->purchase_order_id) : null;
+                if (! $po) {
+                    throw new ApiProblem('invalid_transition', "{$lc->lc_number} has no items any more; refuse amendment {$a->amendment_no} instead.");
+                }
+                $added = $this->orders->amendLines($po, $rows->map(fn ($r) => ['action' => $r->action, 'purchase_order_line_id' => $r->purchase_order_line_id, 'product_id' => $r->product_id,
+                    'unit_id' => $r->unit_id, 'quantity' => $r->quantity, 'unit_cost' => $r->unit_cost, 'description' => $r->description])->all(), "{$lc->lc_number} amendment {$a->amendment_no}");
+                foreach ($added as $i => $lineId) {
+                    DB::table('lc_amendment_lines')->where('id', $rows[$i]->id)->update(['purchase_order_line_id' => $lineId, 'updated_at' => now()]);
+                }
+                $new['item_changes'] = $rows->map(fn ($r) => array_filter(['action' => $r->action, 'product_id' => $r->product_id, 'quantity' => $r->quantity, 'unit_cost' => $r->unit_cost],
+                    fn ($v) => $v !== null))->all();
+            }
             $this->audit->record('amended', $lc, $old, $new + ['amendment_no' => $a->amendment_no], type: 'letters_of_credit');
         }
 
@@ -455,6 +735,14 @@ final class LcService
         return ['id' => $a->id, 'letter_of_credit_id' => $a->letter_of_credit_id, 'amendment_no' => (int) $a->amendment_no, 'status' => $a->status,
             'requested_on' => $a->requested_on?->toDateString(), 'issued_on' => $a->issued_on?->toDateString(), 'accepted_on' => $a->accepted_on?->toDateString(),
             'changes' => DB::table('lc_amendment_changes')->where('lc_amendment_id', $a->id)->orderBy('id')->get(['field_key', 'old_value', 'new_value'])->map(fn ($c) => (array) $c)->all(),
+            'lines' => DB::table('lc_amendment_lines as l')->join('products as p', 'p.id', '=', 'l.product_id')
+                ->leftJoin('units as u', 'u.id', '=', DB::raw('COALESCE(l.unit_id, p.unit_id)'))->where('l.lc_amendment_id', $a->id)->orderBy('l.id')
+                ->get(['l.action', 'l.purchase_order_line_id', 'l.product_id', 'p.code', 'p.name', 'u.name as unit', 'l.old_quantity', 'l.quantity', 'l.old_unit_cost', 'l.unit_cost'])
+                ->map(fn ($r) => ['action' => $r->action, 'purchase_order_line_id' => $r->purchase_order_line_id, 'product_id' => $r->product_id, 'product_code' => $r->code,
+                    'product_name' => $r->name, 'unit' => (string) $r->unit, 'old_quantity' => $r->old_quantity === null ? null : (string) Quantity::of($r->old_quantity),
+                    'quantity' => $r->quantity === null ? null : (string) Quantity::of($r->quantity),
+                    'old_unit_cost' => $r->old_unit_cost === null ? null : (string) UnitCost::of($r->old_unit_cost),
+                    'unit_cost' => $r->unit_cost === null ? null : (string) UnitCost::of($r->unit_cost)])->all(),
             'bank_fee' => (string) Money::of((string) $a->bank_fee), 'reason' => $a->reason, 'version' => (int) $a->lock_version];
     }
 
@@ -479,6 +767,9 @@ final class LcService
             'id' => $lc->id, 'lc_number' => $lc->lc_number, 'status' => $lc->status, 'party' => ['id' => $lc->party->id, 'code' => $lc->party->code, 'name' => $lc->party->name],
             'purchase_order_id' => $lc->purchase_order_id ? (int) $lc->purchase_order_id : null,
             'purchase_order_number' => $lc->purchaseOrder?->number,
+            'items_source' => $lc->purchaseOrder ? ($lc->items_entered ? 'entered' : 'purchase_order') : 'none',
+            'lines_total' => $lc->purchaseOrder ? (string) ($lc->purchaseOrder->total_foreign ?? $lc->purchaseOrder->total) : null,
+            'warehouse_id' => $lc->purchaseOrder?->warehouse_id,
             'quantity' => $lc->quantity !== null ? (string) $lc->quantity : null, 'quantity_unit' => $lc->quantity_unit,
             'goods_description' => $lc->goods_description, 'currency_code' => $lc->currency_code, 'amount' => (string) $lc->amount, 'tolerance_pct' => number_format((float) $lc->tolerance_pct, 4, '.', ''),
             'planning_rate' => (string) $lc->planning_rate,
@@ -495,6 +786,7 @@ final class LcService
         ];
         if ($full) {
             $out += [
+                'lines' => self::lines($lc->purchaseOrder),
                 'documents' => $lc->documents()->get()->map(fn ($d) => self::document($d))->all(),
                 'shipments' => $lc->shipments()->get()->map(fn ($s) => self::shipment($s))->all(),
                 'charges' => $lc->charges()->get()->map(fn ($c) => LcPostingService::charge($c, $lc->lc_number))->all(),

@@ -1098,6 +1098,33 @@ class OpenApiConformanceTest extends TestCase
             'amount' => '1.00', 'planning_rate' => '121.50'], $key())->json('data.id');
         $this->assertConforms($this->api('DELETE', "/api/v1/letters-of-credit/{$id}", $t, $c), 'DELETE', '/letters-of-credit/{id}');                            // 409
         $this->assertConforms($this->api('DELETE', "/api/v1/letters-of-credit/{$draft}", $t, $c), 'DELETE', '/letters-of-credit/{id}');
+
+        // Items on an LC (PEP-487): entered with it, added once to an LC without items, changed by an amendment.
+        $line = ['product_id' => $oil, 'quantity' => '100', 'unit_cost' => '1.92'];
+        $withItems = $this->api('POST', '/api/v1/letters-of-credit', $t, $c, ['lines' => [$line], 'warehouse_id' => $wh] + $body, $key());
+        $this->assertConforms($withItems, 'POST', '/letters-of-credit');
+        $withItems->assertCreated()->assertJsonPath('data.items_source', 'entered');
+        $plain = $this->api('POST', '/api/v1/letters-of-credit', $t, $c, $body, $key())->json('data.id');
+        $this->assertConforms($this->api('POST', "/api/v1/letters-of-credit/{$plain}/items", $t, $c, ['lines' => []], $key()), 'POST', '/letters-of-credit/{id}/items');   // 422
+        $added = $this->api('POST', "/api/v1/letters-of-credit/{$plain}/items", $t, $c, ['lines' => [$line]], $key());
+        $this->assertConforms($added, 'POST', '/letters-of-credit/{id}/items');
+        $added->assertCreated();
+        $this->assertConforms($this->api('POST', "/api/v1/letters-of-credit/{$plain}/items", $t, $c, ['lines' => [$line]], $key()), 'POST', '/letters-of-credit/{id}/items'); // 409
+        $put = $this->api('PUT', "/api/v1/letters-of-credit/{$plain}", $t, $c, ['lines' => [['quantity' => '150'] + $line]] + $body, ['If-Match' => 'W/"2"']);
+        $this->assertConforms($put, 'PUT', '/letters-of-credit/{id}');
+        $put->assertOk()->assertJsonPath('data.lines.0.quantity', '150.000');
+        $v = $put->json('data.version');
+        $this->api('POST', "/api/v1/letters-of-credit/{$plain}/transition", $t, $c, ['action' => 'submit'], ['If-Match' => "W/\"{$v}\""])->assertOk();
+        $this->api('POST', "/api/v1/letters-of-credit/{$plain}/transition", $t, $c, ['action' => 'mark_opened', 'bank_reference' => 'SBL/2', 'date' => $today], ['If-Match' => 'W/"'.($v + 1).'"'])->assertOk();
+        $opened = $this->api('GET', "/api/v1/letters-of-credit/{$plain}", $t, $c);
+        $this->assertConforms($opened, 'GET', '/letters-of-credit/{id}');
+        $itemAm = $this->api('POST', "/api/v1/letters-of-credit/{$plain}/amendments", $t, $c, ['requested_on' => $today, 'status' => 'issued', 'changes' => [],
+            'lines' => [['action' => 'change', 'purchase_order_line_id' => $opened->json('data.lines.0.id'), 'quantity' => '200'], ['action' => 'add', 'product_id' => $oil, 'quantity' => '5', 'unit_cost' => '2']]], $key());
+        $this->assertConforms($itemAm, 'POST', '/letters-of-credit/{id}/amendments');
+        $itemAm->assertCreated();
+        $this->assertConforms($this->api('PATCH', '/api/v1/lc-amendments/'.$itemAm->json('data.id'), $t, $c, ['status' => 'accepted', 'date' => $today], ['If-Match' => 'W/"'.$itemAm->json('data.version').'"']), 'PATCH', '/lc-amendments/{id}');
+        $this->assertConforms($this->api('GET', "/api/v1/letters-of-credit/{$plain}", $t, $c), 'GET', '/letters-of-credit/{id}');
+        $this->assertConforms($this->api('GET', '/api/v1/lc-amendments', $t, $c), 'GET', '/lc-amendments');
     }
 
     public function test_the_validator_rejects_bodies_that_break_the_contract(): void

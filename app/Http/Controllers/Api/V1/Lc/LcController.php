@@ -16,6 +16,7 @@ use App\Http\Requests\Lc\LcChargeListRequest;
 use App\Http\Requests\Lc\LcChargeRequest;
 use App\Http\Requests\Lc\LcCloseRequest;
 use App\Http\Requests\Lc\LcDocumentRequest;
+use App\Http\Requests\Lc\LcItemsRequest;
 use App\Http\Requests\Lc\LcListRequest;
 use App\Http\Requests\Lc\LcPaymentRequest;
 use App\Http\Requests\Lc\LcReportRequest;
@@ -92,6 +93,12 @@ class LcController extends Controller
     public function update(LcRequest $request, int $id): JsonResponse
     {
         return $this->lc($this->lcs->update($id, $request->validated(), $this->ifMatchVersion($request)));
+    }
+
+    /** POST /letters-of-credit/{id}/items (PEP-487): the items of an LC that has none; 201 with the LC. */
+    public function addItems(LcItemsRequest $request, int $id): JsonResponse
+    {
+        return $this->lc($this->lcs->addItems($id, $request->validated()), 201);
     }
 
     public function destroy(int $id): Response
