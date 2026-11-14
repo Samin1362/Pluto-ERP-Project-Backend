@@ -19,6 +19,17 @@ th { color: #555; font-weight: normal; width: 30%; } .num { text-align: right; }
 <tr><th>Opened / expiry</th><td>{{ $lc['opened_on'] ?? '—' }} / {{ $lc['expiry_date'] ?? '—' }}</td></tr>
 <tr><th>Paid / outstanding</th><td>{{ $lc['currency_code'] }} {{ number_format((float) $lc['paid_foreign'], 2) }} / {{ number_format((float) $lc['outstanding_foreign'], 2) }}</td></tr>
 </table>
+@if(!empty($lc['lines']))
+<h2>Items</h2>
+<table>
+<tr><th style="width:4%">#</th><th style="width:36%">Item</th><th class="num" style="width:15%">Quantity</th><th style="width:8%">Unit</th><th class="num" style="width:12%">Unit cost</th><th class="num" style="width:12%">Received</th><th class="num" style="width:13%">Total ({{ $lc['currency_code'] }})</th></tr>
+@foreach($lc['lines'] as $l)
+<tr><td>{{ $l['line_no'] }}</td><td>{{ $l['product_name'] }} <span class="muted">{{ $l['product_code'] }}</span>@if($l['description'])<br><span class="muted">{{ $l['description'] }}</span>@endif</td>
+<td class="num">{{ $l['quantity'] }}</td><td>{{ $l['unit'] }}</td><td class="num">{{ $l['unit_cost'] }}</td><td class="num">{{ $l['received_quantity'] }}</td><td class="num">{{ $l['line_total'] }}</td></tr>
+@endforeach
+<tr><th colspan="6" class="num">Items total</th><td class="num"><strong>{{ $lc['lines_total'] }}</strong></td></tr>
+</table>
+@endif
 <h2>Documents</h2>
 <table>@foreach($lc['documents'] as $d)<tr><td>{{ $d['name'] }}</td><td>{{ $d['provided_by'] }}</td><td>{{ str_replace('_', ' ', $d['status']) }}</td></tr>@endforeach</table>
 <h2>Shipments</h2>
