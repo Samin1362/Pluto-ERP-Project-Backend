@@ -146,6 +146,7 @@ Route::middleware(['jwt', 'throttle:api-user'])->group(function () {
         Route::post('letters-of-credit', [LcController::class, 'store'])->middleware(['perm:lc.create', 'idempotent']);
         Route::get('letters-of-credit/{id}', [LcController::class, 'show'])->whereNumber('id')->middleware('perm:lc.view');
         Route::put('letters-of-credit/{id}', [LcController::class, 'update'])->whereNumber('id')->middleware('perm:lc.edit');
+        Route::post('letters-of-credit/{id}/items', [LcController::class, 'addItems'])->whereNumber('id')->middleware(['perm:lc.edit', 'idempotent']);
         Route::delete('letters-of-credit/{id}', [LcController::class, 'destroy'])->whereNumber('id')->middleware('perm:lc.delete');
         Route::post('letters-of-credit/{id}/transition', [LcController::class, 'transition'])->whereNumber('id')->middleware('perm:lc.edit');
         Route::post('letters-of-credit/{id}/close', [LcController::class, 'close'])->whereNumber('id')->middleware(['perm:lc.edit', 'idempotent']);

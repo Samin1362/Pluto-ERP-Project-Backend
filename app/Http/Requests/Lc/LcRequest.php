@@ -6,12 +6,16 @@ use App\Http\Requests\StrictRequest;
 use App\Support\CurrentCompany;
 use Illuminate\Validation\Rule;
 
-/** POST /letters-of-credit, PUT /letters-of-credit/{id} (LetterOfCreditInput; M3). Only supplier, amount, issuing bank and expiry are needed to submit (BR-039). */
+/**
+ * POST /letters-of-credit, PUT /letters-of-credit/{id} (LetterOfCreditInput; M3). Only supplier, amount, issuing bank and expiry are needed to submit (BR-039).
+ * `lines` are the LC's items (LcLineInput, PEP-487; formats as on a purchase order line) and `warehouse_id` where they arrive; active items and their units are
+ * checked when the linked order is priced (PurchaseBillPreparer).
+ */
 class LcRequest extends StrictRequest
 {
     protected function allowedFields(): array
     {
-        return ['party_id', 'purchase_order_id', 'intended_import', 'goods_description', 'quantity', 'quantity_unit', 'import_authorization_ref', 'lc_type', 'tenor', 'usance_days', 'incoterm', 'currency_code', 'amount', 'tolerance_pct', 'planning_rate', 'partial_shipments', 'transhipment', 'confirmation_required', 'issuing_bank_account_id', 'advising_bank', 'margin_pct', 'margin_account_id', 'application_date', 'latest_shipment_date', 'expiry_date', 'presentation_days', 'document_template_id', 'documents', 'record_shipments', 'shipment'];
+        return ['party_id', 'purchase_order_id', 'intended_import', 'goods_description', 'quantity', 'quantity_unit', 'import_authorization_ref', 'lc_type', 'tenor', 'usance_days', 'incoterm', 'currency_code', 'amount', 'tolerance_pct', 'planning_rate', 'partial_shipments', 'transhipment', 'confirmation_required', 'issuing_bank_account_id', 'advising_bank', 'margin_pct', 'margin_account_id', 'application_date', 'latest_shipment_date', 'expiry_date', 'presentation_days', 'document_template_id', 'documents', 'record_shipments', 'shipment', 'lines', 'warehouse_id'];
     }
 
     public function rules(): array
@@ -59,6 +63,14 @@ class LcRequest extends StrictRequest
             'shipment.mode' => ['sometimes', Rule::in(['sea', 'air', 'road'])],
             'shipment.quantity' => ['sometimes', 'nullable', 'regex:/^\d{1,15}(\.\d{1,3})?$/'],
             'shipment.value_foreign' => ['sometimes', 'nullable', 'regex:/^\d{1,13}(\.\d{1,2})?$/'],
+            'warehouse_id' => ['sometimes', 'nullable', 'integer', Rule::exists('warehouses', 'id')->where('company_id', app(CurrentCompany::class)->id())],
+            'lines' => ['sometimes', 'array', 'max:200'],
+            'lines.*' => ['array:product_id,quantity,unit_id,unit_cost,description'],
+            'lines.*.product_id' => ['required', 'integer', Rule::exists('products', 'id')->where('company_id', app(CurrentCompany::class)->id())->whereNull('deleted_at')],
+            'lines.*.quantity' => ['required', 'string', 'regex:/^\d{1,15}(\.\d{1,3})?$/', 'not_regex:/^0+(\.0+)?$/'],
+            'lines.*.unit_id' => ['sometimes', 'nullable', 'integer', Rule::exists('units', 'id')->where('company_id', app(CurrentCompany::class)->id())], // one of the item's units: checked when the items are priced (BR-069)
+            'lines.*.unit_cost' => ['required', 'string', 'regex:/^\d{1,14}(\.\d{1,4})?$/'],
+            'lines.*.description' => ['sometimes', 'nullable', 'string', 'max:255'],
         ];
     }
 
@@ -73,6 +85,13 @@ class LcRequest extends StrictRequest
             'usance_days.required_if' => 'Enter the usance days',
             'expiry_date.after_or_equal' => 'Expiry cannot be before the latest shipment date',
             'incoterm.required' => 'Choose the Incoterm',
+            'lines.*.product_id.required' => 'Choose an item',
+            'lines.*.product_id.exists' => 'Choose one of your items',
+            'lines.*.quantity.required' => 'Enter the quantity',
+            'lines.*.quantity.regex' => 'Enter a quantity with up to 3 decimals',
+            'lines.*.quantity.not_regex' => 'The quantity must be more than 0',
+            'lines.*.unit_cost.required' => 'Enter the unit cost',
+            'lines.*.unit_cost.regex' => 'Enter a cost of 0 or more with up to 4 decimals',
         ];
     }
 }

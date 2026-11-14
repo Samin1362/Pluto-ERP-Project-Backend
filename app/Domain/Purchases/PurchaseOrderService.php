@@ -10,6 +10,7 @@ use App\Models\FiscalYear;
 use App\Models\Product;
 use App\Models\PurchaseBill;
 use App\Models\PurchaseOrder;
+use App\Models\PurchaseOrderLine;
 use App\Models\StockBalance;
 use App\Support\Problem\ApiProblem;
 use Brick\Math\RoundingMode;
@@ -223,6 +224,124 @@ final class PurchaseOrderService
         return ['succeeded' => $succeeded, 'failed' => $failed];
     }
 
+    /**
+     * What bills have already taken of each order line: received on posted bills plus what sits on draft bills, in the
+     * order line's unit. An LC amendment may not bring an item below this (PEP-487).
+     *
+     * @return array<int, Quantity> keyed by order line id
+     */
+    public function taken(PurchaseOrder $po): array
+    {
+        $pending = DB::table('purchase_bill_lines as l')->join('purchase_bills as b', 'b.id', '=', 'l.purchase_bill_id')
+            ->where('b.purchase_order_id', $po->id)->where('b.status', 'draft')->whereNotNull('l.purchase_order_line_id')
+            ->groupBy('l.purchase_order_line_id')->selectRaw('l.purchase_order_line_id, SUM(l.quantity) q')->pluck('q', 'purchase_order_line_id');
+        $taken = [];
+        foreach (PurchaseOrderLine::where('purchase_order_id', $po->id)->get(['id', 'received_quantity']) as $l) {
+            $taken[$l->id] = Quantity::of($l->received_quantity)->plus(Quantity::of((string) ($pending[$l->id] ?? '0')));
+        }
+
+        return $taken;
+    }
+
+    /**
+     * Item changes of an accepted LC amendment (PEP-487; BR-041, BR-056), applied to the order's lines in place so the
+     * lines bills are linked to keep their id and what has arrived: `add` a line, `change` a line's quantity and/or unit
+     * cost, `remove` a line nothing was received or billed on. A quantity never goes below what bills have already
+     * taken. The order is priced again as a whole and its status follows what has arrived. Works on an order that is
+     * already partly received (unlike update, which replaces the lines of a draft or sent order).
+     *
+     * @param  list<array{action: string, purchase_order_line_id?: ?int, product_id?: ?int, unit_id?: ?int, quantity?: ?string, unit_cost?: ?string, description?: ?string}>  $changes
+     * @return array<int, int> index of each `add` change => the new order line's id
+     */
+    public function amendLines(PurchaseOrder $po, array $changes, string $reason): array
+    {
+        return DB::transaction(function () use ($po, $changes, $reason) {
+            $po = $this->lock($po);
+            if (in_array($po->status, ['closed', 'cancelled'], true)) {
+                throw new ApiProblem('invalid_transition', "{$po->number} is {$this->label($po->status)}; its items cannot change any more.", extra: ['status' => $po->status]);
+            }
+            $lines = PurchaseOrderLine::where('purchase_order_id', $po->id)->orderBy('line_no')->orderBy('id')->lockForUpdate()->get()->keyBy('id');
+            $taken = $this->taken($po);
+            $byLine = [];
+            foreach ($changes as $ch) {
+                if ($ch['action'] === 'add') {
+                    continue;
+                }
+                $id = (int) ($ch['purchase_order_line_id'] ?? 0);
+                if (! isset($lines[$id])) {
+                    throw new ApiProblem('invalid_transition', "An item this amendment changes is no longer on {$po->number}.", extra: ['status' => $po->status]);
+                }
+                $byLine[$id] = $ch;
+            }
+
+            $input = [];    // the order's lines as they will be, priced together
+            $targets = [];  // parallel to $input: the existing line, or the index of the `add` change
+            $removed = [];
+            foreach ($lines as $l) {
+                $ch = $byLine[$l->id] ?? null;
+                $has = $taken[$l->id] ?? Quantity::zero();
+                $unit = $l->unit_name ? " {$l->unit_name}" : '';
+                if ($ch && $ch['action'] === 'remove') {
+                    if ($has->isPositive()) {
+                        throw new ApiProblem('invalid_transition', "{$l->product_name} cannot be removed: {$has}{$unit} is already received or on a bill.", extra: ['status' => $po->status]);
+                    }
+                    $removed[] = $l;
+
+                    continue;
+                }
+                $quantity = $ch['quantity'] ?? null;
+                if ($quantity !== null && Quantity::of($quantity)->isLessThan($has)) {
+                    throw new ApiProblem('invalid_transition', "{$l->product_name} cannot go below {$has}{$unit}: that much is already received or on a bill.", extra: ['status' => $po->status]);
+                }
+                $input[] = ['product_id' => $l->product_id, 'unit_id' => $l->unit_id, 'description' => $l->description, 'quantity' => (string) Quantity::of($quantity ?? $l->quantity),
+                    'unit_cost' => (string) UnitCost::of($ch['unit_cost'] ?? $l->unit_cost), 'discount_pct' => (string) $l->discount_pct, 'tax_rule_id' => $l->tax_rule_id];
+                $targets[] = $l;
+            }
+            foreach ($changes as $i => $ch) {
+                if ($ch['action'] === 'add') {
+                    $input[] = ['product_id' => (int) $ch['product_id'], 'unit_id' => $ch['unit_id'] ?? null, 'description' => $ch['description'] ?? null,
+                        'quantity' => (string) $ch['quantity'], 'unit_cost' => (string) $ch['unit_cost']];
+                    $targets[] = $i;
+                }
+            }
+            if ($input === []) {
+                throw new ApiProblem('invalid_transition', "{$po->number} must keep at least one item.", extra: ['status' => $po->status]);
+            }
+
+            $currency = $po->currencyCode();
+            $prepared = $this->price(['party_id' => $po->party_id, 'order_date' => $po->order_date->toDateString(), 'warehouse_id' => $po->warehouse_id,
+                'payment_term_id' => $po->payment_term_id, 'currency_code' => $currency, 'exchange_rate' => $currency === 'BDT' ? null : (string) $po->exchange_rate, 'lines' => $input]);
+            $old = $this->audited($po) + ['status' => $po->status];
+            foreach ($removed as $l) {
+                // Only lines of cancelled bills can still point here (nothing received, nothing on a draft); the link has no meaning any more.
+                DB::table('purchase_bill_lines')->where('purchase_order_line_id', $l->id)->update(['purchase_order_line_id' => null]);
+                $l->delete();
+            }
+            $nextNo = (int) $lines->max('line_no');
+            $added = [];
+            foreach ($targets as $i => $target) {
+                if ($target instanceof PurchaseOrderLine) {
+                    $target->fill($this->lineRow($prepared, $i))->save();
+                } else {
+                    $added[$target] = $po->lines()->create(['line_no' => ++$nextNo, 'received_quantity' => '0'] + $this->lineRow($prepared, $i))->id;
+                }
+            }
+            $c = $prepared->calculation;
+            $po->fill(['subtotal' => $c->subtotal, 'discount_total' => $c->discountTotal, 'tax_total' => $c->taxTotal, 'rounding_adjustment' => $c->baseRounding,
+                'total' => $c->baseTotal, 'total_foreign' => $prepared->foreign() ? $c->total : null]);
+            if ($po->status !== 'draft') { // the status follows what has arrived, as when a bill posts (PurchaseOrderReceipts)
+                $now = PurchaseOrderLine::where('purchase_order_id', $po->id)->get(['quantity', 'received_quantity']);
+                $full = $now->every(fn ($l) => ! Quantity::of($l->quantity)->isGreaterThan(Quantity::of($l->received_quantity)));
+                $some = $now->contains(fn ($l) => Quantity::of($l->received_quantity)->isPositive());
+                $po->status = $full ? 'received' : ($some ? 'partly_received' : 'sent');
+            }
+            $po->save();
+            $this->audit->record('updated', $po, $old, $this->audited($po->refresh()) + ['status' => $po->status, 'reason' => $reason]);
+
+            return $added;
+        });
+    }
+
     private function suggested(Product $p, int $warehouseId): string
     {
         $s = DB::table('product_warehouse_settings')->where('product_id', $p->id)->where('warehouse_id', $warehouseId)->first(['reorder_level', 'reorder_qty']);
@@ -302,16 +421,24 @@ final class PurchaseOrderService
 
     private function saveLines(PurchaseOrder $po, PreparedBill $p): void
     {
-        foreach ($p->lines as $i => $l) {
-            $c = $p->calculation->lines[$i];
-            $po->lines()->create([
-                'line_no' => $i + 1, 'product_id' => $l['product']->id, 'product_code' => $l['product']->code, 'product_name' => $l['product']->name,
-                'unit_name' => $l['unit']['name'], 'unit_id' => $l['unit']['unit_id'], 'unit_factor' => (string) $l['unit']['factor'], 'description' => $l['input']['description'] ?? null,
-                'quantity' => $l['input']['quantity'], 'unit_cost' => $l['input']['unit_cost'], 'discount_pct' => $l['input']['discount_pct'] ?? '0',
-                'discount_amount' => $c->discountTotal(), 'tax_rule_id' => $c->taxRuleId, 'tax_rate' => $l['tax_rate']->toBigDecimal()->toScale(4, RoundingMode::HalfUp)->toString(),
-                'tax_amount' => $c->tax, 'net_amount' => $c->net, 'line_total' => $c->total, 'received_quantity' => '0',
-            ]);
+        foreach (array_keys($p->lines) as $i) {
+            $po->lines()->create(['line_no' => $i + 1, 'received_quantity' => '0'] + $this->lineRow($p, $i));
         }
+    }
+
+    /** The stored columns of priced line $i (everything but its number and what has arrived). */
+    private function lineRow(PreparedBill $p, int $i): array
+    {
+        $l = $p->lines[$i];
+        $c = $p->calculation->lines[$i];
+
+        return [
+            'product_id' => $l['product']->id, 'product_code' => $l['product']->code, 'product_name' => $l['product']->name,
+            'unit_name' => $l['unit']['name'], 'unit_id' => $l['unit']['unit_id'], 'unit_factor' => (string) $l['unit']['factor'], 'description' => $l['input']['description'] ?? null,
+            'quantity' => $l['input']['quantity'], 'unit_cost' => $l['input']['unit_cost'], 'discount_pct' => $l['input']['discount_pct'] ?? '0',
+            'discount_amount' => $c->discountTotal(), 'tax_rule_id' => $c->taxRuleId, 'tax_rate' => $l['tax_rate']->toBigDecimal()->toScale(4, RoundingMode::HalfUp)->toString(),
+            'tax_amount' => $c->tax, 'net_amount' => $c->net, 'line_total' => $c->total,
+        ];
     }
 
     private function audited(PurchaseOrder $po): array

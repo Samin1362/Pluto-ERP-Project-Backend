@@ -34,7 +34,8 @@ use Illuminate\Support\Facades\DB;
  * draft services, so a saved draft carries exactly what calculate showed.
  *
  * Lines linked to a purchase order line are checked against what that line still expects (PurchaseOrderLimits,
- * BR-056): a warning here, refused by the draft services.
+ * BR-056): a warning here, refused by the draft services. A bill on an LC that keeps its items (PEP-487) may hold
+ * only those items: it is made from the LC's order and every line is one of its lines (422 validation_failed).
  *
  * Refuses (422) an inactive supplier, warehouse or product (inactive_reference), a tax rule that is inactive or only
  * for sales, and a foreign currency without an exchange rate. Each line's debit ledger follows 06 §8: the warehouse's
@@ -54,6 +55,7 @@ final class PurchaseBillPreparer
     {
         $party = Party::findOrFail($in['party_id']);
         $warehouse = Warehouse::findOrFail($in['warehouse_id']);
+        $this->assertLcItems($in);
         $this->assertOrderLinks($in, $party);
         $errors = [];
         if ($party->status !== 'active') {
@@ -152,6 +154,33 @@ final class PurchaseBillPreparer
                 $errors["lines.{$i}.purchase_order_line_id"] = ['This line is not on the chosen purchase order'];
             } elseif ((int) $orderLines[$l['purchase_order_line_id']] !== (int) $l['product_id']) {
                 $errors["lines.{$i}.purchase_order_line_id"] = ['The order line is for a different item'];
+            }
+        }
+        if ($errors) {
+            throw new ApiProblem('validation_failed', errors: $errors);
+        }
+    }
+
+    /**
+     * An LC covers only the goods it describes (owner rule, 13 Nov 2026; PEP-487): when the LC keeps its items on a
+     * purchase order, its bill is made from that order and every line is linked to one of its lines, so BR-056 (with
+     * the LC's tolerance) limits each of them. A new item needs an accepted amendment first.
+     */
+    private function assertLcItems(array $in): void
+    {
+        $lc = empty($in['letter_of_credit_id']) ? null : LetterOfCredit::find($in['letter_of_credit_id']);
+        if (! $lc || ! $lc->purchase_order_id) {
+            return;
+        }
+        $errors = [];
+        if ((int) ($in['purchase_order_id'] ?? 0) !== (int) $lc->purchase_order_id) {
+            $number = PurchaseOrder::whereKey($lc->purchase_order_id)->value('number');
+            $errors['purchase_order_id'] = ["{$lc->lc_number} keeps its items on {$number}; make its bill from that order"];
+        } else {
+            foreach ($in['lines'] as $i => $l) {
+                if (empty($l['purchase_order_line_id'])) {
+                    $errors["lines.{$i}.product_id"] = ["This item is not on {$lc->lc_number}; an LC covers only its goods (amend the LC to add it)"];
+                }
             }
         }
         if ($errors) {

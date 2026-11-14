@@ -21,7 +21,7 @@ class LetterOfCredit extends Model
 
     protected $casts = [
         'amount' => AsMoney::class, 'tolerance_pct' => 'decimal:4', 'planning_rate' => AsRate::class, 'margin_pct' => 'decimal:4', 'quantity' => AsQuantity::class,
-        'partial_shipments' => 'boolean', 'transhipment' => 'boolean', 'confirmation_required' => 'boolean', 'record_shipments' => 'boolean',
+        'partial_shipments' => 'boolean', 'transhipment' => 'boolean', 'confirmation_required' => 'boolean', 'record_shipments' => 'boolean', 'items_entered' => 'boolean',
         'application_date' => 'date', 'latest_shipment_date' => 'date', 'expiry_date' => 'date', 'maturity_date' => 'date', 'opened_on' => 'date', 'closed_on' => 'date',
     ];
 
