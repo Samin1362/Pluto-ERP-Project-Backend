@@ -3662,6 +3662,14 @@
      "auto_increment": false
     },
     {
+     "name": "joined_via",
+     "type": "varchar(30)",
+     "nullable": false,
+     "default": "member",
+     "generated": null,
+     "auto_increment": false
+    },
+    {
      "name": "lock_version",
      "type": "int unsigned",
      "nullable": false,
@@ -3773,7 +3781,8 @@
     }
    },
    "check": {
-    "company_users_status_check": "`status` IN ('active', 'invited', 'deactivated')"
+    "company_users_status_check": "`status` IN ('active', 'invited', 'deactivated')",
+    "company_users_joined_via_check": "`joined_via` IN ('member', 'platform_admin')"
    }
   },
   "lc_document_template_items": {

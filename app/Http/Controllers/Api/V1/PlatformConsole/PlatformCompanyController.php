@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers\Api\V1\PlatformConsole;
 
+use App\Domain\Platform\OwnerAccessService;
 use App\Domain\Platform\PlatformCompanyService;
 use App\Domain\Platform\SupportAccessService;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\PlatformConsole\OwnerAccessRequest;
 use App\Http\Requests\PlatformConsole\PlatformCompanyCreateRequest;
 use App\Http\Requests\PlatformConsole\PlatformCompanyListRequest;
 use App\Http\Requests\PlatformConsole\SupportAccessRequest;
@@ -16,7 +18,8 @@ use Illuminate\Http\Response;
 /** /platform/companies (K17 platform console; PEP-483). Platform admins only (middleware `platform`). */
 class PlatformCompanyController extends Controller
 {
-    public function __construct(private readonly PlatformCompanyService $companies, private readonly SupportAccessService $support) {}
+    public function __construct(private readonly PlatformCompanyService $companies, private readonly SupportAccessService $support,
+        private readonly OwnerAccessService $owner) {}
 
     public function index(PlatformCompanyListRequest $request): JsonResponse
     {
@@ -47,6 +50,19 @@ class PlatformCompanyController extends Controller
     public function endSupport(Request $request, int $id): Response
     {
         $this->support->end($id, (int) $request->attributes->get('auth_user')->id);
+
+        return response()->noContent();
+    }
+
+    /** PEP-496: join the company as an Owner (a real membership), to work in it. */
+    public function joinAsOwner(OwnerAccessRequest $request, int $id): JsonResponse
+    {
+        return response()->json(['data' => $this->owner->join($id, $request->attributes->get('auth_user'), $request->validated()['reason'])], 201);
+    }
+
+    public function leaveAsOwner(Request $request, int $id): Response
+    {
+        $this->owner->leave($id, $request->attributes->get('auth_user'));
 
         return response()->noContent();
     }

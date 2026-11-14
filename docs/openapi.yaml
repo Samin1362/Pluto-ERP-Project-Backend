@@ -672,6 +672,7 @@ paths:
       - 'S0: Switch company (reloads all data)'
       - 'S0: Create a company (NEW, company switcher)'
       - 'K17: Open read-only (reason, time)'
+      - 'K17: Open as Owner (reason)'
       x-tables:
       - users
       - company_users
@@ -3441,6 +3442,7 @@ paths:
       - K17
       x-page-actions:
       - 'K17: Create company'
+      - 'K17: Leave (confirm)'
       x-tables:
       - companies
       - company_users
@@ -4031,6 +4033,208 @@ paths:
                 $ref: '#/components/schemas/Error'
         '404':
           description: 'Not found (also for other companies'' records): `not_found`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        default:
+          description: Unexpected error (`server_error`)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /api/v1/platform/companies/{id}/owner-access:
+    post:
+      operationId: postPlatformCompaniesIdOwnerAccess
+      summary: Join a company as an Owner to work in it (a real membership; the owners are told)
+      tags:
+      - Platform console
+      description: "Platform admins only: the e-mail is in PLUTO_PLATFORM_ADMINS (server setting, never a company role) and this sign-in used 2-step verification;\
+        \ otherwise 403 platform_admin_only / platform_two_factor_required. Every change is written to the company's audit log. The platform admin becomes an active\
+        \ member with the company's Owner role (company_users.joined_via = platform_admin; no seat is used), so every change is made and audited under their own name.\
+        \ An earlier membership is reactivated (already_member). A suspended company answers 409 invalid_transition: reactivate it first.\n\n**Permission:** any signed-in\
+        \ user  \n**Database:** lock: company_users; insert: audit_logs, idempotency_keys; update: company_users; read: companies, notifications, roles  \n**Rules:**\
+        \ —  \n**Transaction:** The membership, the audit entry and the notification in one transaction."
+      x-permission: auth
+      x-business-rules: []
+      x-requirements:
+      - FR-005
+      x-pages:
+      - K17
+      x-page-actions:
+      - 'K17: Open as Owner (reason)'
+      x-tables:
+      - company_users
+      - companies
+      - roles
+      - notifications
+      - audit_logs
+      x-db-operations:
+        company_users: LU
+        companies: R
+        roles: R
+        notifications: R
+        audit_logs: C
+        idempotency_keys: C
+      x-error-codes:
+      - idempotency_in_progress
+      - idempotency_key_reused
+      - invalid_transition
+      - malformed_json
+      - not_found
+      - platform_admin_only
+      - platform_two_factor_required
+      - server_error
+      - token_expired
+      - token_invalid
+      - unauthenticated
+      - validation_failed
+      x-contract-change: PEP-496 owner access
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+          minimum: 1
+      - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OwnerAccessInput'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                properties:
+                  data:
+                    $ref: '#/components/schemas/OwnerAccess'
+          headers:
+            Location:
+              schema:
+                type: string
+              description: URL of the created resource
+        '400':
+          description: 'Malformed request: `malformed_json`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: 'Not authenticated: `token_expired`, `token_invalid`, `unauthenticated`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: 'Not permitted: `platform_admin_only`, `platform_two_factor_required`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: 'Not found (also for other companies'' records): `not_found`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: 'Conflict (version mismatch, state not allowed, duplicate): `idempotency_in_progress`, `invalid_transition`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: 'Validation or business-rule failure: `idempotency_key_reused`, `validation_failed`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        default:
+          description: Unexpected error (`server_error`)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    delete:
+      operationId: deletePlatformCompaniesIdOwnerAccess
+      summary: Leave a company joined from the platform console (the membership is deactivated)
+      tags:
+      - Platform console
+      description: "Platform admins only: the e-mail is in PLUTO_PLATFORM_ADMINS (server setting, never a company role) and this sign-in used 2-step verification;\
+        \ otherwise 403 platform_admin_only / platform_two_factor_required. Every change is written to the company's audit log. Refused with 409 last_owner while\
+        \ the platform admin is the company's only active Owner. Nothing happens when they are not an active member.\n\n**Permission:** any signed-in user  \n**Database:**\
+        \ insert: audit_logs; delete: company_users; read: companies, roles  \n**Rules:** BR-060"
+      x-permission: auth
+      x-business-rules:
+      - BR-060
+      x-requirements:
+      - FR-005
+      x-pages:
+      - K17
+      x-page-actions:
+      - 'K17: Leave (confirm)'
+      x-tables:
+      - company_users
+      - companies
+      - roles
+      - audit_logs
+      x-db-operations:
+        company_users: D
+        companies: R
+        roles: R
+        audit_logs: C
+      x-error-codes:
+      - last_owner
+      - not_found
+      - platform_admin_only
+      - platform_two_factor_required
+      - role_in_use
+      - server_error
+      - system_role
+      - token_expired
+      - token_invalid
+      - unauthenticated
+      x-contract-change: PEP-496 owner access
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+          minimum: 1
+      responses:
+        '204':
+          description: No content
+        '401':
+          description: 'Not authenticated: `token_expired`, `token_invalid`, `unauthenticated`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: 'Not permitted: `platform_admin_only`, `platform_two_factor_required`, `system_role`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: 'Not found (also for other companies'' records): `not_found`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: 'Conflict (version mismatch, state not allowed, duplicate): `last_owner`, `role_in_use`'
           content:
             application/problem+json:
               schema:
@@ -40579,6 +40783,8 @@ components:
           - string
           - 'null'
           format: date-time
+        owner_access:
+          type: boolean
       required:
       - id
       - legal_name
@@ -40618,6 +40824,39 @@ components:
       - company_name
       - reason
       - expires_at
+    OwnerAccessInput:
+      type: object
+      description: Join a company as an Owner from the platform console.
+      properties:
+        reason:
+          type: string
+          maxLength: 255
+      required:
+      - reason
+      additionalProperties: false
+    OwnerAccess:
+      type: object
+      description: The platform admin's membership of a customer company (Owner role).
+      properties:
+        company_id:
+          type: integer
+          format: int64
+          minimum: 1
+        company_name:
+          type: string
+        role:
+          type: string
+        joined_at:
+          type: string
+          format: date-time
+        already_member:
+          type: boolean
+      required:
+      - company_id
+      - company_name
+      - role
+      - joined_at
+      - already_member
     PlatformCompanyCreate:
       type: object
       description: A new customer company and the person who will own it.
@@ -41375,6 +41614,8 @@ components:
           - 'null'
           format: date-time
         two_factor_enabled:
+          type: boolean
+        platform_admin:
           type: boolean
         branch_ids:
           type: array

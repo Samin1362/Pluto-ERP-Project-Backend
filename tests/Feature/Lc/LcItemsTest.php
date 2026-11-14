@@ -120,6 +120,14 @@ class LcItemsTest extends TestCase
         $this->assertSame(0, DB::table('audit_logs')->where('action', 'purchase_order_sent')->count(), 'no e-mail goes to the supplier');
         $this->req('GET', '/api/v1/letters-of-credit')->assertOk()->assertJsonPath('data.0.items_source', 'entered')->assertJsonPath('data.0.lines_total', '43400.00');
 
+        // The LC PDF lists the items and their total (as the API returns them).
+        $lcId = $r->json('data.id');
+        $this->assertStringStartsWith('%PDF', $this->req('GET', "/api/v1/letters-of-credit/{$lcId}/pdf")->assertOk()->getContent());
+        $html = view('pdf.letter-of-credit', ['lc' => $this->req('GET', "/api/v1/letters-of-credit/{$lcId}")->json('data'), 'company' => $this->books])->render();
+        foreach (['<h2>Items</h2>', 'Crude palm oil', 'Vegetable ghee', 'In 16 kg tins', '20000.000', '1.9200', '38400.00', '43400.00'] as $text) {
+            $this->assertStringContainsString($text, $html);
+        }
+
         // An LC without items says so.
         $this->req('POST', '/api/v1/letters-of-credit', $this->body())->assertCreated()->assertJsonPath('data.items_source', 'none')->assertJsonPath('data.lines', [])
             ->assertJsonPath('data.lines_total', null)->assertJsonPath('data.purchase_order_id', null);

@@ -11,6 +11,11 @@ and port) with a fresh database — never the live one. Defects are logged in Ji
 Sev-1 wrong money / data loss / no access, Sev-2 a main task blocked without a workaround, Sev-3 workaround exists,
 Sev-4 cosmetic. **Exit rule: no open Sev-1 or Sev-2.**
 
+**Owner decision (14 Nov 2026):** while the live stack runs on one laptop that has no memory for a second stack, UAT
+runs on the live stack as the real company's own company (company isolation is proven by PEP-486's sweep). If the
+test month goes wrong, that company is removed and created again before C7. The data pack the owner fills is kept
+outside the repos (`E:\Pluto-ERP\uat\`).
+
 | # | Step | Who | Done |
 |---|---|---|---|
 | A1 | Create the real company (`pluto:company:create`), set the financial year, tax rules (from the adviser, B2), number series and invoice design | Owner + dev | ☐ |

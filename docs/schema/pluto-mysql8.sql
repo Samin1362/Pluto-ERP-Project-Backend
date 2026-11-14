@@ -603,6 +603,7 @@ CREATE TABLE `company_users` (
   `joined_at` datetime NULL,
   `deactivated_at` datetime NULL,
   `deactivated_by` bigint unsigned NULL,
+  `joined_via` varchar(30) NOT NULL DEFAULT 'member' COMMENT 'One of: member, platform_admin. platform_admin: Pluto support joined as Owner from the platform console (PEP-496); shown as such to the company and never counted as a seat',
   `lock_version` int unsigned NOT NULL DEFAULT 1 COMMENT 'Optimistic concurrency counter; incremented on every update (If-Match)',
   `created_by` bigint unsigned NULL COMMENT 'User who created the row',
   `updated_by` bigint unsigned NULL COMMENT 'User who last changed the row',
@@ -621,7 +622,8 @@ CREATE TABLE `company_users` (
   CONSTRAINT `company_users_deactivated_by_foreign` FOREIGN KEY (`deactivated_by`) REFERENCES `users` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `company_users_created_by_foreign` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `company_users_updated_by_foreign` FOREIGN KEY (`updated_by`) REFERENCES `users` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
-  CONSTRAINT `company_users_status_check` CHECK (`status` IN ('active', 'invited', 'deactivated'))
+  CONSTRAINT `company_users_status_check` CHECK (`status` IN ('active', 'invited', 'deactivated')),
+  CONSTRAINT `company_users_joined_via_check` CHECK (`joined_via` IN ('member', 'platform_admin'))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Membership: a user belongs to a company with exactly one role (junction users to companies with payload).';
 
 -- 27. lc_document_template_items (level 3)

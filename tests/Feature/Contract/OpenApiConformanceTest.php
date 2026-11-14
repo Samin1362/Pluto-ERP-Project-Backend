@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Contract;
 
+use App\Domain\Access\JwtService;
 use App\Domain\Access\Totp;
 use App\Domain\Accounting\JournalBuilder;
 use App\Domain\Accounting\PostingService;
@@ -978,6 +979,32 @@ class OpenApiConformanceTest extends TestCase
             $this->assertConforms($this->api('GET', "/api/v1/reports/{$path}?{$query}", $t, $c), 'GET', "/reports/{$path}");
             $this->assertConforms($this->api('GET', "/api/v1/reports/{$path}?colour=red", $t, $c), 'GET', "/reports/{$path}");                   // 422
         }
+    }
+
+    /** Platform console owner access (PEP-496): join a company as Owner, the Members flag, leave. */
+    public function test_platform_owner_access_endpoints_match_the_contract(): void
+    {
+        $c = $this->company->id;
+        $admin = $this->makeUser('admin@pluto.example');
+        config(['pluto.platform_admins' => ['admin@pluto.example']]);
+        $plain = $this->login('admin@pluto.example');
+        $t = app(JwtService::class)->issue($admin, (int) $this->claims($plain)['sid'], ['pwd', 'otp'])['access_token'];
+        $key = fn () => ['Idempotency-Key' => (string) Str::uuid()];
+        $path = '/platform/companies/{id}/owner-access';
+
+        $this->assertConforms($this->api('POST', "/api/v1/platform/companies/{$c}/owner-access", $plain, null, ['reason' => 'x'], $key()), 'POST', $path);   // 403
+        $this->assertConforms($this->api('POST', "/api/v1/platform/companies/{$c}/owner-access", $t, null, [], $key()), 'POST', $path);                    // 422
+        $this->assertConforms($this->api('POST', '/api/v1/platform/companies/999999/owner-access', $t, null, ['reason' => 'x'], $key()), 'POST', $path);   // 404
+        $joined = $this->api('POST', "/api/v1/platform/companies/{$c}/owner-access", $t, null, ['reason' => 'Customer asked for help with the year end'], $key());
+        $joined->assertCreated();
+        $this->assertConforms($joined, 'POST', $path);
+        $this->assertConforms($this->api('GET', '/api/v1/platform/companies', $t), 'GET', '/platform/companies');                                          // owner_access
+        $this->assertConforms($this->api('GET', '/api/v1/users', $t, $c), 'GET', '/users');                                                                 // platform_admin
+        $left = $this->api('DELETE', "/api/v1/platform/companies/{$c}/owner-access", $t);
+        $left->assertNoContent();
+        $this->assertConforms($left, 'DELETE', $path);
+        $this->api('POST', "/api/v1/platform/companies/{$c}/suspend", $t, null, ['reason' => 'Unpaid'])->assertOk();
+        $this->assertConforms($this->api('POST', "/api/v1/platform/companies/{$c}/owner-access", $t, null, ['reason' => 'x'], $key()), 'POST', $path);     // 409
     }
 
     public function test_letter_of_credit_endpoints_match_the_contract(): void

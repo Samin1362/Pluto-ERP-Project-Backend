@@ -98,11 +98,13 @@ final class PlatformCompanyService
             return [];
         }
         $owners = DB::table('company_users as m')->join('roles as r', 'r.id', '=', 'm.role_id')->join('users as u', 'u.id', '=', 'm.user_id')
-            ->whereIn('m.company_id', $ids)->where('r.slug', 'owner')->where('m.status', 'active')->orderBy('m.id')
+            ->whereIn('m.company_id', $ids)->where('r.slug', 'owner')->where('m.status', 'active')->where('m.joined_via', 'member')->orderBy('m.id')
             ->get(['m.company_id', 'u.name', 'u.email'])->groupBy('company_id')->map->first();
         $invited = DB::table('user_invitations as i')->join('roles as r', 'r.id', '=', 'i.role_id')->whereIn('i.company_id', $ids)->where('r.slug', 'owner')
             ->whereNull('i.accepted_at')->whereNull('i.revoked_at')->orderBy('i.id')->get(['i.company_id', 'i.name', 'i.email'])->groupBy('company_id')->map->first();
-        $members = DB::table('company_users')->whereIn('company_id', $ids)->where('status', 'active')->groupBy('company_id')->selectRaw('company_id, COUNT(*) n')->pluck('n', 'company_id');
+        // PEP-496: the customer's own people; a platform admin who joined as Owner is not one of them (owner_access says so).
+        $mine = DB::table('company_users')->whereIn('company_id', $ids)->where('status', 'active')->where('user_id', (int) auth()->id())->pluck('company_id')->flip();
+        $members = DB::table('company_users')->whereIn('company_id', $ids)->where('status', 'active')->where('joined_via', 'member')->groupBy('company_id')->selectRaw('company_id, COUNT(*) n')->pluck('n', 'company_id');
         $activity = DB::table('audit_logs')->whereIn('company_id', $ids)->groupBy('company_id')->selectRaw('company_id, MAX(created_at) at')->pluck('at', 'company_id');
 
         $out = [];
@@ -111,7 +113,8 @@ final class PlatformCompanyService
             $i = $o ? null : ($invited[$c->id] ?? null);
             $out[$c->id] = ['id' => $c->id, 'legal_name' => $c->legal_name, 'trading_name' => $c->trading_name, 'status' => $c->status,
                 'created_at' => self::ts($c->created_at), 'owner_name' => $o->name ?? $i->name ?? null, 'owner_email' => $o->email ?? $i->email ?? null,
-                'owner_pending' => $o === null && $i !== null, 'members' => (int) ($members[$c->id] ?? 0), 'last_activity_at' => self::ts($activity[$c->id] ?? null)];
+                'owner_pending' => $o === null && $i !== null, 'members' => (int) ($members[$c->id] ?? 0), 'last_activity_at' => self::ts($activity[$c->id] ?? null),
+                'owner_access' => isset($mine[$c->id])];
         }
 
         return $out;

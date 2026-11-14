@@ -31,6 +31,7 @@ return new class extends Migration
             $table->dateTime('joined_at')->nullable();
             $table->dateTime('deactivated_at')->nullable();
             $table->unsignedBigInteger('deactivated_by')->nullable();
+            $table->string('joined_via', 30)->default('member')->comment('One of: member, platform_admin. platform_admin: Pluto support joined as Owner from the platform console (PEP-496); shown as such to the company and never counted as a seat');
             $table->unsignedInteger('lock_version')->default(1)->comment('Optimistic concurrency counter; incremented on every update (If-Match)');
             $table->unsignedBigInteger('created_by')->nullable()->comment('User who created the row');
             $table->unsignedBigInteger('updated_by')->nullable()->comment('User who last changed the row');
@@ -56,7 +57,8 @@ return new class extends Migration
         if (in_array(DB::connection()->getDriverName(), ['mysql', 'mariadb'], true)) {
             DB::statement(<<<'SQL'
                 ALTER TABLE `company_users`
-                    ADD CONSTRAINT `company_users_status_check` CHECK (`status` IN ('active', 'invited', 'deactivated'))
+                    ADD CONSTRAINT `company_users_status_check` CHECK (`status` IN ('active', 'invited', 'deactivated')),
+                    ADD CONSTRAINT `company_users_joined_via_check` CHECK (`joined_via` IN ('member', 'platform_admin'))
                 SQL);
         }
     }
