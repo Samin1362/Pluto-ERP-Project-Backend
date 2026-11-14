@@ -531,7 +531,7 @@ class OpenApiConformanceTest extends TestCase
             'password_confirmation' => 'Long-Enough-Pass-1']), 'POST', '/auth/password/reset');                                                                        // 422
         $company = $this->api('GET', '/api/v1/company', $t, $c);
         $this->assertConforms($company, 'GET', '/company');
-        $this->assertConforms($this->api('PATCH', '/api/v1/company', $t, $c, ['phone' => '01711000000'], ['If-Match' => 'W/"'.$company->json('data.version').'"']), 'PATCH', '/company');
+        $this->assertConforms($this->api('PATCH', '/api/v1/company', $t, $c, ['phone' => '01711000000', 'brand_color' => '#0f766e'], ['If-Match' => 'W/"'.$company->json('data.version').'"']), 'PATCH', '/company');
         $this->assertConforms($this->api('POST', '/api/v1/branches', $t, $c, ['code' => 'CTG', 'name' => 'Chattogram depot'], $key()), 'POST', '/branches');
         $settings = $this->api('GET', '/api/v1/company/settings', $t, $c);
         $this->assertConforms($this->api('PATCH', '/api/v1/company/settings', $t, $c, ['invoice_rounding' => 'none'], ['If-Match' => 'W/"'.$settings->json('data.version').'"']), 'PATCH', '/company/settings');

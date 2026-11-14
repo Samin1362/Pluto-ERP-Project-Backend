@@ -68,6 +68,7 @@ CREATE TABLE `companies` (
   `timezone` varchar(40) NOT NULL DEFAULT 'Asia/Dhaka',
   `status` varchar(30) NOT NULL DEFAULT 'active' COMMENT 'One of: active, suspended, archived',
   `seat_limit` smallint unsigned NOT NULL DEFAULT 10 COMMENT 'Users allowed (K8 shows 7 of 10)',
+  `brand_color` char(7) NULL COMMENT 'Company brand colour as #rrggbb (PEP-497); NULL = the Pluto default. The app and the PDFs of this company follow it',
   `lock_version` int unsigned NOT NULL DEFAULT 1 COMMENT 'Optimistic concurrency counter; incremented on every update (If-Match)',
   `created_by` bigint unsigned NULL COMMENT 'User who created the row',
   `updated_by` bigint unsigned NULL COMMENT 'User who last changed the row',

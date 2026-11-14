@@ -79,7 +79,8 @@ E("POST", "/companies", "Create a company (the creator becomes Owner; chart of a
   ["companies", "company_settings", "company_users", "roles", "role_permissions", "fiscal_years", "accounting_periods", "account_groups", "ledgers", "account_mappings", "number_sequences", "payment_terms", "branches", "warehouses"],
   ["S0"], req="CompanyCreate", resp="Company", idem=True, tag=T, fr=["FR-005"], tx="CompanyProvisioner runs in one transaction (04 section 11.2).", codes=[201, 422])
 E("GET", "/company", "Active company profile and locations", "settings.view", ["companies", "branches"], ["K1"], resp="Company", tag=T, fr=["FR-080"])
-E("PATCH", "/company", "Edit company identity and contact", "settings.edit", ["companies", "audit_logs"], ["K2"], req="CompanyUpdate", resp="Company", tag=T, fr=["FR-080"], ifmatch=True)
+E("PATCH", "/company", "Edit company identity and contact", "settings.edit", ["companies", "audit_logs"], ["K2"], req="CompanyUpdate", resp="Company", tag=T, fr=["FR-080"], ifmatch=True,
+  desc="brand_color (PEP-497) is #rrggbb or null (the Pluto default). A colour that cannot reach WCAG AA contrast (4.5:1) as a button or as text on the page is refused with 422 on brand_color.")
 E("PUT", "/company/logo", "Upload or replace the logo (PNG/SVG)", "settings.edit", ["companies"], ["K2"], req="FileUpload", resp="Company", tag=T,
   fr=["FR-080"], rules=["BR-051"], ifmatch=True)
 E("GET", "/company/{id}/logo/file", "The company logo behind its 1-day signed link (Company.logo_url)", "public", ["companies"], ["K2"], params=["expires", "signature"],

@@ -2,7 +2,7 @@
 
 > Status: **Release candidate 1.0.0-rc.1 for approval** (18 Oct 2026), Laravel + Eloquent. **No endpoint is to be implemented until this contract is approved.** ⚑ Auth details (DEC-02) and the items in §12.7 are still open.
 >
-> **Generated file.** The endpoint reference (§9), schemas (§10), page action map (§11) and contract review (§12) come from `docs/source/api.py`, `schemas.py`, `actions.py`, `errors.py` and `contract_review.py`. The machine-readable contract is [`openapi.yaml`](openapi.yaml) (OpenAPI 3.1), validated against the official OpenAPI 3.1 schema (§8). Size: 337 endpoints, 222 schemas, 79 error codes, 163 pages with 537 mapped actions.
+> **Generated file.** The endpoint reference (§9), schemas (§10), page action map (§11) and contract review (§12) come from `docs/source/api.py`, `schemas.py`, `actions.py`, `errors.py` and `contract_review.py`. The machine-readable contract is [`openapi.yaml`](openapi.yaml) (OpenAPI 3.1), validated against the official OpenAPI 3.1 schema (§8). Size: 337 endpoints, 224 schemas, 79 error codes, 163 pages with 537 mapped actions.
 
 ## 1. Conventions
 
@@ -601,8 +601,8 @@ Last run: 24 rules, **24 passed, 0 failed**; 6 negative tests, 6 detected. Offic
 | Rule | Check | Items | Result |
 |---|---|---|---|
 | A01 | Document validates against the official OpenAPI 3.1 schema (schema-base: documents incl. Schema Objects) | 1 | ✅ pass |
-| A02 | Every component schema is valid JSON Schema 2020-12 (meta-schema check) | 222 | ✅ pass |
-| A03 | All $refs resolve and every component schema is used | 225 | ✅ pass |
+| A02 | Every component schema is valid JSON Schema 2020-12 (meta-schema check) | 224 | ✅ pass |
+| A03 | All $refs resolve and every component schema is used | 227 | ✅ pass |
 | A04 | Operations have unique camelCase operationIds, summary, description, tags, a 2xx, a default, and problem+json errors | 337 | ✅ pass |
 | A05 | Path templates and declared path parameters match; path parameters are required | 337 | ✅ pass |
 | A06 | Security: public only for sign-in flows, cookie only for refresh/logout, X-Company-Id on company-scoped calls, known permissions | 337 | ✅ pass |
@@ -613,7 +613,7 @@ Last run: 24 rules, **24 passed, 0 failed**; 6 negative tests, 6 detected. Offic
 | A11 | Request-only schemas reject unknown properties (additionalProperties: false) | 103 | ✅ pass |
 | A12 | Money, quantity, cost and rate fields are decimal strings (never JSON numbers) | 237 | ✅ pass |
 | A13 | PUT/PATCH on a versioned table requires If-Match, and If-Match is only required where a version exists | 40 | ✅ pass |
-| A14 | Request fields are stored: each maps to a column (or is declared virtual) with a compatible length, enum values and nullability | 403 | ✅ pass |
+| A14 | Request fields are stored: each maps to a column (or is declared virtual) with a compatible length, enum values and nullability | 404 | ✅ pass |
 | A15 | Response enum fields have exactly the values the database allows | 29 | ✅ pass |
 | A16 | Every action of every page maps to API calls, a dialog, navigation or explicit client behaviour, and every target exists | 537 | ✅ pass |
 | A17 | Every data-changing endpoint is triggered by at least one page action (only token refresh is system-driven) | 191 | ✅ pass |
@@ -1138,7 +1138,7 @@ Active company profile and locations.
 <a id="patchcompany"></a>
 #### `PATCH /api/v1/company`
 
-Edit company identity and contact.
+Edit company identity and contact. brand_color (PEP-497) is #rrggbb or null (the Pluto default). A colour that cannot reach WCAG AA contrast (4.5:1) as a button or as text on the page is refused with 422 on brand_color.
 
 | | |
 |---|---|
@@ -1146,7 +1146,7 @@ Edit company identity and contact.
 | **Permission** | `settings.edit` — roles: Owner, Finance manager |
 | **Path / query params** | — / — |
 | **Request body** | [`CompanyUpdate`](#schema-companyupdate) |
-| **Validation** | `legal_name` string ≤ 190; `trading_name` string ≤ 190 (nullable); `business_type` one of private_limited/sole_proprietorship/partnership/public_limited; `trade_licence_no` string ≤ 60 (nullable); `tax_registration_no` string ≤ 40 (nullable); `incorporated_on` YYYY-MM-DD (nullable); `registered_address` string ≤ 255 (nullable); `phone` string ≤ 30 (nullable); `email` e-mail (nullable); `website` string ≤ 190 (nullable)<br>Unknown fields are rejected (422). |
+| **Validation** | `legal_name` string ≤ 190; `trading_name` string ≤ 190 (nullable); `business_type` one of private_limited/sole_proprietorship/partnership/public_limited; `trade_licence_no` string ≤ 60 (nullable); `tax_registration_no` string ≤ 40 (nullable); `incorporated_on` YYYY-MM-DD (nullable); `registered_address` string ≤ 255 (nullable); `phone` string ≤ 30 (nullable); `email` e-mail (nullable); `website` string ≤ 190 (nullable); `brand_color` string ≤ 7 (nullable)<br>Unknown fields are rejected (422). |
 | **Success** | 200 `data`: [`Company`](#schema-company) |
 | **Status codes** | 200, 400, 401, 403, 409, 422, 428, 503 |
 | **Error codes** | **`company_maintenance`, `support_read_only`**; standard: `company_required`, `if_match_required`, `malformed_json`, `not_a_member`, `permission_denied`, `server_error`, `token_expired`, `token_invalid`, `unauthenticated`, `validation_failed`, `version_conflict` |
@@ -8523,6 +8523,7 @@ Current user.
 | `permissions` | `[str]` | no |
 | `approval_limits` | `obj \| null` | no |
 | `branch_ids` | `[id]` | no |
+| `brand` | `ref:BrandPalette \| null` | no |
 
 <a id="schema-membership"></a>
 #### `Membership`
@@ -8701,7 +8702,33 @@ Company profile.
 | `branches` | `[ref:Branch]` | no |
 | `seats_used` | `int` | no |
 | `seat_limit` | `int` | no |
+| `brand` | `ref:BrandPalette \| null` | no |
 | `version` | `int` | yes |
+
+<a id="schema-brandpalette"></a>
+#### `BrandPalette`
+
+The company's brand colour and the colours the app derives from it for the light and the dark theme (PEP-497). Worked out by the server so every screen and PDF agrees; null on Company/Me = the Pluto default.
+
+| Property | Type | Required |
+|---|---|---|
+| `color` | `str` | yes |
+| `light` | `ref:BrandTokens` | yes |
+| `dark` | `ref:BrandTokens` | yes |
+
+<a id="schema-brandtokens"></a>
+#### `BrandTokens`
+
+Brand colours for one theme, each #rrggbb: brand (buttons, active items), brand_hover, on_brand (text on brand), brand_ink (brand-coloured text and links), brand_soft (tinted background), focus (focus ring).
+
+| Property | Type | Required |
+|---|---|---|
+| `brand` | `str` | yes |
+| `brand_hover` | `str` | yes |
+| `on_brand` | `str` | yes |
+| `brand_ink` | `str` | yes |
+| `brand_soft` | `str` | yes |
+| `focus` | `str` | yes |
 
 <a id="schema-companyupdate"></a>
 #### `CompanyUpdate`
@@ -8720,6 +8747,7 @@ Editable company fields. Unknown properties are rejected.
 | `phone` | `str:30 \| null` | no |
 | `email` | `email \| null` | no |
 | `website` | `str:190 \| null` | no |
+| `brand_color` | `str:7 \| null` | no |
 
 <a id="schema-companysettings"></a>
 #### `CompanySettings`
@@ -13552,7 +13580,7 @@ View permission `lc.create`. **Loads:** nothing of its own (host page data).
 | | Before review | Contract |
 |---|---|---|
 | Endpoints | 280 | 337 |
-| Schemas | 191 | 222 |
+| Schemas | 191 | 224 |
 | Pages | 155 | 163 |
 | Page actions mapped to API or client behaviour | 0 of 448 | 537 of 537 |
 
@@ -13684,6 +13712,7 @@ View permission `lc.create`. **Loads:** nothing of its own (host page data).
 | Checks before posting (UI redesign A+) | DocumentCalculation adds checks: [PostingCheck { key, status pass\|warn\|block, label, line_no }] for sales invoices and purchase bills — the period is open, stock, credit limit, overdue invoices, back-dating, purchase-order quantities — so E3/F3 show what passed as well as what needs attention. Built from the same warnings and PeriodGuard the post uses. PEP-480, 12 Nov 2026. Additive. |
 | Platform console (PEP-483) | New /platform/companies endpoints (list, create with an Owner invitation, suspend, reactivate) for platform admins: e-mails in PLUTO_PLATFORM_ADMINS with 2-step sign-in, never a company role, so selling Pluto to many companies needs no shared membership. Me adds platform_admin (shows the console link; PEP-484). Schemas PlatformCompany, PlatformCompanyCreate; errors platform_admin_only, platform_two_factor_required. Owner request 12-13 Nov 2026. Additive. |
 | Read-only support access (PEP-485) | POST/DELETE /platform/companies/{id}/support-access: a platform admin opens a company read-only for 15-240 minutes with a reason (table support_access_grants); its owners get a notification and the audit log keeps the start and end; any change answers 403 support_read_only; Me adds support_access while the current company is such a view. Additive. |
+| Company brand colour (PEP-497) | companies adds brand_color (#rrggbb, NULL = Pluto default). CompanyUpdate accepts brand_color (null resets); a colour that cannot reach WCAG AA contrast is refused with 422 on brand_color. Company and Me (for the current company) add brand: BrandPalette { color, light, dark } of BrandTokens { brand, brand_hover, on_brand, brand_ink, brand_soft, focus }, worked out by the server so the app sets its CSS variables without colour maths; the company's PDFs use the colour for headings and rules. Owner request 14 Nov 2026. Additive. |
 | Owner access for the software owner (PEP-496) | POST/DELETE /platform/companies/{id}/owner-access: a platform admin joins a customer company as a real member with its Owner role (reason required, idempotent; its owners get a notification, the audit log keeps platform_owner_access_started / _ended) and leaves again (409 last_owner while the only active Owner). company_users adds joined_via (member \| platform_admin): such a membership uses no seat. PlatformCompany adds owner_access; Member adds platform_admin (the Members list shows who is Pluto support). The read-only support view (PEP-485) is unchanged. Owner decision 14 Nov 2026. Additive. |
 | Items on a letter of credit (PEP-487) | LetterOfCreditInput adds lines [LcLineInput { product_id, quantity, unit_id, unit_cost, description }] and warehouse_id: the items are kept in a purchase order created and linked in the same transaction (LC currency, planning rate, marked sent), so an import bill fills from what is still to come and BR-056 with the LC tolerance applies; lines and purchase_order_id together are refused. LetterOfCredit adds items_source (entered \| purchase_order \| none), lines [LcLine], lines_total and warehouse_id, read from that order. New POST /letters-of-credit/{id}/items (LcItemsInput) adds the items once to an LC that has none. LcAmendmentInput adds lines [LcAmendmentLineInput { action add\|change\|remove, purchase_order_line_id, product_id, unit_id, quantity, unit_cost }] and LcAmendment returns them; an accepted amendment applies them to the order's lines, never below what bills have taken (table lc_amendment_lines; column letters_of_credit.items_entered, hand-written migration 2026_11_13_000001). A bill from an LC with items may contain only those items. Owner request 13 Nov 2026. Additive. |
 | GET /reports/income, GET /reports/expenses | Need reports.financial instead of reports.view: they are profit-and-loss figures, which owner decision DEC-13 / C7 keeps from Sales staff and Viewer (P13.1-BE-05). |

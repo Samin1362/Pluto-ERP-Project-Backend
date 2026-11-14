@@ -59,7 +59,7 @@ s("TwoFactorConfirm", "Confirm TOTP.", code="str:6!")
 s("RecoveryCodes", "Shown once.", recovery_codes="[str]!")
 s("InvitationPublic", "Invitation seen before accepting.", company_name="str!", role_name="str!", email="email!", expires_at="datetime!", existing_user="bool!")
 s("AcceptInvitationRequest", "Accept an invitation.", name="str:120?", password="str:200?", password_confirmation="str:200?")
-s("Me", "Current user.", id="id!", name="str!", email="email!", phone="str?", two_factor_enabled="bool!", platform_admin="bool", support_access="ref:SupportAccess?", companies="[ref:Membership]!", active_company_id="id?", permissions="[str]", approval_limits="obj?", branch_ids="[id]")
+s("Me", "Current user.", id="id!", name="str!", email="email!", phone="str?", two_factor_enabled="bool!", platform_admin="bool", support_access="ref:SupportAccess?", companies="[ref:Membership]!", active_company_id="id?", permissions="[str]", approval_limits="obj?", branch_ids="[id]", brand="ref:BrandPalette?")
 s("Membership", "Company membership.", company_id="id!", company_name="str!", role="str!", status="enum:active|invited|deactivated!")
 s("Session", "Signed-in device.", id="id!", device_label="str?", user_agent="str?", ip_address="str?", last_seen_at="datetime?", current="bool!")
 s("UserPreferences", "Appearance.", theme="enum:light|dark|system", density="enum:default|compact", text_size="enum:s|m|l", reduce_motion="bool", sidebar_collapsed="bool")
@@ -75,9 +75,11 @@ s("OwnerAccess", "The platform admin's membership of a customer company (Owner r
 s("PlatformCompanyCreate", "A new customer company and the person who will own it.", legal_name="str:190!", trading_name="str:190?", business_type="enum:private_limited|sole_proprietorship|partnership|public_limited!", fy_start_month="int", base_currency_code="ccy", owner_email="email!", owner_name="str:120?")
 s("CompanyCreate", "New company.", legal_name="str:190!", trading_name="str:190?", business_type="enum:private_limited|sole_proprietorship|partnership|public_limited!", fy_start_month="int", base_currency_code="ccy")
 s("Company", "Company profile.", id="id!", legal_name="str!", trading_name="str?", business_type="str!", trade_licence_no="str?", tax_registration_no="str?", incorporated_on="date?",
-  registered_address="str?", phone="str?", email="email?", website="str?", logo_url="str?", base_currency_code="ccy!", fy_start_month="int!", timezone="str!", branches="[ref:Branch]", seats_used="int", seat_limit="int", version="int!")
+  registered_address="str?", phone="str?", email="email?", website="str?", logo_url="str?", base_currency_code="ccy!", fy_start_month="int!", timezone="str!", branches="[ref:Branch]", seats_used="int", seat_limit="int", brand="ref:BrandPalette?", version="int!")
+s("BrandPalette", "The company's brand colour and the colours the app derives from it for the light and the dark theme (PEP-497). Worked out by the server so every screen and PDF agrees; null on Company/Me = the Pluto default.", color="str!", light="ref:BrandTokens!", dark="ref:BrandTokens!")
+s("BrandTokens", "Brand colours for one theme, each #rrggbb: brand (buttons, active items), brand_hover, on_brand (text on brand), brand_ink (brand-coloured text and links), brand_soft (tinted background), focus (focus ring).", brand="str!", brand_hover="str!", on_brand="str!", brand_ink="str!", brand_soft="str!", focus="str!")
 s("CompanyUpdate", "Editable company fields.", legal_name="str:190", trading_name="str:190?", business_type="enum:private_limited|sole_proprietorship|partnership|public_limited", trade_licence_no="str:60?",
-  tax_registration_no="str:40?", incorporated_on="date?", registered_address="str:255?", phone="str:30?", email="email?", website="str:190?")
+  tax_registration_no="str:40?", incorporated_on="date?", registered_address="str:255?", phone="str:30?", email="email?", website="str:190?", brand_color="str:7?")
 s("CompanySettings", "All company settings (see company_settings).", valuation_method="enum:weighted_average|fifo!", invoice_rounding="enum:none|nearest_1|nearest_5!", allow_negative_stock="bool!", require_approval="bool!",
   backdate_warning_days="int!", prices_include_tax="bool!", show_tax_no_on_invoice="bool!", default_warehouse_id="id?", default_payment_term_id="id?", symbol_position="enum:before|after!", table_decimals="int!",
   negative_format="enum:parentheses|minus!", number_grouping="enum:lakh|million!", date_format="str!", week_start="enum:saturday|sunday|monday!", print_language="enum:en|bn|both!",

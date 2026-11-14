@@ -4,6 +4,8 @@
     $d = fn ($x) => \Carbon\CarbonImmutable::parse($x)->format('j M Y');
     $labels = ['not_due' => 'Not due', 'd1_30' => '1–30 days', 'd31_60' => '31–60 days', 'd61_90' => '61–90 days', 'd90_plus' => 'Over 90 days', 'total' => 'Total'];
     $owes = ['dr' => 'You owe us', 'cr' => 'We owe you']; // the party's ledger: debit = they owe us
+    // PEP-497: headings and rules in the company's brand colour (darkened if too light to read on white); body text stays as it is.
+    $brand = \App\Domain\Company\BrandPalette::printColor($company->brand_color ?? null, '#0b6b5e');
 @endphp
 <!doctype html>
 <html lang="en">
@@ -16,10 +18,10 @@
     h1 { font-size: 14pt; margin: 0; }
     .muted { color: #5f6670; }
     .title { text-align: right; }
-    .title .doc { font-size: 15pt; font-weight: bold; color: #0b6b5e; text-transform: uppercase; letter-spacing: 1px; }
-    .band { margin: 5mm 0 4mm; border-top: 2px solid #0b6b5e; }
+    .title .doc { font-size: 15pt; font-weight: bold; color: {{ $brand }}; text-transform: uppercase; letter-spacing: 1px; }
+    .band { margin: 5mm 0 4mm; border-top: 2px solid {{ $brand }}; }
     table { border-collapse: collapse; width: 100%; }
-    .lines th { background: #0b6b5e; color: #fff; text-align: left; padding: 4px 5px; font-size: 8pt; }
+    .lines th { background: {{ $brand }}; color: #fff; text-align: left; padding: 4px 5px; font-size: 8pt; }
     .lines td { padding: 3px 5px; border-bottom: 1px solid #e3e6ea; vertical-align: top; }
     .num, .lines th.num { text-align: right; white-space: nowrap; }
     .summary td { padding: 2px 5px; }

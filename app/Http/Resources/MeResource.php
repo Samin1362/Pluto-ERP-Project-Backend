@@ -3,6 +3,7 @@
 namespace App\Http\Resources;
 
 use App\Domain\Access\PermissionResolver;
+use App\Domain\Company\BrandPalette;
 use App\Models\Company;
 use App\Models\Role;
 use App\Support\CurrentCompany;
@@ -38,6 +39,8 @@ class MeResource extends JsonResource
             $out['permissions'] = app(PermissionResolver::class)->forMembership($m);
             $out['approval_limits'] = ['payment' => $role?->payment_approval_limit, 'journal' => $role?->journal_approval_limit];
             $out['branch_ids'] = $m->branches()->pluck('branches.id')->all();
+            // PEP-497: the current company's brand colours (null = the Pluto default), so the app is coloured from its first paint.
+            $out['brand'] = BrandPalette::for(Company::whereKey($current->id())->value('brand_color'));
         }
 
         return $out;
