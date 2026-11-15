@@ -31,7 +31,7 @@
 | [S1](#page-s1) | Sign in (NEW: not in design) | Shell | Auth | `public` | 2 | — |
 | [S2](#page-s2) | Forgot / reset password (NEW) | Shell | Auth | `public` | 2 | — |
 | [S3](#page-s3) | Accept invitation (NEW) | Shell | Auth | `public` | 2 | — |
-| [A1](#page-a1) | Main dashboard | Dashboard | Overview | `dashboard.view` | 1 | Dashboard.dc.html (03, 05 dark, 06 tablet, 07 phone) |
+| [A1](#page-a1) | Main dashboard | Dashboard | Overview | `dashboard.view` | 3 | Dashboard.dc.html (03, 05 dark, 06 tablet, 07 phone) |
 | [A2](#page-a2) | Financial overview | Dashboard | Lens | `dashboard.view` | 1 | Dash-A2.dc.html |
 | [A3](#page-a3) | Sales overview lens | Dashboard | Lens | `dashboard.view` | 1 | Dash-A3.dc.html |
 | [A4](#page-a4) | Expense overview lens | Dashboard | Lens | `dashboard.view` | 1 | Dash-A4.dc.html |
@@ -352,12 +352,12 @@ Each entry follows the 13 points of the brief: (1) purpose · (2) components and
    | Field | Type | Req. | Rule |
    |---|---|---|---|
    | Period | segmented | req | This month / quarter / FY to date |
-5. **Actions → API** ([full map](05-API-Specification.md#actions-a1)): New invoice (Alt S) → nav:E3<br>Record receipt → nav:E7<br>Reconcile (from banner) → nav:G10<br>Dismiss banner → ui:hide the banner for this session (sessionStorage)<br>Open any tile or row (deep link) → nav:*
+5. **Actions → API** ([full map](05-API-Specification.md#actions-a1)): New invoice (Alt S) → nav:E3<br>Record receipt → nav:E7<br>Reconcile (from banner) → nav:G10<br>Dismiss banner → ui:hide the banner for this session (sessionStorage)<br>Open any tile or row (deep link) → nav:*<br>Hide the setup checklist (Owner, PEP-511) → POST /setup-checklist/hide → GET /setup-checklist
 6. **Table:** columns Date, Voucher, Type, Party, Amount (৳); server-side pagination and sorting.
 7. **Validation and rules:** Standard server validation (422).
 8. **Roles allowed:** `dashboard.view` → Owner, Finance manager, Accountant, Sales staff, Viewer. Actions additionally check their own permission (see endpoints).
-9. **APIs:** [`GET /dashboard`](05-API-Specification.md#getdashboard)
-10. **Entities:** `journal_entries`, `journal_lines`, `ledgers`, `money_accounts`, `product_warehouse_settings`, `purchase_bills`, `sales_invoices`, `stock_balances`
+9. **APIs:** [`GET /setup-checklist`](05-API-Specification.md#getsetupchecklist), [`POST /setup-checklist/hide`](05-API-Specification.md#postsetupchecklisthide), [`GET /dashboard`](05-API-Specification.md#getdashboard)
+10. **Entities:** `audit_logs`, `companies`, `company_settings`, `company_users`, `journal_entries`, `journal_lines`, `ledgers`, `money_accounts`, `parties`, `product_warehouse_settings`, `products`, `purchase_bills`, `sales_invoices`, `stock_balances`, `tax_rules`, `user_invitations`, `warehouses`
 11. **Workflows:** Bill a customer, Pay a supplier · FR: FR-010
 12. **States:** Loading skeleton tiles and charts; each widget fails independently with an error ref (L11). Empty period: 'Nothing posted in this period'.
 13. **Depends on:** [A2](#page-a2), [A5](#page-a5), [A6](#page-a6), [A7](#page-a7), [A8](#page-a8), [E3](#page-e3), [G10](#page-g10)

@@ -24,7 +24,7 @@ A = {
     "S2": ["POST /auth/password/forgot", "POST /auth/password/reset"],
     "S3": ["POST /invitations/{token}/accept"],
     # ------------------------------------------------------------------ dashboard
-    "A1": ["nav:E3", "nav:E7", "nav:G10", "ui:hide the banner for this session (sessionStorage)", "nav:*"],
+    "A1": ["nav:E3", "nav:E7", "nav:G10", "ui:hide the banner for this session (sessionStorage)", "nav:*", "POST /setup-checklist/hide → GET /setup-checklist"],
     "A2": ["nav:*", "nav:H16"], "A3": ["nav:*", "nav:E11"], "A4": ["nav:*", "nav:I9"], "A5": ["nav:*", "nav:B7"],
     "A6": ["nav:*", "nav:C7"], "A7": ["nav:*", "nav:G1"], "A8": ["nav:*", "nav:D12"],
     # ------------------------------------------------------------------ parties

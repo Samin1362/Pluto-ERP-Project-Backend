@@ -25,6 +25,8 @@ tags:
   description: Money accounts, cash counts, statement import, reconciliation
 - name: Company
   description: Company profile, settings, branches, numbering, tax rules, account mappings
+- name: Dashboard
+  description: Dashboard
 - name: Fiscal years
   description: Financial years and period locks
 - name: Income and expenses
@@ -8510,6 +8512,189 @@ paths:
                 $ref: '#/components/schemas/Error'
         '422':
           description: 'Validation or business-rule failure: `validation_failed`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: 'Company temporarily unavailable (restore in progress): `company_maintenance`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+              description: Seconds to wait
+        default:
+          description: Unexpected error (`server_error`)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /api/v1/setup-checklist:
+    get:
+      operationId: getSetupChecklist
+      summary: The new-company setup checklist (what is done, from the company's data)
+      tags:
+      - Dashboard
+      description: "**Permission:** `dashboard.view`  \n**Database:** read: companies, company_settings, company_users, money_accounts, parties, products, sales_invoices,\
+        \ tax_rules, user_invitations, warehouses  \n**Rules:** —"
+      x-permission: dashboard.view
+      x-business-rules: []
+      x-requirements:
+      - FR-064
+      x-pages:
+      - A1
+      x-page-actions:
+      - 'A1: Hide the setup checklist (Owner, PEP-511)'
+      x-tables:
+      - companies
+      - company_settings
+      - tax_rules
+      - money_accounts
+      - warehouses
+      - products
+      - parties
+      - sales_invoices
+      - company_users
+      - user_invitations
+      x-db-operations:
+        companies: R
+        company_settings: R
+        tax_rules: R
+        money_accounts: R
+        warehouses: R
+        products: R
+        parties: R
+        sales_invoices: R
+        company_users: R
+        user_invitations: R
+      x-error-codes:
+      - company_maintenance
+      - company_required
+      - not_a_member
+      - permission_denied
+      - server_error
+      - token_expired
+      - token_invalid
+      - unauthenticated
+      x-contract-change: PEP-511 setup checklist
+      parameters:
+      - $ref: '#/components/parameters/CompanyHeader'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                properties:
+                  data:
+                    $ref: '#/components/schemas/SetupChecklist'
+          headers:
+            ETag:
+              schema:
+                type: string
+              description: W/"<version>" for If-Match
+        '400':
+          description: 'Malformed request: `company_required`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: 'Not authenticated: `token_expired`, `token_invalid`, `unauthenticated`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: 'Company temporarily unavailable (restore in progress): `company_maintenance`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+              description: Seconds to wait
+        default:
+          description: Unexpected error (`server_error`)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /api/v1/setup-checklist/hide:
+    post:
+      operationId: postSetupChecklistHide
+      summary: Hide the setup checklist on the dashboard for this company
+      tags:
+      - Dashboard
+      description: "**Permission:** `settings.edit`  \n**Database:** insert: audit_logs, company_settings  \n**Rules:** —"
+      x-permission: settings.edit
+      x-business-rules: []
+      x-requirements:
+      - FR-064
+      x-pages:
+      - A1
+      x-page-actions:
+      - 'A1: Hide the setup checklist (Owner, PEP-511)'
+      x-tables:
+      - company_settings
+      - audit_logs
+      x-db-operations:
+        company_settings: C
+        audit_logs: C
+      x-error-codes:
+      - company_maintenance
+      - company_required
+      - not_a_member
+      - permission_denied
+      - server_error
+      - support_read_only
+      - token_expired
+      - token_invalid
+      - unauthenticated
+      x-contract-change: PEP-511 setup checklist
+      parameters:
+      - $ref: '#/components/parameters/CompanyHeader'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                properties:
+                  data:
+                    $ref: '#/components/schemas/SetupChecklist'
+        '400':
+          description: 'Malformed request: `company_required`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: 'Not authenticated: `token_expired`, `token_invalid`, `unauthenticated`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -41634,6 +41819,50 @@ components:
       - created_at
       - owner_pending
       - members
+    SetupStep:
+      type: object
+      description: 'One step of the new-company setup checklist (PEP-511). key: profile, logo, tax, money, warehouse, items, customers, first_invoice, team. done
+        is worked out from the company''s data.'
+      properties:
+        key:
+          type: string
+          enum:
+          - profile
+          - logo
+          - tax
+          - money
+          - warehouse
+          - items
+          - customers
+          - first_invoice
+          - team
+        done:
+          type: boolean
+      required:
+      - key
+      - done
+    SetupChecklist:
+      type: object
+      description: 'The new-company setup checklist (PEP-511): the steps in order, how many are done, and when an Owner hid it (null = shown on the dashboard until
+        all are done).'
+      properties:
+        steps:
+          type: array
+          items:
+            $ref: '#/components/schemas/SetupStep'
+        done:
+          type: integer
+        steps_count:
+          type: integer
+        hidden_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+      required:
+      - steps
+      - done
+      - steps_count
     CompanyBilling:
       type: object
       description: 'A customer company''s Pluto subscription (PEP-503). status: not_billed (no paid_until), paid, due_soon (7 days or less left), overdue (past paid_until,

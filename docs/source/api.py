@@ -223,6 +223,11 @@ E("GET", "/audit-logs", "Activity timeline of one record", "auth.self", ["audit_
   params=["auditable_type", "auditable_id", "page"], resp="Page<AuditLog>", tag=T, fr=["FR-074"],
   desc="Requires view permission on the audited record's module.",
   perm_map={'any': '<module>.view of the record named by type/id (e.g. sales.view for a sales_invoice)'})
+E("GET", "/setup-checklist", "The new-company setup checklist (what is done, from the company's data)", "dashboard.view",
+  ["companies", "company_settings", "tax_rules", "money_accounts", "warehouses", "products", "parties", "sales_invoices", "company_users", "user_invitations"], ["A1"],
+  resp="SetupChecklist", tag="Dashboard", fr=["FR-064"], added="PEP-511 setup checklist")
+E("POST", "/setup-checklist/hide", "Hide the setup checklist on the dashboard for this company", "settings.edit", ["company_settings", "audit_logs"], ["A1"], codes=[200],
+  resp="SetupChecklist", tag="Dashboard", fr=["FR-064"], added="PEP-511 setup checklist")
 E("GET", "/dashboard", "Main dashboard data for a period", "dashboard.view", ["journal_lines", "ledgers", "sales_invoices", "purchase_bills", "money_accounts", "stock_balances", "product_warehouse_settings", "journal_entries"], ["A1"],
   params=["period"], resp="DashboardSummary", tag=T, fr=["FR-010"], desc="Cached per company and period for 60 seconds; invalidated by postings. `period`: this_month (default), this_quarter, this_year. Profit, cash and balance widgets need reports.financial (DEC-13); other widgets follow their module's view permission. A widget that fails comes back empty with an entry in `widget_errors` (ERR-8).")
 E("GET", "/dashboard/lenses/{lens}", "Dashboard lens data (financial, sales, expenses, receivables, payables, cash, inventory)", "dashboard.view",

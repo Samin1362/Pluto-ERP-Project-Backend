@@ -7342,6 +7342,14 @@
      "auto_increment": false
     },
     {
+     "name": "setup_hidden_at",
+     "type": "datetime",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
      "name": "lock_version",
      "type": "int unsigned",
      "nullable": false,
