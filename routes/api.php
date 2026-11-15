@@ -106,6 +106,7 @@ Route::middleware(['jwt', 'throttle:api-user'])->group(function () {
         Route::get('plans', [PlatformPlanController::class, 'index']);
         Route::post('plans', [PlatformPlanController::class, 'store'])->middleware('idempotent');
         Route::put('plans/{id}', [PlatformPlanController::class, 'update'])->whereNumber('id');
+        Route::delete('plans/{id}', [PlatformPlanController::class, 'destroy'])->whereNumber('id');
         Route::post('companies/{id}/plan', [PlatformPlanController::class, 'assign'])->whereNumber('id');
     });
 

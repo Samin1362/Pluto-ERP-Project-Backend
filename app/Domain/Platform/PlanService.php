@@ -61,6 +61,20 @@ final class PlanService
         return Plans::resource($p->refresh());
     }
 
+    /** PEP-499: deletes a plan no company is on (409 plan_in_use otherwise: move them to another plan first). */
+    public function delete(int $id): void
+    {
+        DB::transaction(function () use ($id) {
+            $p = Plan::query()->whereKey($id)->lockForUpdate()->first() ?? throw new ApiProblem('not_found');
+            $on = DB::table('companies')->where('plan_id', $p->id)->count();
+            if ($on > 0) {
+                throw new ApiProblem('plan_in_use', "{$on} ".($on === 1 ? 'company is' : 'companies are')." on {$p->name}; move ".($on === 1 ? 'it' : 'them').' to another plan first.', extra: ['companies' => $on]);
+            }
+            $this->audit->record('deleted', $p, ['slug' => $p->slug, 'name' => $p->name], null, type: 'plans');
+            $p->delete();
+        });
+    }
+
     /** Puts a company on a plan with optional exceptions; audited in that company, its Owners are told. */
     public function assign(int $companyId, int $planId, ?array $overrides): array
     {

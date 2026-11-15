@@ -140,6 +140,9 @@ E("PUT", "/platform/plans/{id}", "Change a Pluto plan (every company on it follo
   fr=["FR-005"], codes=[200, 409, 422], ifmatch=True,
   desc=PLAT + " Lowering a limit removes nobody: companies above it only cannot add more. Switching a module off deletes nothing; its data comes back when it is on again.",
   errors=["platform_admin_only", "platform_two_factor_required"], added="PEP-498 plans")
+E("DELETE", "/platform/plans/{id}", "Delete a plan no company is on", "auth", ["plans", "companies", "audit_logs"], ["K17"], tag="Platform console", fr=["FR-005"], codes=[204, 409],
+  desc=PLAT + " Refused with 409 plan_in_use while any company is on the plan: move them to another plan first (PEP-499).",
+  errors=["platform_admin_only", "platform_two_factor_required", "plan_in_use"], added="PEP-499 plans")
 E("POST", "/platform/companies/{id}/plan", "Put a company on a plan, with optional exceptions", "auth", ["companies", "plans", "notifications", "audit_logs"], ["K17"],
   req="CompanyPlanInput", resp="PlatformCompany", tag="Platform console", fr=["FR-005"], codes=[200, 422], tx="The company, the audit entry and the notification in one transaction.",
   desc=PLAT + " The company's Owners are told the new plan. An inactive plan cannot be given (422).", errors=["platform_admin_only", "platform_two_factor_required"], added="PEP-498 plans")

@@ -10,7 +10,7 @@ class PlatformCompanyCreateRequest extends StrictRequest
 {
     protected function allowedFields(): array
     {
-        return ['legal_name', 'trading_name', 'business_type', 'fy_start_month', 'base_currency_code', 'owner_email', 'owner_name'];
+        return ['legal_name', 'trading_name', 'business_type', 'fy_start_month', 'base_currency_code', 'owner_email', 'owner_name', 'plan_id'];
     }
 
     public function rules(): array
@@ -23,6 +23,8 @@ class PlatformCompanyCreateRequest extends StrictRequest
             'base_currency_code' => ['sometimes', 'string', 'size:3', Rule::exists('currencies', 'code')],
             'owner_email' => ['required', 'email', 'max:190'],
             'owner_name' => ['sometimes', 'nullable', 'string', 'max:120'],
+            // PEP-499: the plan the customer bought; required so nobody gets Import Pro by accident.
+            'plan_id' => ['required', 'integer', Rule::exists('plans', 'id')->where('is_active', true)],
         ];
     }
 
@@ -32,6 +34,8 @@ class PlatformCompanyCreateRequest extends StrictRequest
             'legal_name.required' => 'Enter the company name',
             'business_type.required' => 'Choose the type of business',
             'owner_email.required' => 'Enter the e-mail of the person who will own this company',
+            'plan_id.required' => 'Choose the plan this customer bought',
+            'plan_id.exists' => 'Choose a plan that is offered',
         ];
     }
 }
