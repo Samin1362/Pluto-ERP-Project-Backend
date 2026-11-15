@@ -108,6 +108,10 @@ Route::middleware(['jwt', 'throttle:api-user'])->group(function () {
         Route::put('plans/{id}', [PlatformPlanController::class, 'update'])->whereNumber('id');
         Route::delete('plans/{id}', [PlatformPlanController::class, 'destroy'])->whereNumber('id');
         Route::post('companies/{id}/plan', [PlatformPlanController::class, 'assign'])->whereNumber('id');
+        // PEP-503: subscription terms and payments.
+        Route::post('companies/{id}/billing', [PlatformPlanController::class, 'billing'])->whereNumber('id');
+        Route::get('companies/{id}/payments', [PlatformPlanController::class, 'payments'])->whereNumber('id');
+        Route::post('companies/{id}/payments', [PlatformPlanController::class, 'pay'])->whereNumber('id')->middleware('idempotent');
     });
 
     Route::middleware('company')->group(function () {
