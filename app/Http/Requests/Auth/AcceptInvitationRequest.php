@@ -9,7 +9,7 @@ class AcceptInvitationRequest extends StrictRequest
 {
     protected function allowedFields(): array
     {
-        return ['name', 'password', 'password_confirmation'];
+        return ['name', 'password', 'password_confirmation', 'accept_terms'];
     }
 
     public function rules(): array
@@ -18,6 +18,7 @@ class AcceptInvitationRequest extends StrictRequest
             'name' => ['sometimes', 'nullable', 'string', 'max:120'],
             'password' => ['sometimes', 'nullable', 'string', 'max:200'],
             'password_confirmation' => ['sometimes', 'nullable', 'string', 'max:200'],
+            'accept_terms' => ['sometimes', 'boolean'],
         ];
     }
 }

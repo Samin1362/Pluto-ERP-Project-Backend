@@ -245,6 +245,22 @@
      "auto_increment": false
     },
     {
+     "name": "terms_version",
+     "type": "varchar(20)",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "terms_accepted_at",
+     "type": "datetime",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
      "name": "failed_login_count",
      "type": "smallint unsigned",
      "nullable": false,

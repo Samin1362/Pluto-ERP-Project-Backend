@@ -40,6 +40,8 @@ CREATE TABLE `users` (
   `two_factor_confirmed_at` datetime NULL,
   `password_changed_at` datetime NULL,
   `last_login_at` datetime NULL,
+  `terms_version` varchar(20) NULL COMMENT 'Version of the Terms of service and Privacy policy this person accepted (PEP-502), e.g. 2026-11-15',
+  `terms_accepted_at` datetime NULL COMMENT 'When they accepted it (PEP-502)',
   `failed_login_count` smallint unsigned NOT NULL DEFAULT 0,
   `locked_until` datetime NULL COMMENT 'Brute-force lockout end',
   `created_at` datetime NULL COMMENT 'Set by Laravel',

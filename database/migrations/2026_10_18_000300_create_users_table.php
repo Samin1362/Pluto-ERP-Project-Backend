@@ -35,6 +35,8 @@ return new class extends Migration
             $table->dateTime('two_factor_confirmed_at')->nullable();
             $table->dateTime('password_changed_at')->nullable();
             $table->dateTime('last_login_at')->nullable();
+            $table->string('terms_version', 20)->nullable()->comment('Version of the Terms of service and Privacy policy this person accepted (PEP-502), e.g. 2026-11-15');
+            $table->dateTime('terms_accepted_at')->nullable()->comment('When they accepted it (PEP-502)');
             $table->unsignedSmallInteger('failed_login_count')->default(0);
             $table->dateTime('locked_until')->nullable()->comment('Brute-force lockout end');
             $table->dateTime('created_at')->nullable()->comment('Set by Laravel');

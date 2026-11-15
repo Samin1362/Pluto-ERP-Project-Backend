@@ -821,7 +821,7 @@ Accept an invitation (creates or links the user).
 | **Permission** | public |
 | **Path / query params** | `token` / — |
 | **Request body** | [`AcceptInvitationRequest`](#schema-acceptinvitationrequest) |
-| **Validation** | `name` string ≤ 120 (nullable); `password` string ≤ 200 (nullable); `password_confirmation` string ≤ 200 (nullable)<br>Unknown fields are rejected (422).<br>BR-059: Active plus invited users cannot exceed the company's seat limit. |
+| **Validation** | `name` string ≤ 120 (nullable); `password` string ≤ 200 (nullable); `password_confirmation` string ≤ 200 (nullable); `accept_terms` boolean<br>Unknown fields are rejected (422).<br>BR-059: Active plus invited users cannot exceed the company's seat limit. |
 | **Success** | 200 `data`: [`LoginResponse`](#schema-loginresponse) |
 | **Status codes** | 200, 400, 404, 409, 410, 422, 429 |
 | **Error codes** | **`branch_limit_reached`, `gone`, `seat_limit_reached`**; standard: `malformed_json`, `not_found`, `rate_limited`, `server_error`, `validation_failed` |
@@ -8683,13 +8683,14 @@ Invitation seen before accepting.
 <a id="schema-acceptinvitationrequest"></a>
 #### `AcceptInvitationRequest`
 
-Accept an invitation. Unknown properties are rejected.
+Accept an invitation. A new account must accept the Terms of service and Privacy policy (accept_terms = true; PEP-502); the version and time are stored on the account. Unknown properties are rejected.
 
 | Property | Type | Required |
 |---|---|---|
 | `name` | `str:120 \| null` | no |
 | `password` | `str:200 \| null` | no |
 | `password_confirmation` | `str:200 \| null` | no |
+| `accept_terms` | `bool` | no |
 
 <a id="schema-me"></a>
 #### `Me`
@@ -14058,6 +14059,7 @@ View permission `lc.create`. **Loads:** nothing of its own (host page data).
 | Checks before posting (UI redesign A+) | DocumentCalculation adds checks: [PostingCheck { key, status pass\|warn\|block, label, line_no }] for sales invoices and purchase bills — the period is open, stock, credit limit, overdue invoices, back-dating, purchase-order quantities — so E3/F3 show what passed as well as what needs attention. Built from the same warnings and PeriodGuard the post uses. PEP-480, 12 Nov 2026. Additive. |
 | Platform console (PEP-483) | New /platform/companies endpoints (list, create with an Owner invitation, suspend, reactivate) for platform admins: e-mails in PLUTO_PLATFORM_ADMINS with 2-step sign-in, never a company role, so selling Pluto to many companies needs no shared membership. Me adds platform_admin (shows the console link; PEP-484). Schemas PlatformCompany, PlatformCompanyCreate; errors platform_admin_only, platform_two_factor_required. Owner request 12-13 Nov 2026. Additive. |
 | Read-only support access (PEP-485) | POST/DELETE /platform/companies/{id}/support-access: a platform admin opens a company read-only for 15-240 minutes with a reason (table support_access_grants); its owners get a notification and the audit log keeps the start and end; any change answers 403 support_read_only; Me adds support_access while the current company is such a view. Additive. |
+| Terms and privacy acceptance (PEP-502) | AcceptInvitationRequest adds accept_terms: a new account must accept the Terms of service and Privacy policy (422 on accept_terms otherwise); users adds terms_version and terms_accepted_at (the version in config pluto.terms_version). The texts are public pages of the web app (/terms, /privacy), a draft for the owner's lawyer. Owner request 15 Nov 2026 (roadmap A5). Additive. |
 | Subscription tracking (PEP-503) | companies adds billing_price, paid_until, grace_days, billing_suspended; new subscription_payments. POST /platform/companies/{id}/billing, GET/POST /platform/companies/{id}/payments. PlatformCompany adds billing (price, paid_until, grace_days, status, days_left). Daily pluto:subscriptions:check reminds Owners 7 days before and on the day, e-mails the platform admins a summary, and suspends a company grace_days after paid_until (billing_suspended); a payment reopens it. Owner request 15 Nov 2026 (roadmap A7). Additive. |
 | Export all my data (PEP-501) | POST /export-jobs accepts kind company_data (format csv): an Owner downloads everything the company owns as a ZIP (one CSV per table with only its rows, the company profile, members without secrets, attachments, a README) through the usual 24-hour signed link; export_jobs.kind adds company_data. Owner decision 15 Nov 2026 (roadmap A6). Additive. |
 | Plan on create, delete a plan (PEP-499) | PlatformCompanyCreate requires plan_id (the plan the customer bought), so a new company never gets Import Pro by accident. DELETE /platform/plans/{id} removes a plan no company is on (409 plan_in_use otherwise). Owner request 15 Nov 2026. |

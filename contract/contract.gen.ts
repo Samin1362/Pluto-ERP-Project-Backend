@@ -88,11 +88,12 @@ export type ErrorCode =
   | 'validation_failed'
   | 'version_conflict'
 
-/** Accept an invitation. */
+/** Accept an invitation. A new account must accept the Terms of service and Privacy policy (accept_terms = true; PEP-502); the version and time are stored on the account. */
 export interface AcceptInvitationRequest {
   name?: string | null
   password?: string | null
   password_confirmation?: string | null
+  accept_terms?: boolean
 }
 
 /** Account group. */

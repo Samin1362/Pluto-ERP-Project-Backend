@@ -284,9 +284,14 @@ final class MemberService
                 if ($user->status !== 'active' || ! Hash::check((string) ($in['password'] ?? ''), $user->password_hash)) {
                     throw new ApiProblem('validation_failed', errors: ['password' => ['Enter the password of your existing Pluto account']]);
                 }
+                if (($in['accept_terms'] ?? false) === true && $user->terms_version !== (string) config('pluto.terms_version')) {
+                    $user->forceFill(['terms_version' => (string) config('pluto.terms_version'), 'terms_accepted_at' => now()])->save();
+                }
             } else {
                 $errors = array_filter(['name' => empty($in['name']) ? ['Enter your name'] : null,
-                    'password' => empty($in['password']) ? ['Choose a password'] : null]);
+                    'password' => empty($in['password']) ? ['Choose a password'] : null,
+                    // PEP-502: a new account accepts the Terms of service and Privacy policy.
+                    'accept_terms' => ($in['accept_terms'] ?? false) !== true ? ['Tick to agree to the Terms of service and Privacy policy'] : null]);
                 if (! $errors) {
                     $v = Validator::make($in, ['password' => ['confirmed', AccountService::passwordRule()]],
                         ['password.confirmed' => 'The two passwords do not match', 'password.min' => 'Use at least 10 characters',
@@ -297,7 +302,7 @@ final class MemberService
                     throw new ApiProblem('validation_failed', errors: $errors);
                 }
                 $user = User::forceCreate(['name' => $in['name'], 'email' => $i->email, 'password_hash' => Hash::make($in['password']), 'status' => 'active',
-                    'email_verified_at' => now(), 'password_changed_at' => now()]);
+                    'email_verified_at' => now(), 'password_changed_at' => now(), 'terms_version' => (string) config('pluto.terms_version'), 'terms_accepted_at' => now()]);
             }
             $limit = (int) Company::whereKey($i->company_id)->lockForUpdate()->value('seat_limit');
             // The invitation itself holds a seat until accepted; the member replaces it.

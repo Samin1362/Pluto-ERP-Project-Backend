@@ -172,6 +172,8 @@ erDiagram
         datetime two_factor_confirmed_at
         datetime password_changed_at
         datetime last_login_at
+        varchar terms_version
+        datetime terms_accepted_at
         smallint failed_login_count
         datetime locked_until
     }
@@ -1978,6 +1980,8 @@ Standard columns are listed in each table: `id` (PK), `company_id` (tenant), `lo
 | `two_factor_confirmed_at` | DATETIME | yes | NULL | — | — |  |
 | `password_changed_at` | DATETIME | yes | NULL | — | — |  |
 | `last_login_at` | DATETIME | yes | NULL | — | — |  |
+| `terms_version` | VARCHAR(20) | yes | NULL | — | — | Version of the Terms of service and Privacy policy this person accepted (PEP-502), e.g. 2026-11-15 |
+| `terms_accepted_at` | DATETIME | yes | NULL | — | — | When they accepted it (PEP-502) |
 | `failed_login_count` | SMALLINT UNSIGNED | no | 0 | — | — |  |
 | `locked_until` | DATETIME | yes | NULL | — | — | Brute-force lockout end |
 | `created_at` | DATETIME | yes | NULL | — | — | Set by Laravel |
