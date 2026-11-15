@@ -24,6 +24,26 @@ final class Plans
 
     public const DEFAULT_SLUG = 'import_pro';
 
+    /** The starting plans (owner decision 14 Nov 2026); the platform console changes them later. */
+    public const DEFAULTS = [
+        ['slug' => 'basic', 'name' => 'Basic', 'max_users' => 3, 'max_branches' => 1, 'modules' => []],
+        ['slug' => 'business', 'name' => 'Business', 'max_users' => 10, 'max_branches' => 3, 'modules' => [self::LC_MANAGEMENT]],
+        ['slug' => 'import_pro', 'name' => 'Import Pro', 'max_users' => 25, 'max_branches' => null, 'modules' => [self::LC_MANAGEMENT, self::LC_FINANCE]],
+    ];
+
+    /** Inserts the starting plans that are missing (by slug); never changes a plan the owner has edited. */
+    public static function seedDefaults(): void
+    {
+        if (! DB::getSchemaBuilder()->hasTable('plans')) {
+            return;
+        }
+        foreach (self::DEFAULTS as $p) {
+            if (! DB::table('plans')->where('slug', $p['slug'])->exists()) {
+                DB::table('plans')->insert(['modules' => json_encode($p['modules'])] + $p + ['is_active' => true, 'lock_version' => 1, 'created_at' => now(), 'updated_at' => now()]);
+            }
+        }
+    }
+
     public static function planOf(Company|int $company): ?Plan
     {
         $planId = $company instanceof Company ? $company->plan_id : DB::table('companies')->where('id', $company)->value('plan_id');
