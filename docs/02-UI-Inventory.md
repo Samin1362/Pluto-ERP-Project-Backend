@@ -328,6 +328,7 @@ Each entry follows the 13 points of the brief: (1) purpose · (2) components and
    |---|---|---|---|
    | Name | text | req |  |
    | Password | password | req | as S2 |
+   | I agree to the Terms of service and Privacy policy | checkbox | req | new account (PEP-502) |
 5. **Actions → API** ([full map](05-API-Specification.md#actions-s3)): Join company → POST /invitations/{token}/accept
 6. **Tables:** —
 7. **Validation and rules:** Standard server validation (422).

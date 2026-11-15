@@ -123,6 +123,8 @@ add(
        c("two_factor_recovery_codes", TEXT, null=True, note="Encrypted JSON array of hashed recovery codes"),
        c("two_factor_confirmed_at", TS, null=True),
        c("password_changed_at", TS, null=True), c("last_login_at", TS, null=True),
+       c("terms_version", V(20), null=True, note="Version of the Terms of service and Privacy policy this person accepted (PEP-502), e.g. 2026-11-15"),
+       c("terms_accepted_at", TS, null=True, note="When they accepted it (PEP-502)"),
        c("failed_login_count", "SMALLINT UNSIGNED", default="0"), c("locked_until", TS, null=True,
                                                                   note="Brute-force lockout end")],
       uniques=[["email"]], tenant=False, audit_cols=False),

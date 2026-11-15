@@ -74,7 +74,14 @@ class MembersAndRolesTest extends TestCase
         $this->getJson("/api/v1/invitations/{$token}")->assertOk()->assertJsonPath('data.company_name', 'Meghna Traders Ltd.')
             ->assertJsonPath('data.role_name', 'Sales staff')->assertJsonPath('data.existing_user', false);
         $this->assertProblem($this->postJson("/api/v1/invitations/{$token}/accept", ['name' => 'Rahim Uddin', 'password' => 'short', 'password_confirmation' => 'short']), 422, 'validation_failed');
-        $r = $this->postJson("/api/v1/invitations/{$token}/accept", ['name' => 'Rahim Uddin', 'password' => 'Green-Paddy-Field-9', 'password_confirmation' => 'Green-Paddy-Field-9'])->assertOk();
+        // PEP-502: a new account must accept the Terms of service and Privacy policy.
+        $body = ['name' => 'Rahim Uddin', 'password' => 'Green-Paddy-Field-9', 'password_confirmation' => 'Green-Paddy-Field-9'];
+        $this->assertSame(['Tick to agree to the Terms of service and Privacy policy'],
+            $this->postJson("/api/v1/invitations/{$token}/accept", $body)->assertStatus(422)->json('errors.accept_terms'));
+        $r = $this->postJson("/api/v1/invitations/{$token}/accept", $body + ['accept_terms' => true])->assertOk();
+        $u = DB::table('users')->where('email', 'rahim@meghna.example')->first(['terms_version', 'terms_accepted_at']);
+        $this->assertSame(config('pluto.terms_version'), $u->terms_version);
+        $this->assertNotNull($u->terms_accepted_at);
         $r->assertJsonPath('data.status', 'authenticated')->assertJsonPath('data.user.email', 'rahim@meghna.example')->assertCookie(config('pluto.refresh.cookie'));
         $m = $this->member('rahim@meghna.example');
         $this->assertSame(['active', 'Sales staff', [$branch]], [$m['status'], $m['role_name'], $m['branch_ids']]);
@@ -90,7 +97,9 @@ class MembersAndRolesTest extends TestCase
         $token = $this->invite('karim@padma.example', 'accountant');
         $this->getJson("/api/v1/invitations/{$token}")->assertJsonPath('data.existing_user', true);
         $this->assertProblem($this->postJson("/api/v1/invitations/{$token}/accept", ['password' => 'not-my-password']), 422, 'validation_failed');
-        $this->postJson("/api/v1/invitations/{$token}/accept", ['password' => self::PASSWORD])->assertOk();
+        // An existing account is not asked again; ticking the box records the current version.
+        $this->postJson("/api/v1/invitations/{$token}/accept", ['password' => self::PASSWORD, 'accept_terms' => true])->assertOk();
+        $this->assertSame(config('pluto.terms_version'), DB::table('users')->where('email', 'karim@padma.example')->value('terms_version'));
         $this->assertCount(2, $this->api('GET', '/api/v1/me', $this->login('karim@padma.example'))->json('data.companies'));
         $this->assertGreaterThan(0, $other->id);
 

@@ -28,3 +28,6 @@ Thumbs.db
 .env.live
 /backups
 docs/source/__pycache__/
+
+# Backups of the live settings made by scripts/set-*.sh: they hold passwords and keys, never commit them.
+.env.live.bak-*

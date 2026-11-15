@@ -40,7 +40,7 @@ page("S2", "Forgot / reset password (NEW)", "Shell", "Auth", "public",
      actions=["Send link", "Set password"], validation=["Always shows 'If the address exists, we sent a link'"], fr=["FR-003"], note="GAP-13")
 page("S3", "Accept invitation (NEW)", "Shell", "Auth", "public",
      "Invited user sets name and password and joins the company.", "Card layout.",
-     fields=["Name | text | req | ", "Password | password | req | as S2"], actions=["Join company"], fr=["FR-006"], note="GAP-13")
+     fields=["Name | text | req | ", "Password | password | req | as S2", "I agree to the Terms of service and Privacy policy | checkbox | req | new account (PEP-502)"], actions=["Join company"], fr=["FR-006"], note="GAP-13")
 
 # ======================================================================= A · Dashboard
 page("A1", "Main dashboard", "Dashboard", "Overview", "dashboard.view",

@@ -41370,7 +41370,8 @@ components:
       - existing_user
     AcceptInvitationRequest:
       type: object
-      description: Accept an invitation.
+      description: Accept an invitation. A new account must accept the Terms of service and Privacy policy (accept_terms = true; PEP-502); the version and time are
+        stored on the account.
       properties:
         name:
           type:
@@ -41387,6 +41388,8 @@ components:
           - string
           - 'null'
           maxLength: 200
+        accept_terms:
+          type: boolean
       additionalProperties: false
     Me:
       type: object

@@ -72,6 +72,10 @@ return [
     // Platform admins (PEP-483): e-mails (comma-separated) that may use /platform/* — the platform console where the
     // owner of this Pluto installation creates, lists and suspends customer companies. A server setting, never a company
     // role, so no company member can grant it; a 2-step sign-in is also required.
+    // PEP-502: version of the Terms of service and Privacy policy (the web app's /terms and /privacy). Raise it when the
+    // texts change; people who accepted an older version are asked again when they next join a company.
+    'terms_version' => env('PLUTO_TERMS_VERSION', '2026-11-15'),
+
     'platform_admins' => array_values(array_filter(array_map(fn ($e) => strtolower(trim($e)), explode(',', (string) env('PLUTO_PLATFORM_ADMINS', ''))))),
     // Daily operations check (pluto:ops:check, P17.1-BE-06): the host's nightly backup folder (mounted read-only in the
     // live scheduler) and who is told when it fails. Empty values switch that part off.
