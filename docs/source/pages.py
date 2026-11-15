@@ -47,7 +47,7 @@ page("A1", "Main dashboard", "Dashboard", "Overview", "dashboard.view",
      "Morning view of the business: KPIs, revenue vs expenses, cash, money owed, upcoming payments, quick actions, recent transactions, inventory alerts.",
      "Greeting header with period segmented control and two actions; reconciliation banner; 4 KPI StatTiles; 12-month bar chart with hover; cash position list; money-owed aging bars; upcoming payments; quick actions; recent transactions table; inventory alerts.",
      fields=["Period | segmented | req | This month / quarter / FY to date"],
-     actions=["New invoice (Alt S)", "Record receipt", "Reconcile (from banner)", "Dismiss banner", "Open any tile or row (deep link)"],
+     actions=["New invoice (Alt S)", "Record receipt", "Reconcile (from banner)", "Dismiss banner", "Open any tile or row (deep link)", "Hide the setup checklist (Owner, PEP-511)"],
      table={"cols": ["Date", "Voucher", "Type", "Party", "Amount (৳)"], "filters": [], "search": False},
      workflows=["Bill a customer", "Pay a supplier"], deps=["A2", "A5", "A6", "A7", "A8", "E3", "G10"], fr=["FR-010"],
      artboard="Dashboard.dc.html (03, 05 dark, 06 tablet, 07 phone)")

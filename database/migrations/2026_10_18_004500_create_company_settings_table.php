@@ -52,6 +52,7 @@ return new class extends Migration
             $table->unsignedSmallInteger('idle_timeout_minutes')->nullable()->default(60)->comment('NULL = never');
             $table->boolean('backup_enabled')->default(true);
             $table->unsignedSmallInteger('backup_retention_days')->default(90);
+            $table->dateTime('setup_hidden_at')->nullable()->comment('When an Owner hid the setup checklist on the dashboard (PEP-511); NULL = shown until every step is done');
             $table->unsignedInteger('lock_version')->default(1)->comment('Optimistic concurrency counter; incremented on every update (If-Match)');
             $table->unsignedBigInteger('created_by')->nullable()->comment('User who created the row');
             $table->unsignedBigInteger('updated_by')->nullable()->comment('User who last changed the row');

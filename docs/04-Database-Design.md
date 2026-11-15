@@ -271,6 +271,7 @@ erDiagram
         smallint idle_timeout_minutes
         boolean backup_enabled
         smallint backup_retention_days
+        datetime setup_hidden_at
     }
     notification_preferences {
         bigint id PK
@@ -2175,6 +2176,7 @@ Standard columns are listed in each table: `id` (PK), `company_id` (tenant), `lo
 | `idle_timeout_minutes` | SMALLINT UNSIGNED | yes | 60 | — | — | NULL = never |
 | `backup_enabled` | BOOLEAN | no | 1 | — | — |  |
 | `backup_retention_days` | SMALLINT UNSIGNED | no | 90 | — | — |  |
+| `setup_hidden_at` | DATETIME | yes | NULL | — | — | When an Owner hid the setup checklist on the dashboard (PEP-511); NULL = shown until every step is done |
 | `lock_version` | INT UNSIGNED | no | 1 | — | — | Optimistic concurrency counter; incremented on every update (If-Match) |
 | `created_by` | BIGINT UNSIGNED | yes | NULL | FK → `users.id` | ON DELETE RESTRICT / ON UPDATE RESTRICT | User who created the row |
 | `updated_by` | BIGINT UNSIGNED | yes | NULL | FK → `users.id` | ON DELETE RESTRICT / ON UPDATE RESTRICT | User who last changed the row |

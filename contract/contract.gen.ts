@@ -2468,6 +2468,20 @@ export interface Session {
   current: boolean
 }
 
+/** The new-company setup checklist (PEP-511): the steps in order, how many are done, and when an Owner hid it (null = shown on the dashboard until all are done). */
+export interface SetupChecklist {
+  steps: Array<SetupStep>
+  done: number
+  steps_count: number
+  hidden_at?: string | null
+}
+
+/** One step of the new-company setup checklist (PEP-511). key: profile, logo, tax, money, warehouse, items, customers, first_invoice, team. done is worked out from the company's data. */
+export interface SetupStep {
+  key: 'profile' | 'logo' | 'tax' | 'money' | 'warehouse' | 'items' | 'customers' | 'first_invoice' | 'team'
+  done: boolean
+}
+
 /** Short-lived download link. */
 export interface SignedUrl {
   url: string

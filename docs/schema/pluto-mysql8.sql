@@ -1204,6 +1204,7 @@ CREATE TABLE `company_settings` (
   `idle_timeout_minutes` smallint unsigned NULL DEFAULT 60 COMMENT 'NULL = never',
   `backup_enabled` tinyint(1) NOT NULL DEFAULT 1,
   `backup_retention_days` smallint unsigned NOT NULL DEFAULT 90,
+  `setup_hidden_at` datetime NULL COMMENT 'When an Owner hid the setup checklist on the dashboard (PEP-511); NULL = shown until every step is done',
   `lock_version` int unsigned NOT NULL DEFAULT 1 COMMENT 'Optimistic concurrency counter; incremented on every update (If-Match)',
   `created_by` bigint unsigned NULL COMMENT 'User who created the row',
   `updated_by` bigint unsigned NULL COMMENT 'User who last changed the row',

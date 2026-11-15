@@ -142,7 +142,7 @@ Approval limits (defaults): Finance manager pays up to ৳ 5,00,000 without appr
 | FR-061 | Banking | Users add bank, wallet and card accounts with opening balance. | G4 | 2 |
 | FR-062 | Banking | Users record money received and money paid that are not invoice-related. | G6, G7 | 1 |
 | FR-063 | Banking | Users record cash and bank transfers (contra), including bank charges. | G8, G9 | 1 |
-| FR-064 | Banking | Users import bank statements and reconcile them in a two-pane workspace. | G10 | 9 |
+| FR-064 | Banking | Users import bank statements and reconcile them in a two-pane workspace. | G10 | 11 |
 | FR-065 | Banking | Users record cash counts by denomination. | G2 | 2 |
 | FR-066 | IncExp | Users record income and expenses with category, account, method, attachment and optional recurrence. | I3, I6, I10 | 8 |
 | FR-067 | IncExp | Users manage income/expense categories with ledgers and monthly budgets. | I7 | 3 |

@@ -35,6 +35,7 @@ use App\Http\Controllers\Api\V1\Platform\DashboardController;
 use App\Http\Controllers\Api\V1\Platform\ExportJobController;
 use App\Http\Controllers\Api\V1\Platform\PlatformLookupController;
 use App\Http\Controllers\Api\V1\Platform\SearchController;
+use App\Http\Controllers\Api\V1\Platform\SetupChecklistController;
 use App\Http\Controllers\Api\V1\PlatformConsole\PlatformCompanyController;
 use App\Http\Controllers\Api\V1\PlatformConsole\PlatformPlanController;
 use App\Http\Controllers\Api\V1\Purchases\DebitNoteController;
@@ -243,6 +244,9 @@ Route::middleware(['jwt', 'throttle:api-user'])->group(function () {
         Route::post('backups/{id}/restore', [BackupController::class, 'restore'])->whereNumber('id')->middleware(['perm:settings.restore', 'idempotent']);
         // Dashboards, search and export jobs (P14.1). Money widgets and lenses check reports.financial themselves (DEC-13).
         Route::get('dashboard', [DashboardController::class, 'index'])->middleware('perm:dashboard.view');
+        // PEP-511: new-company setup checklist on the dashboard.
+        Route::get('setup-checklist', [SetupChecklistController::class, 'show'])->middleware('perm:dashboard.view');
+        Route::post('setup-checklist/hide', [SetupChecklistController::class, 'hide'])->middleware('perm:settings.edit');
         Route::get('dashboard/lenses/{lens}', [DashboardController::class, 'lens'])->whereIn('lens', DashboardLensQuery::LENSES)->middleware('perm:dashboard.view');
         Route::get('search', SearchController::class);
         Route::post('export-jobs', [ExportJobController::class, 'store'])->middleware(['perm:reports.export', 'throttle:exports', 'idempotent']);
