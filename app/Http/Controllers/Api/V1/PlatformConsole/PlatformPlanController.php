@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\PlatformConsole\CompanyPlanRequest;
 use App\Http\Requests\PlatformConsole\PlanRequest;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Response;
 
 /** Pluto plans in the platform console (K17; PEP-498). Platform admins only (middleware `platform`). */
 class PlatformPlanController extends Controller
@@ -35,6 +36,13 @@ class PlatformPlanController extends Controller
         $p = $this->plans->update($id, $request->validated(), $this->ifMatchVersion($request));
 
         return response()->json(['data' => $p])->setEtag((string) $p['version'], true);
+    }
+
+    public function destroy(int $id): Response
+    {
+        $this->plans->delete($id);
+
+        return response()->noContent();
     }
 
     public function assign(CompanyPlanRequest $request, int $id): JsonResponse

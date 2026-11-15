@@ -1029,6 +1029,15 @@ class OpenApiConformanceTest extends TestCase
             'POST', '/platform/companies/{id}/plan');
         $this->assertConforms($this->api('POST', "/api/v1/platform/companies/{$c}/plan", $t, null, ['plan_id' => 999999]), 'POST', '/platform/companies/{id}/plan'); // 422
         $this->assertConforms($this->api('GET', '/api/v1/platform/companies', $t), 'GET', '/platform/companies');
+        // PEP-499: the plan is chosen on create; a plan in use cannot be deleted, an unused one can.
+        $created = $this->api('POST', '/api/v1/platform/companies', $t, null, ['legal_name' => 'Padma Agro Ltd.', 'business_type' => 'partnership',
+            'owner_email' => 'karim@padma.example', 'plan_id' => $basic], $key());
+        $created->assertCreated();
+        $this->assertConforms($created, 'POST', '/platform/companies');
+        $this->assertConforms($this->api('DELETE', "/api/v1/platform/plans/{$basic}", $t), 'DELETE', '/platform/plans/{id}');                          // 409
+        $gone = $this->api('DELETE', "/api/v1/platform/plans/{$id}", $t);
+        $gone->assertNoContent();
+        $this->assertConforms($gone, 'DELETE', '/platform/plans/{id}');
         $owner = $this->login('owner@meghna.example');
         $this->assertConforms($this->api('GET', '/api/v1/me', $owner, $c), 'GET', '/me');
         $this->assertConforms($this->api('GET', '/api/v1/company', $owner, $c), 'GET', '/company');

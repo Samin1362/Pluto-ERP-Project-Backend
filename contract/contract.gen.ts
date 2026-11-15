@@ -60,6 +60,7 @@ export type ErrorCode =
   | 'order_qty_exceeded'
   | 'period_locked'
   | 'permission_denied'
+  | 'plan_in_use'
   | 'platform_admin_only'
   | 'platform_two_factor_required'
   | 'purpose_required'
@@ -1872,7 +1873,7 @@ export interface PlatformCompany {
   branches_used?: number
 }
 
-/** A new customer company and the person who will own it. */
+/** A new customer company, the person who will own it and the Pluto plan it bought (PEP-499: required, so nobody gets Import Pro by accident). */
 export interface PlatformCompanyCreate {
   legal_name: string
   trading_name?: string | null
@@ -1881,6 +1882,7 @@ export interface PlatformCompanyCreate {
   base_currency_code?: string
   owner_email: string
   owner_name?: string | null
+  plan_id: number
 }
 
 /** Post a document. confirm_backdated is required when the date is older than the warning window (BR-053). `receipt` (sales invoices only) records the cash received in the same transaction (R-28). */

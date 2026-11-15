@@ -78,6 +78,7 @@ E = {
     "file_too_large": (413, "Files may be up to 10 MB", ["BR-051"]),
     "seat_limit_reached": (409, "All seats are in use", ["BR-059"]),
     "branch_limit_reached": (409, "All branches in the plan are in use", ["BR-059"]),
+    "plan_in_use": (409, "Companies are still on this plan", ["FR-005"]),
     "module_not_in_plan": (403, "This part of Pluto is not in your plan", ["FR-005"]),
     "last_owner": (409, "A company must keep at least one active Owner", ["BR-060"]),
     "restore_confirmation_required": (422, "Type RESTORE to confirm", ["BR-062"]),

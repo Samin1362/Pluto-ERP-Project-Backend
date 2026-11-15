@@ -60,12 +60,15 @@ final class PlatformCompanyService
                 'trading_name' => $in['trading_name'] ?? null, 'business_type' => $in['business_type'], 'fy_start_month' => $in['fy_start_month'] ?? null,
                 'base_currency_code' => $in['base_currency_code'] ?? null,
             ], fn ($v) => $v !== null));
+            // PEP-499: the plan the customer bought, and its user limit as the company's seats.
+            $company->forceFill(['plan_id' => (int) $in['plan_id']])->save();
+            Plans::sync([$company->id]);
             $previous = $this->current->has() ? [$this->current->company(), $this->current->membership()] : null;
             $this->current->set($company, null);
             try {
                 $owner = Role::where('slug', 'owner')->value('id');
                 $this->members->invite(['email' => $email, 'name' => $in['owner_name'] ?? null, 'role_id' => $owner]);
-                $this->audit->record('created', $company, new: ['legal_name' => $company->legal_name, 'owner_email' => $email, 'by' => 'platform'], type: 'companies');
+                $this->audit->record('created', $company, new: ['legal_name' => $company->legal_name, 'owner_email' => $email, 'plan_id' => (int) $in['plan_id'], 'by' => 'platform'], type: 'companies');
             } finally {
                 $previous ? $this->current->set(...$previous) : $this->current->clear();
             }

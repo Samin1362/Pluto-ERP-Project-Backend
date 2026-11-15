@@ -4266,6 +4266,7 @@ paths:
       x-page-actions:
       - 'K17: Create plan'
       - 'K17: Edit plan'
+      - 'K17: Delete plan (confirm)'
       x-tables:
       - plans
       - companies
@@ -4518,6 +4519,82 @@ paths:
                 $ref: '#/components/schemas/Error'
         '428':
           description: 'Precondition required (If-Match missing): `if_match_required`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        default:
+          description: Unexpected error (`server_error`)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    delete:
+      operationId: deletePlatformPlansId
+      summary: Delete a plan no company is on
+      tags:
+      - Platform console
+      description: "Platform admins only: the e-mail is in PLUTO_PLATFORM_ADMINS (server setting, never a company role) and this sign-in used 2-step verification;\
+        \ otherwise 403 platform_admin_only / platform_two_factor_required. Every change is written to the company's audit log. Refused with 409 plan_in_use while\
+        \ any company is on the plan: move them to another plan first (PEP-499).\n\n**Permission:** any signed-in user  \n**Database:** insert: audit_logs; delete:\
+        \ plans; read: companies  \n**Rules:** —"
+      x-permission: auth
+      x-business-rules: []
+      x-requirements:
+      - FR-005
+      x-pages:
+      - K17
+      x-page-actions:
+      - 'K17: Delete plan (confirm)'
+      x-tables:
+      - plans
+      - companies
+      - audit_logs
+      x-db-operations:
+        plans: D
+        companies: R
+        audit_logs: C
+      x-error-codes:
+      - not_found
+      - plan_in_use
+      - platform_admin_only
+      - platform_two_factor_required
+      - server_error
+      - token_expired
+      - token_invalid
+      - unauthenticated
+      x-contract-change: PEP-499 plans
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+          minimum: 1
+      responses:
+        '204':
+          description: No content
+        '401':
+          description: 'Not authenticated: `token_expired`, `token_invalid`, `unauthenticated`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: 'Not permitted: `platform_admin_only`, `platform_two_factor_required`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: 'Not found (also for other companies'' records): `not_found`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: 'Conflict (version mismatch, state not allowed, duplicate): `plan_in_use`'
           content:
             application/problem+json:
               schema:
@@ -40318,6 +40395,7 @@ components:
           - order_qty_exceeded
           - period_locked
           - permission_denied
+          - plan_in_use
           - platform_admin_only
           - platform_two_factor_required
           - purpose_required
@@ -41455,7 +41533,7 @@ components:
       - already_member
     PlatformCompanyCreate:
       type: object
-      description: A new customer company and the person who will own it.
+      description: 'A new customer company, the person who will own it and the Pluto plan it bought (PEP-499: required, so nobody gets Import Pro by accident).'
       properties:
         legal_name:
           type: string
@@ -41487,10 +41565,15 @@ components:
           - string
           - 'null'
           maxLength: 120
+        plan_id:
+          type: integer
+          format: int64
+          minimum: 1
       required:
       - legal_name
       - business_type
       - owner_email
+      - plan_id
       additionalProperties: false
     CompanyCreate:
       type: object
@@ -44604,6 +44687,7 @@ components:
           - order_qty_exceeded
           - period_locked
           - permission_denied
+          - plan_in_use
           - platform_admin_only
           - platform_two_factor_required
           - purpose_required

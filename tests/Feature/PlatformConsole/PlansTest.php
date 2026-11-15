@@ -163,6 +163,22 @@ class PlansTest extends TestCase
         $this->assertProblem($this->asOwner('POST', '/api/v1/branches', ['code' => 'KHL', 'name' => 'Khulna depot']), 409, 'branch_limit_reached');
     }
 
+    public function test_a_plan_is_deleted_only_when_no_company_is_on_it(): void
+    {
+        $this->assign('business')->assertOk();
+        $business = $this->plan('business');
+        $p = $this->api('DELETE', "/api/v1/platform/plans/{$business->id}", $this->admin);
+        $this->assertProblem($p, 409, 'plan_in_use');
+        $this->assertSame(1, $p->json('companies'));
+
+        $this->assign('import_pro')->assertOk();
+        $this->api('DELETE', "/api/v1/platform/plans/{$business->id}", $this->admin)->assertNoContent();
+        $this->assertFalse(DB::table('plans')->where('slug', 'business')->exists());
+        $this->assertSame(1, DB::table('audit_logs')->where('auditable_type', 'plans')->where('action', 'deleted')->count());
+        $this->assertProblem($this->api('DELETE', "/api/v1/platform/plans/{$business->id}", $this->admin), 404, 'not_found');
+        $this->assertProblem($this->api('DELETE', '/api/v1/platform/plans/'.$this->plan('basic')->id, $this->owner), 403, 'platform_admin_only');
+    }
+
     public function test_every_lc_route_carries_its_module_check(): void
     {
         $missing = [];

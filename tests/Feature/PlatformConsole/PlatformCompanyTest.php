@@ -42,10 +42,13 @@ class PlatformCompanyTest extends TestCase
     public function test_a_platform_admin_creates_a_company_for_a_customer_without_joining_it(): void
     {
         $r = $this->send('/api/v1/platform/companies', ['legal_name' => 'Padma Agro Ltd.', 'business_type' => 'partnership',
-            'owner_email' => 'Karim@Padma.example', 'owner_name' => 'Karim Uddin'])->assertCreated();
+            'owner_email' => 'Karim@Padma.example', 'owner_name' => 'Karim Uddin', 'plan_id' => $this->planId('business')])->assertCreated();
         $r->assertJsonPath('data.legal_name', 'Padma Agro Ltd.')->assertJsonPath('data.status', 'active')->assertJsonPath('data.owner_email', 'karim@padma.example')
             ->assertJsonPath('data.owner_name', 'Karim Uddin')->assertJsonPath('data.owner_pending', true)->assertJsonPath('data.members', 0);
         $id = $r->json('data.id');
+        // PEP-499: on the plan the customer bought, with its user limit as seats.
+        $r->assertJsonPath('data.plan.slug', 'business')->assertJsonPath('data.effective.max_users', 10)->assertJsonPath('data.effective.modules', ['lc_management']);
+        $this->assertSame(10, (int) DB::table('companies')->where('id', $id)->value('seat_limit'));
 
         $this->assertSame(0, DB::table('company_users')->where('company_id', $id)->count(), 'the admin is not a member');
         $invite = DB::table('user_invitations')->where('company_id', $id)->first();
@@ -58,7 +61,7 @@ class PlatformCompanyTest extends TestCase
 
     public function test_the_list_shows_every_company_with_its_owner_members_and_activity(): void
     {
-        $this->send('/api/v1/platform/companies', ['legal_name' => 'Padma Agro Ltd.', 'business_type' => 'partnership', 'owner_email' => 'karim@padma.example']);
+        $this->send('/api/v1/platform/companies', ['legal_name' => 'Padma Agro Ltd.', 'business_type' => 'partnership', 'owner_email' => 'karim@padma.example', 'plan_id' => $this->planId('basic')]);
         $r = $this->api('GET', '/api/v1/platform/companies', $this->admin)->assertOk();
         $r->assertJsonPath('meta.total', 2)->assertJsonPath('data.0.legal_name', 'Padma Agro Ltd.')->assertJsonPath('data.1.legal_name', 'Meghna Traders Ltd.')
             ->assertJsonPath('data.1.owner_email', 'owner@meghna.example')->assertJsonPath('data.1.owner_pending', false)->assertJsonPath('data.1.members', 1);
@@ -111,5 +114,16 @@ class PlatformCompanyTest extends TestCase
     {
         $r = $this->send('/api/v1/platform/companies', ['legal_name' => '', 'business_type' => 'club', 'owner_email' => 'not-an-email', 'colour' => 'red']);
         $this->assertProblem($r, 422, 'validation_failed');
+
+        // PEP-499: the plan is required, and must be one that is offered.
+        $body = ['legal_name' => 'Padma Agro Ltd.', 'business_type' => 'partnership', 'owner_email' => 'karim@padma.example'];
+        $this->assertSame(['Choose the plan this customer bought'], $this->send('/api/v1/platform/companies', $body)->assertStatus(422)->json('errors.plan_id'));
+        DB::table('plans')->where('slug', 'basic')->update(['is_active' => false]);
+        $this->assertSame(['Choose a plan that is offered'], $this->send('/api/v1/platform/companies', $body + ['plan_id' => $this->planId('basic')])->assertStatus(422)->json('errors.plan_id'));
+    }
+
+    private function planId(string $slug): int
+    {
+        return (int) DB::table('plans')->where('slug', $slug)->value('id');
     }
 }
