@@ -2330,7 +2330,7 @@ Standard columns are listed in each table: `id` (PK), `company_id` (tenant), `lo
 |---|---|---|---|---|---|---|
 | `id` | BIGINT UNSIGNED | no | — | PK | — | Primary key, auto-increment |
 | `company_id` | BIGINT UNSIGNED | no | — | FK → `companies.id` | ON DELETE RESTRICT / ON UPDATE RESTRICT | Tenant owner. Every query is scoped by it. |
-| `kind` | VARCHAR(30) | no | — | — | — | enum: export_pack \| report \| list |
+| `kind` | VARCHAR(30) | no | — | — | — | enum: export_pack \| report \| list \| company_data. company_data (PEP-501): everything the company owns, one CSV per table plus its attachments, Owner only |
 | `parameters` | JSON | no | — | — | — |  |
 | `status` | VARCHAR(30) | no | 'queued' | — | — | enum: queued \| running \| complete \| failed |
 | `file_path` | VARCHAR(255) | yes | NULL | — | — |  |
@@ -2344,7 +2344,7 @@ Standard columns are listed in each table: `id` (PK), `company_id` (tenant), `lo
 - Index (company_id, status)
 - Index (created_by)
 - Index (updated_by)
-- **Check** `kind IN ('export_pack', 'report', 'list')`
+- **Check** `kind IN ('export_pack', 'report', 'list', 'company_data')`
 - **Check** `status IN ('queued', 'running', 'complete', 'failed')`
 
 ### 6.2 Access

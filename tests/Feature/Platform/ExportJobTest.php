@@ -174,4 +174,56 @@ class ExportJobTest extends TestCase
         $this->assertSame([], array_diff(ExportSources::RANGE_REPORTS, array_keys(ExportSources::REPORTS)));
         $this->assertGreaterThan(0, DB::table('permissions')->where('key', 'reports.export')->count());
     }
+
+    public function test_p_e_p_501_an_owner_exports_all_of_the_company_data_and_nothing_of_another_company(): void
+    {
+        // A second company with its own customer: none of it may leave in Meghna's export.
+        $meghna = $this->books;
+        $rival = $this->provisionedCompany('Rupsha Fisheries', 'owner@rupsha.example');
+        $this->customer('Rupsha Only Customer', '01711000999');
+        $this->books = $meghna;
+        $this->useBooks();
+
+        $r = $this->req('POST', '/api/v1/export-jobs', ['kind' => 'company_data', 'format' => 'csv'])->assertStatus(202);
+        $r->assertJsonPath('data.kind', 'company_data')->assertJsonPath('data.status', 'complete')->assertJsonPath('data.source', 'company_data')->assertJsonPath('data.error', null);
+        $this->assertMatchesRegularExpression('/^pluto-meghna-traders-ltd-all-data-\d{4}-\d{2}-\d{2}\.zip$/', $r->json('data.file_name'));
+        $this->download($r->json('data.download_url'))->assertOk();
+
+        $zip = new ZipArchive;
+        $this->assertTrue($zip->open(Storage::disk('local')->path(ExportJob::withoutGlobalScopes()->find($r->json('data.id'))->file_path)));
+        $names = [];
+        for ($i = 0; $i < $zip->numFiles; $i++) {
+            $names[] = $zip->getNameIndex($i);
+        }
+        foreach (['README.txt', 'company.csv', 'members.csv', 'tables/parties.csv', 'tables/sales_invoices.csv', 'tables/sales_invoice_lines.csv',
+            'tables/journal_entries.csv', 'tables/journal_lines.csv', 'tables/ledgers.csv', 'tables/products.csv'] as $f) {
+            $this->assertContains($f, $names, $f);
+        }
+        foreach (['tables/idempotency_keys.csv', 'tables/user_sessions.csv', 'tables/export_jobs.csv', 'tables/users.csv'] as $f) {
+            $this->assertNotContains($f, $names, $f);
+        }
+        $all = '';
+        foreach ($names as $n) {
+            $all .= $zip->getFromName($n);
+        }
+        $this->assertStringContainsString($this->invoice['number'], $zip->getFromName('tables/sales_invoices.csv'));
+        $this->assertStringContainsString('owner@meghna.example', $zip->getFromName('members.csv'));
+        $this->assertStringNotContainsString('Rupsha', $all, 'no data of another company leaves');
+        $this->assertStringNotContainsString('password', strtolower($zip->getFromName('members.csv')));
+        $this->assertStringContainsString('Rows per file:', $zip->getFromName('README.txt'));
+        // Every exported row of a company table is Meghna's.
+        $rows = array_map('str_getcsv', array_filter(explode('
+', ltrim($zip->getFromName('tables/parties.csv'), 'ï»¿'))));
+        $col = array_search('company_id', $rows[0], true);
+        $this->assertSame([(string) $this->books->id], array_values(array_unique(array_column(array_slice($rows, 1), $col))));
+        $this->assertNotSame($rival->id, $this->books->id);
+        $zip->close();
+    }
+
+    public function test_p_e_p_501_only_an_owner_exports_all_data_and_only_as_csv(): void
+    {
+        $this->assertProblem($this->req('POST', '/api/v1/export-jobs', ['kind' => 'company_data', 'format' => 'xlsx']), 422, 'validation_failed');
+        $this->userWithRole('accountant', 'acc@meghna.example');
+        $this->assertProblem($this->req('POST', '/api/v1/export-jobs', ['kind' => 'company_data', 'format' => 'csv'], $this->login('acc@meghna.example')), 403, 'permission_denied');
+    }
 }

@@ -190,7 +190,7 @@ A = {
     "K12": ["PUT /me/notification-preferences"],
     "K13": ["PUT /me/preferences"],
     "K14": ["PUT /me/password", "POST /me/two-factor → POST /me/two-factor/confirm | DELETE /me/two-factor", "DELETE /me/sessions/{id}", "POST /me/sessions/revoke-others"],
-    "K15": ["POST /export-jobs → GET /export-jobs/{id}", "GET /backups/{id}/download", "POST /backups", "dlg:L6 → POST /backups/{id}/restore"],
+    "K15": ["POST /export-jobs → GET /export-jobs/{id}", "GET /backups/{id}/download", "POST /backups", "dlg:L6 → POST /backups/{id}/restore", "POST /export-jobs (kind company_data) → GET /export-jobs/{id}"],
     # ------------------------------------------------------------------ LC
     "M1": ["nav:M3", "nav:M4", "nav:M4", "nav:M2"],
     "M2": ["nav:M3", "nav:M4"],

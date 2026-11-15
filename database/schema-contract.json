@@ -1965,7 +1965,7 @@
     }
    },
    "check": {
-    "export_jobs_kind_check": "`kind` IN ('export_pack', 'report', 'list')",
+    "export_jobs_kind_check": "`kind` IN ('export_pack', 'report', 'list', 'company_data')",
     "export_jobs_status_check": "`status` IN ('queued', 'running', 'complete', 'failed')"
    }
   },

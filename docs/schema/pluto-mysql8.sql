@@ -299,7 +299,7 @@ CREATE TABLE `company_backups` (
 CREATE TABLE `export_jobs` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT COMMENT 'Primary key, auto-increment',
   `company_id` bigint unsigned NOT NULL COMMENT 'Tenant owner. Every query is scoped by it.',
-  `kind` varchar(30) NOT NULL COMMENT 'One of: export_pack, report, list',
+  `kind` varchar(30) NOT NULL COMMENT 'One of: export_pack, report, list, company_data. company_data (PEP-501): everything the company owns, one CSV per table plus its attachments, Owner only',
   `parameters` json NOT NULL,
   `status` varchar(30) NOT NULL DEFAULT 'queued' COMMENT 'One of: queued, running, complete, failed',
   `file_path` varchar(255) NULL,
@@ -316,7 +316,7 @@ CREATE TABLE `export_jobs` (
   CONSTRAINT `export_jobs_company_id_foreign` FOREIGN KEY (`company_id`) REFERENCES `companies` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `export_jobs_created_by_foreign` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `export_jobs_updated_by_foreign` FOREIGN KEY (`updated_by`) REFERENCES `users` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
-  CONSTRAINT `export_jobs_kind_check` CHECK (`kind` IN ('export_pack', 'report', 'list')),
+  CONSTRAINT `export_jobs_kind_check` CHECK (`kind` IN ('export_pack', 'report', 'list', 'company_data')),
   CONSTRAINT `export_jobs_status_check` CHECK (`status` IN ('queued', 'running', 'complete', 'failed'))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Asynchronous export (month-end pack, report exports).';
 

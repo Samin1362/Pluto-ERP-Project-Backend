@@ -9019,6 +9019,7 @@ paths:
       - 'H2: Export'
       - 'H7: Export'
       - 'K15: Prepare export pack'
+      - 'K15: Export all my data'
       x-tables:
       - export_jobs
       x-db-operations:
@@ -9178,6 +9179,7 @@ paths:
       - 'H2: Export'
       - 'H7: Export'
       - 'K15: Prepare export pack'
+      - 'K15: Export all my data'
       x-tables:
       - export_jobs
       x-db-operations:
@@ -43039,6 +43041,7 @@ components:
           - export_pack
           - report
           - list
+          - company_data
         status:
           type: string
           enum:
@@ -43089,7 +43092,8 @@ components:
       type: object
       description: 'Start an export. export_pack: month-end pack (`period` = YYYY-MM, `reports` = report operationIds, e.g. getReportsTrialBalance; default the financial
         statements). report: one report, `source` = its operationId (e.g. getReportsProfitAndLoss) and `filters` = its query parameters. list: any list screen, `source`
-        = the list operationId (e.g. getParties) and `filters` = its query parameters (every page). The caller needs the source''s view permission as well.'
+        = the list operationId (e.g. getParties) and `filters` = its query parameters (every page). The caller needs the source''s view permission as well. company_data
+        (PEP-501): every record the company owns as a ZIP of CSV files (one per table, its own rows only) with its attachments; format csv; Owner only.'
       properties:
         kind:
           type: string
@@ -43097,6 +43101,7 @@ components:
           - export_pack
           - report
           - list
+          - company_data
         format:
           type: string
           enum:
