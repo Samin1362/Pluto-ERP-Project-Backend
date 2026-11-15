@@ -467,6 +467,22 @@ export interface Company {
   version: number
 }
 
+/** A customer company's Pluto subscription (PEP-503). status: not_billed (no paid_until), paid, due_soon (7 days or less left), overdue (past paid_until, in the grace days), suspended (suspended for payment). days_left: days until paid_until (negative = overdue). */
+export interface CompanyBilling {
+  price?: Decimal | null
+  paid_until?: string | null
+  grace_days: number
+  status: 'not_billed' | 'paid' | 'due_soon' | 'overdue' | 'suspended'
+  days_left?: number | null
+}
+
+/** Set a company's subscription terms (PEP-503): the monthly price, the day it is paid up to (null = not billed) and the grace days before suspension. */
+export interface CompanyBillingInput {
+  price?: Decimal | null
+  paid_until?: string | null
+  grace_days?: number
+}
+
 /** New company. */
 export interface CompanyCreate {
   legal_name: string
@@ -1871,6 +1887,7 @@ export interface PlatformCompany {
   effective?: PlanLimits
   users_used?: number
   branches_used?: number
+  billing?: CompanyBilling
 }
 
 /** A new customer company, the person who will own it and the Pluto plan it bought (PEP-499: required, so nobody gets Import Pro by accident). */
@@ -2594,6 +2611,30 @@ export interface StockTransferInput {
   driver?: string | null
   notes?: string | null
   lines: Array<TransferLineInput>
+}
+
+/** A recorded subscription payment (PEP-503). */
+export interface SubscriptionPayment {
+  id: number
+  paid_on: string
+  amount: Decimal
+  months: number
+  paid_until: string
+  method: 'bank' | 'bkash' | 'nagad' | 'cash' | 'card' | 'other'
+  reference?: string | null
+  note?: string | null
+  recorded_by?: string | null
+  created_at?: string | null
+}
+
+/** Record a subscription payment (PEP-503); it extends paid_until by `months` from the later of paid_until and paid_on. */
+export interface SubscriptionPaymentInput {
+  paid_on: string
+  amount: Decimal
+  months: number
+  method: 'bank' | 'bkash' | 'nagad' | 'cash' | 'card' | 'other'
+  reference?: string | null
+  note?: string | null
 }
 
 /** A read-only support session: which company, why and until when. */

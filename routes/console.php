@@ -18,6 +18,8 @@ Schedule::command('pluto:open-next-year')->dailyAt('01:30')->timezone('Asia/Dhak
 Schedule::command('pluto:recurring:run')->dailyAt('06:00')->timezone('Asia/Dhaka')->withoutOverlapping();
 
 // Overdue invoices and bills due in 3 days (in-app, e-mail if switched on), then the daily summary e-mails (11 §6; P14.1-BE-04).
+// PEP-503: subscription reminders, suspension for payment, summary to the platform admins.
+Schedule::command('pluto:subscriptions:check')->dailyAt('07:15')->timezone('Asia/Dhaka')->withoutOverlapping();
 Schedule::command('pluto:alerts:run')->dailyAt('07:30')->timezone('Asia/Dhaka')->withoutOverlapping();
 foreach (['07:30', '08:00', '09:00'] as $at) { // each user's chosen time (K12; P15.1-BE-08)
     Schedule::command("pluto:alerts:run --summary --at={$at}")->dailyAt($at)->timezone('Asia/Dhaka')->withoutOverlapping();

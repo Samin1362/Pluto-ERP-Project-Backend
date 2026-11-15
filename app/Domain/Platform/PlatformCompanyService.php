@@ -88,7 +88,8 @@ final class PlatformCompanyService
             if ($c->status !== $from) {
                 throw new ApiProblem('invalid_transition', "{$c->legal_name} is {$c->status}; only a company that is {$from} can be ".($to === 'suspended' ? 'suspended' : 'reactivated').'.');
             }
-            $c->update(['status' => $to]);
+            // PEP-503: reopening by hand ends a suspension for payment too.
+            $c->update(['status' => $to] + ($to === 'active' ? ['billing_suspended' => false] : []));
             $this->audit->record($to === 'suspended' ? 'suspended' : 'reactivated', $c, ['status' => $from], ['status' => $to, 'reason' => $reason, 'by' => 'platform'],
                 companyId: $c->id, type: 'companies');
         });
@@ -117,7 +118,7 @@ final class PlatformCompanyService
         $plans = Plan::all()->keyBy('id');
         $default = $plans->firstWhere('slug', Plans::DEFAULT_SLUG);
 
-        foreach (DB::table('companies')->whereIn('id', $ids)->get(['id', 'legal_name', 'trading_name', 'status', 'created_at', 'plan_id', 'plan_overrides']) as $c) {
+        foreach (DB::table('companies')->whereIn('id', $ids)->get(['id', 'legal_name', 'trading_name', 'status', 'created_at', 'plan_id', 'plan_overrides', 'billing_price', 'paid_until', 'grace_days', 'billing_suspended']) as $c) {
             $o = $owners[$c->id] ?? null;
             $i = $o ? null : ($invited[$c->id] ?? null);
             $out[$c->id] = ['id' => $c->id, 'legal_name' => $c->legal_name, 'trading_name' => $c->trading_name, 'status' => $c->status,
@@ -127,7 +128,8 @@ final class PlatformCompanyService
                 // PEP-498: the plan, the company's own exceptions, what it may use and what it uses.
                 'plan' => ($pl = $plans[$c->plan_id] ?? $default) ? ['id' => $pl->id, 'slug' => $pl->slug, 'name' => $pl->name] : null,
                 'plan_overrides' => self::overridesOut(Plans::overrides($c->plan_overrides)), 'effective' => Plans::effective((int) $c->id),
-                'users_used' => CompanyService::seatsUsed((int) $c->id), 'branches_used' => (int) ($branches[$c->id] ?? 0)];
+                'users_used' => CompanyService::seatsUsed((int) $c->id), 'branches_used' => (int) ($branches[$c->id] ?? 0),
+                'billing' => SubscriptionService::billing($c)]; // PEP-503
         }
 
         return $out;

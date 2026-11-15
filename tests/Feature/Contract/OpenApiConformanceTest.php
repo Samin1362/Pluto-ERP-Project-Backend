@@ -1042,6 +1042,14 @@ class OpenApiConformanceTest extends TestCase
         $gone = $this->api('DELETE', "/api/v1/platform/plans/{$id}", $t);
         $gone->assertNoContent();
         $this->assertConforms($gone, 'DELETE', '/platform/plans/{id}');
+        // PEP-503: subscription terms and payments.
+        $this->assertConforms($this->api('POST', "/api/v1/platform/companies/{$c}/billing", $t, null, ['price' => '3000', 'paid_until' => now()->addDays(5)->toDateString(), 'grace_days' => 7]),
+            'POST', '/platform/companies/{id}/billing');
+        $this->assertConforms($this->api('POST', "/api/v1/platform/companies/{$c}/billing", $t, null, ['price' => 'x']), 'POST', '/platform/companies/{id}/billing');          // 422
+        $paid = $this->api('POST', "/api/v1/platform/companies/{$c}/payments", $t, null, ['paid_on' => now()->toDateString(), 'amount' => '3000', 'months' => 1, 'method' => 'bank'], $key());
+        $paid->assertCreated();
+        $this->assertConforms($paid, 'POST', '/platform/companies/{id}/payments');
+        $this->assertConforms($this->api('GET', "/api/v1/platform/companies/{$c}/payments", $t), 'GET', '/platform/companies/{id}/payments');
         $owner = $this->login('owner@meghna.example');
         $this->assertConforms($this->api('GET', '/api/v1/me', $owner, $c), 'GET', '/me');
         $this->assertConforms($this->api('GET', '/api/v1/company', $owner, $c), 'GET', '/company');

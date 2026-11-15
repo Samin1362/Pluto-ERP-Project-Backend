@@ -70,6 +70,10 @@ CREATE TABLE `companies` (
   `seat_limit` smallint unsigned NOT NULL DEFAULT 10 COMMENT 'Users allowed (K8 shows 7 of 10)',
   `brand_color` char(7) NULL COMMENT 'Company brand colour as #rrggbb (PEP-497); NULL = the Pluto default. The app and the PDFs of this company follow it',
   `plan_id` bigint unsigned NULL COMMENT 'Pluto plan (PEP-498; plans.id). Soft reference (plans is created after this table; the API checks the plan exists). NULL = import_pro',
+  `billing_price` decimal(18,2) NULL COMMENT 'Monthly price in BDT the customer pays (PEP-503); NULL with paid_until NULL = not billed',
+  `paid_until` date NULL COMMENT 'Subscription paid up to this day (PEP-503); NULL = not billed, never suspended for payment',
+  `grace_days` tinyint unsigned NOT NULL DEFAULT 7 COMMENT 'Days after paid_until before the company is suspended for payment (PEP-503)',
+  `billing_suspended` tinyint(1) NOT NULL DEFAULT 0 COMMENT '1 when the company was suspended automatically for payment; a payment reopens it (PEP-503)',
   `plan_overrides` json NULL COMMENT 'Per-company exceptions to the plan (PEP-498): {max_users?, max_branches?, modules_on?: [], modules_off?: []}',
   `lock_version` int unsigned NOT NULL DEFAULT 1 COMMENT 'Optimistic concurrency counter; incremented on every update (If-Match)',
   `created_by` bigint unsigned NULL COMMENT 'User who created the row',
@@ -3022,3 +3026,28 @@ CREATE TABLE `plans` (
   CONSTRAINT `plans_created_by_foreign` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `plans_updated_by_foreign` FOREIGN KEY (`updated_by`) REFERENCES `users` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Pluto plans the software owner sells (PEP-498): a user limit, a branch limit (NULL = unlimited) and the modules included. Platform-wide, not a company''s data; companies.plan_id points here.';
+
+-- 94. subscription_payments (level 2)
+CREATE TABLE `subscription_payments` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT COMMENT 'Primary key, auto-increment',
+  `company_id` bigint unsigned NOT NULL COMMENT 'Tenant owner. Every query is scoped by it.',
+  `paid_on` date NOT NULL,
+  `amount` decimal(18,2) NOT NULL COMMENT 'BDT received',
+  `months` tinyint unsigned NOT NULL COMMENT 'Months the payment covers',
+  `paid_until` date NOT NULL COMMENT 'companies.paid_until after this payment',
+  `method` varchar(30) NOT NULL COMMENT 'One of: bank, bkash, nagad, cash, card, other',
+  `reference` varchar(80) NULL,
+  `note` varchar(255) NULL,
+  `created_by` bigint unsigned NULL COMMENT 'User who created the row',
+  `updated_by` bigint unsigned NULL COMMENT 'User who last changed the row',
+  `created_at` datetime NULL COMMENT 'Set by Laravel',
+  `updated_at` datetime NULL COMMENT 'Set by Laravel',
+  PRIMARY KEY (`id`),
+  KEY `subscription_payments_company_id_paid_on_index` (`company_id`, `paid_on`),
+  KEY `subscription_payments_created_by_index` (`created_by`),
+  KEY `subscription_payments_updated_by_index` (`updated_by`),
+  CONSTRAINT `subscription_payments_company_id_foreign` FOREIGN KEY (`company_id`) REFERENCES `companies` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  CONSTRAINT `subscription_payments_created_by_foreign` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  CONSTRAINT `subscription_payments_updated_by_foreign` FOREIGN KEY (`updated_by`) REFERENCES `users` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  CONSTRAINT `subscription_payments_method_check` CHECK (`method` IN ('bank', 'bkash', 'nagad', 'cash', 'card', 'other'))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Payments a customer company made for its Pluto subscription (PEP-503), recorded by the software owner in the platform console. Each extends companies.paid_until.';

@@ -140,6 +140,17 @@ E("PUT", "/platform/plans/{id}", "Change a Pluto plan (every company on it follo
   fr=["FR-005"], codes=[200, 409, 422], ifmatch=True,
   desc=PLAT + " Lowering a limit removes nobody: companies above it only cannot add more. Switching a module off deletes nothing; its data comes back when it is on again.",
   errors=["platform_admin_only", "platform_two_factor_required"], added="PEP-498 plans")
+E("POST", "/platform/companies/{id}/billing", "Set a company's subscription terms (price, paid until, grace days)", "auth", ["companies", "audit_logs"], ["K17"],
+  req="CompanyBillingInput", resp="PlatformCompany", tag="Platform console", fr=["FR-005"], codes=[200, 422],
+  desc=PLAT + " paid_until null = not billed (never suspended for payment). Clearing a billing suspension this way reopens the company (PEP-503).",
+  errors=["platform_admin_only", "platform_two_factor_required"], added="PEP-503 subscriptions")
+E("GET", "/platform/companies/{id}/payments", "A company's subscription payments, newest first", "auth", ["subscription_payments", "users"], ["K17"],
+  resp="Page<SubscriptionPayment>", tag="Platform console", fr=["FR-005"], desc=PLAT, errors=["platform_admin_only", "platform_two_factor_required"], added="PEP-503 subscriptions")
+E("POST", "/platform/companies/{id}/payments", "Record a subscription payment (extends paid until; reopens a company suspended for payment)", "auth",
+  ["subscription_payments", "companies", "notifications", "audit_logs"], ["K17"], req="SubscriptionPaymentInput", resp="SubscriptionPayment", idem=True,
+  tag="Platform console", fr=["FR-005"], codes=[201, 422], tx="The payment, the new paid_until, the reopening and the audit entry in one transaction.",
+  desc=PLAT + " paid_until becomes the later of the current paid_until and paid_on, plus `months`. The company's Owners are told.",
+  errors=["platform_admin_only", "platform_two_factor_required"], added="PEP-503 subscriptions")
 E("DELETE", "/platform/plans/{id}", "Delete a plan no company is on", "auth", ["plans", "companies", "audit_logs"], ["K17"], tag="Platform console", fr=["FR-005"], codes=[204, 409],
   desc=PLAT + " Refused with 409 plan_in_use while any company is on the plan: move them to another plan first (PEP-499).",
   errors=["platform_admin_only", "platform_two_factor_required", "plan_in_use"], added="PEP-499 plans")

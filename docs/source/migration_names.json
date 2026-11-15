@@ -90,5 +90,6 @@
  "lc_loan_repayments": "2026_10_18_008900_create_lc_loan_repayments_table.php",
  "product_units": "2026_10_18_009000_create_product_units_table.php",
  "support_access_grants": "2026_10_18_009100_create_support_access_grants_table.php",
- "lc_amendment_lines": "2026_10_18_009200_create_lc_amendment_lines_table.php"
+ "lc_amendment_lines": "2026_10_18_009200_create_lc_amendment_lines_table.php",
+ "plans": "2026_10_18_009300_create_plans_table.php"
 }

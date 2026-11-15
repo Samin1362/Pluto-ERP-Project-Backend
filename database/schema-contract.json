@@ -450,6 +450,38 @@
      "auto_increment": false
     },
     {
+     "name": "billing_price",
+     "type": "decimal(18,2)",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "paid_until",
+     "type": "date",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "grace_days",
+     "type": "tinyint unsigned",
+     "nullable": false,
+     "default": "7",
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "billing_suspended",
+     "type": "tinyint(1)",
+     "nullable": false,
+     "default": "0",
+     "generated": null,
+     "auto_increment": false
+    },
+    {
      "name": "plan_overrides",
      "type": "json",
      "nullable": true,
@@ -18315,6 +18347,160 @@
     }
    },
    "check": {}
+  },
+  "subscription_payments": {
+   "seq": 94,
+   "level": 2,
+   "migration": "2026_10_18_009400_create_subscription_payments_table.php",
+   "module": "Platform",
+   "columns": [
+    {
+     "name": "id",
+     "type": "bigint unsigned",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": true
+    },
+    {
+     "name": "company_id",
+     "type": "bigint unsigned",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "paid_on",
+     "type": "date",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "amount",
+     "type": "decimal(18,2)",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "months",
+     "type": "tinyint unsigned",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "paid_until",
+     "type": "date",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "method",
+     "type": "varchar(30)",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "reference",
+     "type": "varchar(80)",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "note",
+     "type": "varchar(255)",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "created_by",
+     "type": "bigint unsigned",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "updated_by",
+     "type": "bigint unsigned",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "created_at",
+     "type": "datetime",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "updated_at",
+     "type": "datetime",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    }
+   ],
+   "primary": [
+    "id"
+   ],
+   "unique": {},
+   "index": {
+    "subscription_payments_company_id_paid_on_index": [
+     "company_id",
+     "paid_on"
+    ],
+    "subscription_payments_created_by_index": [
+     "created_by"
+    ],
+    "subscription_payments_updated_by_index": [
+     "updated_by"
+    ]
+   },
+   "foreign": {
+    "subscription_payments_company_id_foreign": {
+     "column": "company_id",
+     "references_table": "companies",
+     "references_column": "id",
+     "on_delete": "RESTRICT",
+     "on_update": "RESTRICT"
+    },
+    "subscription_payments_created_by_foreign": {
+     "column": "created_by",
+     "references_table": "users",
+     "references_column": "id",
+     "on_delete": "RESTRICT",
+     "on_update": "RESTRICT"
+    },
+    "subscription_payments_updated_by_foreign": {
+     "column": "updated_by",
+     "references_table": "users",
+     "references_column": "id",
+     "on_delete": "RESTRICT",
+     "on_update": "RESTRICT"
+    }
+   },
+   "check": {
+    "subscription_payments_method_check": "`method` IN ('bank', 'bkash', 'nagad', 'cash', 'card', 'other')"
+   }
   }
  }
 }

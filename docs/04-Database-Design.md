@@ -195,6 +195,10 @@ erDiagram
         smallint seat_limit
         char brand_color
         bigint plan_id
+        decimal billing_price
+        date paid_until
+        tinyint grace_days
+        boolean billing_suspended
         json plan_overrides
     }
     branches {
@@ -223,6 +227,17 @@ erDiagram
         smallint max_branches
         json modules
         boolean is_active
+    }
+    subscription_payments {
+        bigint id PK
+        bigint company_id FK
+        date paid_on
+        decimal amount
+        tinyint months
+        date paid_until
+        varchar method
+        varchar reference
+        varchar note
     }
     company_settings {
         bigint id PK
@@ -1998,6 +2013,10 @@ Standard columns are listed in each table: `id` (PK), `company_id` (tenant), `lo
 | `seat_limit` | SMALLINT UNSIGNED | no | 10 | — | — | Users allowed (K8 shows 7 of 10) |
 | `brand_color` | CHAR(7) | yes | NULL | — | — | Company brand colour as #rrggbb (PEP-497); NULL = the Pluto default. The app and the PDFs of this company follow it |
 | `plan_id` | BIGINT UNSIGNED | yes | NULL | — | — | Pluto plan (PEP-498; plans.id). Soft reference (plans is created after this table; the API checks the plan exists). NULL = import_pro |
+| `billing_price` | DECIMAL(18,2) | yes | NULL | — | — | Monthly price in BDT the customer pays (PEP-503); NULL with paid_until NULL = not billed |
+| `paid_until` | DATE | yes | NULL | — | — | Subscription paid up to this day (PEP-503); NULL = not billed, never suspended for payment |
+| `grace_days` | TINYINT UNSIGNED | no | 7 | — | — | Days after paid_until before the company is suspended for payment (PEP-503) |
+| `billing_suspended` | BOOLEAN | no | 0 | — | — | 1 when the company was suspended automatically for payment; a payment reopens it (PEP-503) |
 | `plan_overrides` | JSON | yes | NULL | — | — | Per-company exceptions to the plan (PEP-498): {max_users?, max_branches?, modules_on?: [], modules_off?: []} |
 | `lock_version` | INT UNSIGNED | no | 1 | — | — | Optimistic concurrency counter; incremented on every update (If-Match) |
 | `created_by` | BIGINT UNSIGNED | yes | NULL | FK → `users.id` | ON DELETE RESTRICT / ON UPDATE RESTRICT | User who created the row |
@@ -2087,6 +2106,33 @@ Standard columns are listed in each table: `id` (PK), `company_id` (tenant), `lo
 - **Unique** (slug)
 - Index (created_by)
 - Index (updated_by)
+
+#### `subscription_payments`
+
+**Purpose:** Payments a customer company made for its Pluto subscription (PEP-503), recorded by the software owner in the platform console. Each extends companies.paid_until.  
+**Flags:** tenant-scoped  
+**Primary key:** (id)
+
+| Column | Type | Null | Default | Keys | FK rule | Meaning / rules |
+|---|---|---|---|---|---|---|
+| `id` | BIGINT UNSIGNED | no | — | PK | — | Primary key, auto-increment |
+| `company_id` | BIGINT UNSIGNED | no | — | FK → `companies.id` | ON DELETE RESTRICT / ON UPDATE RESTRICT | Tenant owner. Every query is scoped by it. |
+| `paid_on` | DATE | no | — | — | — |  |
+| `amount` | DECIMAL(18,2) | no | — | — | — | BDT received |
+| `months` | TINYINT UNSIGNED | no | — | — | — | Months the payment covers |
+| `paid_until` | DATE | no | — | — | — | companies.paid_until after this payment |
+| `method` | VARCHAR(30) | no | — | — | — | enum: bank \| bkash \| nagad \| cash \| card \| other |
+| `reference` | VARCHAR(80) | yes | NULL | — | — |  |
+| `note` | VARCHAR(255) | yes | NULL | — | — |  |
+| `created_by` | BIGINT UNSIGNED | yes | NULL | FK → `users.id` | ON DELETE RESTRICT / ON UPDATE RESTRICT | User who created the row |
+| `updated_by` | BIGINT UNSIGNED | yes | NULL | FK → `users.id` | ON DELETE RESTRICT / ON UPDATE RESTRICT | User who last changed the row |
+| `created_at` | DATETIME | yes | NULL | — | — | Set by Laravel |
+| `updated_at` | DATETIME | yes | NULL | — | — | Set by Laravel |
+
+- Index (company_id, paid_on)
+- Index (created_by)
+- Index (updated_by)
+- **Check** `method IN ('bank', 'bkash', 'nagad', 'cash', 'card', 'other')`
 
 #### `company_settings`
 
@@ -5403,7 +5449,7 @@ Standard columns are listed in each table: `id` (PK), `company_id` (tenant), `lo
 - `party_id` → `parties`: one-to-many (optional)
 - `currency_code` → `currencies`: one-to-many
 
-_Total: 93 application tables._
+_Total: 94 application tables._
 
 
 ## 7. Relationship matrix
@@ -5683,6 +5729,7 @@ For each table, the tables it references (must exist first). Self-references are
 | `user_invitations` | `companies`, `roles`, `users` | — |
 | `support_access_grants` | `companies`, `users` | — |
 | `plans` | `users` | — |
+| `subscription_payments` | `companies`, `users` | — |
 | `user_invitation_branches` | `branches`, `user_invitations` | — |
 | `user_sessions` | `users` | replaced_by_id |
 | `password_reset_tokens` | `users` | — |
@@ -5798,103 +5845,104 @@ Computed by topological sort of section 8, so every referenced table is created 
 21. `payment_terms`
 22. `roles`
 23. `stock_groups`
-24. `support_access_grants`
-25. `units`
-26. `user_preferences`
+24. `subscription_payments`
+25. `support_access_grants`
+26. `units`
+27. `user_preferences`
 
 **Level 3**
 
-27. `accounting_periods`
-28. `company_users`
-29. `lc_document_template_items`
-30. `ledgers`
-31. `number_sequences`
-32. `product_categories`
-33. `role_permissions`
-34. `user_invitations`
+28. `accounting_periods`
+29. `company_users`
+30. `lc_document_template_items`
+31. `ledgers`
+32. `number_sequences`
+33. `product_categories`
+34. `role_permissions`
+35. `user_invitations`
 
 **Level 4**
 
-35. `account_mappings`
-36. `company_user_branches`
-37. `ie_categories`
-38. `journal_entries`
-39. `money_accounts`
-40. `parties`
-41. `tax_rules`
-42. `user_invitation_branches`
-43. `warehouses`
+36. `account_mappings`
+37. `company_user_branches`
+38. `ie_categories`
+39. `journal_entries`
+40. `money_accounts`
+41. `parties`
+42. `tax_rules`
+43. `user_invitation_branches`
+44. `warehouses`
 
 **Level 5**
 
-44. `bank_facilities`
-45. `bank_reconciliations`
-46. `bank_statement_imports`
-47. `cash_counts`
-48. `company_settings`
-49. `fx_revaluations`
-50. `party_bank_accounts`
-51. `payment_details`
-52. `products`
-53. `purchase_orders`
-54. `quotations`
-55. `recurring_templates`
-56. `stock_adjustments`
-57. `stock_transfers`
+45. `bank_facilities`
+46. `bank_reconciliations`
+47. `bank_statement_imports`
+48. `cash_counts`
+49. `company_settings`
+50. `fx_revaluations`
+51. `party_bank_accounts`
+52. `payment_details`
+53. `products`
+54. `purchase_orders`
+55. `quotations`
+56. `recurring_templates`
+57. `stock_adjustments`
+58. `stock_transfers`
 
 **Level 6**
 
-58. `cash_count_denominations`
-59. `letters_of_credit`
-60. `product_units`
-61. `product_warehouse_settings`
-62. `purchase_order_lines`
-63. `quotation_lines`
-64. `sales_invoices`
-65. `stock_adjustment_lines`
-66. `stock_balances`
-67. `stock_movements`
-68. `stock_transfer_lines`
+59. `cash_count_denominations`
+60. `letters_of_credit`
+61. `product_units`
+62. `product_warehouse_settings`
+63. `purchase_order_lines`
+64. `quotation_lines`
+65. `sales_invoices`
+66. `stock_adjustment_lines`
+67. `stock_balances`
+68. `stock_movements`
+69. `stock_transfer_lines`
 
 **Level 7**
 
-69. `journal_lines`
-70. `lc_amendments`
-71. `lc_shipments`
-72. `sales_invoice_lines`
-73. `sales_returns`
+70. `journal_lines`
+71. `lc_amendments`
+72. `lc_shipments`
+73. `sales_invoice_lines`
+74. `sales_returns`
 
 **Level 8**
 
-74. `bank_statement_lines`
-75. `credit_notes`
-76. `lc_amendment_changes`
-77. `lc_amendment_lines`
-78. `lc_documents`
-79. `purchase_bills`
-80. `sales_return_lines`
+75. `bank_statement_lines`
+76. `credit_notes`
+77. `lc_amendment_changes`
+78. `lc_amendment_lines`
+79. `lc_documents`
+80. `purchase_bills`
+81. `sales_return_lines`
 
 **Level 9**
 
-81. `bill_allocations`
-82. `fx_revaluation_lines`
-83. `landed_cost_allocations`
-84. `lc_payments`
-85. `purchase_bill_lines`
-86. `purchase_returns`
+82. `bill_allocations`
+83. `fx_revaluation_lines`
+84. `landed_cost_allocations`
+85. `lc_payments`
+86. `purchase_bill_lines`
+87. `purchase_returns`
 
 **Level 10**
 
-87. `debit_notes`
-88. `landed_cost_allocation_lines`
-89. `lc_charges`
-90. `lc_loans`
-91. `purchase_return_lines`
+88. `debit_notes`
+89. `landed_cost_allocation_lines`
+90. `lc_charges`
+91. `lc_loans`
+92. `purchase_return_lines`
 
 **Level 11**
 
-92. `lc_loan_accruals`
-93. `lc_loan_repayments`
+93. `lc_loan_accruals`
+94. `lc_loan_repayments`
 
 ## 10. Index and uniqueness recommendations
 

@@ -3446,6 +3446,8 @@ paths:
       - 'K17: Create company'
       - 'K17: Leave (confirm)'
       - 'K17: Change plan (plan, exceptions)'
+      - 'K17: Billing: set price, paid until, grace days'
+      - 'K17: Billing: record payment'
       x-tables:
       - companies
       - company_users
@@ -4595,6 +4597,300 @@ paths:
                 $ref: '#/components/schemas/Error'
         '409':
           description: 'Conflict (version mismatch, state not allowed, duplicate): `plan_in_use`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        default:
+          description: Unexpected error (`server_error`)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /api/v1/platform/companies/{id}/billing:
+    post:
+      operationId: postPlatformCompaniesIdBilling
+      summary: Set a company's subscription terms (price, paid until, grace days)
+      tags:
+      - Platform console
+      description: "Platform admins only: the e-mail is in PLUTO_PLATFORM_ADMINS (server setting, never a company role) and this sign-in used 2-step verification;\
+        \ otherwise 403 platform_admin_only / platform_two_factor_required. Every change is written to the company's audit log. paid_until null = not billed (never\
+        \ suspended for payment). Clearing a billing suspension this way reopens the company (PEP-503).\n\n**Permission:** any signed-in user  \n**Database:** lock:\
+        \ companies; insert: audit_logs; update: companies  \n**Rules:** —"
+      x-permission: auth
+      x-business-rules: []
+      x-requirements:
+      - FR-005
+      x-pages:
+      - K17
+      x-page-actions:
+      - 'K17: Billing: set price, paid until, grace days'
+      x-tables:
+      - companies
+      - audit_logs
+      x-db-operations:
+        companies: LU
+        audit_logs: C
+      x-error-codes:
+      - malformed_json
+      - not_found
+      - platform_admin_only
+      - platform_two_factor_required
+      - server_error
+      - token_expired
+      - token_invalid
+      - unauthenticated
+      - validation_failed
+      x-contract-change: PEP-503 subscriptions
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+          minimum: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CompanyBillingInput'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                properties:
+                  data:
+                    $ref: '#/components/schemas/PlatformCompany'
+        '400':
+          description: 'Malformed request: `malformed_json`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: 'Not authenticated: `token_expired`, `token_invalid`, `unauthenticated`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: 'Not permitted: `platform_admin_only`, `platform_two_factor_required`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: 'Not found (also for other companies'' records): `not_found`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: 'Validation or business-rule failure: `validation_failed`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        default:
+          description: Unexpected error (`server_error`)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /api/v1/platform/companies/{id}/payments:
+    get:
+      operationId: getPlatformCompaniesIdPayments
+      summary: A company's subscription payments, newest first
+      tags:
+      - Platform console
+      description: "Platform admins only: the e-mail is in PLUTO_PLATFORM_ADMINS (server setting, never a company role) and this sign-in used 2-step verification;\
+        \ otherwise 403 platform_admin_only / platform_two_factor_required. Every change is written to the company's audit log.\n\n**Permission:** any signed-in user\
+        \  \n**Database:** read: subscription_payments, users  \n**Rules:** —"
+      x-permission: auth
+      x-business-rules: []
+      x-requirements:
+      - FR-005
+      x-pages:
+      - K17
+      x-page-actions:
+      - 'K17: Billing: payment history'
+      x-tables:
+      - subscription_payments
+      - users
+      x-db-operations:
+        subscription_payments: R
+        users: R
+      x-error-codes:
+      - not_found
+      - platform_admin_only
+      - platform_two_factor_required
+      - server_error
+      - token_expired
+      - token_invalid
+      - unauthenticated
+      x-contract-change: PEP-503 subscriptions
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+          minimum: 1
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                - meta
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/SubscriptionPayment'
+                  meta:
+                    $ref: '#/components/schemas/PageMeta'
+        '401':
+          description: 'Not authenticated: `token_expired`, `token_invalid`, `unauthenticated`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: 'Not permitted: `platform_admin_only`, `platform_two_factor_required`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: 'Not found (also for other companies'' records): `not_found`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        default:
+          description: Unexpected error (`server_error`)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    post:
+      operationId: postPlatformCompaniesIdPayments
+      summary: Record a subscription payment (extends paid until; reopens a company suspended for payment)
+      tags:
+      - Platform console
+      description: "Platform admins only: the e-mail is in PLUTO_PLATFORM_ADMINS (server setting, never a company role) and this sign-in used 2-step verification;\
+        \ otherwise 403 platform_admin_only / platform_two_factor_required. Every change is written to the company's audit log. paid_until becomes the later of the\
+        \ current paid_until and paid_on, plus `months`. The company's Owners are told.\n\n**Permission:** any signed-in user  \n**Database:** insert: audit_logs,\
+        \ idempotency_keys, notifications, subscription_payments; read: companies  \n**Rules:** —  \n**Transaction:** The payment, the new paid_until, the reopening\
+        \ and the audit entry in one transaction."
+      x-permission: auth
+      x-business-rules: []
+      x-requirements:
+      - FR-005
+      x-pages:
+      - K17
+      x-page-actions:
+      - 'K17: Billing: record payment'
+      x-tables:
+      - subscription_payments
+      - companies
+      - notifications
+      - audit_logs
+      x-db-operations:
+        subscription_payments: C
+        companies: R
+        notifications: C
+        audit_logs: C
+        idempotency_keys: C
+      x-error-codes:
+      - idempotency_in_progress
+      - idempotency_key_reused
+      - malformed_json
+      - not_found
+      - platform_admin_only
+      - platform_two_factor_required
+      - server_error
+      - token_expired
+      - token_invalid
+      - unauthenticated
+      - validation_failed
+      x-contract-change: PEP-503 subscriptions
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+          minimum: 1
+      - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubscriptionPaymentInput'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                properties:
+                  data:
+                    $ref: '#/components/schemas/SubscriptionPayment'
+          headers:
+            Location:
+              schema:
+                type: string
+              description: URL of the created resource
+        '400':
+          description: 'Malformed request: `malformed_json`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: 'Not authenticated: `token_expired`, `token_invalid`, `unauthenticated`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: 'Not permitted: `platform_admin_only`, `platform_two_factor_required`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: 'Not found (also for other companies'' records): `not_found`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: 'Conflict (version mismatch, state not allowed, duplicate): `idempotency_in_progress`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: 'Validation or business-rule failure: `idempotency_key_reused`, `validation_failed`'
           content:
             application/problem+json:
               schema:
@@ -41326,6 +41622,8 @@ components:
           type: integer
         branches_used:
           type: integer
+        billing:
+          $ref: '#/components/schemas/CompanyBilling'
       required:
       - id
       - legal_name
@@ -41333,6 +41631,152 @@ components:
       - created_at
       - owner_pending
       - members
+    CompanyBilling:
+      type: object
+      description: 'A customer company''s Pluto subscription (PEP-503). status: not_billed (no paid_until), paid, due_soon (7 days or less left), overdue (past paid_until,
+        in the grace days), suspended (suspended for payment). days_left: days until paid_until (negative = overdue).'
+      properties:
+        price:
+          type:
+          - string
+          - 'null'
+          pattern: ^-?\d{1,16}(\.\d{1,2})?$
+          example: '118450.00'
+          description: Decimal as string (money)
+        paid_until:
+          type:
+          - string
+          - 'null'
+          format: date
+        grace_days:
+          type: integer
+        status:
+          type: string
+          enum:
+          - not_billed
+          - paid
+          - due_soon
+          - overdue
+          - suspended
+        days_left:
+          type:
+          - integer
+          - 'null'
+      required:
+      - grace_days
+      - status
+    CompanyBillingInput:
+      type: object
+      description: 'Set a company''s subscription terms (PEP-503): the monthly price, the day it is paid up to (null = not billed) and the grace days before suspension.'
+      properties:
+        price:
+          type:
+          - string
+          - 'null'
+          pattern: ^-?\d{1,16}(\.\d{1,2})?$
+          example: '118450.00'
+          description: Decimal as string (money)
+        paid_until:
+          type:
+          - string
+          - 'null'
+          format: date
+        grace_days:
+          type: integer
+      additionalProperties: false
+    SubscriptionPaymentInput:
+      type: object
+      description: Record a subscription payment (PEP-503); it extends paid_until by `months` from the later of paid_until and paid_on.
+      properties:
+        paid_on:
+          type: string
+          format: date
+        amount:
+          type: string
+          pattern: ^-?\d{1,16}(\.\d{1,2})?$
+          example: '118450.00'
+          description: Decimal as string (money)
+        months:
+          type: integer
+        method:
+          type: string
+          enum:
+          - bank
+          - bkash
+          - nagad
+          - cash
+          - card
+          - other
+        reference:
+          type:
+          - string
+          - 'null'
+          maxLength: 80
+        note:
+          type:
+          - string
+          - 'null'
+          maxLength: 255
+      required:
+      - paid_on
+      - amount
+      - months
+      - method
+      additionalProperties: false
+    SubscriptionPayment:
+      type: object
+      description: A recorded subscription payment (PEP-503).
+      properties:
+        id:
+          type: integer
+          format: int64
+          minimum: 1
+        paid_on:
+          type: string
+          format: date
+        amount:
+          type: string
+          pattern: ^-?\d{1,16}(\.\d{1,2})?$
+          example: '118450.00'
+          description: Decimal as string (money)
+        months:
+          type: integer
+        paid_until:
+          type: string
+          format: date
+        method:
+          type: string
+          enum:
+          - bank
+          - bkash
+          - nagad
+          - cash
+          - card
+          - other
+        reference:
+          type:
+          - string
+          - 'null'
+        note:
+          type:
+          - string
+          - 'null'
+        recorded_by:
+          type:
+          - string
+          - 'null'
+        created_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+      required:
+      - id
+      - paid_on
+      - amount
+      - months
+      - paid_until
+      - method
     PlanRef:
       type: object
       description: The plan a company is on (PEP-498).
