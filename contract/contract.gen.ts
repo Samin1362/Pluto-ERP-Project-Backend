@@ -12,6 +12,7 @@ export type ErrorCode =
   | 'approval_required'
   | 'backdated_confirmation_required'
   | 'base_currency_locked'
+  | 'branch_limit_reached'
   | 'branch_restricted'
   | 'charge_allocated'
   | 'comment_required'
@@ -49,6 +50,7 @@ export type ErrorCode =
   | 'malformed_json'
   | 'mapping_missing'
   | 'margin_exceeds_deposit'
+  | 'module_not_in_plan'
   | 'nature_mismatch'
   | 'not_a_member'
   | 'not_draft'
@@ -458,6 +460,9 @@ export interface Company {
   seats_used?: number
   seat_limit?: number
   brand?: BrandPalette | null
+  plan_name?: string | null
+  modules?: Array<string>
+  max_branches?: number | null
   version: number
 }
 
@@ -468,6 +473,12 @@ export interface CompanyCreate {
   business_type: 'private_limited' | 'sole_proprietorship' | 'partnership' | 'public_limited'
   fy_start_month?: number
   base_currency_code?: string
+}
+
+/** Put a company on a plan, with optional exceptions (PEP-498). Lowering a limit removes nobody; switching a module off deletes nothing. */
+export interface CompanyPlanInput {
+  plan_id: number
+  overrides?: PlanOverrides | null
 }
 
 /** All company settings (see company_settings). */
@@ -1373,6 +1384,8 @@ export interface Me {
   approval_limits?: Record<string, unknown> | null
   branch_ids?: Array<number>
   brand?: BrandPalette | null
+  plan_name?: string | null
+  modules?: Array<string>
 }
 
 /** Company member. */
@@ -1794,6 +1807,51 @@ export interface PermissionList {
   modules: Array<Record<string, unknown>>
 }
 
+/** A Pluto plan the software owner sells (PEP-498): max_users, max_branches (null = unlimited) and the modules included (lc_management, lc_finance). companies = how many companies are on it. */
+export interface Plan {
+  id: number
+  slug: string
+  name: string
+  max_users: number
+  max_branches?: number | null
+  modules: Array<string>
+  is_active: boolean
+  companies?: number
+  version: number
+}
+
+/** Create or change a plan (PEP-498). modules: lc_management and/or lc_finance (lc_finance needs lc_management). */
+export interface PlanInput {
+  slug: string
+  name: string
+  max_users: number
+  max_branches?: number | null
+  modules: Array<string>
+  is_active?: boolean
+}
+
+/** What a company may use after its plan and its own exceptions (PEP-498): max_users and max_branches (max_branches null = unlimited); modules are module keys: lc_management, lc_finance. */
+export interface PlanLimits {
+  max_users: number
+  max_branches?: number | null
+  modules: Array<string>
+}
+
+/** Exceptions for one company (PEP-498): users and branches allowed; each field left out follows the plan. modules_on / modules_off add or remove module keys (lc_management, lc_finance). */
+export interface PlanOverrides {
+  max_users?: number | null
+  max_branches?: number | null
+  modules_on?: Array<string>
+  modules_off?: Array<string>
+}
+
+/** The plan a company is on (PEP-498). */
+export interface PlanRef {
+  id: number
+  slug: string
+  name: string
+}
+
 /** A customer company as the platform console lists it. */
 export interface PlatformCompany {
   id: number
@@ -1807,6 +1865,11 @@ export interface PlatformCompany {
   members: number
   last_activity_at?: string | null
   owner_access?: boolean
+  plan?: PlanRef | null
+  plan_overrides?: PlanOverrides | null
+  effective?: PlanLimits
+  users_used?: number
+  branches_used?: number
 }
 
 /** A new customer company and the person who will own it. */

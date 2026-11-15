@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use App\Domain\Access\PermissionResolver;
 use App\Domain\Company\BrandPalette;
+use App\Domain\Platform\Plans;
 use App\Models\Company;
 use App\Models\Role;
 use App\Support\CurrentCompany;
@@ -41,6 +42,9 @@ class MeResource extends JsonResource
             $out['branch_ids'] = $m->branches()->pluck('branches.id')->all();
             // PEP-497: the current company's brand colours (null = the Pluto default), so the app is coloured from its first paint.
             $out['brand'] = BrandPalette::for(Company::whereKey($current->id())->value('brand_color'));
+            // PEP-498: the plan and the modules it gives, so the app hides what the plan leaves out.
+            $out['plan_name'] = Plans::planOf($current->company())?->name;
+            $out['modules'] = Plans::effective($current->company())['modules'];
         }
 
         return $out;

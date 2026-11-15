@@ -442,6 +442,22 @@
      "auto_increment": false
     },
     {
+     "name": "plan_id",
+     "type": "bigint unsigned",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "plan_overrides",
+     "type": "json",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
      "name": "lock_version",
      "type": "int unsigned",
      "nullable": false,
@@ -18162,6 +18178,143 @@
    "check": {
     "lc_amendment_lines_action_check": "`action` IN ('add', 'change', 'remove')"
    }
+  },
+  "plans": {
+   "seq": 93,
+   "level": 1,
+   "migration": "2026_10_18_009300_create_plans_table.php",
+   "module": "Platform",
+   "columns": [
+    {
+     "name": "id",
+     "type": "bigint unsigned",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": true
+    },
+    {
+     "name": "slug",
+     "type": "varchar(40)",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "name",
+     "type": "varchar(80)",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "max_users",
+     "type": "smallint unsigned",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "max_branches",
+     "type": "smallint unsigned",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "modules",
+     "type": "json",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "is_active",
+     "type": "tinyint(1)",
+     "nullable": false,
+     "default": "1",
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "lock_version",
+     "type": "int unsigned",
+     "nullable": false,
+     "default": "1",
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "created_by",
+     "type": "bigint unsigned",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "updated_by",
+     "type": "bigint unsigned",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "created_at",
+     "type": "datetime",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "updated_at",
+     "type": "datetime",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    }
+   ],
+   "primary": [
+    "id"
+   ],
+   "unique": {
+    "plans_slug_unique": [
+     "slug"
+    ]
+   },
+   "index": {
+    "plans_created_by_index": [
+     "created_by"
+    ],
+    "plans_updated_by_index": [
+     "updated_by"
+    ]
+   },
+   "foreign": {
+    "plans_created_by_foreign": {
+     "column": "created_by",
+     "references_table": "users",
+     "references_column": "id",
+     "on_delete": "RESTRICT",
+     "on_update": "RESTRICT"
+    },
+    "plans_updated_by_foreign": {
+     "column": "updated_by",
+     "references_table": "users",
+     "references_column": "id",
+     "on_delete": "RESTRICT",
+     "on_update": "RESTRICT"
+    }
+   },
+   "check": {}
   }
  }
 }

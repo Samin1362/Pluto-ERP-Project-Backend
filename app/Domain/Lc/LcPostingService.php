@@ -8,6 +8,7 @@ use App\Domain\Accounting\PeriodGuard;
 use App\Domain\Accounting\PostingService;
 use App\Domain\Documents\LineUnits;
 use App\Domain\Inventory\StockService;
+use App\Domain\Platform\Plans;
 use App\Domain\Shared\AuditLogger;
 use App\Domain\Shared\Money;
 use App\Domain\Shared\Quantity;
@@ -326,6 +327,10 @@ final class LcPostingService
                 throw new ApiProblem('margin_exceeds_deposit', 'Only ৳ '.$this->tagged($lc->id, 'lc_margin').' margin is held for this LC.', errors: ['margin_applied' => ['More than the margin held or the payment']]);
             }
             $financedBy = $in['financed_by'] ?? 'own';
+            // PEP-498: financing a payment opens a PAD/LTR loan, which is LC finance.
+            if ($financedBy !== 'own' && ! Plans::has($lc->company_id, Plans::LC_FINANCE)) {
+                throw new ApiProblem('validation_failed', errors: ['financed_by' => ['Bank financing (PAD/LTR) is LC finance, which is not in your Pluto plan; pay from your own funds']]);
+            }
             if ($financedBy !== 'own' && $kind === 'usance_acceptance') {
                 throw new ApiProblem('validation_failed', errors: ['financed_by' => ['An acceptance is not paid yet; finance the settlement at maturity']]);
             }

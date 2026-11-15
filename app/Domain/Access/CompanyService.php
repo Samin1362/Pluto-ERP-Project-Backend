@@ -4,6 +4,7 @@ namespace App\Domain\Access;
 
 use App\Domain\Accounting\LedgerService;
 use App\Domain\Company\BrandPalette;
+use App\Domain\Platform\Plans;
 use App\Domain\Shared\AuditLogger;
 use App\Models\AccountGroup;
 use App\Models\Branch;
@@ -60,7 +61,10 @@ final class CompanyService
             'logo_url' => $c->logo_path ? URL::temporarySignedRoute('company.logo', now()->addDay(), ['id' => $c->id, 'v' => $c->lock_version], absolute: false) : null,
             'base_currency_code' => $c->base_currency_code, 'fy_start_month' => (int) $c->fy_start_month, 'timezone' => $c->timezone,
             'branches' => Branch::where('company_id', $c->id)->orderByDesc('is_head_office')->orderBy('name')->get()->map(fn (Branch $b) => self::branch($b))->all(),
-            'seats_used' => self::seatsUsed($c->id), 'seat_limit' => (int) $c->seat_limit, 'brand' => BrandPalette::for($c->brand_color), 'version' => (int) $c->lock_version];
+            'seats_used' => self::seatsUsed($c->id), 'seat_limit' => (int) $c->seat_limit, 'brand' => BrandPalette::for($c->brand_color),
+            // PEP-498: the plan, the modules it gives and the branch limit (seat_limit above is the effective user limit).
+            'plan_name' => Plans::planOf($c)?->name, 'modules' => Plans::effective($c)['modules'], 'max_branches' => Plans::effective($c)['max_branches'],
+            'version' => (int) $c->lock_version];
     }
 
     public static function branch(Branch $b): array
@@ -150,6 +154,12 @@ final class CompanyService
             }
             if ($id && $b->is_head_office && ($in['is_active'] ?? true) === false) {
                 throw new ApiProblem('validation_failed', errors: ['is_active' => ['The head office cannot be closed']]);
+            }
+            // PEP-498: a new (or reopened) branch must fit the plan's branch limit; closing one is always allowed.
+            $opening = ! $id ? ($in['is_active'] ?? true) !== false : (! $b->is_active && ($in['is_active'] ?? false) === true);
+            $max = Plans::effective($this->current->id())['max_branches'];
+            if ($opening && $max !== null && Plans::branchesUsed($this->current->id()) >= $max) {
+                throw new ApiProblem('branch_limit_reached', "Your Pluto plan allows {$max} ".($max === 1 ? 'branch' : 'branches').'; close one or ask Pluto for more.');
             }
             $old = $id ? $b->only(array_keys($in)) : null;
             $b->fill($in)->save();

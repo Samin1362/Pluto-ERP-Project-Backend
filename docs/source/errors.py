@@ -77,6 +77,8 @@ E = {
     "file_type_not_allowed": (415, "Only JPG, PNG or PDF up to 10 MB", ["BR-051"]),
     "file_too_large": (413, "Files may be up to 10 MB", ["BR-051"]),
     "seat_limit_reached": (409, "All seats are in use", ["BR-059"]),
+    "branch_limit_reached": (409, "All branches in the plan are in use", ["BR-059"]),
+    "module_not_in_plan": (403, "This part of Pluto is not in your plan", ["FR-005"]),
     "last_owner": (409, "A company must keep at least one active Owner", ["BR-060"]),
     "restore_confirmation_required": (422, "Type RESTORE to confirm", ["BR-062"]),
     "invalid_mobile": (422, "Mobile numbers have 11 digits starting 01", ["BR-063"]),
@@ -102,7 +104,7 @@ RULE_ERRORS = {
     "BR-035": ["base_currency_locked"], "BR-038": ["branch_restricted"], "BR-039": ["lc_submit_incomplete"], "BR-040": ["invalid_transition"],
     "BR-042": ["exceeds_tolerance"], "BR-044": ["margin_exceeds_deposit"], "BR-045": ["charge_allocated"], "BR-046": ["lc_not_closable"],
     "BR-049": ["version_conflict"], "BR-050": ["idempotency_key_reused", "idempotency_in_progress"], "BR-051": ["file_type_not_allowed", "file_too_large"],
-    "BR-053": ["backdated_confirmation_required"], "BR-059": ["seat_limit_reached"], "BR-060": ["last_owner", "role_in_use", "system_role"],
+    "BR-053": ["backdated_confirmation_required"], "BR-059": ["seat_limit_reached", "branch_limit_reached"], "BR-060": ["last_owner", "role_in_use", "system_role"],
     "BR-062": ["restore_confirmation_required"], "BR-063": ["invalid_mobile"], "BR-064": ["mapping_missing"], "BR-065": ["mapping_missing"],
     "BR-066": ["lc_limit_exceeded", "loan_limit_exceeded"], "BR-067": ["repayment_exceeds_outstanding"], "BR-068": ["nothing_to_revalue"],
 }

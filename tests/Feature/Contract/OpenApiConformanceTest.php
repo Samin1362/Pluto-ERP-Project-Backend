@@ -1007,6 +1007,34 @@ class OpenApiConformanceTest extends TestCase
         $this->assertConforms($this->api('POST', "/api/v1/platform/companies/{$c}/owner-access", $t, null, ['reason' => 'x'], $key()), 'POST', $path);     // 409
     }
 
+    public function test_platform_plan_endpoints_match_the_contract(): void
+    {
+        $c = $this->company->id;
+        $admin = $this->makeUser('admin@pluto.example');
+        config(['pluto.platform_admins' => ['admin@pluto.example']]);
+        $t = app(JwtService::class)->issue($admin, (int) $this->claims($this->login('admin@pluto.example'))['sid'], ['pwd', 'otp'])['access_token'];
+        $key = fn () => ['Idempotency-Key' => (string) Str::uuid()];
+
+        $this->assertConforms($this->api('GET', '/api/v1/platform/plans', $t), 'GET', '/platform/plans');
+        $body = ['slug' => 'starter', 'name' => 'Starter', 'max_users' => 2, 'max_branches' => 1, 'modules' => []];
+        $made = $this->api('POST', '/api/v1/platform/plans', $t, null, $body, $key());
+        $made->assertCreated();
+        $this->assertConforms($made, 'POST', '/platform/plans');
+        $this->assertConforms($this->api('POST', '/api/v1/platform/plans', $t, null, ['slug' => 'Bad slug'] + $body, $key()), 'POST', '/platform/plans');      // 422
+        $id = $made->json('data.id');
+        $this->assertConforms($this->api('PUT', "/api/v1/platform/plans/{$id}", $t, null, ['max_users' => 3] + $body, ['If-Match' => 'W/"1"']), 'PUT', '/platform/plans/{id}');
+        $this->assertConforms($this->api('PUT', "/api/v1/platform/plans/{$id}", $t, null, $body, ['If-Match' => 'W/"1"']), 'PUT', '/platform/plans/{id}');   // 409
+        $basic = \DB::table('plans')->where('slug', 'basic')->value('id');
+        $this->assertConforms($this->api('POST', "/api/v1/platform/companies/{$c}/plan", $t, null, ['plan_id' => $basic, 'overrides' => ['max_users' => 5, 'modules_on' => []]]),
+            'POST', '/platform/companies/{id}/plan');
+        $this->assertConforms($this->api('POST', "/api/v1/platform/companies/{$c}/plan", $t, null, ['plan_id' => 999999]), 'POST', '/platform/companies/{id}/plan'); // 422
+        $this->assertConforms($this->api('GET', '/api/v1/platform/companies', $t), 'GET', '/platform/companies');
+        $owner = $this->login('owner@meghna.example');
+        $this->assertConforms($this->api('GET', '/api/v1/me', $owner, $c), 'GET', '/me');
+        $this->assertConforms($this->api('GET', '/api/v1/company', $owner, $c), 'GET', '/company');
+        $this->assertConforms($this->api('GET', '/api/v1/letters-of-credit', $owner, $c), 'GET', '/letters-of-credit');                                      // 403 module_not_in_plan
+    }
+
     public function test_letter_of_credit_endpoints_match_the_contract(): void
     {
         $t = $this->login('owner@meghna.example');

@@ -3,25 +3,25 @@
   {
    "id": "V01",
    "title": "Every table has a primary key",
-   "checked": 92,
+   "checked": 93,
    "failures": []
   },
   {
    "id": "V02",
    "title": "Every FK references an existing primary or unique key",
-   "checked": 434,
+   "checked": 436,
    "failures": []
   },
   {
    "id": "V03",
    "title": "FK column type equals referenced column type exactly (incl. UNSIGNED, CHAR length)",
-   "checked": 434,
+   "checked": 436,
    "failures": []
   },
   {
    "id": "V04",
    "title": "ON DELETE SET NULL only on nullable columns; self-references nullable",
-   "checked": 434,
+   "checked": 436,
    "failures": []
   },
   {
@@ -45,31 +45,31 @@
   {
    "id": "V08",
    "title": "Identifiers ≤ 64 chars; FK and CHECK names unique schema-wide; index names unique per table",
-   "checked": 2629,
+   "checked": 2649,
    "failures": []
   },
   {
    "id": "V09",
    "title": "Every FK column is the leftmost column of an index (no implicit InnoDB index)",
-   "checked": 434,
+   "checked": 436,
    "failures": []
   },
   {
    "id": "V10",
    "title": "No redundant index (left prefix of another key)",
-   "checked": 372,
+   "checked": 374,
    "failures": []
   },
   {
    "id": "V11",
    "title": "Index key length ≤ 3072 bytes (utf8mb4, DYNAMIC rows); no TEXT/JSON keys",
-   "checked": 557,
+   "checked": 561,
    "failures": []
   },
   {
    "id": "V12",
    "title": "Maximum row size < 65,535 bytes",
-   "checked": 92,
+   "checked": 93,
    "failures": []
   },
   {
@@ -81,13 +81,13 @@
   {
    "id": "V14",
    "title": "Every BIGINT *_id column has a FK, or is declared polymorphic",
-   "checked": 7,
+   "checked": 8,
    "failures": []
   },
   {
    "id": "V15",
    "title": "Defaults are valid for their type; enum defaults and values fit",
-   "checked": 257,
+   "checked": 259,
    "failures": []
   },
   {
@@ -111,13 +111,13 @@
   {
    "id": "V19",
    "title": "ON UPDATE RESTRICT on every FK (surrogate keys are immutable)",
-   "checked": 434,
+   "checked": 436,
    "failures": []
   },
   {
    "id": "V20",
    "title": "Dependency graph is acyclic (12 migration levels; self-references created in the same migration)",
-   "checked": 92,
+   "checked": 93,
    "failures": []
   },
   {
@@ -146,11 +146,11 @@
   }
  ],
  "summary": {
-  "tables": 92,
-  "columns": 1465,
-  "fks": 434,
-  "uniques": 93,
-  "indexes": 372,
+  "tables": 93,
+  "columns": 1479,
+  "fks": 436,
+  "uniques": 94,
+  "indexes": 374,
   "checks": 173,
   "levels": 12,
   "decimal_inventory": {

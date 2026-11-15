@@ -4,6 +4,7 @@ namespace App\Domain\Notifications;
 
 use App\Domain\Access\PermissionResolver;
 use App\Domain\Approvals\NotificationService;
+use App\Domain\Platform\Plans;
 use App\Domain\Shared\Money;
 use App\Domain\Shared\Taka;
 use App\Mail\NotificationMail;
@@ -56,6 +57,10 @@ final class AlertService
      */
     private function lcDeadlines(int $c, CarbonImmutable $today): int
     {
+        // PEP-498: no LC alerts for a company whose plan leaves LC management out.
+        if (! Plans::has($c, Plans::LC_MANAGEMENT)) {
+            return 0;
+        }
         $soon = $today->addDays(self::LC_LEAD_DAYS)->toDateString();
         $days = [$today->toDateString() => 'today', $soon => 'in '.self::LC_LEAD_DAYS.' days'];
         $when = fn (string $date) => $days[CarbonImmutable::parse($date)->toDateString()];
@@ -180,7 +185,7 @@ final class AlertService
                 ->whereRaw('COALESCE(b.qty_on_hand, 0) <= s.reorder_level')->count();
             $lines[] = "• Products at or below their reorder level: {$low}.";
         }
-        if ($can('lc.view')) { // PEP-489
+        if ($can('lc.view') && Plans::has($c, Plans::LC_MANAGEMENT)) { // PEP-489, PEP-498
             $until = $today->addDays(self::LC_LEAD_DAYS)->toDateString();
             $n = DB::table('letters_of_credit')->where('company_id', $c)->whereIn('status', self::LC_OPEN)
                 ->where(fn ($q) => $q->whereBetween('expiry_date', [$today->toDateString(), $until])->orWhereBetween('latest_shipment_date', [$today->toDateString(), $until])
