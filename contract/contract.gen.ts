@@ -630,7 +630,7 @@ export interface Error {
 /** Async export. */
 export interface ExportJob {
   id: number
-  kind: 'export_pack' | 'report' | 'list'
+  kind: 'export_pack' | 'report' | 'list' | 'company_data'
   status: 'queued' | 'running' | 'complete' | 'failed'
   download_url?: string | null
   expires_at?: string | null
@@ -642,9 +642,9 @@ export interface ExportJob {
   created_at?: string | null
 }
 
-/** Start an export. export_pack: month-end pack (`period` = YYYY-MM, `reports` = report operationIds, e.g. getReportsTrialBalance; default the financial statements). report: one report, `source` = its operationId (e.g. getReportsProfitAndLoss) and `filters` = its query parameters. list: any list screen, `source` = the list operationId (e.g. getParties) and `filters` = its query parameters (every page). The caller needs the source's view permission as well. */
+/** Start an export. export_pack: month-end pack (`period` = YYYY-MM, `reports` = report operationIds, e.g. getReportsTrialBalance; default the financial statements). report: one report, `source` = its operationId (e.g. getReportsProfitAndLoss) and `filters` = its query parameters. list: any list screen, `source` = the list operationId (e.g. getParties) and `filters` = its query parameters (every page). The caller needs the source's view permission as well. company_data (PEP-501): every record the company owns as a ZIP of CSV files (one per table, its own rows only) with its attachments; format csv; Owner only. */
 export interface ExportJobCreate {
-  kind: 'export_pack' | 'report' | 'list'
+  kind: 'export_pack' | 'report' | 'list' | 'company_data'
   format: 'xlsx' | 'pdf' | 'both' | 'csv'
   period?: string | null
   reports?: Array<string>

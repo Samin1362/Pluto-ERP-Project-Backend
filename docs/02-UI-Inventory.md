@@ -3152,7 +3152,7 @@ Each entry follows the 13 points of the brief: (1) purpose · (2) components and
 <a id="page-k15"></a>
 #### K15 · Backup and export
 
-1. **Purpose:** Month-end export pack, automatic backups, history, restore (Owner, type RESTORE).
+1. **Purpose:** Month-end export pack, automatic backups, history, restore (Owner, type RESTORE); Export all my data (Owner, PEP-501): a ZIP of every record the company owns.
 2. **Components and layout:** Settings layout: section rail (Business, People, You, Data) on the left, grouped cards on the right, sticky unsaved-changes bar. _Source: Settings.dc.html (K15)._
 3. **Inputs** (and 4. required/optional):
 
@@ -3164,7 +3164,7 @@ Each entry follows the 13 points of the brief: (1) purpose · (2) components and
    | Daily backup | switch | opt |  |
    | Keep for | select | opt | 30/90/365 days |
    | Type RESTORE | text | req | restore dialog |
-5. **Actions → API** ([full map](05-API-Specification.md#actions-k15)): Prepare export pack → POST /export-jobs → GET /export-jobs/{id}<br>Download backup → GET /backups/{id}/download<br>Back up now → POST /backups<br>Restore… (dialog) → dlg:L6 → POST /backups/{id}/restore
+5. **Actions → API** ([full map](05-API-Specification.md#actions-k15)): Prepare export pack → POST /export-jobs → GET /export-jobs/{id}<br>Download backup → GET /backups/{id}/download<br>Back up now → POST /backups<br>Restore… (dialog) → dlg:L6 → POST /backups/{id}/restore<br>Export all my data → POST /export-jobs (kind company_data) → GET /export-jobs/{id}
 6. **Tables:** —
 7. **Validation and rules:** BR-062: Restore is Owner-only, requires typing RESTORE, and always takes a pre-restore snapshot first.
 8. **Roles allowed:** `settings.backup` → Owner, Finance manager. Actions additionally check their own permission (see endpoints).

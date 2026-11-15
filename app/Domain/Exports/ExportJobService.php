@@ -4,10 +4,12 @@ namespace App\Domain\Exports;
 
 use App\Domain\Access\JwtService;
 use App\Domain\Access\PermissionResolver;
+use App\Domain\Shared\AuditLogger;
 use App\Jobs\RunExportJob;
 use App\Models\Company;
 use App\Models\CompanyUser;
 use App\Models\ExportJob;
+use App\Models\Role;
 use App\Models\User;
 use App\Support\CurrentCompany;
 use App\Support\Problem\ApiProblem;
@@ -47,7 +49,11 @@ final class ExportJobService
     {
         $kind = $in['kind'];
         $format = $in['format'];
-        $allowed = ['report' => ['xlsx', 'csv', 'pdf'], 'list' => ['xlsx', 'csv'], 'export_pack' => ['xlsx', 'pdf', 'both']][$kind];
+        // PEP-501: everything the company owns leaves only with an Owner (not even Pluto support in a read-only view).
+        if ($kind === 'company_data' && Role::withoutGlobalScope('company')->whereKey($member->role_id)->value('slug') !== 'owner') {
+            throw new ApiProblem('permission_denied', 'Only an Owner can export all of the company data.');
+        }
+        $allowed = ['report' => ['xlsx', 'csv', 'pdf'], 'list' => ['xlsx', 'csv'], 'export_pack' => ['xlsx', 'pdf', 'both'], 'company_data' => ['csv']][$kind];
         if (! in_array($format, $allowed, true)) {
             throw new ApiProblem('validation_failed', errors: ['format' => ['Choose '.implode(', ', $allowed).' for this export']]);
         }
@@ -55,6 +61,7 @@ final class ExportJobService
             'report' => [$this->source($in['source'] ?? null, ExportSources::REPORTS)],
             'list' => [$this->source($in['source'] ?? null, ExportSources::LISTS)],
             'export_pack' => array_map(fn ($s) => $this->source($s, ExportSources::REPORTS, 'reports'), $in['reports'] ?? ExportSources::PACK_DEFAULT),
+            'company_data' => [],
         };
         foreach ($sources as $s) {
             $permission = $this->permissionOf(ExportSources::REPORTS[$s][0] ?? ExportSources::LISTS[$s][0]);
@@ -63,10 +70,14 @@ final class ExportJobService
             }
         }
         $job = ExportJob::create(['kind' => $kind, 'status' => 'queued', 'parameters' => [
-            'format' => $format, 'source' => $kind === 'export_pack' ? null : $sources[0], 'reports' => $kind === 'export_pack' ? $sources : null,
+            'format' => $format, 'source' => in_array($kind, ['export_pack', 'company_data'], true) ? null : $sources[0], 'reports' => $kind === 'export_pack' ? $sources : null,
             'period' => $in['period'] ?? null, 'filters' => array_map(fn ($v) => is_bool($v) ? ($v ? 'true' : 'false') : (string) $v, array_filter($in['filters'] ?? [], fn ($v) => $v !== null && $v !== '')),
             'session_id' => $sessionId,
         ]]);
+        if ($kind === 'company_data') {
+            // PEP-501: who took a full copy of the company's data, and when, stays in its audit log.
+            app(AuditLogger::class)->record('exported_all_data', $job, null, ['kind' => 'company_data'], type: 'export_jobs');
+        }
         RunExportJob::dispatch($job->id);
 
         return $job->refresh();
@@ -105,7 +116,7 @@ final class ExportJobService
         return ['id' => $job->id, 'kind' => $job->kind, 'status' => $job->status,
             'download_url' => $live ? URL::temporarySignedRoute('export-jobs.file', $expires, ['id' => $job->id], absolute: false) : null,
             'expires_at' => $expires?->toIso8601String(), 'finished_at' => $job->finished_at?->toIso8601String(), 'error' => $job->error,
-            'source' => $p['source'] ?? ($job->kind === 'export_pack' ? 'month_end_pack' : ($p['report'] ?? null)), 'format' => $p['format'] ?? null,
+            'source' => $p['source'] ?? ($job->kind === 'export_pack' ? 'month_end_pack' : ($job->kind === 'company_data' ? 'company_data' : ($p['report'] ?? null))), 'format' => $p['format'] ?? null,
             'file_name' => $p['file_name'] ?? null, 'created_at' => $job->created_at?->toIso8601String()];
     }
 
@@ -131,6 +142,7 @@ final class ExportJobService
                 'report' => $this->report($call, $p, $dir),
                 'list' => $this->list($call, $p, $dir),
                 'export_pack' => $this->pack($call, $p, $dir),
+                'company_data' => app(CompanyDataExporter::class)->write((int) $job->company_id, $dir),
             };
             $p['file_name'] = $name;
             $job->forceFill(['status' => 'complete', 'file_path' => $files, 'finished_at' => now(), 'parameters' => $p, 'error' => null])->save();

@@ -2,7 +2,7 @@
 
 > Status: **Release candidate 1.0.0-rc.1 for approval** (18 Oct 2026), Laravel + Eloquent. **No endpoint is to be implemented until this contract is approved.** ⚑ Auth details (DEC-02) and the items in §12.7 are still open.
 >
-> **Generated file.** The endpoint reference (§9), schemas (§10), page action map (§11) and contract review (§12) come from `docs/source/api.py`, `schemas.py`, `actions.py`, `errors.py` and `contract_review.py`. The machine-readable contract is [`openapi.yaml`](openapi.yaml) (OpenAPI 3.1), validated against the official OpenAPI 3.1 schema (§8). Size: 342 endpoints, 230 schemas, 82 error codes, 163 pages with 541 mapped actions.
+> **Generated file.** The endpoint reference (§9), schemas (§10), page action map (§11) and contract review (§12) come from `docs/source/api.py`, `schemas.py`, `actions.py`, `errors.py` and `contract_review.py`. The machine-readable contract is [`openapi.yaml`](openapi.yaml) (OpenAPI 3.1), validated against the official OpenAPI 3.1 schema (§8). Size: 342 endpoints, 230 schemas, 82 error codes, 163 pages with 542 mapped actions.
 
 ## 1. Conventions
 
@@ -623,10 +623,10 @@ Last run: 24 rules, **24 passed, 0 failed**; 6 negative tests, 6 detected. Offic
 | A13 | PUT/PATCH on a versioned table requires If-Match, and If-Match is only required where a version exists | 41 | ✅ pass |
 | A14 | Request fields are stored: each maps to a column (or is declared virtual) with a compatible length, enum values and nullability | 404 | ✅ pass |
 | A15 | Response enum fields have exactly the values the database allows | 29 | ✅ pass |
-| A16 | Every action of every page maps to API calls, a dialog, navigation or explicit client behaviour, and every target exists | 541 | ✅ pass |
+| A16 | Every action of every page maps to API calls, a dialog, navigation or explicit client behaviour, and every target exists | 542 | ✅ pass |
 | A17 | Every data-changing endpoint is triggered by at least one page action (only token refresh is system-driven) | 195 | ✅ pass |
 | A18 | Every page has at least one endpoint (shared components use their host page's) | 163 | ✅ pass |
-| A19 | For every action, at least one role can both open the page and call the endpoint | 338 | ✅ pass |
+| A19 | For every action, at least one role can both open the page and call the endpoint | 340 | ✅ pass |
 | A20 | Database operations name real tables; nothing deletes posted or append-only rows; every write changes something | 1441 | ✅ pass |
 | A21 | Every parameter has a typed schema | 575 | ✅ pass |
 | A22 | Business rules exist; 46 rejecting rules map to error codes | 374 | ✅ pass |
@@ -2706,7 +2706,7 @@ Prepare the month-end export pack or a large report export. Queued (NFR-006); 30
 | **Permission** | `reports.export` — roles: Owner, Finance manager, Accountant |
 | **Path / query params** | — / — |
 | **Request body** | [`ExportJobCreate`](#schema-exportjobcreate) |
-| **Validation** | `kind`* one of export_pack/report/list; `format`* one of xlsx/pdf/both/csv; `period` string ≤ 20 (nullable); `reports` array of str; `source` string ≤ 60 (nullable); `filters` object (nullable)<br>Unknown fields are rejected (422). |
+| **Validation** | `kind`* one of export_pack/report/list/company_data; `format`* one of xlsx/pdf/both/csv; `period` string ≤ 20 (nullable); `reports` array of str; `source` string ≤ 60 (nullable); `filters` object (nullable)<br>Unknown fields are rejected (422). |
 | **Success** | 202 `data`: [`ExportJob`](#schema-exportjob) · 202 when above the approval limit |
 | **Status codes** | 202, 400, 401, 403, 409, 422, 429, 503 |
 | **Error codes** | **`company_maintenance`, `support_read_only`**; standard: `company_required`, `idempotency_in_progress`, `idempotency_key_reused`, `malformed_json`, `not_a_member`, `permission_denied`, `server_error`, `token_expired`, `token_invalid`, `unauthenticated`, `validation_failed` |
@@ -2714,7 +2714,7 @@ Prepare the month-end export pack or a large report export. Queued (NFR-006); 30
 | **Database** | insert: audit_logs, export_jobs, idempotency_keys |
 | **Business rules** | — |
 | **Requirements** | FR-087, FR-076 |
-| **Pages and actions** | K15, J1, B1, B5, B6, C1, C5, C6, D1, D9, D12, E2, E13, E14, E15, F2, F11, F12, F13, G11, G12, H2, H7<br>B1 · Export (bulk)<br>B5 · Export<br>B6 · Export<br>C1 · Export (bulk)<br>C5 · Export<br>C6 · Export<br>D1 · Export<br>D9 · Export<br>D12 · Export<br>E2 · Export<br>E13 · Export<br>E14 · Export<br>E15 · Export<br>E15 · Export<br>F2 · Export<br>F11 · Export<br>F12 · Export<br>F13 · Export<br>F13 · Export<br>G11 · Export<br>G12 · Export<br>H2 · Export<br>H7 · Export<br>K15 · Prepare export pack |
+| **Pages and actions** | K15, J1, B1, B5, B6, C1, C5, C6, D1, D9, D12, E2, E13, E14, E15, F2, F11, F12, F13, G11, G12, H2, H7<br>B1 · Export (bulk)<br>B5 · Export<br>B6 · Export<br>C1 · Export (bulk)<br>C5 · Export<br>C6 · Export<br>D1 · Export<br>D9 · Export<br>D12 · Export<br>E2 · Export<br>E13 · Export<br>E14 · Export<br>E15 · Export<br>E15 · Export<br>F2 · Export<br>F11 · Export<br>F12 · Export<br>F13 · Export<br>F13 · Export<br>G11 · Export<br>G12 · Export<br>H2 · Export<br>H7 · Export<br>K15 · Prepare export pack<br>K15 · Export all my data |
 | **Transaction / concurrency** | Single transaction. |
 
 <a id="getexportjobsid"></a>
@@ -2736,7 +2736,7 @@ Export job status and signed download URL when complete.
 | **Database** | read: export_jobs |
 | **Business rules** | — |
 | **Requirements** | FR-087 |
-| **Pages and actions** | K15, J1, B1, B5, B6, C1, C5, C6, D1, D9, D12, E2, E13, E14, E15, F2, F11, F12, F13, G11, G12, H2, H7<br>B1 · Export (bulk)<br>B5 · Export<br>B6 · Export<br>C1 · Export (bulk)<br>C5 · Export<br>C6 · Export<br>D1 · Export<br>D9 · Export<br>D12 · Export<br>E2 · Export<br>E13 · Export<br>E14 · Export<br>E15 · Export<br>E15 · Export<br>F2 · Export<br>F11 · Export<br>F12 · Export<br>F13 · Export<br>F13 · Export<br>G11 · Export<br>G12 · Export<br>H2 · Export<br>H7 · Export<br>K15 · Prepare export pack |
+| **Pages and actions** | K15, J1, B1, B5, B6, C1, C5, C6, D1, D9, D12, E2, E13, E14, E15, F2, F11, F12, F13, G11, G12, H2, H7<br>B1 · Export (bulk)<br>B5 · Export<br>B6 · Export<br>C1 · Export (bulk)<br>C5 · Export<br>C6 · Export<br>D1 · Export<br>D9 · Export<br>D12 · Export<br>E2 · Export<br>E13 · Export<br>E14 · Export<br>E15 · Export<br>E15 · Export<br>F2 · Export<br>F11 · Export<br>F12 · Export<br>F13 · Export<br>F13 · Export<br>G11 · Export<br>G12 · Export<br>H2 · Export<br>H7 · Export<br>K15 · Prepare export pack<br>K15 · Export all my data |
 | **Transaction / concurrency** | Read-only; consistent snapshot. |
 
 <a id="getexportjobsidfile"></a>
@@ -9477,7 +9477,7 @@ Async export.
 | Property | Type | Required |
 |---|---|---|
 | `id` | `id` | yes |
-| `kind` | `enum:export_pack\|report\|list` | yes |
+| `kind` | `enum:export_pack\|report\|list\|company_data` | yes |
 | `status` | `enum:queued\|running\|complete\|failed` | yes |
 | `download_url` | `str \| null` | no |
 | `expires_at` | `datetime \| null` | no |
@@ -9491,11 +9491,11 @@ Async export.
 <a id="schema-exportjobcreate"></a>
 #### `ExportJobCreate`
 
-Start an export. export_pack: month-end pack (`period` = YYYY-MM, `reports` = report operationIds, e.g. getReportsTrialBalance; default the financial statements). report: one report, `source` = its operationId (e.g. getReportsProfitAndLoss) and `filters` = its query parameters. list: any list screen, `source` = the list operationId (e.g. getParties) and `filters` = its query parameters (every page). The caller needs the source's view permission as well. Unknown properties are rejected.
+Start an export. export_pack: month-end pack (`period` = YYYY-MM, `reports` = report operationIds, e.g. getReportsTrialBalance; default the financial statements). report: one report, `source` = its operationId (e.g. getReportsProfitAndLoss) and `filters` = its query parameters. list: any list screen, `source` = the list operationId (e.g. getParties) and `filters` = its query parameters (every page). The caller needs the source's view permission as well. company_data (PEP-501): every record the company owns as a ZIP of CSV files (one per table, its own rows only) with its attachments; format csv; Owner only. Unknown properties are rejected.
 
 | Property | Type | Required |
 |---|---|---|
-| `kind` | `enum:export_pack\|report\|list` | yes |
+| `kind` | `enum:export_pack\|report\|list\|company_data` | yes |
 | `format` | `enum:xlsx\|pdf\|both\|csv` | yes |
 | `period` | `str:20 \| null` | no |
 | `reports` | `[str]` | no |
@@ -13473,6 +13473,7 @@ View permission `settings.backup`. **Loads:** [`GET /company/settings`](#getcomp
 | 2 | Download backup | [`GET /backups/{id}/download`](#getbackupsiddownload) | `settings.restore` | — | 200 | — |
 | 3 | Back up now | [`POST /backups`](#postbackups) | `settings.backup` | — → [`Backup`](#schema-backup) | 202 | `support_read_only` |
 | 4 | Restore… (dialog) | dlg:L6 → [`POST /backups/{id}/restore`](#postbackupsidrestore) | `settings.restore` | [`RestoreRequest`](#schema-restorerequest) → [`Backup`](#schema-backup) | 202 | `restore_confirmation_required`, `support_read_only` |
+| 5 | Export all my data | [`POST /export-jobs`](#postexportjobs) (kind company_data) → [`GET /export-jobs/{id}`](#getexportjobsid) | `reports.export` | [`ExportJobCreate`](#schema-exportjobcreate) → [`ExportJob`](#schema-exportjob) | 200, 202 | `support_read_only` |
 
 <a id="actions-k17"></a>
 #### K17 · Platform console
@@ -13790,7 +13791,7 @@ View permission `lc.create`. **Loads:** nothing of its own (host page data).
 | Endpoints | 280 | 342 |
 | Schemas | 191 | 230 |
 | Pages | 155 | 163 |
-| Page actions mapped to API or client behaviour | 0 of 448 | 541 of 541 |
+| Page actions mapped to API or client behaviour | 0 of 448 | 542 of 542 |
 
 ### 12.2 Missing endpoints, now added (61)
 
@@ -13925,6 +13926,7 @@ View permission `lc.create`. **Loads:** nothing of its own (host page data).
 | Checks before posting (UI redesign A+) | DocumentCalculation adds checks: [PostingCheck { key, status pass\|warn\|block, label, line_no }] for sales invoices and purchase bills — the period is open, stock, credit limit, overdue invoices, back-dating, purchase-order quantities — so E3/F3 show what passed as well as what needs attention. Built from the same warnings and PeriodGuard the post uses. PEP-480, 12 Nov 2026. Additive. |
 | Platform console (PEP-483) | New /platform/companies endpoints (list, create with an Owner invitation, suspend, reactivate) for platform admins: e-mails in PLUTO_PLATFORM_ADMINS with 2-step sign-in, never a company role, so selling Pluto to many companies needs no shared membership. Me adds platform_admin (shows the console link; PEP-484). Schemas PlatformCompany, PlatformCompanyCreate; errors platform_admin_only, platform_two_factor_required. Owner request 12-13 Nov 2026. Additive. |
 | Read-only support access (PEP-485) | POST/DELETE /platform/companies/{id}/support-access: a platform admin opens a company read-only for 15-240 minutes with a reason (table support_access_grants); its owners get a notification and the audit log keeps the start and end; any change answers 403 support_read_only; Me adds support_access while the current company is such a view. Additive. |
+| Export all my data (PEP-501) | POST /export-jobs accepts kind company_data (format csv): an Owner downloads everything the company owns as a ZIP (one CSV per table with only its rows, the company profile, members without secrets, attachments, a README) through the usual 24-hour signed link; export_jobs.kind adds company_data. Owner decision 15 Nov 2026 (roadmap A6). Additive. |
 | Plan on create, delete a plan (PEP-499) | PlatformCompanyCreate requires plan_id (the plan the customer bought), so a new company never gets Import Pro by accident. DELETE /platform/plans/{id} removes a plan no company is on (409 plan_in_use otherwise). Owner request 15 Nov 2026. |
 | Plans and limits per company (PEP-498) | plans table (platform-wide: slug, name, max_users, max_branches NULL = unlimited, modules JSON, is_active) and companies.plan_id + plan_overrides. GET/POST /platform/plans, PUT /platform/plans/{id}, PUT /platform/companies/{id}/plan. PlatformCompany adds plan, plan_overrides, effective, users_used, branches_used; Company adds plan_name, modules, max_branches (seat_limit shows the effective user limit); Me adds plan_name and modules. LC routes need module lc_management and LC finance routes lc_finance (403 module_not_in_plan); a new branch beyond the limit is 409 branch_limit_reached. Existing companies move to import_pro. Owner decision 14 Nov 2026. Additive. |
 | Company brand colour (PEP-497) | companies adds brand_color (#rrggbb, NULL = Pluto default). CompanyUpdate accepts brand_color (null resets); a colour that cannot reach WCAG AA contrast is refused with 422 on brand_color. Company and Me (for the current company) add brand: BrandPalette { color, light, dark } of BrandTokens { brand, brand_hover, on_brand, brand_ink, brand_soft, focus }, worked out by the server so the app sets its CSS variables without colour maths; the company's PDFs use the colour for headings and rules. Owner request 14 Nov 2026. Additive. |

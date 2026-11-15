@@ -312,7 +312,7 @@ add(
        c("started_at", TS), c("finished_at", TS, null=True), c("expires_at", TS, null=True), c("error", V(500), null=True)],
       indexes=[["company_id", "started_at"]]),
     T("export_jobs", "Platform", "Asynchronous export (month-end pack, report exports).",
-      [enum("kind", ["export_pack", "report", "list"]), c("parameters", JSON), enum("status", ["queued", "running", "complete", "failed"], default="'queued'"),
+      [enum("kind", ["export_pack", "report", "list", "company_data"], note="company_data (PEP-501): everything the company owns, one CSV per table plus its attachments, Owner only"), c("parameters", JSON), enum("status", ["queued", "running", "complete", "failed"], default="'queued'"),
        c("file_path", V(255), null=True), c("finished_at", TS, null=True), c("error", V(500), null=True)],
       indexes=[["company_id", "status"]]),
 )

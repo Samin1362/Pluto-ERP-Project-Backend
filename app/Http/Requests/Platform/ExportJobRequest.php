@@ -16,7 +16,7 @@ class ExportJobRequest extends StrictRequest
     public function rules(): array
     {
         return [
-            'kind' => ['required', Rule::in(['export_pack', 'report', 'list'])],
+            'kind' => ['required', Rule::in(['export_pack', 'report', 'list', 'company_data'])],
             'format' => ['required', Rule::in(['xlsx', 'pdf', 'both', 'csv'])],
             'period' => ['sometimes', 'nullable', 'date_format:Y-m'],
             'reports' => ['sometimes', 'array', 'min:1', 'max:20'],

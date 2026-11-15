@@ -510,6 +510,10 @@ class OpenApiConformanceTest extends TestCase
         $this->assertConforms($this->api('POST', '/api/v1/export-jobs', $t, $c, ['kind' => 'list', 'format' => 'pdf', 'source' => 'getMoneyAccounts'], $key()), 'POST', '/export-jobs'); // 422
         $this->assertConforms($this->api('GET', '/api/v1/export-jobs/'.$job->json('data.id'), $t, $c), 'GET', '/export-jobs/{id}');
         $this->assertConforms($this->api('GET', '/api/v1/export-jobs/999999', $t, $c), 'GET', '/export-jobs/{id}');                                            // 404
+        $all = $this->api('POST', '/api/v1/export-jobs', $t, $c, ['kind' => 'company_data', 'format' => 'csv'], $key());                                         // PEP-501
+        $all->assertStatus(202);
+        $this->assertConforms($all, 'POST', '/export-jobs');
+        $this->assertConforms($this->api('GET', '/api/v1/export-jobs/'.$all->json('data.id'), $t, $c), 'GET', '/export-jobs/{id}');
     }
 
     public function test_settings_users_and_security_endpoints_match_the_contract(): void
