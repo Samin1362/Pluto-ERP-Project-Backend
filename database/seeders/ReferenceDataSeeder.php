@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Domain\Access\RoleTemplates;
+use App\Domain\Platform\Plans;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
@@ -24,5 +25,7 @@ class ReferenceDataSeeder extends Seeder
                 'created_at' => now(), 'updated_at' => now(),
             ]);
         }
+        // PEP-498: the three starting Pluto plans, only when missing (the owner edits them in the platform console).
+        Plans::seedDefaults();
     }
 }
