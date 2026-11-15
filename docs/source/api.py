@@ -132,6 +132,17 @@ E("DELETE", "/platform/companies/{id}/owner-access", "Leave a company joined fro
   ["company_users", "companies", "roles", "audit_logs"], ["K17"], tag="Platform console", fr=["FR-005"], codes=[204], rules=["BR-060"],
   desc=PLAT + " Refused with 409 last_owner while the platform admin is the company's only active Owner. Nothing happens when they are not an active member.",
   errors=["platform_admin_only", "platform_two_factor_required", "last_owner"], added="PEP-496 owner access")
+E("GET", "/platform/plans", "Pluto plans with how many companies are on each", "auth", ["plans", "companies"], ["K17"], resp="Page<Plan>", tag="Platform console", fr=["FR-005"],
+  desc=PLAT + " Plans set each company's user limit, branch limit and modules (PEP-498).", errors=["platform_admin_only", "platform_two_factor_required"], added="PEP-498 plans")
+E("POST", "/platform/plans", "Create a Pluto plan", "auth", ["plans"], ["K17"], req="PlanInput", resp="Plan", idem=True, tag="Platform console", fr=["FR-005"], codes=[201, 422],
+  desc=PLAT + " The slug is unique; lc_finance needs lc_management.", errors=["platform_admin_only", "platform_two_factor_required"], added="PEP-498 plans")
+E("PUT", "/platform/plans/{id}", "Change a Pluto plan (every company on it follows at once)", "auth", ["plans", "companies"], ["K17"], req="PlanInput", resp="Plan", tag="Platform console",
+  fr=["FR-005"], codes=[200, 409, 422], ifmatch=True,
+  desc=PLAT + " Lowering a limit removes nobody: companies above it only cannot add more. Switching a module off deletes nothing; its data comes back when it is on again.",
+  errors=["platform_admin_only", "platform_two_factor_required"], added="PEP-498 plans")
+E("POST", "/platform/companies/{id}/plan", "Put a company on a plan, with optional exceptions", "auth", ["companies", "plans", "notifications", "audit_logs"], ["K17"],
+  req="CompanyPlanInput", resp="PlatformCompany", tag="Platform console", fr=["FR-005"], codes=[200, 422], tx="The company, the audit entry and the notification in one transaction.",
+  desc=PLAT + " The company's Owners are told the new plan. An inactive plan cannot be given (422).", errors=["platform_admin_only", "platform_two_factor_required"], added="PEP-498 plans")
 T = "Fiscal years"
 E("GET", "/fiscal-years", "Financial years with period status", "auth.self", ["fiscal_years", "accounting_periods"], ["K4", "S0"], resp="Page<FiscalYear>", tag=T, fr=["FR-082"])
 E("POST", "/accounting-periods/{id}/lock", "Lock a period (earlier periods must be locked)", "accounting.lock_period", ["accounting_periods", "company_backups", "audit_logs"], ["K4"], rules=["BR-033"],
@@ -671,3 +682,12 @@ _fix("POST", "/allocations", ops={"bill_allocations": "C", "journal_lines": "L",
 # Converting a quotation or PO creates the draft invoice or bill (with lines) and reserves its number at first save.
 _fix("POST", "/quotations/{id}/convert", ops={"sales_invoices": "C", "sales_invoice_lines": "C", "number_sequences": "LU"})
 _fix("POST", "/purchase-orders/{id}/convert", ops={"purchase_bills": "C", "purchase_bill_lines": "C", "number_sequences": "LU"})
+
+# PEP-498: LC management and LC finance are plan modules; their endpoints answer 403 module_not_in_plan when the
+# company's plan does not include them (middleware module:lc_management / module:lc_finance).
+_LC_PATHS = ("/letters-of-credit", "/lc/", "/lc-", "/landed-cost-allocations", "/reports/lc/", "/bank-facilities", "/fx-revaluations")
+for _e in EP:
+    if _e["path"].startswith(_LC_PATHS) and "module_not_in_plan" not in _e["errors"]:
+        _e["errors"].append("module_not_in_plan")
+        if _e["codes"] is not None and 403 not in _e["codes"]:
+            _e["codes"] = list(_e["codes"]) + [403]

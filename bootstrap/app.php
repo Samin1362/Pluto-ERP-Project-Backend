@@ -6,6 +6,7 @@ use App\Http\Middleware\AuthenticateJwt;
 use App\Http\Middleware\ForceJsonApi;
 use App\Http\Middleware\Idempotency;
 use App\Http\Middleware\RequestId;
+use App\Http\Middleware\RequireModule;
 use App\Http\Middleware\RequirePermission;
 use App\Http\Middleware\RequirePlatformAdmin;
 use App\Http\Middleware\ResolveCompany;
@@ -43,6 +44,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'jwt' => AuthenticateJwt::class,
             'company' => ResolveCompany::class,
             'perm' => RequirePermission::class,
+            'module' => RequireModule::class,
             'idempotent' => Idempotency::class,
             'platform' => RequirePlatformAdmin::class,
         ]);

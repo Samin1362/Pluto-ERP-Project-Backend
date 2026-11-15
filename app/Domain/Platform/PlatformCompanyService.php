@@ -3,9 +3,11 @@
 namespace App\Domain\Platform;
 
 use App\Domain\Access\CompanyProvisioner;
+use App\Domain\Access\CompanyService;
 use App\Domain\Access\MemberService;
 use App\Domain\Shared\AuditLogger;
 use App\Models\Company;
+use App\Models\Plan;
 use App\Models\Role;
 use App\Support\CurrentCompany;
 use App\Support\Problem\ApiProblem;
@@ -108,16 +110,31 @@ final class PlatformCompanyService
         $activity = DB::table('audit_logs')->whereIn('company_id', $ids)->groupBy('company_id')->selectRaw('company_id, MAX(created_at) at')->pluck('at', 'company_id');
 
         $out = [];
-        foreach (DB::table('companies')->whereIn('id', $ids)->get(['id', 'legal_name', 'trading_name', 'status', 'created_at']) as $c) {
+        $branches = DB::table('branches')->whereIn('company_id', $ids)->where('is_active', true)->groupBy('company_id')->selectRaw('company_id, COUNT(*) n')->pluck('n', 'company_id');
+        $plans = Plan::all()->keyBy('id');
+        $default = $plans->firstWhere('slug', Plans::DEFAULT_SLUG);
+
+        foreach (DB::table('companies')->whereIn('id', $ids)->get(['id', 'legal_name', 'trading_name', 'status', 'created_at', 'plan_id', 'plan_overrides']) as $c) {
             $o = $owners[$c->id] ?? null;
             $i = $o ? null : ($invited[$c->id] ?? null);
             $out[$c->id] = ['id' => $c->id, 'legal_name' => $c->legal_name, 'trading_name' => $c->trading_name, 'status' => $c->status,
                 'created_at' => self::ts($c->created_at), 'owner_name' => $o->name ?? $i->name ?? null, 'owner_email' => $o->email ?? $i->email ?? null,
                 'owner_pending' => $o === null && $i !== null, 'members' => (int) ($members[$c->id] ?? 0), 'last_activity_at' => self::ts($activity[$c->id] ?? null),
-                'owner_access' => isset($mine[$c->id])];
+                'owner_access' => isset($mine[$c->id]),
+                // PEP-498: the plan, the company's own exceptions, what it may use and what it uses.
+                'plan' => ($pl = $plans[$c->plan_id] ?? $default) ? ['id' => $pl->id, 'slug' => $pl->slug, 'name' => $pl->name] : null,
+                'plan_overrides' => self::overridesOut(Plans::overrides($c->plan_overrides)), 'effective' => Plans::effective((int) $c->id),
+                'users_used' => CompanyService::seatsUsed((int) $c->id), 'branches_used' => (int) ($branches[$c->id] ?? 0)];
         }
 
         return $out;
+    }
+
+    /** @return array{max_users: ?int, max_branches: ?int, modules_on: list<string>, modules_off: list<string>}|null */
+    private static function overridesOut(array $o): ?array
+    {
+        return $o === [] ? null : ['max_users' => $o['max_users'] ?? null, 'max_branches' => $o['max_branches'] ?? null,
+            'modules_on' => $o['modules_on'] ?? [], 'modules_off' => $o['modules_off'] ?? []];
     }
 
     private static function ts(?string $at): ?string

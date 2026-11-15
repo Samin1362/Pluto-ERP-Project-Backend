@@ -574,6 +574,7 @@ paths:
         company_user_branches: C
         audit_logs: C
       x-error-codes:
+      - branch_limit_reached
       - gone
       - malformed_json
       - not_found
@@ -619,7 +620,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '409':
-          description: 'Conflict (version mismatch, state not allowed, duplicate): `seat_limit_reached`'
+          description: 'Conflict (version mismatch, state not allowed, duplicate): `branch_limit_reached`, `seat_limit_reached`'
           content:
             application/problem+json:
               schema:
@@ -3444,6 +3445,7 @@ paths:
       x-page-actions:
       - 'K17: Create company'
       - 'K17: Leave (confirm)'
+      - 'K17: Change plan (plan, exceptions)'
       x-tables:
       - companies
       - company_users
@@ -4236,6 +4238,387 @@ paths:
                 $ref: '#/components/schemas/Error'
         '409':
           description: 'Conflict (version mismatch, state not allowed, duplicate): `last_owner`, `role_in_use`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        default:
+          description: Unexpected error (`server_error`)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /api/v1/platform/plans:
+    get:
+      operationId: getPlatformPlans
+      summary: Pluto plans with how many companies are on each
+      tags:
+      - Platform console
+      description: "Platform admins only: the e-mail is in PLUTO_PLATFORM_ADMINS (server setting, never a company role) and this sign-in used 2-step verification;\
+        \ otherwise 403 platform_admin_only / platform_two_factor_required. Every change is written to the company's audit log. Plans set each company's user limit,\
+        \ branch limit and modules (PEP-498).\n\n**Permission:** any signed-in user  \n**Database:** read: companies, plans  \n**Rules:** —"
+      x-permission: auth
+      x-business-rules: []
+      x-requirements:
+      - FR-005
+      x-pages:
+      - K17
+      x-page-actions:
+      - 'K17: Create plan'
+      - 'K17: Edit plan'
+      x-tables:
+      - plans
+      - companies
+      x-db-operations:
+        plans: R
+        companies: R
+      x-error-codes:
+      - platform_admin_only
+      - platform_two_factor_required
+      - server_error
+      - token_expired
+      - token_invalid
+      - unauthenticated
+      x-contract-change: PEP-498 plans
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                - meta
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Plan'
+                  meta:
+                    $ref: '#/components/schemas/PageMeta'
+        '401':
+          description: 'Not authenticated: `token_expired`, `token_invalid`, `unauthenticated`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: 'Not permitted: `platform_admin_only`, `platform_two_factor_required`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        default:
+          description: Unexpected error (`server_error`)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    post:
+      operationId: postPlatformPlans
+      summary: Create a Pluto plan
+      tags:
+      - Platform console
+      description: "Platform admins only: the e-mail is in PLUTO_PLATFORM_ADMINS (server setting, never a company role) and this sign-in used 2-step verification;\
+        \ otherwise 403 platform_admin_only / platform_two_factor_required. Every change is written to the company's audit log. The slug is unique; lc_finance needs\
+        \ lc_management.\n\n**Permission:** any signed-in user  \n**Database:** insert: audit_logs, idempotency_keys, plans  \n**Rules:** —"
+      x-permission: auth
+      x-business-rules: []
+      x-requirements:
+      - FR-005
+      x-pages:
+      - K17
+      x-page-actions:
+      - 'K17: Create plan'
+      x-tables:
+      - plans
+      x-db-operations:
+        plans: C
+        audit_logs: C
+        idempotency_keys: C
+      x-error-codes:
+      - idempotency_in_progress
+      - idempotency_key_reused
+      - malformed_json
+      - platform_admin_only
+      - platform_two_factor_required
+      - server_error
+      - token_expired
+      - token_invalid
+      - unauthenticated
+      - validation_failed
+      x-contract-change: PEP-498 plans
+      parameters:
+      - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PlanInput'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Plan'
+          headers:
+            Location:
+              schema:
+                type: string
+              description: URL of the created resource
+        '400':
+          description: 'Malformed request: `malformed_json`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: 'Not authenticated: `token_expired`, `token_invalid`, `unauthenticated`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: 'Not permitted: `platform_admin_only`, `platform_two_factor_required`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: 'Conflict (version mismatch, state not allowed, duplicate): `idempotency_in_progress`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: 'Validation or business-rule failure: `idempotency_key_reused`, `validation_failed`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        default:
+          description: Unexpected error (`server_error`)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /api/v1/platform/plans/{id}:
+    put:
+      operationId: putPlatformPlansId
+      summary: Change a Pluto plan (every company on it follows at once)
+      tags:
+      - Platform console
+      description: "Platform admins only: the e-mail is in PLUTO_PLATFORM_ADMINS (server setting, never a company role) and this sign-in used 2-step verification;\
+        \ otherwise 403 platform_admin_only / platform_two_factor_required. Every change is written to the company's audit log. Lowering a limit removes nobody: companies\
+        \ above it only cannot add more. Switching a module off deletes nothing; its data comes back when it is on again.\n\n**Permission:** any signed-in user  \n\
+        **Database:** insert: audit_logs; update: plans; read: companies  \n**Rules:** —"
+      x-permission: auth
+      x-business-rules: []
+      x-requirements:
+      - FR-005
+      x-pages:
+      - K17
+      x-page-actions:
+      - 'K17: Edit plan'
+      x-tables:
+      - plans
+      - companies
+      x-db-operations:
+        plans: U
+        companies: R
+        audit_logs: C
+      x-error-codes:
+      - if_match_required
+      - malformed_json
+      - not_found
+      - platform_admin_only
+      - platform_two_factor_required
+      - server_error
+      - token_expired
+      - token_invalid
+      - unauthenticated
+      - validation_failed
+      - version_conflict
+      x-contract-change: PEP-498 plans
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+          minimum: 1
+      - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PlanInput'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Plan'
+          headers:
+            ETag:
+              schema:
+                type: string
+              description: W/"<version>" for If-Match
+        '400':
+          description: 'Malformed request: `malformed_json`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: 'Not authenticated: `token_expired`, `token_invalid`, `unauthenticated`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: 'Not permitted: `platform_admin_only`, `platform_two_factor_required`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: 'Not found (also for other companies'' records): `not_found`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: 'Conflict (version mismatch, state not allowed, duplicate): `version_conflict`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: 'Validation or business-rule failure: `validation_failed`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '428':
+          description: 'Precondition required (If-Match missing): `if_match_required`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        default:
+          description: Unexpected error (`server_error`)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /api/v1/platform/companies/{id}/plan:
+    post:
+      operationId: postPlatformCompaniesIdPlan
+      summary: Put a company on a plan, with optional exceptions
+      tags:
+      - Platform console
+      description: "Platform admins only: the e-mail is in PLUTO_PLATFORM_ADMINS (server setting, never a company role) and this sign-in used 2-step verification;\
+        \ otherwise 403 platform_admin_only / platform_two_factor_required. Every change is written to the company's audit log. The company's Owners are told the\
+        \ new plan. An inactive plan cannot be given (422).\n\n**Permission:** any signed-in user  \n**Database:** lock: companies; insert: audit_logs; update: companies;\
+        \ read: notifications, plans  \n**Rules:** —  \n**Transaction:** The company, the audit entry and the notification in one transaction."
+      x-permission: auth
+      x-business-rules: []
+      x-requirements:
+      - FR-005
+      x-pages:
+      - K17
+      x-page-actions:
+      - 'K17: Change plan (plan, exceptions)'
+      x-tables:
+      - companies
+      - plans
+      - notifications
+      - audit_logs
+      x-db-operations:
+        companies: LU
+        plans: R
+        notifications: R
+        audit_logs: C
+      x-error-codes:
+      - malformed_json
+      - not_found
+      - platform_admin_only
+      - platform_two_factor_required
+      - server_error
+      - token_expired
+      - token_invalid
+      - unauthenticated
+      - validation_failed
+      x-contract-change: PEP-498 plans
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+          minimum: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CompanyPlanInput'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                properties:
+                  data:
+                    $ref: '#/components/schemas/PlatformCompany'
+        '400':
+          description: 'Malformed request: `malformed_json`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: 'Not authenticated: `token_expired`, `token_invalid`, `unauthenticated`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: 'Not permitted: `platform_admin_only`, `platform_two_factor_required`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: 'Not found (also for other companies'' records): `not_found`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: 'Validation or business-rule failure: `validation_failed`'
           content:
             application/problem+json:
               schema:
@@ -5171,6 +5554,7 @@ paths:
         company_users: LU
         audit_logs: C
       x-error-codes:
+      - branch_limit_reached
       - company_maintenance
       - company_required
       - not_a_member
@@ -5228,7 +5612,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '409':
-          description: 'Conflict (version mismatch, state not allowed, duplicate): `seat_limit_reached`'
+          description: 'Conflict (version mismatch, state not allowed, duplicate): `branch_limit_reached`, `seat_limit_reached`'
           content:
             application/problem+json:
               schema:
@@ -5362,6 +5746,7 @@ paths:
         audit_logs: C
         idempotency_keys: C
       x-error-codes:
+      - branch_limit_reached
       - company_maintenance
       - company_required
       - idempotency_in_progress
@@ -5421,7 +5806,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '409':
-          description: 'Conflict (version mismatch, state not allowed, duplicate): `idempotency_in_progress`, `seat_limit_reached`'
+          description: 'Conflict (version mismatch, state not allowed, duplicate): `branch_limit_reached`, `idempotency_in_progress`, `seat_limit_reached`'
           content:
             application/problem+json:
               schema:
@@ -33958,6 +34343,7 @@ paths:
       x-error-codes:
       - company_maintenance
       - company_required
+      - module_not_in_plan
       - not_a_member
       - permission_denied
       - server_error
@@ -33996,7 +34382,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `module_not_in_plan`, `not_a_member`, `permission_denied`'
           content:
             application/problem+json:
               schema:
@@ -34054,6 +34440,7 @@ paths:
       x-error-codes:
       - company_maintenance
       - company_required
+      - module_not_in_plan
       - not_a_member
       - permission_denied
       - server_error
@@ -34147,7 +34534,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `module_not_in_plan`, `not_a_member`, `permission_denied`'
           content:
             application/problem+json:
               schema:
@@ -34225,6 +34612,7 @@ paths:
       - idempotency_in_progress
       - idempotency_key_reused
       - malformed_json
+      - module_not_in_plan
       - not_a_member
       - permission_denied
       - server_error
@@ -34272,7 +34660,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
+          description: 'Not permitted: `module_not_in_plan`, `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -34346,6 +34734,7 @@ paths:
       x-error-codes:
       - company_maintenance
       - company_required
+      - module_not_in_plan
       - not_a_member
       - not_found
       - permission_denied
@@ -34392,7 +34781,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `module_not_in_plan`, `not_a_member`, `permission_denied`'
           content:
             application/problem+json:
               schema:
@@ -34467,6 +34856,7 @@ paths:
       - if_match_required
       - invalid_transition
       - malformed_json
+      - module_not_in_plan
       - not_a_member
       - not_found
       - permission_denied
@@ -34523,7 +34913,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
+          description: 'Not permitted: `module_not_in_plan`, `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -34596,6 +34986,7 @@ paths:
       x-error-codes:
       - company_maintenance
       - company_required
+      - module_not_in_plan
       - not_a_member
       - not_draft
       - not_found
@@ -34630,7 +35021,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
+          description: 'Not permitted: `module_not_in_plan`, `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -34710,6 +35101,7 @@ paths:
       - idempotency_in_progress
       - idempotency_key_reused
       - malformed_json
+      - module_not_in_plan
       - not_a_member
       - not_found
       - permission_denied
@@ -34765,7 +35157,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
+          description: 'Not permitted: `module_not_in_plan`, `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -34837,6 +35229,7 @@ paths:
       - invalid_transition
       - lc_submit_incomplete
       - malformed_json
+      - module_not_in_plan
       - not_a_member
       - not_found
       - permission_denied
@@ -34893,7 +35286,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
+          description: 'Not permitted: `module_not_in_plan`, `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -34987,6 +35380,7 @@ paths:
       - lc_not_closable
       - malformed_json
       - margin_exceeds_deposit
+      - module_not_in_plan
       - not_a_member
       - not_found
       - permission_denied
@@ -35038,7 +35432,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
+          description: 'Not permitted: `module_not_in_plan`, `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -35101,6 +35495,7 @@ paths:
       x-error-codes:
       - company_maintenance
       - company_required
+      - module_not_in_plan
       - not_a_member
       - not_found
       - permission_denied
@@ -35147,7 +35542,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `module_not_in_plan`, `not_a_member`, `permission_denied`'
           content:
             application/problem+json:
               schema:
@@ -35200,6 +35595,7 @@ paths:
       - company_maintenance
       - company_required
       - malformed_json
+      - module_not_in_plan
       - not_a_member
       - not_found
       - permission_denied
@@ -35254,7 +35650,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
+          description: 'Not permitted: `module_not_in_plan`, `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -35315,6 +35711,7 @@ paths:
       - company_required
       - if_match_required
       - malformed_json
+      - module_not_in_plan
       - not_a_member
       - not_found
       - permission_denied
@@ -35371,7 +35768,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
+          description: 'Not permitted: `module_not_in_plan`, `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -35440,6 +35837,7 @@ paths:
       x-error-codes:
       - company_maintenance
       - company_required
+      - module_not_in_plan
       - not_a_member
       - permission_denied
       - server_error
@@ -35478,7 +35876,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `module_not_in_plan`, `not_a_member`, `permission_denied`'
           content:
             application/problem+json:
               schema:
@@ -35525,6 +35923,7 @@ paths:
       x-error-codes:
       - company_maintenance
       - company_required
+      - module_not_in_plan
       - not_a_member
       - permission_denied
       - server_error
@@ -35563,7 +35962,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `module_not_in_plan`, `not_a_member`, `permission_denied`'
           content:
             application/problem+json:
               schema:
@@ -35610,6 +36009,7 @@ paths:
       - company_maintenance
       - company_required
       - malformed_json
+      - module_not_in_plan
       - not_a_member
       - permission_denied
       - server_error
@@ -35656,7 +36056,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
+          description: 'Not permitted: `module_not_in_plan`, `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -35711,6 +36111,7 @@ paths:
       - company_maintenance
       - company_required
       - malformed_json
+      - module_not_in_plan
       - not_a_member
       - not_found
       - permission_denied
@@ -35765,7 +36166,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
+          description: 'Not permitted: `module_not_in_plan`, `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -35827,6 +36228,7 @@ paths:
       x-error-codes:
       - company_maintenance
       - company_required
+      - module_not_in_plan
       - not_a_member
       - permission_denied
       - server_error
@@ -35903,7 +36305,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `module_not_in_plan`, `not_a_member`, `permission_denied`'
           content:
             application/problem+json:
               schema:
@@ -35979,6 +36381,7 @@ paths:
       - idempotency_in_progress
       - idempotency_key_reused
       - malformed_json
+      - module_not_in_plan
       - not_a_member
       - not_found
       - permission_denied
@@ -36034,7 +36437,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
+          description: 'Not permitted: `module_not_in_plan`, `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -36117,6 +36520,7 @@ paths:
       - company_required
       - if_match_required
       - malformed_json
+      - module_not_in_plan
       - not_a_member
       - not_found
       - permission_denied
@@ -36173,7 +36577,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
+          description: 'Not permitted: `module_not_in_plan`, `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -36243,6 +36647,7 @@ paths:
       - company_maintenance
       - company_required
       - malformed_json
+      - module_not_in_plan
       - not_a_member
       - not_found
       - permission_denied
@@ -36297,7 +36702,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
+          description: 'Not permitted: `module_not_in_plan`, `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -36359,6 +36764,7 @@ paths:
       - company_required
       - if_match_required
       - malformed_json
+      - module_not_in_plan
       - not_a_member
       - not_found
       - permission_denied
@@ -36415,7 +36821,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
+          description: 'Not permitted: `module_not_in_plan`, `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -36484,6 +36890,7 @@ paths:
       x-error-codes:
       - company_maintenance
       - company_required
+      - module_not_in_plan
       - not_a_member
       - permission_denied
       - server_error
@@ -36566,7 +36973,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `module_not_in_plan`, `not_a_member`, `permission_denied`'
           content:
             application/problem+json:
               schema:
@@ -36646,6 +37053,7 @@ paths:
       - insufficient_funds
       - malformed_json
       - margin_exceeds_deposit
+      - module_not_in_plan
       - not_a_member
       - period_locked
       - permission_denied
@@ -36695,7 +37103,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
+          description: 'Not permitted: `module_not_in_plan`, `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -36774,6 +37182,7 @@ paths:
       - idempotency_in_progress
       - idempotency_key_reused
       - malformed_json
+      - module_not_in_plan
       - not_a_member
       - not_found
       - period_locked
@@ -36827,7 +37236,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
+          description: 'Not permitted: `module_not_in_plan`, `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -36911,6 +37320,7 @@ paths:
       - idempotency_key_reused
       - insufficient_funds
       - malformed_json
+      - module_not_in_plan
       - not_a_member
       - not_found
       - period_locked
@@ -36963,7 +37373,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
+          description: 'Not permitted: `module_not_in_plan`, `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -37059,6 +37469,7 @@ paths:
       - insufficient_funds
       - malformed_json
       - margin_exceeds_deposit
+      - module_not_in_plan
       - not_a_member
       - not_found
       - period_locked
@@ -37116,7 +37527,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
+          description: 'Not permitted: `module_not_in_plan`, `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -37179,6 +37590,7 @@ paths:
       x-error-codes:
       - company_maintenance
       - company_required
+      - module_not_in_plan
       - not_a_member
       - not_found
       - permission_denied
@@ -37226,7 +37638,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `module_not_in_plan`, `not_a_member`, `permission_denied`'
           content:
             application/problem+json:
               schema:
@@ -37304,6 +37716,7 @@ paths:
       - idempotency_key_reused
       - invalid_transition
       - malformed_json
+      - module_not_in_plan
       - not_a_member
       - not_found
       - period_locked
@@ -37357,7 +37770,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
+          description: 'Not permitted: `module_not_in_plan`, `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -37428,6 +37841,7 @@ paths:
       - company_maintenance
       - company_required
       - malformed_json
+      - module_not_in_plan
       - not_a_member
       - not_found
       - permission_denied
@@ -37477,7 +37891,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
+          description: 'Not permitted: `module_not_in_plan`, `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -37566,6 +37980,7 @@ paths:
       - idempotency_in_progress
       - idempotency_key_reused
       - malformed_json
+      - module_not_in_plan
       - not_a_member
       - not_found
       - period_locked
@@ -37623,7 +38038,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
+          description: 'Not permitted: `module_not_in_plan`, `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -37717,6 +38132,7 @@ paths:
       - idempotency_in_progress
       - idempotency_key_reused
       - malformed_json
+      - module_not_in_plan
       - not_a_member
       - not_found
       - period_locked
@@ -37770,7 +38186,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
+          description: 'Not permitted: `module_not_in_plan`, `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -37846,6 +38262,7 @@ paths:
       x-error-codes:
       - company_maintenance
       - company_required
+      - module_not_in_plan
       - not_a_member
       - not_found
       - permission_denied
@@ -37883,7 +38300,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `module_not_in_plan`, `not_a_member`, `permission_denied`'
           content:
             application/problem+json:
               schema:
@@ -37941,6 +38358,7 @@ paths:
       x-error-codes:
       - company_maintenance
       - company_required
+      - module_not_in_plan
       - not_a_member
       - not_found
       - permission_denied
@@ -37987,7 +38405,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `module_not_in_plan`, `not_a_member`, `permission_denied`'
           content:
             application/problem+json:
               schema:
@@ -38044,6 +38462,7 @@ paths:
       x-error-codes:
       - company_maintenance
       - company_required
+      - module_not_in_plan
       - not_a_member
       - permission_denied
       - server_error
@@ -38083,7 +38502,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `module_not_in_plan`, `not_a_member`, `permission_denied`'
           content:
             application/problem+json:
               schema:
@@ -38135,6 +38554,7 @@ paths:
       - lc_limit_exceeded
       - loan_limit_exceeded
       - malformed_json
+      - module_not_in_plan
       - not_a_member
       - permission_denied
       - server_error
@@ -38182,7 +38602,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
+          description: 'Not permitted: `module_not_in_plan`, `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -38240,6 +38660,7 @@ paths:
       - lc_limit_exceeded
       - loan_limit_exceeded
       - malformed_json
+      - module_not_in_plan
       - not_a_member
       - not_found
       - permission_denied
@@ -38297,7 +38718,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
+          description: 'Not permitted: `module_not_in_plan`, `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -38371,6 +38792,7 @@ paths:
       x-error-codes:
       - company_maintenance
       - company_required
+      - module_not_in_plan
       - not_a_member
       - permission_denied
       - server_error
@@ -38460,7 +38882,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `module_not_in_plan`, `not_a_member`, `permission_denied`'
           content:
             application/problem+json:
               schema:
@@ -38514,6 +38936,7 @@ paths:
       x-error-codes:
       - company_maintenance
       - company_required
+      - module_not_in_plan
       - not_a_member
       - not_found
       - permission_denied
@@ -38561,7 +38984,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `module_not_in_plan`, `not_a_member`, `permission_denied`'
           content:
             application/problem+json:
               schema:
@@ -38614,6 +39037,7 @@ paths:
       x-error-codes:
       - company_maintenance
       - company_required
+      - module_not_in_plan
       - not_a_member
       - not_found
       - permission_denied
@@ -38669,7 +39093,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `module_not_in_plan`, `not_a_member`, `permission_denied`'
           content:
             application/problem+json:
               schema:
@@ -38754,6 +39178,7 @@ paths:
       - idempotency_key_reused
       - insufficient_funds
       - malformed_json
+      - module_not_in_plan
       - not_a_member
       - not_found
       - period_locked
@@ -38813,7 +39238,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
+          description: 'Not permitted: `module_not_in_plan`, `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -38882,6 +39307,7 @@ paths:
       - company_required
       - if_match_required
       - malformed_json
+      - module_not_in_plan
       - not_a_member
       - not_found
       - permission_denied
@@ -38940,7 +39366,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
+          description: 'Not permitted: `module_not_in_plan`, `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -39033,6 +39459,7 @@ paths:
       - idempotency_in_progress
       - idempotency_key_reused
       - malformed_json
+      - module_not_in_plan
       - not_a_member
       - not_found
       - period_locked
@@ -39086,7 +39513,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
+          description: 'Not permitted: `module_not_in_plan`, `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -39159,6 +39586,7 @@ paths:
       - company_maintenance
       - company_required
       - malformed_json
+      - module_not_in_plan
       - not_a_member
       - nothing_to_revalue
       - permission_denied
@@ -39202,7 +39630,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
+          description: 'Not permitted: `module_not_in_plan`, `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -39273,6 +39701,7 @@ paths:
       - idempotency_in_progress
       - idempotency_key_reused
       - malformed_json
+      - module_not_in_plan
       - not_a_member
       - nothing_to_revalue
       - period_locked
@@ -39324,7 +39753,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
+          description: 'Not permitted: `module_not_in_plan`, `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -39381,6 +39810,7 @@ paths:
       x-error-codes:
       - company_maintenance
       - company_required
+      - module_not_in_plan
       - not_a_member
       - permission_denied
       - server_error
@@ -39451,7 +39881,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `module_not_in_plan`, `not_a_member`, `permission_denied`'
           content:
             application/problem+json:
               schema:
@@ -39520,6 +39950,7 @@ paths:
       - idempotency_in_progress
       - idempotency_key_reused
       - malformed_json
+      - module_not_in_plan
       - not_a_member
       - not_found
       - period_locked
@@ -39573,7 +40004,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
+          description: 'Not permitted: `module_not_in_plan`, `not_a_member`, `permission_denied`, `support_read_only`'
           content:
             application/problem+json:
               schema:
@@ -39652,6 +40083,7 @@ paths:
       x-error-codes:
       - company_maintenance
       - company_required
+      - module_not_in_plan
       - not_a_member
       - not_found
       - permission_denied
@@ -39744,7 +40176,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          description: 'Not permitted: `module_not_in_plan`, `not_a_member`, `permission_denied`'
           content:
             application/problem+json:
               schema:
@@ -39838,6 +40270,7 @@ components:
           - approval_required
           - backdated_confirmation_required
           - base_currency_locked
+          - branch_limit_reached
           - branch_restricted
           - charge_allocated
           - comment_required
@@ -39875,6 +40308,7 @@ components:
           - malformed_json
           - mapping_missing
           - margin_exceeds_deposit
+          - module_not_in_plan
           - nature_mismatch
           - not_a_member
           - not_draft
@@ -40633,6 +41067,14 @@ components:
           oneOf:
           - $ref: '#/components/schemas/BrandPalette'
           - type: 'null'
+        plan_name:
+          type:
+          - string
+          - 'null'
+        modules:
+          type: array
+          items:
+            type: string
       required:
       - id
       - name
@@ -40790,6 +41232,20 @@ components:
           format: date-time
         owner_access:
           type: boolean
+        plan:
+          oneOf:
+          - $ref: '#/components/schemas/PlanRef'
+          - type: 'null'
+        plan_overrides:
+          oneOf:
+          - $ref: '#/components/schemas/PlanOverrides'
+          - type: 'null'
+        effective:
+          $ref: '#/components/schemas/PlanLimits'
+        users_used:
+          type: integer
+        branches_used:
+          type: integer
       required:
       - id
       - legal_name
@@ -40797,6 +41253,141 @@ components:
       - created_at
       - owner_pending
       - members
+    PlanRef:
+      type: object
+      description: The plan a company is on (PEP-498).
+      properties:
+        id:
+          type: integer
+          format: int64
+          minimum: 1
+        slug:
+          type: string
+        name:
+          type: string
+      required:
+      - id
+      - slug
+      - name
+    PlanLimits:
+      type: object
+      description: 'What a company may use after its plan and its own exceptions (PEP-498): max_users and max_branches (max_branches null = unlimited); modules are
+        module keys: lc_management, lc_finance.'
+      properties:
+        max_users:
+          type: integer
+        max_branches:
+          type:
+          - integer
+          - 'null'
+        modules:
+          type: array
+          items:
+            type: string
+      required:
+      - max_users
+      - modules
+    PlanOverrides:
+      type: object
+      description: 'Exceptions for one company (PEP-498): users and branches allowed; each field left out follows the plan. modules_on / modules_off add or remove
+        module keys (lc_management, lc_finance).'
+      properties:
+        max_users:
+          type:
+          - integer
+          - 'null'
+        max_branches:
+          type:
+          - integer
+          - 'null'
+        modules_on:
+          type: array
+          items:
+            type: string
+        modules_off:
+          type: array
+          items:
+            type: string
+    Plan:
+      type: object
+      description: 'A Pluto plan the software owner sells (PEP-498): max_users, max_branches (null = unlimited) and the modules included (lc_management, lc_finance).
+        companies = how many companies are on it.'
+      properties:
+        id:
+          type: integer
+          format: int64
+          minimum: 1
+        slug:
+          type: string
+        name:
+          type: string
+        max_users:
+          type: integer
+        max_branches:
+          type:
+          - integer
+          - 'null'
+        modules:
+          type: array
+          items:
+            type: string
+        is_active:
+          type: boolean
+        companies:
+          type: integer
+        version:
+          type: integer
+      required:
+      - id
+      - slug
+      - name
+      - max_users
+      - modules
+      - is_active
+      - version
+    PlanInput:
+      type: object
+      description: 'Create or change a plan (PEP-498). modules: lc_management and/or lc_finance (lc_finance needs lc_management).'
+      properties:
+        slug:
+          type: string
+          maxLength: 40
+        name:
+          type: string
+          maxLength: 80
+        max_users:
+          type: integer
+        max_branches:
+          type:
+          - integer
+          - 'null'
+        modules:
+          type: array
+          items:
+            type: string
+        is_active:
+          type: boolean
+      required:
+      - slug
+      - name
+      - max_users
+      - modules
+      additionalProperties: false
+    CompanyPlanInput:
+      type: object
+      description: Put a company on a plan, with optional exceptions (PEP-498). Lowering a limit removes nobody; switching a module off deletes nothing.
+      properties:
+        plan_id:
+          type: integer
+          format: int64
+          minimum: 1
+        overrides:
+          oneOf:
+          - $ref: '#/components/schemas/PlanOverrides'
+          - type: 'null'
+      required:
+      - plan_id
+      additionalProperties: false
     SupportAccessRequest:
       type: object
       description: Open a company read-only for support.
@@ -41002,6 +41593,18 @@ components:
           oneOf:
           - $ref: '#/components/schemas/BrandPalette'
           - type: 'null'
+        plan_name:
+          type:
+          - string
+          - 'null'
+        modules:
+          type: array
+          items:
+            type: string
+        max_branches:
+          type:
+          - integer
+          - 'null'
         version:
           type: integer
       required:
@@ -43953,6 +44556,7 @@ components:
           - approval_required
           - backdated_confirmation_required
           - base_currency_locked
+          - branch_limit_reached
           - branch_restricted
           - charge_allocated
           - comment_required
@@ -43990,6 +44594,7 @@ components:
           - malformed_json
           - mapping_missing
           - margin_exceeds_deposit
+          - module_not_in_plan
           - nature_mismatch
           - not_a_member
           - not_draft

@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Table `companies` (Platform): migration 4 of 92, dependency level 1.
+ * Table `companies` (Platform): migration 4 of 93, dependency level 1.
  * A business (tenant). All business data hangs off a company.
  * Depends on: currencies, users.
  *
@@ -41,6 +41,8 @@ return new class extends Migration
             $table->string('status', 30)->default('active')->comment('One of: active, suspended, archived');
             $table->unsignedSmallInteger('seat_limit')->default(10)->comment('Users allowed (K8 shows 7 of 10)');
             $table->char('brand_color', 7)->nullable()->comment('Company brand colour as #rrggbb (PEP-497); NULL = the Pluto default. The app and the PDFs of this company follow it');
+            $table->unsignedBigInteger('plan_id')->nullable()->comment('Pluto plan (PEP-498; plans.id). Soft reference (plans is created after this table; the API checks the plan exists). NULL = import_pro');
+            $table->json('plan_overrides')->nullable()->comment('Per-company exceptions to the plan (PEP-498): {max_users?, max_branches?, modules_on?: [], modules_off?: []}');
             $table->unsignedInteger('lock_version')->default(1)->comment('Optimistic concurrency counter; incremented on every update (If-Match)');
             $table->unsignedBigInteger('created_by')->nullable()->comment('User who created the row');
             $table->unsignedBigInteger('updated_by')->nullable()->comment('User who last changed the row');

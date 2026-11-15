@@ -69,6 +69,8 @@ CREATE TABLE `companies` (
   `status` varchar(30) NOT NULL DEFAULT 'active' COMMENT 'One of: active, suspended, archived',
   `seat_limit` smallint unsigned NOT NULL DEFAULT 10 COMMENT 'Users allowed (K8 shows 7 of 10)',
   `brand_color` char(7) NULL COMMENT 'Company brand colour as #rrggbb (PEP-497); NULL = the Pluto default. The app and the PDFs of this company follow it',
+  `plan_id` bigint unsigned NULL COMMENT 'Pluto plan (PEP-498; plans.id). Soft reference (plans is created after this table; the API checks the plan exists). NULL = import_pro',
+  `plan_overrides` json NULL COMMENT 'Per-company exceptions to the plan (PEP-498): {max_users?, max_branches?, modules_on?: [], modules_off?: []}',
   `lock_version` int unsigned NOT NULL DEFAULT 1 COMMENT 'Optimistic concurrency counter; incremented on every update (If-Match)',
   `created_by` bigint unsigned NULL COMMENT 'User who created the row',
   `updated_by` bigint unsigned NULL COMMENT 'User who last changed the row',
@@ -2998,3 +3000,25 @@ CREATE TABLE `lc_amendment_lines` (
   CONSTRAINT `lc_amendment_lines_unit_id_foreign` FOREIGN KEY (`unit_id`) REFERENCES `units` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `lc_amendment_lines_action_check` CHECK (`action` IN ('add', 'change', 'remove'))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Item change of an amendment (PEP-487): add, change or remove an item of the LC. An accepted amendment applies them to the linked purchase order''s lines.';
+
+-- 93. plans (level 1)
+CREATE TABLE `plans` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT COMMENT 'Primary key, auto-increment',
+  `slug` varchar(40) NOT NULL COMMENT 'basic, business, import_pro, or one the owner adds',
+  `name` varchar(80) NOT NULL,
+  `max_users` smallint unsigned NOT NULL COMMENT 'Users allowed; Pluto support memberships never count',
+  `max_branches` smallint unsigned NULL COMMENT 'Active branches allowed; NULL = unlimited',
+  `modules` json NOT NULL COMMENT 'Module keys included, e.g. ["lc_management", "lc_finance"]',
+  `is_active` tinyint(1) NOT NULL DEFAULT 1 COMMENT 'Inactive plans cannot be given to more companies',
+  `lock_version` int unsigned NOT NULL DEFAULT 1 COMMENT 'Optimistic concurrency counter; incremented on every update (If-Match)',
+  `created_by` bigint unsigned NULL COMMENT 'User who created the row',
+  `updated_by` bigint unsigned NULL COMMENT 'User who last changed the row',
+  `created_at` datetime NULL COMMENT 'Set by Laravel',
+  `updated_at` datetime NULL COMMENT 'Set by Laravel',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `plans_slug_unique` (`slug`),
+  KEY `plans_created_by_index` (`created_by`),
+  KEY `plans_updated_by_index` (`updated_by`),
+  CONSTRAINT `plans_created_by_foreign` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  CONSTRAINT `plans_updated_by_foreign` FOREIGN KEY (`updated_by`) REFERENCES `users` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Pluto plans the software owner sells (PEP-498): a user limit, a branch limit (NULL = unlimited) and the modules included. Platform-wide, not a company''s data; companies.plan_id points here.';

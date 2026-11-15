@@ -9,6 +9,7 @@ use App\Domain\Documents\DocumentCalculator;
 use App\Domain\Documents\LineUnits;
 use App\Domain\Inventory\AverageCostCalculator;
 use App\Domain\Lc\LcPostingService;
+use App\Domain\Platform\Plans;
 use App\Domain\Shared\Money;
 use App\Domain\Shared\Quantity;
 use App\Domain\Shared\Rate;
@@ -195,6 +196,10 @@ final class PurchaseBillPreparer
         // (weighted by foreign amount), or the planning rate while nothing is paid; the user may enter another rate.
         if (! empty($in['letter_of_credit_id'])) {
             $lc = LetterOfCredit::find($in['letter_of_credit_id']);
+            // PEP-498: an import bill on an LC needs LC management in the company's plan.
+            if ($lc && ! Plans::has($lc->company_id, Plans::LC_MANAGEMENT)) {
+                throw new ApiProblem('validation_failed', errors: ['letter_of_credit_id' => ['LC management is not in your Pluto plan; enter the bill without an LC']]);
+            }
             $errors = [];
             if (! $lc || $lc->party_id !== $party->id) {
                 $errors['letter_of_credit_id'] = ['This LC is for another supplier'];
