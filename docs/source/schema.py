@@ -837,6 +837,14 @@ add(
        c("advance_recovery", MONEY, default="0", note="Staff advance taken back this month (PEP-523)"), c("gross", MONEY), c("net", MONEY),
        c("paid_amount", MONEY, default="0", note="Paid so far (PEP-522)"), c("note", V(255), null=True)],
       uniques=[["payroll_run_id", "employee_id"]], checks=["net >= 0", "deductions >= 0", "overtime >= 0", "other_earnings >= 0"], tenant=False, audit_cols=False),
+    T("payroll_payments", "Payroll", "Salaries paid from one money account on one day against an approved sheet (PEP-522): Dr salaries_payable / Cr the account; reversed by a mirror entry.",
+      [fk("payroll_run_id", "payroll_runs"), fk("money_account_id", "money_accounts"), c("paid_on", DATE), c("amount", MONEY), c("employees_count", "SMALLINT UNSIGNED"),
+       c("reference", V(60), null=True, note="Cheque, transfer or bKash reference"), enum("status", ["posted", "reversed"], default="'posted'"),
+       fk("journal_entry_id", "journal_entries", null=True, note="Set in the same transaction as the payment"), fk("reversal_entry_id", "journal_entries", null=True), c("reversed_at", TS, null=True), c("reverse_reason", V(255), null=True)],
+      uniques=[["journal_entry_id"], ["reversal_entry_id"]], indexes=[["company_id", "payroll_run_id"]], checks=["amount > 0"], version=True),
+    T("payroll_payment_lines", "Payroll", "How much of a salary payment went to each employee (PEP-522).",
+      [fk("payroll_payment_id", "payroll_payments", on_delete="CASCADE"), fk("payroll_line_id", "payroll_lines"), c("amount", MONEY)],
+      uniques=[["payroll_payment_id", "payroll_line_id"]], checks=["amount > 0"], tenant=False, audit_cols=False),
 )
 
 MODULE_ORDER = ["Platform", "Access", "Accounting", "Parties", "Inventory", "Money", "Sales", "Purchases", "LC", "Payroll"]

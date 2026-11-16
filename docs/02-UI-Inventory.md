@@ -193,7 +193,7 @@
 | [P1](#page-p1) | Employees | Payroll | List | `payroll.view` | 1 | — |
 | [P2](#page-p2) | Employee form | Payroll | Form | `payroll.create` | 3 | — |
 | [P3](#page-p3) | Salary sheets | Payroll | List | `payroll.view` | 2 | — |
-| [P4](#page-p4) | Salary sheet | Payroll | Detail | `payroll.view` | 5 | — |
+| [P4](#page-p4) | Salary sheet | Payroll | Detail | `payroll.view` | 9 | — |
 | J2 | Sales report | Reports | → E11 | as E11 | — | reused |
 | J3 | Purchase report | Reports | → F9 | as F9 | — | reused |
 | J4 | Income report | Reports | → I8 | as I8 | — | reused |
@@ -3757,12 +3757,12 @@ Each entry follows the 13 points of the brief: (1) purpose · (2) components and
 1. **Purpose:** Lines per employee (days paid, structure, overtime, other earnings, deductions, gross, net) with totals from the server.
 2. **Components and layout:** Editable grid while draft; Approve posts; Cancel reverses.
 3–4. **Inputs:** none (read-only page; filters listed below)
-5. **Actions → API** ([full map](05-API-Specification.md#actions-p4)): Save changes → PUT /payroll-runs/{id}<br>Delete draft → dlg:L6 → DELETE /payroll-runs/{id}<br>Approve and post → dlg:L6 → POST /payroll-runs/{id}/approve<br>Cancel sheet → dlg:L6 → POST /payroll-runs/{id}/cancel
+5. **Actions → API** ([full map](05-API-Specification.md#actions-p4)): Save changes → PUT /payroll-runs/{id}<br>Delete draft → dlg:L6 → DELETE /payroll-runs/{id}<br>Approve and post → dlg:L6 → POST /payroll-runs/{id}/approve<br>Cancel sheet → dlg:L6 → POST /payroll-runs/{id}/cancel<br>Pay salaries → GET /money-accounts → POST /payroll-runs/{id}/payments<br>Reverse a payment → GET /payroll-runs/{id}/payments → dlg:L6 → POST /payroll-payments/{id}/reverse
 6. **Tables:** —
 7. **Validation and rules:** Standard server validation (422).
 8. **Roles allowed:** `payroll.view` → Owner, Finance manager, Accountant. Actions additionally check their own permission (see endpoints).
-9. **APIs:** [`GET /payroll-runs/{id}`](05-API-Specification.md#getpayrollrunsid), [`PUT /payroll-runs/{id}`](05-API-Specification.md#putpayrollrunsid), [`DELETE /payroll-runs/{id}`](05-API-Specification.md#deletepayrollrunsid), [`POST /payroll-runs/{id}/approve`](05-API-Specification.md#postpayrollrunsidapprove), [`POST /payroll-runs/{id}/cancel`](05-API-Specification.md#postpayrollrunsidcancel)
-10. **Entities:** `account_mappings`, `audit_logs`, `journal_entries`, `journal_lines`, `number_sequences`, `payroll_lines`, `payroll_runs`
-11. **Workflows:** — · FR: FR-101
+9. **APIs:** [`GET /money-accounts`](05-API-Specification.md#getmoneyaccounts), [`GET /payroll-runs/{id}`](05-API-Specification.md#getpayrollrunsid), [`PUT /payroll-runs/{id}`](05-API-Specification.md#putpayrollrunsid), [`DELETE /payroll-runs/{id}`](05-API-Specification.md#deletepayrollrunsid), [`POST /payroll-runs/{id}/approve`](05-API-Specification.md#postpayrollrunsidapprove), [`POST /payroll-runs/{id}/payments`](05-API-Specification.md#postpayrollrunsidpayments), [`GET /payroll-runs/{id}/payments`](05-API-Specification.md#getpayrollrunsidpayments), [`POST /payroll-payments/{id}/reverse`](05-API-Specification.md#postpayrollpaymentsidreverse), [`POST /payroll-runs/{id}/cancel`](05-API-Specification.md#postpayrollrunsidcancel)
+10. **Entities:** `account_mappings`, `audit_logs`, `bank_statement_lines`, `journal_entries`, `journal_lines`, `ledgers`, `money_accounts`, `number_sequences`, `payroll_lines`, `payroll_payment_lines`, `payroll_payments`, `payroll_runs`
+11. **Workflows:** — · FR: FR-101, FR-102
 12. **States:** Loading: skeleton strip and tabs. Not found: 404 page (L15). Error per card with Retry. Success toasts after actions.
 13. **Depends on:** [P3](#page-p3)

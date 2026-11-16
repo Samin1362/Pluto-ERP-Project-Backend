@@ -28086,7 +28086,9 @@ paths:
       - LC-DlgPay
       - E14
       - F12
-      x-page-actions: []
+      - P4
+      x-page-actions:
+      - 'P4: Pay salaries'
       x-tables:
       - money_accounts
       - ledgers
@@ -43067,6 +43069,399 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/Error'
+  /api/v1/payroll-runs/{id}/payments:
+    post:
+      operationId: postPayrollRunsIdPayments
+      summary: 'Pay salaries of an approved sheet (all unpaid, or chosen lines and amounts): Dr salaries_payable / Cr the money account'
+      tags:
+      - Payroll
+      description: "**Permission:** `payroll.approve`  \n**Database:** lock: number_sequences; insert: audit_logs, idempotency_keys, journal_entries, journal_lines,\
+        \ payroll_runs; update: number_sequences; read: money_accounts, payroll_lines, payroll_payment_lines, payroll_payments  \n**Rules:** BR-001, BR-004, BR-031\
+        \  \n**Transaction:** One DB transaction; SELECT ... FOR UPDATE on the document row, number_sequences, stock_balances in a fixed order (sequence -> document\
+        \ -> products by id) to avoid deadlocks."
+      x-permission: payroll.approve
+      x-business-rules:
+      - BR-001
+      - BR-004
+      - BR-031
+      x-requirements:
+      - FR-102
+      x-pages:
+      - P4
+      x-page-actions:
+      - 'P4: Pay salaries'
+      x-tables:
+      - payroll_runs
+      - payroll_lines
+      - payroll_payments
+      - payroll_payment_lines
+      - money_accounts
+      - journal_entries
+      - journal_lines
+      - number_sequences
+      - audit_logs
+      x-db-operations:
+        payroll_runs: C
+        payroll_lines: R
+        payroll_payments: R
+        payroll_payment_lines: R
+        money_accounts: R
+        journal_entries: C
+        journal_lines: C
+        number_sequences: LU
+        audit_logs: C
+        idempotency_keys: C
+      x-error-codes:
+      - company_maintenance
+      - company_required
+      - idempotency_in_progress
+      - idempotency_key_reused
+      - insufficient_funds
+      - malformed_json
+      - module_not_in_plan
+      - not_a_member
+      - not_found
+      - nothing_to_pay
+      - payroll_overpaid
+      - payroll_run_not_approved
+      - period_locked
+      - permission_denied
+      - server_error
+      - support_read_only
+      - token_expired
+      - token_invalid
+      - unauthenticated
+      - unbalanced_entry
+      - validation_failed
+      x-contract-change: PEP-522 pay salaries
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+          minimum: 1
+      - $ref: '#/components/parameters/CompanyHeader'
+      - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PayrollPaymentInput'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                properties:
+                  data:
+                    $ref: '#/components/schemas/PayrollPayment'
+          headers:
+            Location:
+              schema:
+                type: string
+              description: URL of the created resource
+        '400':
+          description: 'Malformed request: `company_required`, `malformed_json`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: 'Not authenticated: `token_expired`, `token_invalid`, `unauthenticated`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: 'Not permitted: `module_not_in_plan`, `not_a_member`, `permission_denied`, `support_read_only`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: 'Not found (also for other companies'' records): `not_found`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: 'Conflict (version mismatch, state not allowed, duplicate): `idempotency_in_progress`, `payroll_run_not_approved`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: 'Validation or business-rule failure: `idempotency_key_reused`, `insufficient_funds`, `nothing_to_pay`, `payroll_overpaid`, `period_locked`,
+            `unbalanced_entry`, `validation_failed`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: 'Company temporarily unavailable (restore in progress): `company_maintenance`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+              description: Seconds to wait
+        default:
+          description: Unexpected error (`server_error`)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    get:
+      operationId: getPayrollRunsIdPayments
+      summary: Payments made against a salary sheet
+      tags:
+      - Payroll
+      description: "**Permission:** `payroll.view`  \n**Database:** read: journal_entries, money_accounts, payroll_payment_lines, payroll_payments  \n**Rules:** —"
+      x-permission: payroll.view
+      x-business-rules: []
+      x-requirements:
+      - FR-102
+      x-pages:
+      - P4
+      x-page-actions:
+      - 'P4: Reverse a payment'
+      x-tables:
+      - payroll_payments
+      - payroll_payment_lines
+      - money_accounts
+      - journal_entries
+      x-db-operations:
+        payroll_payments: R
+        payroll_payment_lines: R
+        money_accounts: R
+        journal_entries: R
+      x-error-codes:
+      - company_maintenance
+      - company_required
+      - module_not_in_plan
+      - not_a_member
+      - not_found
+      - permission_denied
+      - server_error
+      - token_expired
+      - token_invalid
+      - unauthenticated
+      x-contract-change: PEP-522 pay salaries
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+          minimum: 1
+      - $ref: '#/components/parameters/CompanyHeader'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                - meta
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/PayrollPayment'
+                  meta:
+                    $ref: '#/components/schemas/PageMeta'
+        '400':
+          description: 'Malformed request: `company_required`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: 'Not authenticated: `token_expired`, `token_invalid`, `unauthenticated`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: 'Not permitted: `module_not_in_plan`, `not_a_member`, `permission_denied`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: 'Not found (also for other companies'' records): `not_found`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: 'Company temporarily unavailable (restore in progress): `company_maintenance`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+              description: Seconds to wait
+        default:
+          description: Unexpected error (`server_error`)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /api/v1/payroll-payments/{id}/reverse:
+    post:
+      operationId: postPayrollPaymentsIdReverse
+      summary: Reverse a salary payment (mirror entry; the employees are unpaid again)
+      tags:
+      - Payroll
+      description: "**Permission:** `payroll.approve`  \n**Database:** lock: number_sequences, payroll_payments; insert: audit_logs, idempotency_keys, journal_entries,\
+        \ journal_lines; update: journal_entries, number_sequences, payroll_payments; read: payroll_lines, payroll_payment_lines  \n**Rules:** BR-003, BR-004  \n\
+        **Transaction:** One DB transaction; SELECT ... FOR UPDATE on the document row, number_sequences, stock_balances in a fixed order (sequence -> document ->\
+        \ products by id) to avoid deadlocks."
+      x-permission: payroll.approve
+      x-business-rules:
+      - BR-003
+      - BR-004
+      x-requirements:
+      - FR-102
+      x-pages:
+      - P4
+      x-page-actions:
+      - 'P4: Reverse a payment'
+      x-tables:
+      - payroll_payments
+      - payroll_payment_lines
+      - payroll_lines
+      - journal_entries
+      - journal_lines
+      - number_sequences
+      - audit_logs
+      x-db-operations:
+        payroll_payments: LU
+        payroll_payment_lines: R
+        payroll_lines: R
+        journal_entries: CU
+        journal_lines: C
+        number_sequences: LU
+        audit_logs: C
+        idempotency_keys: C
+      x-error-codes:
+      - already_reversed
+      - company_maintenance
+      - company_required
+      - idempotency_in_progress
+      - idempotency_key_reused
+      - malformed_json
+      - module_not_in_plan
+      - not_a_member
+      - not_found
+      - period_locked
+      - permission_denied
+      - server_error
+      - support_read_only
+      - token_expired
+      - token_invalid
+      - unauthenticated
+      - use_document_cancel
+      - validation_failed
+      x-contract-change: PEP-522 pay salaries
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+          minimum: 1
+      - $ref: '#/components/parameters/CompanyHeader'
+      - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReasonRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                properties:
+                  data:
+                    $ref: '#/components/schemas/PayrollPayment'
+        '400':
+          description: 'Malformed request: `company_required`, `malformed_json`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: 'Not authenticated: `token_expired`, `token_invalid`, `unauthenticated`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: 'Not permitted: `module_not_in_plan`, `not_a_member`, `permission_denied`, `support_read_only`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: 'Not found (also for other companies'' records): `not_found`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: 'Conflict (version mismatch, state not allowed, duplicate): `already_reversed`, `idempotency_in_progress`, `use_document_cancel`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: 'Validation or business-rule failure: `idempotency_key_reused`, `period_locked`, `validation_failed`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: 'Company temporarily unavailable (restore in progress): `company_maintenance`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+              description: Seconds to wait
+        default:
+          description: Unexpected error (`server_error`)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
   /api/v1/payroll-runs/{id}/cancel:
     post:
       operationId: postPayrollRunsIdCancel
@@ -43307,9 +43702,11 @@ components:
           - not_draft
           - not_found
           - note_applied
+          - nothing_to_pay
           - nothing_to_revalue
           - order_qty_exceeded
           - party_has_no_email
+          - payroll_overpaid
           - payroll_run_exists
           - payroll_run_not_approved
           - payroll_run_not_draft
@@ -47958,9 +48355,11 @@ components:
           - not_draft
           - not_found
           - note_applied
+          - nothing_to_pay
           - nothing_to_revalue
           - order_qty_exceeded
           - party_has_no_email
+          - payroll_overpaid
           - payroll_run_exists
           - payroll_run_not_approved
           - payroll_run_not_draft
@@ -51560,6 +51959,17 @@ components:
           pattern: ^-?\d{1,16}(\.\d{1,2})?$
           example: '118450.00'
           description: Decimal as string (money)
+        total_paid:
+          type: string
+          pattern: ^-?\d{1,16}(\.\d{1,2})?$
+          example: '118450.00'
+          description: Decimal as string (money)
+        payment_status:
+          type: string
+          enum:
+          - unpaid
+          - part_paid
+          - paid
         notes:
           type:
           - string
@@ -51606,6 +52016,136 @@ components:
       - total_gross
       - total_deductions
       - total_net
+      - total_paid
+      - payment_status
+      - version
+    PayrollPaymentLineInput:
+      type: object
+      description: Pay one line (PEP-522).
+      properties:
+        payroll_line_id:
+          type: integer
+          format: int64
+          minimum: 1
+        amount:
+          type: string
+          pattern: ^-?\d{1,16}(\.\d{1,2})?$
+          example: '118450.00'
+          description: Decimal as string (money)
+      required:
+      - payroll_line_id
+      - amount
+      additionalProperties: false
+    PayrollPaymentInput:
+      type: object
+      description: Pay salaries (PEP-522). Without lines, every line still unpaid is paid in full.
+      properties:
+        money_account_id:
+          type: integer
+          format: int64
+          minimum: 1
+        paid_on:
+          type: string
+          format: date
+        reference:
+          type:
+          - string
+          - 'null'
+          maxLength: 60
+        lines:
+          type:
+          - array
+          - 'null'
+          items:
+            $ref: '#/components/schemas/PayrollPaymentLineInput'
+      required:
+      - money_account_id
+      - paid_on
+      additionalProperties: false
+    PayrollPaymentLine:
+      type: object
+      description: One employee in a salary payment (PEP-522).
+      properties:
+        payroll_line_id:
+          type: integer
+          format: int64
+          minimum: 1
+        employee_code:
+          type: string
+        employee_name:
+          type: string
+        amount:
+          type: string
+          pattern: ^-?\d{1,16}(\.\d{1,2})?$
+          example: '118450.00'
+          description: Decimal as string (money)
+      required:
+      - payroll_line_id
+      - employee_code
+      - employee_name
+      - amount
+    PayrollPayment:
+      type: object
+      description: A salary payment (PEP-522).
+      properties:
+        id:
+          type: integer
+          format: int64
+          minimum: 1
+        payroll_run_id:
+          type: integer
+          format: int64
+          minimum: 1
+        money_account:
+          type: object
+          additionalProperties: true
+        paid_on:
+          type: string
+          format: date
+        amount:
+          type: string
+          pattern: ^-?\d{1,16}(\.\d{1,2})?$
+          example: '118450.00'
+          description: Decimal as string (money)
+        employees_count:
+          type: integer
+        reference:
+          type:
+          - string
+          - 'null'
+        status:
+          type: string
+          enum:
+          - posted
+          - reversed
+        voucher_number:
+          type:
+          - string
+          - 'null'
+        reversed_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        reverse_reason:
+          type:
+          - string
+          - 'null'
+        lines:
+          type: array
+          items:
+            $ref: '#/components/schemas/PayrollPaymentLine'
+        version:
+          type: integer
+      required:
+      - id
+      - payroll_run_id
+      - money_account
+      - paid_on
+      - amount
+      - employees_count
+      - status
+      - lines
       - version
     PayrollRunCreate:
       type: object

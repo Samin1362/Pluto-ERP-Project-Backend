@@ -2051,13 +2051,43 @@ erDiagram
         decimal paid_amount
         varchar note
     }
+    payroll_payments {
+        bigint id PK
+        bigint company_id FK
+        bigint payroll_run_id FK
+        bigint money_account_id FK
+        date paid_on
+        decimal amount
+        smallint employees_count
+        varchar reference
+        varchar status
+        bigint journal_entry_id FK
+        bigint reversal_entry_id FK
+        datetime reversed_at
+        varchar reverse_reason
+    }
+    payroll_payment_lines {
+        bigint id PK
+        bigint payroll_payment_id FK
+        bigint payroll_line_id FK
+        decimal amount
+    }
     journal_entries {
         bigint id PK
     }
+    money_accounts {
+        bigint id PK
+    }
     employees ||--o{ payroll_lines : "employee_id"
+    journal_entries |o--o| payroll_payments : "journal_entry_id"
+    journal_entries |o--o| payroll_payments : "reversal_entry_id"
     journal_entries |o--o| payroll_runs : "journal_entry_id"
     journal_entries |o--o| payroll_runs : "reversal_entry_id"
+    money_accounts ||--o{ payroll_payments : "money_account_id"
+    payroll_lines ||--o{ payroll_payment_lines : "payroll_line_id"
+    payroll_payments ||--o{ payroll_payment_lines : "payroll_payment_id"
     payroll_runs ||--o{ payroll_lines : "payroll_run_id"
+    payroll_runs ||--o{ payroll_payments : "payroll_run_id"
 ```
 
 ## 6. Data dictionary
@@ -5836,7 +5866,73 @@ Standard columns are listed in each table: `id` (PK), `company_id` (tenant), `lo
 - `payroll_run_id` → `payroll_runs`: one-to-many
 - `employee_id` → `employees`: one-to-many
 
-_Total: 101 application tables._
+#### `payroll_payments`
+
+**Purpose:** Salaries paid from one money account on one day against an approved sheet (PEP-522): Dr salaries_payable / Cr the account; reversed by a mirror entry.  
+**Flags:** tenant-scoped, optimistic lock  
+**Primary key:** (id)
+
+| Column | Type | Null | Default | Keys | FK rule | Meaning / rules |
+|---|---|---|---|---|---|---|
+| `id` | BIGINT UNSIGNED | no | — | PK | — | Primary key, auto-increment |
+| `company_id` | BIGINT UNSIGNED | no | — | FK → `companies.id` | ON DELETE RESTRICT / ON UPDATE RESTRICT | Tenant owner. Every query is scoped by it. |
+| `payroll_run_id` | BIGINT UNSIGNED | no | — | FK → `payroll_runs.id` | ON DELETE RESTRICT / ON UPDATE RESTRICT |  |
+| `money_account_id` | BIGINT UNSIGNED | no | — | FK → `money_accounts.id` | ON DELETE RESTRICT / ON UPDATE RESTRICT |  |
+| `paid_on` | DATE | no | — | — | — |  |
+| `amount` | DECIMAL(18,2) | no | — | — | — |  |
+| `employees_count` | SMALLINT UNSIGNED | no | — | — | — |  |
+| `reference` | VARCHAR(60) | yes | NULL | — | — | Cheque, transfer or bKash reference |
+| `status` | VARCHAR(30) | no | 'posted' | — | — | enum: posted \| reversed |
+| `journal_entry_id` | BIGINT UNSIGNED | yes | NULL | FK → `journal_entries.id` · UQ | ON DELETE RESTRICT / ON UPDATE RESTRICT | Set in the same transaction as the payment |
+| `reversal_entry_id` | BIGINT UNSIGNED | yes | NULL | FK → `journal_entries.id` · UQ | ON DELETE RESTRICT / ON UPDATE RESTRICT |  |
+| `reversed_at` | DATETIME | yes | NULL | — | — |  |
+| `reverse_reason` | VARCHAR(255) | yes | NULL | — | — |  |
+| `lock_version` | INT UNSIGNED | no | 1 | — | — | Optimistic concurrency counter; incremented on every update (If-Match) |
+| `created_by` | BIGINT UNSIGNED | yes | NULL | FK → `users.id` | ON DELETE RESTRICT / ON UPDATE RESTRICT | User who created the row |
+| `updated_by` | BIGINT UNSIGNED | yes | NULL | FK → `users.id` | ON DELETE RESTRICT / ON UPDATE RESTRICT | User who last changed the row |
+| `created_at` | DATETIME | yes | NULL | — | — | Set by Laravel |
+| `updated_at` | DATETIME | yes | NULL | — | — | Set by Laravel |
+
+- **Unique** (journal_entry_id)
+- **Unique** (reversal_entry_id)
+- Index (company_id, payroll_run_id)
+- Index (payroll_run_id)
+- Index (money_account_id)
+- Index (created_by)
+- Index (updated_by)
+- **Check** `amount > 0`
+- **Check** `status IN ('posted', 'reversed')`
+
+**Relationships:**
+- `payroll_run_id` → `payroll_runs`: one-to-many
+- `money_account_id` → `money_accounts`: one-to-many
+- `journal_entry_id` → `journal_entries`: one-to-one (optional)
+- `reversal_entry_id` → `journal_entries`: one-to-one (optional)
+
+#### `payroll_payment_lines`
+
+**Purpose:** How much of a salary payment went to each employee (PEP-522).  
+**Flags:** —  
+**Primary key:** (id)
+
+| Column | Type | Null | Default | Keys | FK rule | Meaning / rules |
+|---|---|---|---|---|---|---|
+| `id` | BIGINT UNSIGNED | no | — | PK | — | Primary key, auto-increment |
+| `payroll_payment_id` | BIGINT UNSIGNED | no | — | FK → `payroll_payments.id` | ON DELETE CASCADE / ON UPDATE RESTRICT |  |
+| `payroll_line_id` | BIGINT UNSIGNED | no | — | FK → `payroll_lines.id` | ON DELETE RESTRICT / ON UPDATE RESTRICT |  |
+| `amount` | DECIMAL(18,2) | no | — | — | — |  |
+| `created_at` | DATETIME | yes | NULL | — | — | Set by Laravel |
+| `updated_at` | DATETIME | yes | NULL | — | — | Set by Laravel |
+
+- **Unique** (payroll_payment_id, payroll_line_id)
+- Index (payroll_line_id)
+- **Check** `amount > 0`
+
+**Relationships:**
+- `payroll_payment_id` → `payroll_payments`: one-to-many
+- `payroll_line_id` → `payroll_lines`: one-to-many
+
+_Total: 103 application tables._
 
 
 ## 7. Relationship matrix
@@ -6099,6 +6195,12 @@ Every foreign key except the uniform `company_id`, `created_by` and `updated_by`
 | 252 | `payroll_runs` | `approved_by` | `users` | one-to-many (optional) | no | RESTRICT |
 | 253 | `payroll_lines` | `payroll_run_id` | `payroll_runs` | one-to-many | yes | CASCADE |
 | 254 | `payroll_lines` | `employee_id` | `employees` | one-to-many | yes | RESTRICT |
+| 255 | `payroll_payments` | `payroll_run_id` | `payroll_runs` | one-to-many | yes | RESTRICT |
+| 256 | `payroll_payments` | `money_account_id` | `money_accounts` | one-to-many | yes | RESTRICT |
+| 257 | `payroll_payments` | `journal_entry_id` | `journal_entries` | one-to-one (optional) | no | RESTRICT |
+| 258 | `payroll_payments` | `reversal_entry_id` | `journal_entries` | one-to-one (optional) | no | RESTRICT |
+| 259 | `payroll_payment_lines` | `payroll_payment_id` | `payroll_payments` | one-to-many | yes | CASCADE |
+| 260 | `payroll_payment_lines` | `payroll_line_id` | `payroll_lines` | one-to-many | yes | RESTRICT |
 
 **Many-to-many relationships** are only ever implemented through junction tables:
 
@@ -6214,6 +6316,8 @@ For each table, the tables it references (must exist first). Self-references are
 | `employees` | `companies`, `users` | — |
 | `payroll_runs` | `companies`, `journal_entries`, `users` | — |
 | `payroll_lines` | `employees`, `payroll_runs` | — |
+| `payroll_payments` | `companies`, `journal_entries`, `money_accounts`, `payroll_runs`, `users` | — |
+| `payroll_payment_lines` | `payroll_lines`, `payroll_payments` | — |
 
 ## 9. Migration order
 
@@ -6306,56 +6410,58 @@ Computed by topological sort of section 8, so every referenced table is created 
 64. `cash_count_denominations`
 65. `letters_of_credit`
 66. `payroll_lines`
-67. `product_units`
-68. `product_warehouse_settings`
-69. `purchase_order_lines`
-70. `quotation_lines`
-71. `sales_invoices`
-72. `stock_adjustment_lines`
-73. `stock_balances`
-74. `stock_movements`
-75. `stock_transfer_lines`
+67. `payroll_payments`
+68. `product_units`
+69. `product_warehouse_settings`
+70. `purchase_order_lines`
+71. `quotation_lines`
+72. `sales_invoices`
+73. `stock_adjustment_lines`
+74. `stock_balances`
+75. `stock_movements`
+76. `stock_transfer_lines`
 
 **Level 7**
 
-76. `journal_lines`
-77. `lc_amendments`
-78. `lc_shipments`
-79. `recurring_invoices`
-80. `sales_invoice_lines`
-81. `sales_returns`
+77. `journal_lines`
+78. `lc_amendments`
+79. `lc_shipments`
+80. `payroll_payment_lines`
+81. `recurring_invoices`
+82. `sales_invoice_lines`
+83. `sales_returns`
 
 **Level 8**
 
-82. `bank_statement_lines`
-83. `credit_notes`
-84. `lc_amendment_changes`
-85. `lc_amendment_lines`
-86. `lc_documents`
-87. `purchase_bills`
-88. `sales_return_lines`
+84. `bank_statement_lines`
+85. `credit_notes`
+86. `lc_amendment_changes`
+87. `lc_amendment_lines`
+88. `lc_documents`
+89. `purchase_bills`
+90. `sales_return_lines`
 
 **Level 9**
 
-89. `bill_allocations`
-90. `fx_revaluation_lines`
-91. `landed_cost_allocations`
-92. `lc_payments`
-93. `purchase_bill_lines`
-94. `purchase_returns`
+91. `bill_allocations`
+92. `fx_revaluation_lines`
+93. `landed_cost_allocations`
+94. `lc_payments`
+95. `purchase_bill_lines`
+96. `purchase_returns`
 
 **Level 10**
 
-95. `debit_notes`
-96. `landed_cost_allocation_lines`
-97. `lc_charges`
-98. `lc_loans`
-99. `purchase_return_lines`
+97. `debit_notes`
+98. `landed_cost_allocation_lines`
+99. `lc_charges`
+100. `lc_loans`
+101. `purchase_return_lines`
 
 **Level 11**
 
-100. `lc_loan_accruals`
-101. `lc_loan_repayments`
+102. `lc_loan_accruals`
+103. `lc_loan_repayments`
 
 ## 10. Index and uniqueness recommendations
 

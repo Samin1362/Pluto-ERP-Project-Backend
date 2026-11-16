@@ -58,9 +58,11 @@ export type ErrorCode =
   | 'not_draft'
   | 'not_found'
   | 'note_applied'
+  | 'nothing_to_pay'
   | 'nothing_to_revalue'
   | 'order_qty_exceeded'
   | 'party_has_no_email'
+  | 'payroll_overpaid'
   | 'payroll_run_exists'
   | 'payroll_run_not_approved'
   | 'payroll_run_not_draft'
@@ -1948,6 +1950,45 @@ export interface PayrollLineChange {
   note?: string | null
 }
 
+/** A salary payment (PEP-522). */
+export interface PayrollPayment {
+  id: number
+  payroll_run_id: number
+  money_account: Record<string, unknown>
+  paid_on: string
+  amount: Decimal
+  employees_count: number
+  reference?: string | null
+  status: 'posted' | 'reversed'
+  voucher_number?: string | null
+  reversed_at?: string | null
+  reverse_reason?: string | null
+  lines: Array<PayrollPaymentLine>
+  version: number
+}
+
+/** Pay salaries (PEP-522). Without lines, every line still unpaid is paid in full. */
+export interface PayrollPaymentInput {
+  money_account_id: number
+  paid_on: string
+  reference?: string | null
+  lines?: Array<PayrollPaymentLineInput> | null
+}
+
+/** One employee in a salary payment (PEP-522). */
+export interface PayrollPaymentLine {
+  payroll_line_id: number
+  employee_code: string
+  employee_name: string
+  amount: Decimal
+}
+
+/** Pay one line (PEP-522). */
+export interface PayrollPaymentLineInput {
+  payroll_line_id: number
+  amount: Decimal
+}
+
 /** A salary sheet (PEP-521). lines only on GET /payroll-runs/{id} and after a change. */
 export interface PayrollRun {
   id: number
@@ -1960,6 +2001,8 @@ export interface PayrollRun {
   total_gross: Decimal
   total_deductions: Decimal
   total_net: Decimal
+  total_paid: Decimal
+  payment_status: 'unpaid' | 'part_paid' | 'paid'
   notes?: string | null
   journal_entry_id?: number | null
   voucher_number?: string | null

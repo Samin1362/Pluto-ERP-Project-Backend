@@ -213,6 +213,7 @@ FR = {
  "FR-098": ("LC", "Users receive LC goods through an import purchase bill and allocate landed cost."),
  "FR-099": ("LC", "Users close an LC, after checks, and view the eight LC reports."),
  "FR-101": ("Payroll", "Users prepare a monthly salary sheet (earnings, deductions, net per employee, part months prorated), approve it to post the salary expense, and cancel an approved sheet by reversal (PEP-521)."),
+ "FR-102": ("Payroll", "Users pay an approved salary sheet, everyone or chosen employees and amounts, from a cash, bank or mobile-wallet account, and reverse a payment (PEP-522)."),
  "FR-100": ("Payroll", "Users keep employees with their salary structure (basic, house rent, medical, conveyance), pay method and status (PEP-520)."),
 }
 

@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Table `payment_reminders` (Parties): migration 97 of 101, dependency level 5.
+ * Table `payment_reminders` (Parties): migration 97 of 103, dependency level 5.
  * Payment reminders e-mailed to a customer about overdue invoices (PEP-516): by hand or by the daily job; at most one a week per customer.
  * Depends on: companies, parties, users.
  *

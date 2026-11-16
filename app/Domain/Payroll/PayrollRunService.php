@@ -171,10 +171,14 @@ class PayrollRunService
     public static function resource(PayrollRun $run, bool $withLines = false): array
     {
         $run->loadMissing(['journalEntry:id,voucher_number', 'approver:id,name']);
+        // PEP-522: what is paid so far, from the lines; part paid until every net is paid.
+        $paid = Money::of((string) PayrollLine::where('payroll_run_id', $run->id)->sum('paid_amount'));
+        $status = ! $paid->isPositive() ? 'unpaid' : ($paid->isLessThan(Money::of((string) $run->total_net)) ? 'part_paid' : 'paid');
         $out = ['id' => $run->id, 'kind' => $run->kind, 'period_month' => $run->period_month->toDateString(), 'label' => self::label($run),
             'pay_date' => $run->pay_date->toDateString(), 'status' => $run->status, 'employees_count' => $run->employees_count,
             'total_gross' => (string) Money::of((string) $run->total_gross), 'total_deductions' => (string) Money::of((string) $run->total_deductions),
-            'total_net' => (string) Money::of((string) $run->total_net), 'notes' => $run->notes, 'journal_entry_id' => $run->journal_entry_id,
+            'total_net' => (string) Money::of((string) $run->total_net), 'total_paid' => (string) $paid, 'payment_status' => $status,
+            'notes' => $run->notes, 'journal_entry_id' => $run->journal_entry_id,
             'voucher_number' => $run->journalEntry?->voucher_number, 'approved_at' => $run->approved_at?->toIso8601String(),
             'approved_by' => $run->approver ? ['id' => $run->approver->id, 'name' => $run->approver->name] : null, 'cancel_reason' => $run->cancel_reason,
             'version' => $run->lock_version];

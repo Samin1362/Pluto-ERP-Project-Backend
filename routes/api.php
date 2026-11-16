@@ -34,6 +34,7 @@ use App\Http\Controllers\Api\V1\Parties\PartyAccountController;
 use App\Http\Controllers\Api\V1\Parties\PartyController;
 use App\Http\Controllers\Api\V1\Parties\PaymentReminderController;
 use App\Http\Controllers\Api\V1\Payroll\EmployeeController;
+use App\Http\Controllers\Api\V1\Payroll\PayrollPaymentController;
 use App\Http\Controllers\Api\V1\Payroll\PayrollRunController;
 use App\Http\Controllers\Api\V1\Platform\DashboardController;
 use App\Http\Controllers\Api\V1\Platform\ExportJobController;
@@ -183,6 +184,10 @@ Route::middleware(['jwt', 'throttle:api-user'])->group(function () {
             Route::delete('payroll-runs/{id}', [PayrollRunController::class, 'destroy'])->whereNumber('id')->middleware('perm:payroll.create');
             Route::post('payroll-runs/{id}/approve', [PayrollRunController::class, 'approve'])->whereNumber('id')->middleware(['perm:payroll.approve', 'idempotent']);
             Route::post('payroll-runs/{id}/cancel', [PayrollRunController::class, 'cancel'])->whereNumber('id')->middleware(['perm:payroll.approve', 'idempotent']);
+            // PEP-522: paying salaries (money out: payroll.approve).
+            Route::get('payroll-runs/{id}/payments', [PayrollPaymentController::class, 'index'])->whereNumber('id')->middleware('perm:payroll.view');
+            Route::post('payroll-runs/{id}/payments', [PayrollPaymentController::class, 'store'])->whereNumber('id')->middleware(['perm:payroll.approve', 'idempotent']);
+            Route::post('payroll-payments/{id}/reverse', [PayrollPaymentController::class, 'reverse'])->whereNumber('id')->middleware(['perm:payroll.approve', 'idempotent']);
         });
         // PEP-498: LC management and LC finance are plan modules (403 module_not_in_plan when the plan leaves them out).
         Route::middleware('module:lc_management')->group(function () {

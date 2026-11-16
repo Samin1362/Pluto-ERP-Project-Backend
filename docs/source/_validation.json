@@ -3,31 +3,31 @@
   {
    "id": "V01",
    "title": "Every table has a primary key",
-   "checked": 101,
+   "checked": 103,
    "failures": []
   },
   {
    "id": "V02",
    "title": "Every FK references an existing primary or unique key",
-   "checked": 463,
+   "checked": 472,
    "failures": []
   },
   {
    "id": "V03",
    "title": "FK column type equals referenced column type exactly (incl. UNSIGNED, CHAR length)",
-   "checked": 463,
+   "checked": 472,
    "failures": []
   },
   {
    "id": "V04",
    "title": "ON DELETE SET NULL only on nullable columns; self-references nullable",
-   "checked": 463,
+   "checked": 472,
    "failures": []
   },
   {
    "id": "V05",
    "title": "No CHECK constraint uses a column whose FK has a CASCADE/SET NULL action (MySQL error 3823)",
-   "checked": 192,
+   "checked": 195,
    "failures": []
   },
   {
@@ -39,43 +39,43 @@
   {
    "id": "V07",
    "title": "CHECK expressions reference only existing, non-AUTO_INCREMENT columns",
-   "checked": 192,
+   "checked": 195,
    "failures": []
   },
   {
    "id": "V08",
    "title": "Identifiers ≤ 64 chars; FK and CHECK names unique schema-wide; index names unique per table",
-   "checked": 2870,
+   "checked": 2917,
    "failures": []
   },
   {
    "id": "V09",
    "title": "Every FK column is the leftmost column of an index (no implicit InnoDB index)",
-   "checked": 463,
+   "checked": 472,
    "failures": []
   },
   {
    "id": "V10",
    "title": "No redundant index (left prefix of another key)",
-   "checked": 399,
+   "checked": 405,
    "failures": []
   },
   {
    "id": "V11",
    "title": "Index key length ≤ 3072 bytes (utf8mb4, DYNAMIC rows); no TEXT/JSON keys",
-   "checked": 599,
+   "checked": 610,
    "failures": []
   },
   {
    "id": "V12",
    "title": "Maximum row size < 65,535 bytes",
-   "checked": 101,
+   "checked": 103,
    "failures": []
   },
   {
    "id": "V13",
    "title": "Decimal precision by class: money (18,2), quantity (18,3), unit cost (18,4), FX rate (18,6), percent (7,4); no FLOAT/DOUBLE",
-   "checked": 197,
+   "checked": 199,
    "failures": []
   },
   {
@@ -87,7 +87,7 @@
   {
    "id": "V15",
    "title": "Defaults are valid for their type; enum defaults and values fit",
-   "checked": 290,
+   "checked": 292,
    "failures": []
   },
   {
@@ -99,37 +99,37 @@
   {
    "id": "V17",
    "title": "Document → journal-entry links are one-to-one (UNIQUE), which blocks double posting",
-   "checked": 22,
+   "checked": 24,
    "failures": []
   },
   {
    "id": "V18",
-   "title": "Financial and append-only tables (32) are never changed by a delete elsewhere: no SET NULL; CASCADE only from their own header",
-   "checked": 198,
+   "title": "Financial and append-only tables (34) are never changed by a delete elsewhere: no SET NULL; CASCADE only from their own header",
+   "checked": 207,
    "failures": []
   },
   {
    "id": "V19",
    "title": "ON UPDATE RESTRICT on every FK (surrogate keys are immutable)",
-   "checked": 463,
+   "checked": 472,
    "failures": []
   },
   {
    "id": "V20",
    "title": "Dependency graph is acyclic (12 migration levels; self-references created in the same migration)",
-   "checked": 101,
+   "checked": 103,
    "failures": []
   },
   {
    "id": "V21",
    "title": "Every non-tenant table is global reference data or a dependant (CASCADE) of a tenant or global row",
-   "checked": 24,
+   "checked": 25,
    "failures": []
   },
   {
    "id": "V22",
    "title": "Every tenant table has an index or unique key led by company_id",
-   "checked": 71,
+   "checked": 72,
    "failures": []
   },
   {
@@ -146,15 +146,15 @@
   }
  ],
  "summary": {
-  "tables": 101,
-  "columns": 1616,
-  "fks": 463,
-  "uniques": 99,
-  "indexes": 399,
-  "checks": 192,
+  "tables": 103,
+  "columns": 1640,
+  "fks": 472,
+  "uniques": 102,
+  "indexes": 405,
+  "checks": 195,
   "levels": 12,
   "decimal_inventory": {
-   "DECIMAL(18,2)": 130,
+   "DECIMAL(18,2)": 132,
    "DECIMAL(18,3)": 27,
    "DECIMAL(18,4)": 13,
    "DECIMAL(18,6)": 12,
@@ -192,7 +192,9 @@
    "fx_revaluations (journal_entry_id) — nullable: journal_entry_id",
    "fx_revaluations (reversal_entry_id) — nullable: reversal_entry_id",
    "payroll_runs (journal_entry_id) — nullable: journal_entry_id",
-   "payroll_runs (reversal_entry_id) — nullable: reversal_entry_id"
+   "payroll_runs (reversal_entry_id) — nullable: reversal_entry_id",
+   "payroll_payments (journal_entry_id) — nullable: journal_entry_id",
+   "payroll_payments (reversal_entry_id) — nullable: reversal_entry_id"
   ],
   "financial_tables": [
    "audit_logs",
@@ -213,6 +215,8 @@
    "lc_payments",
    "payment_details",
    "payroll_lines",
+   "payroll_payment_lines",
+   "payroll_payments",
    "payroll_runs",
    "purchase_bill_lines",
    "purchase_bills",

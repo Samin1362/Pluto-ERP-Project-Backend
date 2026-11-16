@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Table `payroll_lines` (Payroll): migration 101 of 101, dependency level 6.
+ * Table `payroll_lines` (Payroll): migration 101 of 103, dependency level 6.
  * One employee on a salary sheet (PEP-521): the salary structure for the days paid, plus overtime and other earnings, less deductions and advance recovery.
  * Depends on: employees, payroll_runs.
  *

@@ -626,7 +626,7 @@ page("P3", "Salary sheets", "Payroll", "List", "payroll.view", "One sheet per mo
      "List; New sheet asks for the month.", actions=["New salary sheet", "Open sheet"],
      table={"cols": ["Month", "Employees", "Gross", "Deductions", "Net", "Status"], "filters": ["Status"], "search": False}, fr=["FR-101"])
 page("P4", "Salary sheet", "Payroll", "Detail", "payroll.view", "Lines per employee (days paid, structure, overtime, other earnings, deductions, gross, net) with totals from the server.",
-     "Editable grid while draft; Approve posts; Cancel reverses.", actions=["Save changes", "Delete draft", "Approve and post", "Cancel sheet"], deps=["P3"], fr=["FR-101"])
+     "Editable grid while draft; Approve posts; Cancel reverses.", actions=["Save changes", "Delete draft", "Approve and post", "Cancel sheet", "Pay salaries", "Reverse a payment"], deps=["P3"], fr=["FR-101", "FR-102"])
 
 
 # ---- Actions added by the API contract review (18 Oct 2026). Marked NEW: the design does not show them; each needs design sign-off.

@@ -19867,6 +19867,331 @@
     "payroll_lines_rule3_check": "`overtime` >= 0",
     "payroll_lines_rule4_check": "`other_earnings` >= 0"
    }
+  },
+  "payroll_payments": {
+   "seq": 102,
+   "level": 6,
+   "migration": "2026_10_18_010200_create_payroll_payments_table.php",
+   "module": "Payroll",
+   "columns": [
+    {
+     "name": "id",
+     "type": "bigint unsigned",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": true
+    },
+    {
+     "name": "company_id",
+     "type": "bigint unsigned",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "payroll_run_id",
+     "type": "bigint unsigned",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "money_account_id",
+     "type": "bigint unsigned",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "paid_on",
+     "type": "date",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "amount",
+     "type": "decimal(18,2)",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "employees_count",
+     "type": "smallint unsigned",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "reference",
+     "type": "varchar(60)",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "status",
+     "type": "varchar(30)",
+     "nullable": false,
+     "default": "posted",
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "journal_entry_id",
+     "type": "bigint unsigned",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "reversal_entry_id",
+     "type": "bigint unsigned",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "reversed_at",
+     "type": "datetime",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "reverse_reason",
+     "type": "varchar(255)",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "lock_version",
+     "type": "int unsigned",
+     "nullable": false,
+     "default": "1",
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "created_by",
+     "type": "bigint unsigned",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "updated_by",
+     "type": "bigint unsigned",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "created_at",
+     "type": "datetime",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "updated_at",
+     "type": "datetime",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    }
+   ],
+   "primary": [
+    "id"
+   ],
+   "unique": {
+    "payroll_payments_journal_entry_id_unique": [
+     "journal_entry_id"
+    ],
+    "payroll_payments_reversal_entry_id_unique": [
+     "reversal_entry_id"
+    ]
+   },
+   "index": {
+    "payroll_payments_company_id_payroll_run_id_index": [
+     "company_id",
+     "payroll_run_id"
+    ],
+    "payroll_payments_payroll_run_id_index": [
+     "payroll_run_id"
+    ],
+    "payroll_payments_money_account_id_index": [
+     "money_account_id"
+    ],
+    "payroll_payments_created_by_index": [
+     "created_by"
+    ],
+    "payroll_payments_updated_by_index": [
+     "updated_by"
+    ]
+   },
+   "foreign": {
+    "payroll_payments_company_id_foreign": {
+     "column": "company_id",
+     "references_table": "companies",
+     "references_column": "id",
+     "on_delete": "RESTRICT",
+     "on_update": "RESTRICT"
+    },
+    "payroll_payments_payroll_run_id_foreign": {
+     "column": "payroll_run_id",
+     "references_table": "payroll_runs",
+     "references_column": "id",
+     "on_delete": "RESTRICT",
+     "on_update": "RESTRICT"
+    },
+    "payroll_payments_money_account_id_foreign": {
+     "column": "money_account_id",
+     "references_table": "money_accounts",
+     "references_column": "id",
+     "on_delete": "RESTRICT",
+     "on_update": "RESTRICT"
+    },
+    "payroll_payments_journal_entry_id_foreign": {
+     "column": "journal_entry_id",
+     "references_table": "journal_entries",
+     "references_column": "id",
+     "on_delete": "RESTRICT",
+     "on_update": "RESTRICT"
+    },
+    "payroll_payments_reversal_entry_id_foreign": {
+     "column": "reversal_entry_id",
+     "references_table": "journal_entries",
+     "references_column": "id",
+     "on_delete": "RESTRICT",
+     "on_update": "RESTRICT"
+    },
+    "payroll_payments_created_by_foreign": {
+     "column": "created_by",
+     "references_table": "users",
+     "references_column": "id",
+     "on_delete": "RESTRICT",
+     "on_update": "RESTRICT"
+    },
+    "payroll_payments_updated_by_foreign": {
+     "column": "updated_by",
+     "references_table": "users",
+     "references_column": "id",
+     "on_delete": "RESTRICT",
+     "on_update": "RESTRICT"
+    }
+   },
+   "check": {
+    "payroll_payments_status_check": "`status` IN ('posted', 'reversed')",
+    "payroll_payments_rule1_check": "`amount` > 0"
+   }
+  },
+  "payroll_payment_lines": {
+   "seq": 103,
+   "level": 7,
+   "migration": "2026_10_18_010300_create_payroll_payment_lines_table.php",
+   "module": "Payroll",
+   "columns": [
+    {
+     "name": "id",
+     "type": "bigint unsigned",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": true
+    },
+    {
+     "name": "payroll_payment_id",
+     "type": "bigint unsigned",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "payroll_line_id",
+     "type": "bigint unsigned",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "amount",
+     "type": "decimal(18,2)",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "created_at",
+     "type": "datetime",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "updated_at",
+     "type": "datetime",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    }
+   ],
+   "primary": [
+    "id"
+   ],
+   "unique": {
+    "payroll_payment_lines_payroll_payment_id_payroll_line_id_unique": [
+     "payroll_payment_id",
+     "payroll_line_id"
+    ]
+   },
+   "index": {
+    "payroll_payment_lines_payroll_line_id_index": [
+     "payroll_line_id"
+    ]
+   },
+   "foreign": {
+    "payroll_payment_lines_payroll_payment_id_foreign": {
+     "column": "payroll_payment_id",
+     "references_table": "payroll_payments",
+     "references_column": "id",
+     "on_delete": "CASCADE",
+     "on_update": "RESTRICT"
+    },
+    "payroll_payment_lines_payroll_line_id_foreign": {
+     "column": "payroll_line_id",
+     "references_table": "payroll_lines",
+     "references_column": "id",
+     "on_delete": "RESTRICT",
+     "on_update": "RESTRICT"
+    }
+   },
+   "check": {
+    "payroll_payment_lines_rule1_check": "`amount` > 0"
+   }
   }
  }
 }

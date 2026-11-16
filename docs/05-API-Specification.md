@@ -2,7 +2,7 @@
 
 > Status: **Release candidate 1.0.0-rc.1 for approval** (18 Oct 2026), Laravel + Eloquent. **No endpoint is to be implemented until this contract is approved.** ⚑ Auth details (DEC-02) and the items in §12.7 are still open.
 >
-> **Generated file.** The endpoint reference (§9), schemas (§10), page action map (§11) and contract review (§12) come from `docs/source/api.py`, `schemas.py`, `actions.py`, `errors.py` and `contract_review.py`. The machine-readable contract is [`openapi.yaml`](openapi.yaml) (OpenAPI 3.1), validated against the official OpenAPI 3.1 schema (§8). Size: 369 endpoints, 249 schemas, 89 error codes, 167 pages with 564 mapped actions.
+> **Generated file.** The endpoint reference (§9), schemas (§10), page action map (§11) and contract review (§12) come from `docs/source/api.py`, `schemas.py`, `actions.py`, `errors.py` and `contract_review.py`. The machine-readable contract is [`openapi.yaml`](openapi.yaml) (OpenAPI 3.1), validated against the official OpenAPI 3.1 schema (§8). Size: 372 endpoints, 253 schemas, 91 error codes, 167 pages with 566 mapped actions.
 
 ## 1. Conventions
 
@@ -55,29 +55,29 @@
 | Code | HTTP | Title (shown to the user) | Rules | Endpoints |
 |---|---|---|---|---|
 | `approval_required` | 202 | Above your approval limit: submitted for approval | BR-007 | — (outcome) |
-| `company_required` | 400 | The X-Company-Id header is missing | BR-037 | 326 |
-| `malformed_json` | 400 | The request body is not valid JSON or has the wrong type | — | 156 |
+| `company_required` | 400 | The X-Company-Id header is missing | BR-037 | 329 |
+| `malformed_json` | 400 | The request body is not valid JSON or has the wrong type | — | 158 |
 | `invalid_credentials` | 401 | E-mail or password is incorrect | BR-061 | 2 |
 | `refresh_reuse_detected` | 401 | A refresh token was reused; every session of this sign-in was revoked | FR-001 | 1 |
 | `refresh_token_invalid` | 401 | The session has ended; sign in again | FR-001 | 1 |
-| `token_expired` | 401 | The access token has expired; refresh and retry | NFR-012 | 357 |
-| `token_invalid` | 401 | The access token is not valid | NFR-012 | 357 |
+| `token_expired` | 401 | The access token has expired; refresh and retry | NFR-012 | 360 |
+| `token_invalid` | 401 | The access token is not valid | NFR-012 | 360 |
 | `two_factor_failed` | 401 | The authentication code is not valid | FR-004 | 2 |
-| `unauthenticated` | 401 | Sign-in is required | NFR-010 | 357 |
+| `unauthenticated` | 401 | Sign-in is required | NFR-010 | 360 |
 | `branch_restricted` | 403 | This record belongs to a branch you cannot access | BR-038 | 3 |
-| `module_not_in_plan` | 403 | This part of Pluto is not in your plan | FR-005 | 58 |
-| `not_a_member` | 403 | You are not an active member of this company | BR-037 | 326 |
-| `permission_denied` | 403 | Your role does not allow this action | BR-037 | 326 |
+| `module_not_in_plan` | 403 | This part of Pluto is not in your plan | FR-005 | 61 |
+| `not_a_member` | 403 | You are not an active member of this company | BR-037 | 329 |
+| `permission_denied` | 403 | Your role does not allow this action | BR-037 | 329 |
 | `platform_admin_only` | 403 | Only a platform admin can do this | FR-005 | 20 |
 | `platform_two_factor_required` | 403 | Platform admins must sign in with 2-step verification | FR-004 | 20 |
 | `self_approval_forbidden` | 403 | You cannot approve a voucher you submitted | BR-008 | 2 |
-| `support_read_only` | 403 | This is a read-only support view; nothing can be changed | FR-005 | 187 |
+| `support_read_only` | 403 | This is a read-only support view; nothing can be changed | FR-005 | 189 |
 | `system_role` | 403 | The Owner role cannot be changed or deleted | BR-060 | 4 |
 | `two_factor_required_by_company` | 403 | Your company requires 2-step verification | FR-004 | 1 |
-| `not_found` | 404 | Not found (or it belongs to another company) | BR-037 | 200 |
+| `not_found` | 404 | Not found (or it belongs to another company) | BR-037 | 203 |
 | `already_converted` | 409 | This quotation or purchase order has already been converted | BR-056 | 1 |
 | `already_posted` | 409 | This document has already been posted | BR-009 | 24 |
-| `already_reversed` | 409 | This entry has already been reversed or cancelled | BR-003 | 17 |
+| `already_reversed` | 409 | This entry has already been reversed or cancelled | BR-003 | 18 |
 | `branch_limit_reached` | 409 | All branches in the plan are in use | BR-059 | 3 |
 | `charge_allocated` | 409 | The charge is part of a posted landed-cost allocation | BR-045 | 4 |
 | `created_from_return` | 409 | This debit note belongs to a purchase return; cancel the return | BR-057 | 3 |
@@ -85,19 +85,19 @@
 | `duplicate_statement` | 409 | This statement file was already imported | BR-032 | 1 |
 | `duplicate_supplier_bill` | 409 | This supplier's bill number is already entered | BR-018 | 3 |
 | `has_history` | 409 | This record is used elsewhere; make it inactive instead | BR-026 | 9 |
-| `idempotency_in_progress` | 409 | The same request is still being processed | BR-050 | 88 |
+| `idempotency_in_progress` | 409 | The same request is still being processed | BR-050 | 90 |
 | `invalid_transition` | 409 | This status change is not allowed from the current status | BR-003, BR-040 | 22 |
 | `last_owner` | 409 | A company must keep at least one active Owner | BR-060 | 4 |
 | `not_draft` | 409 | Only a draft can be changed, posted or deleted | BR-025 | 26 |
 | `note_applied` | 409 | Remove the note's allocations before cancelling | BR-023 | 1 |
 | `payroll_run_exists` | 409 | A salary sheet for this month already exists | FR-101 | 1 |
-| `payroll_run_not_approved` | 409 | Only an approved salary sheet can be cancelled | FR-101 | 1 |
+| `payroll_run_not_approved` | 409 | Only an approved salary sheet can be cancelled or paid | FR-101 | 2 |
 | `payroll_run_not_draft` | 409 | Only a draft salary sheet can be changed | FR-101 | 3 |
 | `plan_in_use` | 409 | Companies are still on this plan | FR-005 | 1 |
 | `reminder_sent_recently` | 409 | A reminder was sent to this customer in the last 7 days | FR-024 | 1 |
 | `role_in_use` | 409 | Move the members to another role first | BR-060 | 4 |
 | `seat_limit_reached` | 409 | All seats are in use | BR-059 | 3 |
-| `use_document_cancel` | 409 | System entries are corrected through their document | BR-003 | 17 |
+| `use_document_cancel` | 409 | System entries are corrected through their document | BR-003 | 18 |
 | `version_conflict` | 409 | Someone else changed this record; reload to see their changes | BR-049 | 39 |
 | `gone` | 410 | This link has expired | — | 2 |
 | `file_too_large` | 413 | Files may be up to 10 MB | BR-051 | 5 |
@@ -110,9 +110,9 @@
 | `exceeds_tolerance` | 422 | Payments would exceed the LC amount plus tolerance | BR-042 | 1 |
 | `fiscal_year_not_closable` | 422 | The year has not ended or a period is still open | BR-034 | 1 |
 | `foreign_document` | 422 | The document belongs to another party | BR-021 | 14 |
-| `idempotency_key_reused` | 422 | This Idempotency-Key was used with a different request | BR-050 | 88 |
+| `idempotency_key_reused` | 422 | This Idempotency-Key was used with a different request | BR-050 | 90 |
 | `inactive_reference` | 422 | An inactive party, product, ledger, warehouse or account was used | BR-026 | 18 |
-| `insufficient_funds` | 422 | The account would go below zero (or below its overdraft limit) | BR-031 | 8 |
+| `insufficient_funds` | 422 | The account would go below zero (or below its overdraft limit) | BR-031 | 9 |
 | `insufficient_stock` | 422 | Not enough stock in the warehouse | BR-014, BR-030 | 10 |
 | `invalid_mobile` | 422 | Mobile numbers have 11 digits starting 01 | BR-063 | 2 |
 | `lc_limit_exceeded` | 422 | The bank's LC limit would be exceeded | BR-066 | 2 |
@@ -127,22 +127,24 @@
 | `nature_mismatch` | 422 | The group must have the same nature (asset, liability, …) | BR-027 | 3 |
 | `no_employees` | 422 | Nobody was employed in this month | FR-101 | 1 |
 | `no_overdue_invoices` | 422 | This customer has no overdue invoices | FR-024 | 1 |
+| `nothing_to_pay` | 422 | Everyone on this sheet is already paid | FR-102 | 1 |
 | `nothing_to_revalue` | 422 | No open foreign-currency items at that date | BR-068 | 2 |
 | `order_qty_exceeded` | 422 | More than the purchase order still expects (plus the LC's tolerance) | BR-056 | 3 |
 | `party_has_no_email` | 422 | This customer has no e-mail address | FR-024 | 1 |
-| `period_locked` | 422 | The date is in a locked period or outside an open financial year | BR-004, BR-033 | 42 |
+| `payroll_overpaid` | 422 | A payment is more than what is still due to the employee | FR-102 | 1 |
+| `period_locked` | 422 | The date is in a locked period or outside an open financial year | BR-004, BR-033 | 44 |
 | `purpose_required` | 422 | Choose what the ledger is for | BR-037 | 1 |
 | `repayment_exceeds_outstanding` | 422 | The principal repaid is more than the loan's outstanding principal | BR-067 | 2 |
 | `restore_confirmation_required` | 422 | Type RESTORE to confirm | BR-062 | 1 |
 | `return_qty_exceeds` | 422 | More than the quantity still returnable | BR-022 | 6 |
 | `rounding_ledger_missing` | 422 | Map the rounding ledger in Accounting defaults first | BR-012 | 2 |
 | `same_warehouse` | 422 | Source and destination warehouses must differ | BR-030 | 3 |
-| `unbalanced_entry` | 422 | Total debit must equal total credit | BR-001, BR-002 | 32 |
-| `validation_failed` | 422 | The request has invalid fields | NFR-030 | 240 |
+| `unbalanced_entry` | 422 | Total debit must equal total credit | BR-001, BR-002 | 33 |
+| `validation_failed` | 422 | The request has invalid fields | NFR-030 | 242 |
 | `if_match_required` | 428 | If-Match header with the current version is required | BR-049 | 39 |
 | `rate_limited` | 429 | Too many requests; try again later | NFR-013 | 13 |
-| `server_error` | 500 | Something went wrong; quote the request id | NFR-031 | 369 |
-| `company_maintenance` | 503 | This company is being restored from a backup; try again shortly (Retry-After) | BR-062 | 326 |
+| `server_error` | 500 | Something went wrong; quote the request id | NFR-031 | 372 |
+| `company_maintenance` | 503 | This company is being restored from a backup; try again shortly (Retry-After) | BR-062 | 329 |
 
 Non-blocking conditions (credit limit, overdue customer, low stock, budget, possible duplicate party) are returned as `warnings[]` in 2xx responses, not as errors (BR-015).
 
@@ -631,7 +633,10 @@ The journal debits the supplier ৳ 46,88,640 (an advance until the import bill 
 | 366 | `PUT` | [`/api/v1/payroll-runs/{id}`](#putpayrollrunsid) | Change a draft sheet: pay date, notes, each line's overtime, other earnings, deductions | `payroll.create` | 200 |
 | 367 | `DELETE` | [`/api/v1/payroll-runs/{id}`](#deletepayrollrunsid) | Delete a draft sheet | `payroll.create` | 204 |
 | 368 | `POST` | [`/api/v1/payroll-runs/{id}/approve`](#postpayrollrunsidapprove) | Approve and post: Dr salaries_expense / Cr salaries_payable | `payroll.approve` | 200 |
-| 369 | `POST` | [`/api/v1/payroll-runs/{id}/cancel`](#postpayrollrunsidcancel) | Cancel an approved sheet by a reversal entry | `payroll.approve` | 200 |
+| 369 | `POST` | [`/api/v1/payroll-runs/{id}/payments`](#postpayrollrunsidpayments) | Pay salaries of an approved sheet (all unpaid, or chosen lines and amounts): Dr salaries_payable / Cr the money account | `payroll.approve` | 201 |
+| 370 | `GET` | [`/api/v1/payroll-runs/{id}/payments`](#getpayrollrunsidpayments) | Payments made against a salary sheet | `payroll.view` | 200 |
+| 371 | `POST` | [`/api/v1/payroll-payments/{id}/reverse`](#postpayrollpaymentsidreverse) | Reverse a salary payment (mirror entry; the employees are unpaid again) | `payroll.approve` | 200 |
+| 372 | `POST` | [`/api/v1/payroll-runs/{id}/cancel`](#postpayrollrunsidcancel) | Cancel an approved sheet by a reversal entry | `payroll.approve` | 200 |
 
 ## 8. Contract validation
 
@@ -643,29 +648,29 @@ Last run: 24 rules, **24 passed, 0 failed**; 6 negative tests, 6 detected. Offic
 | Rule | Check | Items | Result |
 |---|---|---|---|
 | A01 | Document validates against the official OpenAPI 3.1 schema (schema-base: documents incl. Schema Objects) | 1 | ✅ pass |
-| A02 | Every component schema is valid JSON Schema 2020-12 (meta-schema check) | 249 | ✅ pass |
-| A03 | All $refs resolve and every component schema is used | 252 | ✅ pass |
-| A04 | Operations have unique camelCase operationIds, summary, description, tags, a 2xx, a default, and problem+json errors | 369 | ✅ pass |
-| A05 | Path templates and declared path parameters match; path parameters are required | 369 | ✅ pass |
-| A06 | Security: public only for sign-in flows, cookie only for refresh/logout, X-Company-Id on company-scoped calls, known permissions | 369 | ✅ pass |
-| A07 | Every operation that posts a journal entry takes an Idempotency-Key and documents its locking; every body can be rejected with 422 | 369 | ✅ pass |
-| A08 | Every 201 response declares a Location header | 63 | ✅ pass |
-| A09 | Collections use the paginated envelope {data[], meta} | 61 | ✅ pass |
-| A10 | Every error code exists in the catalogue, has its HTTP status documented on the operation, and every catalogue code is reachable | 89 | ✅ pass |
-| A11 | Request-only schemas reject unknown properties (additionalProperties: false) | 113 | ✅ pass |
-| A12 | Money, quantity, cost and rate fields are decimal strings (never JSON numbers) | 246 | ✅ pass |
+| A02 | Every component schema is valid JSON Schema 2020-12 (meta-schema check) | 253 | ✅ pass |
+| A03 | All $refs resolve and every component schema is used | 256 | ✅ pass |
+| A04 | Operations have unique camelCase operationIds, summary, description, tags, a 2xx, a default, and problem+json errors | 372 | ✅ pass |
+| A05 | Path templates and declared path parameters match; path parameters are required | 372 | ✅ pass |
+| A06 | Security: public only for sign-in flows, cookie only for refresh/logout, X-Company-Id on company-scoped calls, known permissions | 372 | ✅ pass |
+| A07 | Every operation that posts a journal entry takes an Idempotency-Key and documents its locking; every body can be rejected with 422 | 372 | ✅ pass |
+| A08 | Every 201 response declares a Location header | 64 | ✅ pass |
+| A09 | Collections use the paginated envelope {data[], meta} | 62 | ✅ pass |
+| A10 | Every error code exists in the catalogue, has its HTTP status documented on the operation, and every catalogue code is reachable | 91 | ✅ pass |
+| A11 | Request-only schemas reject unknown properties (additionalProperties: false) | 115 | ✅ pass |
+| A12 | Money, quantity, cost and rate fields are decimal strings (never JSON numbers) | 250 | ✅ pass |
 | A13 | PUT/PATCH on a versioned table requires If-Match, and If-Match is only required where a version exists | 45 | ✅ pass |
 | A14 | Request fields are stored: each maps to a column (or is declared virtual) with a compatible length, enum values and nullability | 406 | ✅ pass |
 | A15 | Response enum fields have exactly the values the database allows | 29 | ✅ pass |
-| A16 | Every action of every page maps to API calls, a dialog, navigation or explicit client behaviour, and every target exists | 564 | ✅ pass |
-| A17 | Every data-changing endpoint is triggered by at least one page action (only token refresh is system-driven) | 212 | ✅ pass |
+| A16 | Every action of every page maps to API calls, a dialog, navigation or explicit client behaviour, and every target exists | 566 | ✅ pass |
+| A17 | Every data-changing endpoint is triggered by at least one page action (only token refresh is system-driven) | 214 | ✅ pass |
 | A18 | Every page has at least one endpoint (shared components use their host page's) | 167 | ✅ pass |
-| A19 | For every action, at least one role can both open the page and call the endpoint | 356 | ✅ pass |
-| A20 | Database operations name real tables; nothing deletes posted or append-only rows; every write changes something | 1531 | ✅ pass |
-| A21 | Every parameter has a typed schema | 606 | ✅ pass |
-| A22 | Business rules exist; 46 rejecting rules map to error codes | 378 | ✅ pass |
+| A19 | For every action, at least one role can both open the page and call the endpoint | 359 | ✅ pass |
+| A20 | Database operations name real tables; nothing deletes posted or append-only rows; every write changes something | 1553 | ✅ pass |
+| A21 | Every parameter has a typed schema | 609 | ✅ pass |
+| A22 | Business rules exist; 46 rejecting rules map to error codes | 383 | ✅ pass |
 | A23 | Calculate/preview endpoints never reject on business state; they return warnings[] (BR-015) | 5 | ✅ pass |
-| A24 | Ledger/stock writes are coherent: entries have lines, stock movements update balances, system entries take an SJ number, bulk post = single post | 91 | ✅ pass |
+| A24 | Ledger/stock writes are coherent: entries have lines, stock movements update balances, system entries take an SJ number, bulk post = single post | 94 | ✅ pass |
 
 **Negative tests** (a deliberately broken copy of the document must fail the named rule):
 
@@ -6578,7 +6583,7 @@ Cash, bank, wallet and card accounts with book balance and reconciliation status
 | **Database** | read: bank_statement_lines, journal_lines, ledgers, money_accounts |
 | **Business rules** | — |
 | **Requirements** | FR-060 |
-| **Pages and actions** | G3, E7, F5, G6, G7, G8, G9, H10, H11, H12, I3, I6, M3, LC-DlgPay, E14, F12 |
+| **Pages and actions** | G3, E7, F5, G6, G7, G8, G9, H10, H11, H12, I3, I6, M3, LC-DlgPay, E14, F12, P4<br>P4 · Pay salaries |
 | **Transaction / concurrency** | Read-only; consistent snapshot. |
 
 <a id="postmoneyaccounts"></a>
@@ -8835,6 +8840,72 @@ Approve and post: Dr salaries_expense / Cr salaries_payable. _Contract change: P
 | **Business rules** | BR-001, BR-004 |
 | **Requirements** | FR-101 |
 | **Pages and actions** | P4<br>P4 · Approve and post |
+| **Transaction / concurrency** | One DB transaction; SELECT ... FOR UPDATE on the document row, number_sequences, stock_balances in a fixed order (sequence -> document -> products by id) to avoid deadlocks. |
+
+<a id="postpayrollrunsidpayments"></a>
+#### `POST /api/v1/payroll-runs/{id}/payments`
+
+Pay salaries of an approved sheet (all unpaid, or chosen lines and amounts): Dr salaries_payable / Cr the money account. _Contract change: PEP-522 pay salaries._
+
+| | |
+|---|---|
+| **Auth** | Bearer JWT + `X-Company-Id` |
+| **Permission** | `payroll.approve` — roles: Owner, Finance manager |
+| **Path / query params** | `id` / — |
+| **Request body** | [`PayrollPaymentInput`](#schema-payrollpaymentinput) |
+| **Validation** | `money_account_id`* id of a record in this company; `paid_on`* YYYY-MM-DD; `reference` string ≤ 60 (nullable); `lines` array of PayrollPaymentLineInput (nullable)<br>Unknown fields are rejected (422).<br>BR-001: Every posted journal entry balances: total debit = total credit > 0.<br>BR-004: A document or voucher date must fall inside an open accounting period of an open financial year; posting, editing or reversing into a locked period is rejected.<br>BR-031: A payment, transfer or contra cannot take a cash or wallet account below zero, or a bank or cash-credit account below minus its overdraft_limit (zero when not set). |
+| **Success** | 201 `data`: [`PayrollPayment`](#schema-payrollpayment) |
+| **Status codes** | 201, 400, 401, 403, 404, 409, 422, 503 |
+| **Error codes** | **`company_maintenance`, `insufficient_funds`, `module_not_in_plan`, `nothing_to_pay`, `payroll_overpaid`, `payroll_run_not_approved`, `period_locked`, `support_read_only`, `unbalanced_entry`**; standard: `company_required`, `idempotency_in_progress`, `idempotency_key_reused`, `malformed_json`, `not_a_member`, `not_found`, `permission_denied`, `server_error`, `token_expired`, `token_invalid`, `unauthenticated`, `validation_failed` |
+| **Headers** | `Idempotency-Key`, `Location` on 201 |
+| **Database** | lock: number_sequences; insert: audit_logs, idempotency_keys, journal_entries, journal_lines, payroll_runs; update: number_sequences; read: money_accounts, payroll_lines, payroll_payment_lines, payroll_payments |
+| **Business rules** | BR-001, BR-004, BR-031 |
+| **Requirements** | FR-102 |
+| **Pages and actions** | P4<br>P4 · Pay salaries |
+| **Transaction / concurrency** | One DB transaction; SELECT ... FOR UPDATE on the document row, number_sequences, stock_balances in a fixed order (sequence -> document -> products by id) to avoid deadlocks. |
+
+<a id="getpayrollrunsidpayments"></a>
+#### `GET /api/v1/payroll-runs/{id}/payments`
+
+Payments made against a salary sheet. _Contract change: PEP-522 pay salaries._
+
+| | |
+|---|---|
+| **Auth** | Bearer JWT + `X-Company-Id` |
+| **Permission** | `payroll.view` — roles: Owner, Finance manager, Accountant |
+| **Path / query params** | `id` / — |
+| **Request body** | — |
+| **Validation** | — |
+| **Success** | 200 `data[]` of [`PayrollPayment`](#schema-payrollpayment) + `meta` |
+| **Status codes** | 200, 400, 401, 403, 404, 503 |
+| **Error codes** | **`company_maintenance`, `module_not_in_plan`**; standard: `company_required`, `not_a_member`, `not_found`, `permission_denied`, `server_error`, `token_expired`, `token_invalid`, `unauthenticated` |
+| **Headers** | — |
+| **Database** | read: journal_entries, money_accounts, payroll_payment_lines, payroll_payments |
+| **Business rules** | — |
+| **Requirements** | FR-102 |
+| **Pages and actions** | P4<br>P4 · Reverse a payment |
+| **Transaction / concurrency** | Read-only; consistent snapshot. |
+
+<a id="postpayrollpaymentsidreverse"></a>
+#### `POST /api/v1/payroll-payments/{id}/reverse`
+
+Reverse a salary payment (mirror entry; the employees are unpaid again). _Contract change: PEP-522 pay salaries._
+
+| | |
+|---|---|
+| **Auth** | Bearer JWT + `X-Company-Id` |
+| **Permission** | `payroll.approve` — roles: Owner, Finance manager |
+| **Path / query params** | `id` / — |
+| **Request body** | [`ReasonRequest`](#schema-reasonrequest) |
+| **Validation** | `reason`* string ≤ 255<br>Unknown fields are rejected (422).<br>BR-003: Posted journal entries, documents and stock movements are immutable; corrections are made only by reversal, cancellation or a credit/debit note. Non-financial fields (delivery challan, vehicle, delivered time, internal note, attachments) may still be updated after posting, and every change is audited.<br>BR-004: A document or voucher date must fall inside an open accounting period of an open financial year; posting, editing or reversing into a locked period is rejected. |
+| **Success** | 200 `data`: [`PayrollPayment`](#schema-payrollpayment) |
+| **Status codes** | 200, 400, 401, 403, 404, 409, 422, 503 |
+| **Error codes** | **`already_reversed`, `company_maintenance`, `module_not_in_plan`, `period_locked`, `support_read_only`, `use_document_cancel`**; standard: `company_required`, `idempotency_in_progress`, `idempotency_key_reused`, `malformed_json`, `not_a_member`, `not_found`, `permission_denied`, `server_error`, `token_expired`, `token_invalid`, `unauthenticated`, `validation_failed` |
+| **Headers** | `Idempotency-Key` |
+| **Database** | lock: number_sequences, payroll_payments; insert: audit_logs, idempotency_keys, journal_entries, journal_lines; update: journal_entries, number_sequences, payroll_payments; read: payroll_lines, payroll_payment_lines |
+| **Business rules** | BR-003, BR-004 |
+| **Requirements** | FR-102 |
+| **Pages and actions** | P4<br>P4 · Reverse a payment |
 | **Transaction / concurrency** | One DB transaction; SELECT ... FOR UPDATE on the document row, number_sequences, stock_balances in a fixed order (sequence -> document -> products by id) to avoid deadlocks. |
 
 <a id="postpayrollrunsidcancel"></a>
@@ -11944,6 +12015,8 @@ A salary sheet (PEP-521). lines only on GET /payroll-runs/{id} and after a chang
 | `total_gross` | `money` | yes |
 | `total_deductions` | `money` | yes |
 | `total_net` | `money` | yes |
+| `total_paid` | `money` | yes |
+| `payment_status` | `enum:unpaid\|part_paid\|paid` | yes |
 | `notes` | `str \| null` | no |
 | `journal_entry_id` | `id \| null` | no |
 | `voucher_number` | `str \| null` | no |
@@ -11951,6 +12024,61 @@ A salary sheet (PEP-521). lines only on GET /payroll-runs/{id} and after a chang
 | `approved_by` | `ref:UserRef \| null` | no |
 | `cancel_reason` | `str \| null` | no |
 | `lines` | `[ref:PayrollLine] \| null` | no |
+| `version` | `int` | yes |
+
+<a id="schema-payrollpaymentlineinput"></a>
+#### `PayrollPaymentLineInput`
+
+Pay one line (PEP-522). Unknown properties are rejected.
+
+| Property | Type | Required |
+|---|---|---|
+| `payroll_line_id` | `id` | yes |
+| `amount` | `money` | yes |
+
+<a id="schema-payrollpaymentinput"></a>
+#### `PayrollPaymentInput`
+
+Pay salaries (PEP-522). Without lines, every line still unpaid is paid in full. Unknown properties are rejected.
+
+| Property | Type | Required |
+|---|---|---|
+| `money_account_id` | `id` | yes |
+| `paid_on` | `date` | yes |
+| `reference` | `str:60 \| null` | no |
+| `lines` | `[ref:PayrollPaymentLineInput] \| null` | no |
+
+<a id="schema-payrollpaymentline"></a>
+#### `PayrollPaymentLine`
+
+One employee in a salary payment (PEP-522).
+
+| Property | Type | Required |
+|---|---|---|
+| `payroll_line_id` | `id` | yes |
+| `employee_code` | `str` | yes |
+| `employee_name` | `str` | yes |
+| `amount` | `money` | yes |
+
+<a id="schema-payrollpayment"></a>
+#### `PayrollPayment`
+
+A salary payment (PEP-522).
+
+| Property | Type | Required |
+|---|---|---|
+| `id` | `id` | yes |
+| `payroll_run_id` | `id` | yes |
+| `money_account` | `obj` | yes |
+| `paid_on` | `date` | yes |
+| `amount` | `money` | yes |
+| `employees_count` | `int` | yes |
+| `reference` | `str \| null` | no |
+| `status` | `enum:posted\|reversed` | yes |
+| `voucher_number` | `str \| null` | no |
+| `reversed_at` | `datetime \| null` | no |
+| `reverse_reason` | `str \| null` | no |
+| `lines` | `[ref:PayrollPaymentLine]` | yes |
 | `version` | `int` | yes |
 
 <a id="schema-payrollruncreate"></a>
@@ -14758,7 +14886,7 @@ View permission `payroll.view`. **Loads:** [`GET /payroll-runs`](#getpayrollruns
 <a id="actions-p4"></a>
 #### P4 · Salary sheet
 
-View permission `payroll.view`. **Loads:** [`GET /payroll-runs/{id}`](#getpayrollrunsid).
+View permission `payroll.view`. **Loads:** [`GET /money-accounts`](#getmoneyaccounts), [`GET /payroll-runs/{id}`](#getpayrollrunsid), [`GET /payroll-runs/{id}/payments`](#getpayrollrunsidpayments).
 
 | # | Action | Calls | Permission | Body → data | Success | Business errors to handle |
 |---|---|---|---|---|---|---|
@@ -14766,6 +14894,8 @@ View permission `payroll.view`. **Loads:** [`GET /payroll-runs/{id}`](#getpayrol
 | 2 | Delete draft | dlg:L6 → [`DELETE /payroll-runs/{id}`](#deletepayrollrunsid) | `payroll.create` | — → — | 204 | `module_not_in_plan`, `payroll_run_not_draft`, `support_read_only` |
 | 3 | Approve and post | dlg:L6 → [`POST /payroll-runs/{id}/approve`](#postpayrollrunsidapprove) | `payroll.approve` | — → [`PayrollRun`](#schema-payrollrun) | 200 | `mapping_missing`, `module_not_in_plan`, `payroll_run_not_draft`, `period_locked`, `support_read_only`, `unbalanced_entry` |
 | 4 | Cancel sheet | dlg:L6 → [`POST /payroll-runs/{id}/cancel`](#postpayrollrunsidcancel) | `payroll.approve` | [`ReasonRequest`](#schema-reasonrequest) → [`PayrollRun`](#schema-payrollrun) | 200 | `already_reversed`, `module_not_in_plan`, `payroll_run_not_approved`, `period_locked`, `support_read_only`, `use_document_cancel` |
+| 5 | Pay salaries | [`GET /money-accounts`](#getmoneyaccounts) → [`POST /payroll-runs/{id}/payments`](#postpayrollrunsidpayments) | `payroll.approve`, any signed-in user who is an active member of the company | [`PayrollPaymentInput`](#schema-payrollpaymentinput) → [`PayrollPayment`](#schema-payrollpayment) | 200, 201 | `insufficient_funds`, `module_not_in_plan`, `nothing_to_pay`, `payroll_overpaid`, `payroll_run_not_approved`, `period_locked`, `support_read_only`, `unbalanced_entry` |
+| 6 | Reverse a payment | [`GET /payroll-runs/{id}/payments`](#getpayrollrunsidpayments) → dlg:L6 → [`POST /payroll-payments/{id}/reverse`](#postpayrollpaymentsidreverse) | `payroll.approve`, `payroll.view` | [`ReasonRequest`](#schema-reasonrequest) → [`PayrollPayment`](#schema-payrollpayment) | 200 | `already_reversed`, `module_not_in_plan`, `period_locked`, `support_read_only`, `use_document_cancel` |
 
 - J2 · Sales report: same as [E11](#actions-e11) (reused screen, Reports breadcrumb)
 
@@ -14803,12 +14933,12 @@ View permission `payroll.view`. **Loads:** [`GET /payroll-runs/{id}`](#getpayrol
 
 | | Before review | Contract |
 |---|---|---|
-| Endpoints | 280 | 369 |
-| Schemas | 191 | 249 |
+| Endpoints | 280 | 372 |
+| Schemas | 191 | 253 |
 | Pages | 155 | 167 |
-| Page actions mapped to API or client behaviour | 0 of 448 | 564 of 564 |
+| Page actions mapped to API or client behaviour | 0 of 448 | 566 of 566 |
 
-### 12.2 Missing endpoints, now added (88)
+### 12.2 Missing endpoints, now added (91)
 
 | Endpoint | Ref | Why it was missing |
 |---|---|---|
@@ -14899,6 +15029,9 @@ View permission `payroll.view`. **Loads:** [`GET /payroll-runs/{id}`](#getpayrol
 | [`PUT /payroll-runs/{id}`](#putpayrollrunsid) | PEP-521 salary sheet |  |
 | [`DELETE /payroll-runs/{id}`](#deletepayrollrunsid) | PEP-521 salary sheet |  |
 | [`POST /payroll-runs/{id}/approve`](#postpayrollrunsidapprove) | PEP-521 salary sheet |  |
+| [`POST /payroll-runs/{id}/payments`](#postpayrollrunsidpayments) | PEP-522 pay salaries |  |
+| [`GET /payroll-runs/{id}/payments`](#getpayrollrunsidpayments) | PEP-522 pay salaries |  |
+| [`POST /payroll-payments/{id}/reverse`](#postpayrollpaymentsidreverse) | PEP-522 pay salaries |  |
 | [`POST /payroll-runs/{id}/cancel`](#postpayrollrunsidcancel) | PEP-521 salary sheet |  |
 
 ### 12.3 Redundant or unused endpoints, removed (6)
@@ -14969,6 +15102,7 @@ View permission `payroll.view`. **Loads:** [`GET /payroll-runs/{id}`](#getpayrol
 | Platform console (PEP-483) | New /platform/companies endpoints (list, create with an Owner invitation, suspend, reactivate) for platform admins: e-mails in PLUTO_PLATFORM_ADMINS with 2-step sign-in, never a company role, so selling Pluto to many companies needs no shared membership. Me adds platform_admin (shows the console link; PEP-484). Schemas PlatformCompany, PlatformCompanyCreate; errors platform_admin_only, platform_two_factor_required. Owner request 12-13 Nov 2026. Additive. |
 | Read-only support access (PEP-485) | POST/DELETE /platform/companies/{id}/support-access: a platform admin opens a company read-only for 15-240 minutes with a reason (table support_access_grants); its owners get a notification and the audit log keeps the start and end; any change answers 403 support_read_only; Me adds support_access while the current company is such a view. Additive. |
 | Usage overview (PEP-512) | PlatformCompany adds usage: last sign-in of the company's own people, active people in 30 days, this month's sales invoices, purchase bills and vouchers, and quiet (no activity for 7+ days). Read-only, worked out from existing tables. Owner request 15 Nov 2026. Additive. |
+| Pay salaries (PEP-522) | payroll_payments + payroll_payment_lines. POST /payroll-runs/{id}/payments (payroll.approve; all unpaid lines in full, or chosen lines and amounts; BR-031 funds), GET /payroll-runs/{id}/payments, POST /payroll-payments/{id}/reverse. PayrollRun adds total_paid and payment_status. Owner 16 Nov 2026. Additive. |
 | Salary sheet (PEP-521) | payroll_runs + payroll_lines; account mappings salaries_expense (6001) and salaries_payable (2201). GET/POST /payroll-runs, GET/PUT/DELETE /payroll-runs/{id} (draft; PUT and DELETE need payroll.create), POST /payroll-runs/{id}/approve and /cancel (payroll.approve). Part months prorated by days; posts entry_type journal with source payroll_runs. Owner 16 Nov 2026. Additive. |
 | Payroll setup and employees (PEP-520) | Payroll module: permissions payroll.view/create/edit/approve (Owner all; Finance VCEA; Accountant VC; others none, salaries are private); plan module payroll (module_not_in_plan). employees table; GET/POST /employees, GET/PATCH /employees/{id}; Employee.gross_salary from the server. Owner 16 Nov 2026. Additive. |
 | Recurring sales invoices (PEP-517) | recurring_invoices (party, frequency, next_run_on, ends, payload = draft body without dates, last_invoice_id). POST /sales-invoices/{id}/repeat (sales.create, RecurringInvoiceCreate) → RecurringInvoice; GET /recurring-invoices (sales.view); PATCH /recurring-invoices/{id} (sales.edit, RecurringTemplateInput, If-Match). The 06:00 pluto:recurring:run also writes the due draft invoices (never posted). Owner 16 Nov 2026. Additive. |

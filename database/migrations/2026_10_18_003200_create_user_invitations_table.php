@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Table `user_invitations` (Access): migration 32 of 101, dependency level 3.
+ * Table `user_invitations` (Access): migration 32 of 103, dependency level 3.
  * Pending invitation e-mail (link valid 7 days).
  * Depends on: companies, roles, users.
  *
