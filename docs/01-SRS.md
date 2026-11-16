@@ -173,6 +173,7 @@ Approval limits (defaults): Finance manager pays up to ৳ 5,00,000 without appr
 | FR-097 | LC | Users record LC charges and import expenses, and payments at the bank's rate. | M7, LC-DlgPay, LC-DrawerCharge | 17 |
 | FR-098 | LC | Users receive LC goods through an import purchase bill and allocate landed cost. | F3, M4, M7 | 5 |
 | FR-099 | LC | Users close an LC, after checks, and view the eight LC reports. | M8, LC-DlgClose | 5 |
+| FR-101 | Payroll | Users prepare a monthly salary sheet (earnings, deductions, net per employee, part months prorated), approve it to post the salary expense, and cancel an approved sheet by reversal (PEP-521). | P3, P4 | 7 |
 | FR-100 | Payroll | Users keep employees with their salary structure (basic, house rent, medical, conveyance), pay method and status (PEP-520). | P1, P2 | 4 |
 
 ## 6. Non-functional requirements
@@ -230,10 +231,10 @@ Approval limits (defaults): Finance manager pays up to ৳ 5,00,000 without appr
 
 | ID | Rule | Enforced by (endpoints) | Tests |
 |---|---|---|---|
-| BR-001 | Every posted journal entry balances: total debit = total credit > 0. | 32 | TC-ACC-001, TC-ACC-005, TC-ACC-012, TC-DB-003 |
+| BR-001 | Every posted journal entry balances: total debit = total credit > 0. | 33 | TC-ACC-001, TC-ACC-005, TC-ACC-012, TC-DB-003 |
 | BR-002 | Each journal line carries a debit or a credit greater than zero, never both and never neither. | 2 | TC-ACC-002, TC-ACC-012 |
-| BR-003 | Posted journal entries, documents and stock movements are immutable; corrections are made only by reversal, cancellation or a credit/debit note. Non-financial fields (delivery challan, vehicle, delivered time, internal note, attachments) may still be updated after posting, and every change is audited. | 16 | TC-ACC-003, TC-ACC-007, TC-ACC-008, TC-SAL-018, TC-PUR-011, TC-INV-005, TC-BNK-010, TC-LC-012 |
-| BR-004 | A document or voucher date must fall inside an open accounting period of an open financial year; posting, editing or reversing into a locked period is rejected. | 38 | TC-ACC-004 |
+| BR-003 | Posted journal entries, documents and stock movements are immutable; corrections are made only by reversal, cancellation or a credit/debit note. Non-financial fields (delivery challan, vehicle, delivered time, internal note, attachments) may still be updated after posting, and every change is audited. | 17 | TC-ACC-003, TC-ACC-007, TC-ACC-008, TC-SAL-018, TC-PUR-011, TC-INV-005, TC-BNK-010, TC-LC-012 |
+| BR-004 | A document or voucher date must fall inside an open accounting period of an open financial year; posting, editing or reversing into a locked period is rejected. | 40 | TC-ACC-004 |
 | BR-005 | Drafts, submitted and rejected vouchers never affect ledger balances, stock or reports. | 7 | TC-ACC-006 |
 | BR-006 | Document numbers come from the company's sequence for the document type and FY, are unique, are reserved at first save and are never reused; voiding a draft number is audited. | 21 | TC-ACC-023, TC-SAL-013, TC-DB-002 |
 | BR-007 | A payment or journal voucher whose amount exceeds the submitter's role limit must be approved by a user with the module's approve permission before it posts. | 7 | TC-AUTH-019, TC-ACC-009, TC-PUR-006 |

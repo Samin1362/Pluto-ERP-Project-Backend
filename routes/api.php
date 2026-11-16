@@ -34,6 +34,7 @@ use App\Http\Controllers\Api\V1\Parties\PartyAccountController;
 use App\Http\Controllers\Api\V1\Parties\PartyController;
 use App\Http\Controllers\Api\V1\Parties\PaymentReminderController;
 use App\Http\Controllers\Api\V1\Payroll\EmployeeController;
+use App\Http\Controllers\Api\V1\Payroll\PayrollRunController;
 use App\Http\Controllers\Api\V1\Platform\DashboardController;
 use App\Http\Controllers\Api\V1\Platform\ExportJobController;
 use App\Http\Controllers\Api\V1\Platform\PlatformLookupController;
@@ -174,6 +175,14 @@ Route::middleware(['jwt', 'throttle:api-user'])->group(function () {
             Route::post('employees', [EmployeeController::class, 'store'])->middleware(['perm:payroll.create', 'idempotent']);
             Route::get('employees/{id}', [EmployeeController::class, 'show'])->whereNumber('id')->middleware('perm:payroll.view');
             Route::patch('employees/{id}', [EmployeeController::class, 'update'])->whereNumber('id')->middleware('perm:payroll.edit');
+            // PEP-521: salary sheets (preparing a draft needs payroll.create; approving and cancelling payroll.approve).
+            Route::get('payroll-runs', [PayrollRunController::class, 'index'])->middleware('perm:payroll.view');
+            Route::post('payroll-runs', [PayrollRunController::class, 'store'])->middleware(['perm:payroll.create', 'idempotent']);
+            Route::get('payroll-runs/{id}', [PayrollRunController::class, 'show'])->whereNumber('id')->middleware('perm:payroll.view');
+            Route::put('payroll-runs/{id}', [PayrollRunController::class, 'update'])->whereNumber('id')->middleware('perm:payroll.create');
+            Route::delete('payroll-runs/{id}', [PayrollRunController::class, 'destroy'])->whereNumber('id')->middleware('perm:payroll.create');
+            Route::post('payroll-runs/{id}/approve', [PayrollRunController::class, 'approve'])->whereNumber('id')->middleware(['perm:payroll.approve', 'idempotent']);
+            Route::post('payroll-runs/{id}/cancel', [PayrollRunController::class, 'cancel'])->whereNumber('id')->middleware(['perm:payroll.approve', 'idempotent']);
         });
         // PEP-498: LC management and LC finance are plan modules (403 module_not_in_plan when the plan leaves them out).
         Route::middleware('module:lc_management')->group(function () {

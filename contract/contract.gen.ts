@@ -52,6 +52,7 @@ export type ErrorCode =
   | 'margin_exceeds_deposit'
   | 'module_not_in_plan'
   | 'nature_mismatch'
+  | 'no_employees'
   | 'no_overdue_invoices'
   | 'not_a_member'
   | 'not_draft'
@@ -60,6 +61,9 @@ export type ErrorCode =
   | 'nothing_to_revalue'
   | 'order_qty_exceeded'
   | 'party_has_no_email'
+  | 'payroll_run_exists'
+  | 'payroll_run_not_approved'
+  | 'payroll_run_not_draft'
   | 'period_locked'
   | 'permission_denied'
   | 'plan_in_use'
@@ -1910,6 +1914,73 @@ export interface PaymentTerm {
   name: string
   days: number
   is_default: boolean
+}
+
+/** One employee on a salary sheet (PEP-521). gross = structure for days_paid + overtime + other_earnings; net = gross − deductions − advance_recovery; all from the server. */
+export interface PayrollLine {
+  id: number
+  employee_id: number
+  employee_code: string
+  employee_name: string
+  designation?: string | null
+  days_in_month: number
+  days_paid: number
+  basic_salary: Decimal
+  house_rent: Decimal
+  medical: Decimal
+  conveyance: Decimal
+  overtime: Decimal
+  other_earnings: Decimal
+  deductions: Decimal
+  advance_recovery: Decimal
+  gross: Decimal
+  net: Decimal
+  paid_amount: Decimal
+  note?: string | null
+}
+
+/** Change one line of a draft sheet (PEP-521). */
+export interface PayrollLineChange {
+  id: number
+  overtime?: Decimal | null
+  other_earnings?: Decimal | null
+  deductions?: Decimal | null
+  note?: string | null
+}
+
+/** A salary sheet (PEP-521). lines only on GET /payroll-runs/{id} and after a change. */
+export interface PayrollRun {
+  id: number
+  kind: 'salary' | 'bonus'
+  period_month: string
+  label: string
+  pay_date: string
+  status: 'draft' | 'approved' | 'cancelled'
+  employees_count: number
+  total_gross: Decimal
+  total_deductions: Decimal
+  total_net: Decimal
+  notes?: string | null
+  journal_entry_id?: number | null
+  voucher_number?: string | null
+  approved_at?: string | null
+  approved_by?: UserRef | null
+  cancel_reason?: string | null
+  lines?: Array<PayrollLine> | null
+  version: number
+}
+
+/** Start a month (PEP-521). month = YYYY-MM; pay_date defaults to the month end. */
+export interface PayrollRunCreate {
+  month: string
+  pay_date?: string | null
+}
+
+/** Change a draft sheet (PEP-521); lines left out keep their values. */
+export interface PayrollRunUpdate {
+  pay_date?: string | null
+  notes?: string | null
+  lines?: Array<PayrollLineChange> | null
 }
 
 /** Lock a period. */

@@ -39,6 +39,8 @@ final class AccountMappingService
         'lc_loan' => ['ledger', ['liability'], 'PAD/LTR loans the bank made to pay LC suppliers'],
         'interest_payable' => ['ledger', ['liability'], 'Loan interest accrued at month end, not yet paid'],
         'interest_expense' => ['ledger', ['expense'], 'Interest on PAD/LTR loans'],
+        'salaries_expense' => ['ledger', ['expense'], 'Salary sheets: earnings less deductions (payroll)'],
+        'salaries_payable' => ['ledger', ['liability'], 'Net salaries approved, not yet paid (payroll)'],
         'fx_gain_loss' => ['ledger', ['expense', 'income'], 'Exchange differences'],
         'bank_charges' => ['ledger', ['expense'], 'Bank fees not capitalised'],
         'rounding' => ['ledger', ['expense'], 'Invoice and bill rounding'],

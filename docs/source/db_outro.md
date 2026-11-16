@@ -86,7 +86,7 @@ It reproduces the designed H2 chart and adds the ledgers needed by posting rules
 | 2 | Liabilities | Primary | Liability | |
 | 21 | Current liabilities | Group | Liability | |
 | 2101 | Sundry creditors | Group | Liability | `sundry_creditors_group` |
-| 2201 | Salaries payable | Ledger | Liability | |
+| 2201 | Salaries payable | Ledger | Liability | `salaries_payable` |
 | 2202 | Accrued expenses | Ledger | Liability | |
 | 2205 ✚ | Tax payable | Ledger (tax) | Liability | |
 | 2301 | Bank cash credit | Ledger | Liability | |
@@ -116,7 +116,8 @@ It reproduces the designed H2 chart and adds the ledgers needed by posting rules
 | 5109 ✚ | Purchase returns, non-stock items | Ledger | Expense (contra) | `purchase_returns_non_stock` |
 | 6 | Expenses | Primary | Expense | |
 | 61 | Operating expenses | Group | Expense | |
-| 6001, 6101, 6105, 6110, 6199, 6201 | Salaries and wages; Rent; Transport and delivery; Electricity and utilities; Other expenses; Marketing and promotion | Ledger | Expense | linked to `ie_categories` |
+| 6001 | Salaries and wages | Ledger | Expense | `salaries_expense` |
+| 6101, 6105, 6110, 6199, 6201 | Rent; Transport and delivery; Electricity and utilities; Other expenses; Marketing and promotion | Ledger | Expense | linked to `ie_categories` |
 | 6198 ✚ | Cash short and over | Ledger (system) | Expense | `cash_short_over` |
 | 62 | Depreciation and finance | Group | Expense | |
 | 6501 | Depreciation | Ledger | Expense | |

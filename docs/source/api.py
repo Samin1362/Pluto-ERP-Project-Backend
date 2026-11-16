@@ -698,6 +698,19 @@ E("POST", "/employees", "Add an employee (code from the EMP series)", "payroll.c
 E("GET", "/employees/{id}", "One employee", "payroll.view", ["employees"], ["P2"], resp="Employee", tag=T, fr=["FR-100"], added="PEP-520 payroll")
 E("PATCH", "/employees/{id}", "Change an employee, or mark them left", "payroll.edit", ["employees", "audit_logs"], ["P2"], req="EmployeeInput", resp="Employee", ifmatch=True,
   tag=T, fr=["FR-100"], codes=[200, 409, 422], added="PEP-520 payroll")
+E("GET", "/payroll-runs", "Salary sheets, newest month first", "payroll.view", ["payroll_runs"], ["P3"], params=["page", "per_page", "status", "kind"], resp="Page<PayrollRun>",
+  tag=T, fr=["FR-101"], added="PEP-521 salary sheet")
+E("POST", "/payroll-runs", "Start a month's salary sheet (draft) with everyone employed that month", "payroll.create", ["payroll_runs", "payroll_lines", "employees", "audit_logs"], ["P3"],
+  req="PayrollRunCreate", resp="PayrollRun", idem=True, tag=T, fr=["FR-101"], codes=[201, 409, 422], errors=["payroll_run_exists", "no_employees"], added="PEP-521 salary sheet")
+E("GET", "/payroll-runs/{id}", "A salary sheet with its lines", "payroll.view", ["payroll_runs", "payroll_lines"], ["P4"], resp="PayrollRun", tag=T, fr=["FR-101"], added="PEP-521 salary sheet")
+E("PUT", "/payroll-runs/{id}", "Change a draft sheet: pay date, notes, each line's overtime, other earnings, deductions", "payroll.create", ["payroll_runs", "payroll_lines", "audit_logs"], ["P4"],
+  req="PayrollRunUpdate", resp="PayrollRun", ifmatch=True, tag=T, fr=["FR-101"], codes=[200, 409, 422], errors=["payroll_run_not_draft"], added="PEP-521 salary sheet")
+E("DELETE", "/payroll-runs/{id}", "Delete a draft sheet", "payroll.create", ["payroll_runs", "payroll_lines", "audit_logs"], ["P4"], codes=[204, 409], tag=T, fr=["FR-101"],
+  errors=["payroll_run_not_draft"], added="PEP-521 salary sheet")
+E("POST", "/payroll-runs/{id}/approve", "Approve and post: Dr salaries_expense / Cr salaries_payable", "payroll.approve", ["payroll_runs", "payroll_lines", "journal_entries", "journal_lines", "account_mappings", "number_sequences", "audit_logs"],
+  ["P4"], rules=["BR-001", "BR-004"], resp="PayrollRun", idem=True, tx=TXP, tag=T, fr=["FR-101"], codes=[200, 409, 422], errors=["payroll_run_not_draft", "mapping_missing"], added="PEP-521 salary sheet")
+E("POST", "/payroll-runs/{id}/cancel", "Cancel an approved sheet by a reversal entry", "payroll.approve", ["payroll_runs", "journal_entries", "journal_lines", "number_sequences", "audit_logs"],
+  ["P4"], rules=["BR-003", "BR-004"], req="ReasonRequest", resp="PayrollRun", idem=True, tx=TXP, tag=T, fr=["FR-101"], codes=[200, 409], errors=["payroll_run_not_approved"], added="PEP-521 salary sheet")
 
 
 # ---------------------------------------------------------------- contract-review corrections, second pass (18 Oct 2026)
@@ -737,7 +750,7 @@ _fix("POST", "/purchase-orders/{id}/convert", ops={"purchase_bills": "C", "purch
 # PEP-498: LC management and LC finance are plan modules; their endpoints answer 403 module_not_in_plan when the
 # company's plan does not include them (middleware module:lc_management / module:lc_finance).
 _LC_PATHS = ("/letters-of-credit", "/lc/", "/lc-", "/landed-cost-allocations", "/reports/lc/", "/bank-facilities", "/fx-revaluations",
-             "/employees")  # PEP-520: payroll is a plan module too (module:payroll)
+             "/employees", "/payroll-runs")  # PEP-520: payroll is a plan module too (module:payroll)
 for _e in EP:
     if _e["path"].startswith(_LC_PATHS) and "module_not_in_plan" not in _e["errors"]:
         _e["errors"].append("module_not_in_plan")

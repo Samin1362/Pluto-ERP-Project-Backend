@@ -622,6 +622,11 @@ page("P1", "Employees", "Payroll", "List", "payroll.view", "Everyone the company
 page("P2", "Employee form", "Payroll", "Form", "payroll.create", "Name, designation, department, contacts, joining date, salary structure (basic, house rent, medical, conveyance), pay method and account, status.",
      "Form with a salary card showing the server's gross.", fields=["Name | text | req | ", "Joining date | date | req | ", "Basic salary | money | req | >= 0", "Pay method | select | opt | cash/bank/mobile"],
      actions=["Cancel", "Save", "Mark as left"], deps=["P1"], fr=["FR-100"])
+page("P3", "Salary sheets", "Payroll", "List", "payroll.view", "One sheet per month: month, employees, gross, net, status (PEP-521).",
+     "List; New sheet asks for the month.", actions=["New salary sheet", "Open sheet"],
+     table={"cols": ["Month", "Employees", "Gross", "Deductions", "Net", "Status"], "filters": ["Status"], "search": False}, fr=["FR-101"])
+page("P4", "Salary sheet", "Payroll", "Detail", "payroll.view", "Lines per employee (days paid, structure, overtime, other earnings, deductions, gross, net) with totals from the server.",
+     "Editable grid while draft; Approve posts; Cancel reverses.", actions=["Save changes", "Delete draft", "Approve and post", "Cancel sheet"], deps=["P3"], fr=["FR-101"])
 
 
 # ---- Actions added by the API contract review (18 Oct 2026). Marked NEW: the design does not show them; each needs design sign-off.
