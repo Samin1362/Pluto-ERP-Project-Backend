@@ -291,6 +291,11 @@ E("GET", "/parties/{id}/statement", 'Statement of account (JSON for the screen)'
 E("GET", "/parties/{id}/statement/pdf", "Statement of account as PDF (same parameters as the JSON statement)", "parties.view", ["journal_lines", "journal_entries", "parties", "companies"], ["B8", "C8"], params=DATEQ + ["aging"], resp="Binary", tag=T, fr=["FR-024"], added="C-01")
 E("POST", "/parties/statements/send", "E-mail statements to one or more parties (queued)", "parties.view", ["parties", "export_jobs", "audit_logs"],
   ['B1', 'B8', 'C8'], req="StatementSendRequest", resp="ExportJob", idem=True, tag=T, fr=["FR-024"], codes=[202, 422])
+E("POST", "/parties/{id}/payment-reminder", "E-mail a customer a reminder of their overdue invoices, statement attached (PEP-516)", "parties.view",
+  ["parties", "sales_invoices", "payment_reminders", "audit_logs"], ["B4"], resp="PaymentReminder", idem=True, tag=T, fr=["FR-024"], codes=[201, 409, 422],
+  errors=["party_has_no_email", "no_overdue_invoices", "reminder_sent_recently"], added="PEP-516 payment reminders")
+E("GET", "/parties/{id}/payment-reminders", "Reminders sent to this customer, newest first (PEP-516)", "parties.view", ["payment_reminders", "users"], ["B4"],
+  resp="Page<PaymentReminder>", tag=T, fr=["FR-024"], added="PEP-516 payment reminders")
 E("GET", "/party-groups", "Customer or supplier groups", "parties.view", ["party_groups"], ["B2", "C2", "B1"], params=["type"], resp="Page<PartyGroup>", tag=T, fr=["FR-021"])
 E("POST", "/party-groups", "Add a group", "parties.create", ["party_groups", "audit_logs"], ["B2", "C2"], req="PartyGroupInput", resp="PartyGroup", idem=True, tag=T, fr=["FR-021"], codes=[201, 422])
 

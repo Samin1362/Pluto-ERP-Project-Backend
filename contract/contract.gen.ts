@@ -52,12 +52,14 @@ export type ErrorCode =
   | 'margin_exceeds_deposit'
   | 'module_not_in_plan'
   | 'nature_mismatch'
+  | 'no_overdue_invoices'
   | 'not_a_member'
   | 'not_draft'
   | 'not_found'
   | 'note_applied'
   | 'nothing_to_revalue'
   | 'order_qty_exceeded'
+  | 'party_has_no_email'
   | 'period_locked'
   | 'permission_denied'
   | 'plan_in_use'
@@ -67,6 +69,7 @@ export type ErrorCode =
   | 'rate_limited'
   | 'refresh_reuse_detected'
   | 'refresh_token_invalid'
+  | 'reminder_sent_recently'
   | 'repayment_exceeds_outstanding'
   | 'restore_confirmation_required'
   | 'return_qty_exceeds'
@@ -545,6 +548,8 @@ export interface CompanySettings {
   idle_timeout_minutes?: number | null
   backup_enabled?: boolean
   backup_retention_days?: number
+  reminders_auto: boolean
+  reminder_days_after_due: number
   version: number
 }
 
@@ -571,6 +576,8 @@ export interface CompanySettingsUpdate {
   idle_timeout_minutes?: number | null
   backup_enabled?: boolean
   backup_retention_days?: number
+  reminders_auto?: boolean
+  reminder_days_after_due?: number
 }
 
 /** Editable company fields. */
@@ -1838,6 +1845,17 @@ export interface PaymentDetailInput {
   transaction_reference?: string | null
   bank_charge?: Decimal
   handed_to?: string | null
+}
+
+/** A payment reminder e-mailed to a customer (PEP-516). trigger: manual (sent_by) or auto (the daily job). */
+export interface PaymentReminder {
+  id: number
+  sent_at: string
+  trigger: 'manual' | 'auto'
+  email: string
+  invoices_count: number
+  overdue_amount: Decimal
+  sent_by?: UserRef | null
 }
 
 /** Payment terms. */

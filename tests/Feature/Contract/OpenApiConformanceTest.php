@@ -108,6 +108,9 @@ class OpenApiConformanceTest extends TestCase
 
         $party = $this->api('POST', '/api/v1/parties', $t, $c, ['party_type' => 'customer', 'name' => 'Rahman Stores', 'mobile' => '01711458230'])->json('data.id');
         $this->assertConforms($this->api('GET', "/api/v1/audit-logs?auditable_type=party&auditable_id={$party}", $t, $c), 'GET', '/audit-logs');
+        // PEP-516: payment reminders (log list; a customer without overdue invoices answers 422).
+        $this->assertConforms($this->api('GET', "/api/v1/parties/{$party}/payment-reminders", $t, $c), 'GET', '/parties/{id}/payment-reminders');
+        $this->assertConforms($this->api('POST', "/api/v1/parties/{$party}/payment-reminder", $t, $c, [], ['Idempotency-Key' => (string) Str::uuid()]), 'POST', '/parties/{id}/payment-reminder');
         $this->assertConforms($this->api('GET', '/api/v1/audit-logs?auditable_type=nope&auditable_id=1', $t, $c), 'GET', '/audit-logs');   // 422
         $this->assertConforms($this->api('GET', "/api/v1/audit-logs?auditable_type=party&auditable_id={$party}", $store, $c), 'GET', '/audit-logs'); // 403
 

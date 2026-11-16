@@ -92,5 +92,7 @@
  "support_access_grants": "2026_10_18_009100_create_support_access_grants_table.php",
  "lc_amendment_lines": "2026_10_18_009200_create_lc_amendment_lines_table.php",
  "plans": "2026_10_18_009300_create_plans_table.php",
- "subscription_payments": "2026_10_18_009400_create_subscription_payments_table.php"
+ "subscription_payments": "2026_10_18_009400_create_subscription_payments_table.php",
+ "announcements": "2026_10_18_009500_create_announcements_table.php",
+ "announcement_dismissals": "2026_10_18_009600_create_announcement_dismissals_table.php"
 }

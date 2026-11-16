@@ -7350,6 +7350,22 @@
      "auto_increment": false
     },
     {
+     "name": "reminders_auto",
+     "type": "tinyint(1)",
+     "nullable": false,
+     "default": "0",
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "reminder_days_after_due",
+     "type": "smallint unsigned",
+     "nullable": false,
+     "default": "7",
+     "generated": null,
+     "auto_increment": false
+    },
+    {
      "name": "lock_version",
      "type": "int unsigned",
      "nullable": false,
@@ -18743,6 +18759,143 @@
     }
    },
    "check": {}
+  },
+  "payment_reminders": {
+   "seq": 97,
+   "level": 5,
+   "migration": "2026_10_18_009700_create_payment_reminders_table.php",
+   "module": "Parties",
+   "columns": [
+    {
+     "name": "id",
+     "type": "bigint unsigned",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": true
+    },
+    {
+     "name": "company_id",
+     "type": "bigint unsigned",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "party_id",
+     "type": "bigint unsigned",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "sent_at",
+     "type": "datetime",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "trigger",
+     "type": "varchar(30)",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "email",
+     "type": "varchar(190)",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "invoices_count",
+     "type": "smallint unsigned",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "overdue_amount",
+     "type": "decimal(18,2)",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "sent_by",
+     "type": "bigint unsigned",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "created_at",
+     "type": "datetime",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "updated_at",
+     "type": "datetime",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    }
+   ],
+   "primary": [
+    "id"
+   ],
+   "unique": {},
+   "index": {
+    "payment_reminders_company_id_index": [
+     "company_id"
+    ],
+    "payment_reminders_party_id_index": [
+     "party_id"
+    ],
+    "payment_reminders_sent_by_index": [
+     "sent_by"
+    ]
+   },
+   "foreign": {
+    "payment_reminders_company_id_foreign": {
+     "column": "company_id",
+     "references_table": "companies",
+     "references_column": "id",
+     "on_delete": "RESTRICT",
+     "on_update": "RESTRICT"
+    },
+    "payment_reminders_party_id_foreign": {
+     "column": "party_id",
+     "references_table": "parties",
+     "references_column": "id",
+     "on_delete": "CASCADE",
+     "on_update": "RESTRICT"
+    },
+    "payment_reminders_sent_by_foreign": {
+     "column": "sent_by",
+     "references_table": "users",
+     "references_column": "id",
+     "on_delete": "SET NULL",
+     "on_update": "RESTRICT"
+    }
+   },
+   "check": {
+    "payment_reminders_trigger_check": "`trigger` IN ('manual', 'auto')"
+   }
   }
  }
 }

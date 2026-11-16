@@ -286,6 +286,8 @@ erDiagram
         boolean backup_enabled
         smallint backup_retention_days
         datetime setup_hidden_at
+        boolean reminders_auto
+        smallint reminder_days_after_due
     }
     notification_preferences {
         bigint id PK
@@ -735,6 +737,17 @@ erDiagram
         text notes
         varchar status
     }
+    payment_reminders {
+        bigint id PK
+        bigint company_id FK
+        bigint party_id FK
+        datetime sent_at
+        varchar trigger
+        varchar email
+        smallint invoices_count
+        decimal overdue_amount
+        bigint sent_by FK
+    }
     party_bank_accounts {
         bigint id PK
         bigint company_id FK
@@ -760,6 +773,7 @@ erDiagram
     ledgers |o--o{ parties : "default_purchase_ledger_id"
     ledgers ||--o| parties : "ledger_id"
     parties ||--o{ party_bank_accounts : "party_id"
+    parties ||--o{ payment_reminders : "party_id"
     party_groups |o--o{ parties : "party_group_id"
     payment_terms |o--o{ parties : "payment_term_id"
 ```
@@ -2240,6 +2254,8 @@ Standard columns are listed in each table: `id` (PK), `company_id` (tenant), `lo
 | `backup_enabled` | BOOLEAN | no | 1 | — | — |  |
 | `backup_retention_days` | SMALLINT UNSIGNED | no | 90 | — | — |  |
 | `setup_hidden_at` | DATETIME | yes | NULL | — | — | When an Owner hid the setup checklist on the dashboard (PEP-511); NULL = shown until every step is done |
+| `reminders_auto` | BOOLEAN | no | 0 | — | — | PEP-516: e-mail customers with overdue invoices automatically (daily job) |
+| `reminder_days_after_due` | SMALLINT UNSIGNED | no | 7 | — | — | PEP-516: days past the due date before the first automatic reminder |
 | `lock_version` | INT UNSIGNED | no | 1 | — | — | Optimistic concurrency counter; incremented on every update (If-Match) |
 | `created_by` | BIGINT UNSIGNED | yes | NULL | FK → `users.id` | ON DELETE RESTRICT / ON UPDATE RESTRICT | User who created the row |
 | `updated_by` | BIGINT UNSIGNED | yes | NULL | FK → `users.id` | ON DELETE RESTRICT / ON UPDATE RESTRICT | User who last changed the row |
@@ -3255,6 +3271,35 @@ Standard columns are listed in each table: `id` (PK), `company_id` (tenant), `lo
 - `payment_term_id` → `payment_terms`: one-to-many (optional)
 - `default_purchase_ledger_id` → `ledgers`: one-to-many (optional)
 - `ledger_id` → `ledgers`: one-to-one
+
+#### `payment_reminders`
+
+**Purpose:** Payment reminders e-mailed to a customer about overdue invoices (PEP-516): by hand or by the daily job; at most one a week per customer.  
+**Flags:** tenant-scoped  
+**Primary key:** (id)
+
+| Column | Type | Null | Default | Keys | FK rule | Meaning / rules |
+|---|---|---|---|---|---|---|
+| `id` | BIGINT UNSIGNED | no | — | PK | — | Primary key, auto-increment |
+| `company_id` | BIGINT UNSIGNED | no | — | FK → `companies.id` | ON DELETE RESTRICT / ON UPDATE RESTRICT | Tenant owner. Every query is scoped by it. |
+| `party_id` | BIGINT UNSIGNED | no | — | FK → `parties.id` | ON DELETE CASCADE / ON UPDATE RESTRICT |  |
+| `sent_at` | DATETIME | no | — | — | — |  |
+| `trigger` | VARCHAR(30) | no | — | — | — | enum: manual \| auto |
+| `email` | VARCHAR(190) | no | — | — | — |  |
+| `invoices_count` | SMALLINT UNSIGNED | no | — | — | — |  |
+| `overdue_amount` | DECIMAL(18,2) | no | — | — | — |  |
+| `sent_by` | BIGINT UNSIGNED | yes | NULL | FK → `users.id` | ON DELETE SET NULL / ON UPDATE RESTRICT | NULL = the daily job |
+| `created_at` | DATETIME | yes | NULL | — | — | Set by Laravel |
+| `updated_at` | DATETIME | yes | NULL | — | — | Set by Laravel |
+
+- Index (company_id)
+- Index (party_id)
+- Index (sent_by)
+- **Check** `trigger IN ('manual', 'auto')`
+
+**Relationships:**
+- `party_id` → `parties`: one-to-many
+- `sent_by` → `users`: one-to-many (optional)
 
 #### `party_bank_accounts`
 
@@ -5518,7 +5563,7 @@ Standard columns are listed in each table: `id` (PK), `company_id` (tenant), `lo
 - `party_id` → `parties`: one-to-many (optional)
 - `currency_code` → `currencies`: one-to-many
 
-_Total: 96 application tables._
+_Total: 97 application tables._
 
 
 ## 7. Relationship matrix
@@ -5568,209 +5613,211 @@ Every foreign key except the uniform `company_id`, `created_by` and `updated_by`
 | 39 | `parties` | `payment_term_id` | `payment_terms` | one-to-many (optional) | no | SET NULL |
 | 40 | `parties` | `default_purchase_ledger_id` | `ledgers` | one-to-many (optional) | no | SET NULL |
 | 41 | `parties` | `ledger_id` | `ledgers` | one-to-one | yes | RESTRICT |
-| 42 | `party_bank_accounts` | `party_id` | `parties` | one-to-many | yes | CASCADE |
-| 43 | `stock_groups` | `parent_id` | `stock_groups` | one-to-many (optional) | no | RESTRICT |
-| 44 | `product_categories` | `parent_id` | `product_categories` | one-to-many (optional) | no | RESTRICT |
-| 45 | `product_categories` | `default_unit_id` | `units` | one-to-many (optional) | no | SET NULL |
-| 46 | `product_categories` | `default_stock_group_id` | `stock_groups` | one-to-many (optional) | no | SET NULL |
-| 47 | `warehouses` | `branch_id` | `branches` | one-to-many | yes | RESTRICT |
-| 48 | `warehouses` | `manager_user_id` | `users` | one-to-many (optional) | no | RESTRICT |
-| 49 | `warehouses` | `inventory_ledger_id` | `ledgers` | one-to-many | yes | RESTRICT |
-| 50 | `products` | `category_id` | `product_categories` | one-to-many (optional) | no | SET NULL |
-| 51 | `products` | `stock_group_id` | `stock_groups` | one-to-many (optional) | no | SET NULL |
-| 52 | `products` | `unit_id` | `units` | one-to-many | yes | RESTRICT |
-| 53 | `products` | `tax_rule_id` | `tax_rules` | one-to-many (optional) | no | SET NULL |
-| 54 | `products` | `income_ledger_id` | `ledgers` | one-to-many | yes | RESTRICT |
-| 55 | `products` | `expense_ledger_id` | `ledgers` | one-to-many (optional) | no | RESTRICT |
-| 56 | `products` | `preferred_supplier_id` | `parties` | one-to-many (optional) | no | SET NULL |
-| 57 | `product_units` | `product_id` | `products` | one-to-many | yes | CASCADE |
-| 58 | `product_units` | `unit_id` | `units` | one-to-many | yes | RESTRICT |
-| 59 | `product_warehouse_settings` | `product_id` | `products` | one-to-many | yes | CASCADE |
-| 60 | `product_warehouse_settings` | `warehouse_id` | `warehouses` | one-to-many | yes | CASCADE |
-| 61 | `stock_balances` | `product_id` | `products` | one-to-many | yes | RESTRICT |
-| 62 | `stock_balances` | `warehouse_id` | `warehouses` | one-to-many | yes | RESTRICT |
-| 63 | `stock_movements` | `product_id` | `products` | one-to-many | yes | RESTRICT |
-| 64 | `stock_movements` | `warehouse_id` | `warehouses` | one-to-many | yes | RESTRICT |
-| 65 | `stock_movements` | `journal_entry_id` | `journal_entries` | one-to-many (optional) | no | RESTRICT |
-| 66 | `stock_movements` | `reverses_movement_id` | `stock_movements` | one-to-many (optional) | no | RESTRICT |
-| 67 | `stock_adjustments` | `warehouse_id` | `warehouses` | one-to-many | yes | RESTRICT |
-| 68 | `stock_adjustments` | `journal_entry_id` | `journal_entries` | one-to-one (optional) | no | RESTRICT |
-| 69 | `stock_adjustments` | `posted_by` | `users` | one-to-many (optional) | no | RESTRICT |
-| 70 | `stock_adjustment_lines` | `stock_adjustment_id` | `stock_adjustments` | one-to-many | yes | CASCADE |
-| 71 | `stock_adjustment_lines` | `product_id` | `products` | one-to-many | yes | RESTRICT |
-| 72 | `stock_transfers` | `from_warehouse_id` | `warehouses` | one-to-many | yes | RESTRICT |
-| 73 | `stock_transfers` | `to_warehouse_id` | `warehouses` | one-to-many | yes | RESTRICT |
-| 74 | `stock_transfers` | `dispatch_entry_id` | `journal_entries` | one-to-one (optional) | no | RESTRICT |
-| 75 | `stock_transfers` | `receive_entry_id` | `journal_entries` | one-to-one (optional) | no | RESTRICT |
-| 76 | `stock_transfer_lines` | `stock_transfer_id` | `stock_transfers` | one-to-many | yes | CASCADE |
-| 77 | `stock_transfer_lines` | `product_id` | `products` | one-to-many | yes | RESTRICT |
-| 78 | `journal_entries` | `branch_id` | `branches` | one-to-many (optional) | no | RESTRICT |
-| 79 | `journal_entries` | `fiscal_year_id` | `fiscal_years` | one-to-many | yes | RESTRICT |
-| 80 | `journal_entries` | `accounting_period_id` | `accounting_periods` | one-to-many | yes | RESTRICT |
-| 81 | `journal_entries` | `reverses_entry_id` | `journal_entries` | one-to-one (optional) | no | RESTRICT |
-| 82 | `journal_entries` | `submitted_by` | `users` | one-to-many (optional) | no | RESTRICT |
-| 83 | `journal_entries` | `approved_by` | `users` | one-to-many (optional) | no | RESTRICT |
-| 84 | `journal_entries` | `posted_by` | `users` | one-to-many (optional) | no | RESTRICT |
-| 85 | `journal_lines` | `journal_entry_id` | `journal_entries` | one-to-many | yes | CASCADE |
-| 86 | `journal_lines` | `ledger_id` | `ledgers` | one-to-many | yes | RESTRICT |
-| 87 | `journal_lines` | `tax_rule_id` | `tax_rules` | one-to-many (optional) | no | RESTRICT |
-| 88 | `journal_lines` | `foreign_currency_code` | `currencies` | one-to-many (optional) | no | RESTRICT |
-| 89 | `journal_lines` | `warehouse_id` | `warehouses` | one-to-many (optional) | no | RESTRICT |
-| 90 | `journal_lines` | `letter_of_credit_id` | `letters_of_credit` | one-to-many (optional) | no | RESTRICT |
-| 91 | `bill_allocations` | `journal_line_id` | `journal_lines` | one-to-many | yes | RESTRICT |
-| 92 | `bill_allocations` | `sales_invoice_id` | `sales_invoices` | one-to-many (optional) | no | RESTRICT |
-| 93 | `bill_allocations` | `purchase_bill_id` | `purchase_bills` | one-to-many (optional) | no | RESTRICT |
-| 94 | `money_accounts` | `ledger_id` | `ledgers` | one-to-one | yes | RESTRICT |
-| 95 | `money_accounts` | `currency_code` | `currencies` | one-to-many | yes | RESTRICT |
-| 96 | `money_accounts` | `custodian_user_id` | `users` | one-to-many (optional) | no | RESTRICT |
-| 97 | `payment_details` | `journal_entry_id` | `journal_entries` | one-to-one | yes | CASCADE |
-| 98 | `payment_details` | `party_id` | `parties` | one-to-many (optional) | no | RESTRICT |
-| 99 | `payment_details` | `money_account_id` | `money_accounts` | one-to-many | yes | RESTRICT |
-| 100 | `payment_details` | `counter_money_account_id` | `money_accounts` | one-to-many (optional) | no | RESTRICT |
-| 101 | `ie_categories` | `ledger_id` | `ledgers` | one-to-one | yes | RESTRICT |
-| 102 | `recurring_templates` | `last_entry_id` | `journal_entries` | one-to-many (optional) | no | SET NULL |
-| 103 | `cash_counts` | `money_account_id` | `money_accounts` | one-to-many | yes | RESTRICT |
-| 104 | `cash_counts` | `counted_by` | `users` | one-to-many | yes | RESTRICT |
-| 105 | `cash_counts` | `adjustment_entry_id` | `journal_entries` | one-to-one (optional) | no | RESTRICT |
-| 106 | `cash_count_denominations` | `cash_count_id` | `cash_counts` | one-to-many | yes | CASCADE |
-| 107 | `bank_reconciliations` | `money_account_id` | `money_accounts` | one-to-many | yes | RESTRICT |
-| 108 | `bank_reconciliations` | `finished_by` | `users` | one-to-many (optional) | no | RESTRICT |
-| 109 | `bank_statement_imports` | `money_account_id` | `money_accounts` | one-to-many | yes | RESTRICT |
-| 110 | `bank_statement_lines` | `bank_statement_import_id` | `bank_statement_imports` | one-to-many | yes | CASCADE |
-| 111 | `bank_statement_lines` | `money_account_id` | `money_accounts` | one-to-many | yes | RESTRICT |
-| 112 | `bank_statement_lines` | `matched_journal_line_id` | `journal_lines` | one-to-one (optional) | no | RESTRICT |
-| 113 | `bank_statement_lines` | `paired_line_id` | `bank_statement_lines` | one-to-many (optional) | no | RESTRICT |
-| 114 | `bank_statement_lines` | `bank_reconciliation_id` | `bank_reconciliations` | one-to-many (optional) | no | RESTRICT |
-| 115 | `bank_statement_lines` | `matched_by` | `users` | one-to-many (optional) | no | RESTRICT |
-| 116 | `quotations` | `branch_id` | `branches` | one-to-many | yes | RESTRICT |
-| 117 | `quotations` | `party_id` | `parties` | one-to-many | yes | RESTRICT |
-| 118 | `quotations` | `warehouse_id` | `warehouses` | one-to-many (optional) | no | RESTRICT |
-| 119 | `quotations` | `payment_term_id` | `payment_terms` | one-to-many (optional) | no | RESTRICT |
-| 120 | `quotation_lines` | `quotation_id` | `quotations` | one-to-many | yes | CASCADE |
-| 121 | `quotation_lines` | `product_id` | `products` | one-to-many | yes | RESTRICT |
-| 122 | `quotation_lines` | `unit_id` | `units` | one-to-many (optional) | no | RESTRICT |
-| 123 | `quotation_lines` | `tax_rule_id` | `tax_rules` | one-to-many (optional) | no | RESTRICT |
-| 124 | `sales_invoices` | `branch_id` | `branches` | one-to-many | yes | RESTRICT |
-| 125 | `sales_invoices` | `party_id` | `parties` | one-to-many | yes | RESTRICT |
-| 126 | `sales_invoices` | `payment_term_id` | `payment_terms` | one-to-many (optional) | no | RESTRICT |
-| 127 | `sales_invoices` | `warehouse_id` | `warehouses` | one-to-many | yes | RESTRICT |
-| 128 | `sales_invoices` | `quotation_id` | `quotations` | one-to-many (optional) | no | RESTRICT |
-| 129 | `sales_invoices` | `journal_entry_id` | `journal_entries` | one-to-one (optional) | no | RESTRICT |
-| 130 | `sales_invoices` | `cancellation_entry_id` | `journal_entries` | one-to-one (optional) | no | RESTRICT |
-| 131 | `sales_invoices` | `cancelled_by` | `users` | one-to-many (optional) | no | RESTRICT |
-| 132 | `sales_invoices` | `posted_by` | `users` | one-to-many (optional) | no | RESTRICT |
-| 133 | `sales_invoice_lines` | `sales_invoice_id` | `sales_invoices` | one-to-many | yes | CASCADE |
-| 134 | `sales_invoice_lines` | `product_id` | `products` | one-to-many | yes | RESTRICT |
-| 135 | `sales_invoice_lines` | `unit_id` | `units` | one-to-many (optional) | no | RESTRICT |
-| 136 | `sales_invoice_lines` | `tax_rule_id` | `tax_rules` | one-to-many (optional) | no | RESTRICT |
-| 137 | `sales_invoice_lines` | `income_ledger_id` | `ledgers` | one-to-many | yes | RESTRICT |
-| 138 | `sales_returns` | `branch_id` | `branches` | one-to-many | yes | RESTRICT |
-| 139 | `sales_returns` | `party_id` | `parties` | one-to-many | yes | RESTRICT |
-| 140 | `sales_returns` | `sales_invoice_id` | `sales_invoices` | one-to-many | yes | RESTRICT |
-| 141 | `sales_returns` | `warehouse_id` | `warehouses` | one-to-many | yes | RESTRICT |
-| 142 | `sales_returns` | `journal_entry_id` | `journal_entries` | one-to-one (optional) | no | RESTRICT |
-| 143 | `sales_return_lines` | `sales_return_id` | `sales_returns` | one-to-many | yes | CASCADE |
-| 144 | `sales_return_lines` | `sales_invoice_line_id` | `sales_invoice_lines` | one-to-many | yes | RESTRICT |
-| 145 | `sales_return_lines` | `product_id` | `products` | one-to-many | yes | RESTRICT |
-| 146 | `credit_notes` | `branch_id` | `branches` | one-to-many | yes | RESTRICT |
-| 147 | `credit_notes` | `party_id` | `parties` | one-to-many | yes | RESTRICT |
-| 148 | `credit_notes` | `sales_return_id` | `sales_returns` | one-to-one (optional) | no | RESTRICT |
-| 149 | `credit_notes` | `sales_invoice_id` | `sales_invoices` | one-to-many (optional) | no | RESTRICT |
-| 150 | `credit_notes` | `journal_entry_id` | `journal_entries` | one-to-one (optional) | no | RESTRICT |
-| 151 | `purchase_orders` | `branch_id` | `branches` | one-to-many | yes | RESTRICT |
-| 152 | `purchase_orders` | `party_id` | `parties` | one-to-many | yes | RESTRICT |
-| 153 | `purchase_orders` | `warehouse_id` | `warehouses` | one-to-many | yes | RESTRICT |
-| 154 | `purchase_orders` | `payment_term_id` | `payment_terms` | one-to-many (optional) | no | RESTRICT |
-| 155 | `purchase_orders` | `currency_code` | `currencies` | one-to-many | yes | RESTRICT |
-| 156 | `purchase_order_lines` | `purchase_order_id` | `purchase_orders` | one-to-many | yes | CASCADE |
-| 157 | `purchase_order_lines` | `product_id` | `products` | one-to-many | yes | RESTRICT |
-| 158 | `purchase_order_lines` | `unit_id` | `units` | one-to-many (optional) | no | RESTRICT |
-| 159 | `purchase_order_lines` | `tax_rule_id` | `tax_rules` | one-to-many (optional) | no | RESTRICT |
-| 160 | `letters_of_credit` | `branch_id` | `branches` | one-to-many | yes | RESTRICT |
-| 161 | `letters_of_credit` | `party_id` | `parties` | one-to-many | yes | RESTRICT |
-| 162 | `letters_of_credit` | `purchase_order_id` | `purchase_orders` | one-to-many (optional) | no | RESTRICT |
-| 163 | `letters_of_credit` | `currency_code` | `currencies` | one-to-many | yes | RESTRICT |
-| 164 | `letters_of_credit` | `issuing_bank_account_id` | `money_accounts` | one-to-many (optional) | no | RESTRICT |
-| 165 | `letters_of_credit` | `margin_account_id` | `money_accounts` | one-to-many (optional) | no | RESTRICT |
-| 166 | `letters_of_credit` | `closed_by` | `users` | one-to-many (optional) | no | RESTRICT |
-| 167 | `lc_shipments` | `letter_of_credit_id` | `letters_of_credit` | one-to-many | yes | CASCADE |
-| 168 | `purchase_bills` | `branch_id` | `branches` | one-to-many | yes | RESTRICT |
-| 169 | `purchase_bills` | `party_id` | `parties` | one-to-many | yes | RESTRICT |
-| 170 | `purchase_bills` | `payment_term_id` | `payment_terms` | one-to-many (optional) | no | RESTRICT |
-| 171 | `purchase_bills` | `warehouse_id` | `warehouses` | one-to-many | yes | RESTRICT |
-| 172 | `purchase_bills` | `purchase_order_id` | `purchase_orders` | one-to-many (optional) | no | RESTRICT |
-| 173 | `purchase_bills` | `letter_of_credit_id` | `letters_of_credit` | one-to-many (optional) | no | RESTRICT |
-| 174 | `purchase_bills` | `lc_shipment_id` | `lc_shipments` | one-to-many (optional) | no | RESTRICT |
-| 175 | `purchase_bills` | `currency_code` | `currencies` | one-to-many | yes | RESTRICT |
-| 176 | `purchase_bills` | `received_by_user_id` | `users` | one-to-many (optional) | no | RESTRICT |
-| 177 | `purchase_bills` | `journal_entry_id` | `journal_entries` | one-to-one (optional) | no | RESTRICT |
-| 178 | `purchase_bills` | `cancellation_entry_id` | `journal_entries` | one-to-one (optional) | no | RESTRICT |
-| 179 | `purchase_bills` | `cancelled_by` | `users` | one-to-many (optional) | no | RESTRICT |
-| 180 | `purchase_bills` | `posted_by` | `users` | one-to-many (optional) | no | RESTRICT |
-| 181 | `purchase_bill_lines` | `purchase_bill_id` | `purchase_bills` | one-to-many | yes | CASCADE |
-| 182 | `purchase_bill_lines` | `product_id` | `products` | one-to-many | yes | RESTRICT |
-| 183 | `purchase_bill_lines` | `unit_id` | `units` | one-to-many (optional) | no | RESTRICT |
-| 184 | `purchase_bill_lines` | `tax_rule_id` | `tax_rules` | one-to-many (optional) | no | RESTRICT |
-| 185 | `purchase_bill_lines` | `debit_ledger_id` | `ledgers` | one-to-many | yes | RESTRICT |
-| 186 | `purchase_bill_lines` | `purchase_order_line_id` | `purchase_order_lines` | one-to-many (optional) | no | RESTRICT |
-| 187 | `purchase_returns` | `branch_id` | `branches` | one-to-many | yes | RESTRICT |
-| 188 | `purchase_returns` | `party_id` | `parties` | one-to-many | yes | RESTRICT |
-| 189 | `purchase_returns` | `purchase_bill_id` | `purchase_bills` | one-to-many | yes | RESTRICT |
-| 190 | `purchase_returns` | `warehouse_id` | `warehouses` | one-to-many | yes | RESTRICT |
-| 191 | `purchase_returns` | `journal_entry_id` | `journal_entries` | one-to-one (optional) | no | RESTRICT |
-| 192 | `purchase_return_lines` | `purchase_return_id` | `purchase_returns` | one-to-many | yes | CASCADE |
-| 193 | `purchase_return_lines` | `purchase_bill_line_id` | `purchase_bill_lines` | one-to-many | yes | RESTRICT |
-| 194 | `purchase_return_lines` | `product_id` | `products` | one-to-many | yes | RESTRICT |
-| 195 | `debit_notes` | `branch_id` | `branches` | one-to-many | yes | RESTRICT |
-| 196 | `debit_notes` | `party_id` | `parties` | one-to-many | yes | RESTRICT |
-| 197 | `debit_notes` | `purchase_return_id` | `purchase_returns` | one-to-one (optional) | no | RESTRICT |
-| 198 | `debit_notes` | `purchase_bill_id` | `purchase_bills` | one-to-many (optional) | no | RESTRICT |
-| 199 | `debit_notes` | `journal_entry_id` | `journal_entries` | one-to-one (optional) | no | RESTRICT |
-| 200 | `lc_document_template_items` | `lc_document_template_id` | `lc_document_templates` | one-to-many | yes | CASCADE |
-| 201 | `lc_documents` | `letter_of_credit_id` | `letters_of_credit` | one-to-many | yes | CASCADE |
-| 202 | `lc_documents` | `lc_shipment_id` | `lc_shipments` | one-to-many (optional) | no | SET NULL |
-| 203 | `lc_amendments` | `letter_of_credit_id` | `letters_of_credit` | one-to-many | yes | CASCADE |
-| 204 | `lc_amendment_changes` | `lc_amendment_id` | `lc_amendments` | one-to-many | yes | CASCADE |
-| 205 | `lc_amendment_lines` | `lc_amendment_id` | `lc_amendments` | one-to-many | yes | CASCADE |
-| 206 | `lc_amendment_lines` | `purchase_order_line_id` | `purchase_order_lines` | one-to-many (optional) | no | SET NULL |
-| 207 | `lc_amendment_lines` | `product_id` | `products` | one-to-many | yes | RESTRICT |
-| 208 | `lc_amendment_lines` | `unit_id` | `units` | one-to-many (optional) | no | RESTRICT |
-| 209 | `landed_cost_allocations` | `letter_of_credit_id` | `letters_of_credit` | one-to-many | yes | RESTRICT |
-| 210 | `landed_cost_allocations` | `purchase_bill_id` | `purchase_bills` | one-to-many | yes | RESTRICT |
-| 211 | `landed_cost_allocations` | `journal_entry_id` | `journal_entries` | one-to-one (optional) | no | RESTRICT |
-| 212 | `landed_cost_allocation_lines` | `landed_cost_allocation_id` | `landed_cost_allocations` | one-to-many | yes | CASCADE |
-| 213 | `landed_cost_allocation_lines` | `purchase_bill_line_id` | `purchase_bill_lines` | one-to-many | yes | RESTRICT |
-| 214 | `landed_cost_allocation_lines` | `product_id` | `products` | one-to-many | yes | RESTRICT |
-| 215 | `landed_cost_allocation_lines` | `warehouse_id` | `warehouses` | one-to-many | yes | RESTRICT |
-| 216 | `lc_charges` | `letter_of_credit_id` | `letters_of_credit` | one-to-many | yes | RESTRICT |
-| 217 | `lc_charges` | `lc_amendment_id` | `lc_amendments` | one-to-many (optional) | no | RESTRICT |
-| 218 | `lc_charges` | `lc_shipment_id` | `lc_shipments` | one-to-many (optional) | no | RESTRICT |
-| 219 | `lc_charges` | `payee_party_id` | `parties` | one-to-many (optional) | no | RESTRICT |
-| 220 | `lc_charges` | `paid_from_account_id` | `money_accounts` | one-to-many (optional) | no | RESTRICT |
-| 221 | `lc_charges` | `journal_entry_id` | `journal_entries` | one-to-one (optional) | no | RESTRICT |
-| 222 | `lc_charges` | `landed_cost_allocation_id` | `landed_cost_allocations` | one-to-many (optional) | no | SET NULL |
-| 223 | `lc_charges` | `tax_rule_id` | `tax_rules` | one-to-many (optional) | no | RESTRICT |
-| 224 | `lc_payments` | `letter_of_credit_id` | `letters_of_credit` | one-to-many | yes | RESTRICT |
-| 225 | `lc_payments` | `lc_shipment_id` | `lc_shipments` | one-to-many (optional) | no | RESTRICT |
-| 226 | `lc_payments` | `purchase_bill_id` | `purchase_bills` | one-to-many (optional) | no | RESTRICT |
-| 227 | `lc_payments` | `money_account_id` | `money_accounts` | one-to-many | yes | RESTRICT |
-| 228 | `lc_payments` | `journal_entry_id` | `journal_entries` | one-to-one (optional) | no | RESTRICT |
-| 229 | `bank_facilities` | `money_account_id` | `money_accounts` | one-to-many | yes | RESTRICT |
-| 230 | `lc_loans` | `letter_of_credit_id` | `letters_of_credit` | one-to-many | yes | RESTRICT |
-| 231 | `lc_loans` | `lc_payment_id` | `lc_payments` | one-to-one | yes | RESTRICT |
-| 232 | `lc_loans` | `money_account_id` | `money_accounts` | one-to-many | yes | RESTRICT |
-| 233 | `lc_loan_repayments` | `lc_loan_id` | `lc_loans` | one-to-many | yes | RESTRICT |
-| 234 | `lc_loan_repayments` | `money_account_id` | `money_accounts` | one-to-many | yes | RESTRICT |
-| 235 | `lc_loan_repayments` | `journal_entry_id` | `journal_entries` | one-to-one (optional) | no | RESTRICT |
-| 236 | `lc_loan_accruals` | `lc_loan_id` | `lc_loans` | one-to-many | yes | RESTRICT |
-| 237 | `lc_loan_accruals` | `journal_entry_id` | `journal_entries` | one-to-one (optional) | no | RESTRICT |
-| 238 | `fx_revaluations` | `journal_entry_id` | `journal_entries` | one-to-one (optional) | no | RESTRICT |
-| 239 | `fx_revaluations` | `reversal_entry_id` | `journal_entries` | one-to-one (optional) | no | RESTRICT |
-| 240 | `fx_revaluation_lines` | `fx_revaluation_id` | `fx_revaluations` | one-to-many | yes | CASCADE |
-| 241 | `fx_revaluation_lines` | `purchase_bill_id` | `purchase_bills` | one-to-many (optional) | no | RESTRICT |
-| 242 | `fx_revaluation_lines` | `letter_of_credit_id` | `letters_of_credit` | one-to-many (optional) | no | RESTRICT |
-| 243 | `fx_revaluation_lines` | `party_id` | `parties` | one-to-many (optional) | no | RESTRICT |
-| 244 | `fx_revaluation_lines` | `currency_code` | `currencies` | one-to-many | yes | RESTRICT |
+| 42 | `payment_reminders` | `party_id` | `parties` | one-to-many | yes | CASCADE |
+| 43 | `payment_reminders` | `sent_by` | `users` | one-to-many (optional) | no | SET NULL |
+| 44 | `party_bank_accounts` | `party_id` | `parties` | one-to-many | yes | CASCADE |
+| 45 | `stock_groups` | `parent_id` | `stock_groups` | one-to-many (optional) | no | RESTRICT |
+| 46 | `product_categories` | `parent_id` | `product_categories` | one-to-many (optional) | no | RESTRICT |
+| 47 | `product_categories` | `default_unit_id` | `units` | one-to-many (optional) | no | SET NULL |
+| 48 | `product_categories` | `default_stock_group_id` | `stock_groups` | one-to-many (optional) | no | SET NULL |
+| 49 | `warehouses` | `branch_id` | `branches` | one-to-many | yes | RESTRICT |
+| 50 | `warehouses` | `manager_user_id` | `users` | one-to-many (optional) | no | RESTRICT |
+| 51 | `warehouses` | `inventory_ledger_id` | `ledgers` | one-to-many | yes | RESTRICT |
+| 52 | `products` | `category_id` | `product_categories` | one-to-many (optional) | no | SET NULL |
+| 53 | `products` | `stock_group_id` | `stock_groups` | one-to-many (optional) | no | SET NULL |
+| 54 | `products` | `unit_id` | `units` | one-to-many | yes | RESTRICT |
+| 55 | `products` | `tax_rule_id` | `tax_rules` | one-to-many (optional) | no | SET NULL |
+| 56 | `products` | `income_ledger_id` | `ledgers` | one-to-many | yes | RESTRICT |
+| 57 | `products` | `expense_ledger_id` | `ledgers` | one-to-many (optional) | no | RESTRICT |
+| 58 | `products` | `preferred_supplier_id` | `parties` | one-to-many (optional) | no | SET NULL |
+| 59 | `product_units` | `product_id` | `products` | one-to-many | yes | CASCADE |
+| 60 | `product_units` | `unit_id` | `units` | one-to-many | yes | RESTRICT |
+| 61 | `product_warehouse_settings` | `product_id` | `products` | one-to-many | yes | CASCADE |
+| 62 | `product_warehouse_settings` | `warehouse_id` | `warehouses` | one-to-many | yes | CASCADE |
+| 63 | `stock_balances` | `product_id` | `products` | one-to-many | yes | RESTRICT |
+| 64 | `stock_balances` | `warehouse_id` | `warehouses` | one-to-many | yes | RESTRICT |
+| 65 | `stock_movements` | `product_id` | `products` | one-to-many | yes | RESTRICT |
+| 66 | `stock_movements` | `warehouse_id` | `warehouses` | one-to-many | yes | RESTRICT |
+| 67 | `stock_movements` | `journal_entry_id` | `journal_entries` | one-to-many (optional) | no | RESTRICT |
+| 68 | `stock_movements` | `reverses_movement_id` | `stock_movements` | one-to-many (optional) | no | RESTRICT |
+| 69 | `stock_adjustments` | `warehouse_id` | `warehouses` | one-to-many | yes | RESTRICT |
+| 70 | `stock_adjustments` | `journal_entry_id` | `journal_entries` | one-to-one (optional) | no | RESTRICT |
+| 71 | `stock_adjustments` | `posted_by` | `users` | one-to-many (optional) | no | RESTRICT |
+| 72 | `stock_adjustment_lines` | `stock_adjustment_id` | `stock_adjustments` | one-to-many | yes | CASCADE |
+| 73 | `stock_adjustment_lines` | `product_id` | `products` | one-to-many | yes | RESTRICT |
+| 74 | `stock_transfers` | `from_warehouse_id` | `warehouses` | one-to-many | yes | RESTRICT |
+| 75 | `stock_transfers` | `to_warehouse_id` | `warehouses` | one-to-many | yes | RESTRICT |
+| 76 | `stock_transfers` | `dispatch_entry_id` | `journal_entries` | one-to-one (optional) | no | RESTRICT |
+| 77 | `stock_transfers` | `receive_entry_id` | `journal_entries` | one-to-one (optional) | no | RESTRICT |
+| 78 | `stock_transfer_lines` | `stock_transfer_id` | `stock_transfers` | one-to-many | yes | CASCADE |
+| 79 | `stock_transfer_lines` | `product_id` | `products` | one-to-many | yes | RESTRICT |
+| 80 | `journal_entries` | `branch_id` | `branches` | one-to-many (optional) | no | RESTRICT |
+| 81 | `journal_entries` | `fiscal_year_id` | `fiscal_years` | one-to-many | yes | RESTRICT |
+| 82 | `journal_entries` | `accounting_period_id` | `accounting_periods` | one-to-many | yes | RESTRICT |
+| 83 | `journal_entries` | `reverses_entry_id` | `journal_entries` | one-to-one (optional) | no | RESTRICT |
+| 84 | `journal_entries` | `submitted_by` | `users` | one-to-many (optional) | no | RESTRICT |
+| 85 | `journal_entries` | `approved_by` | `users` | one-to-many (optional) | no | RESTRICT |
+| 86 | `journal_entries` | `posted_by` | `users` | one-to-many (optional) | no | RESTRICT |
+| 87 | `journal_lines` | `journal_entry_id` | `journal_entries` | one-to-many | yes | CASCADE |
+| 88 | `journal_lines` | `ledger_id` | `ledgers` | one-to-many | yes | RESTRICT |
+| 89 | `journal_lines` | `tax_rule_id` | `tax_rules` | one-to-many (optional) | no | RESTRICT |
+| 90 | `journal_lines` | `foreign_currency_code` | `currencies` | one-to-many (optional) | no | RESTRICT |
+| 91 | `journal_lines` | `warehouse_id` | `warehouses` | one-to-many (optional) | no | RESTRICT |
+| 92 | `journal_lines` | `letter_of_credit_id` | `letters_of_credit` | one-to-many (optional) | no | RESTRICT |
+| 93 | `bill_allocations` | `journal_line_id` | `journal_lines` | one-to-many | yes | RESTRICT |
+| 94 | `bill_allocations` | `sales_invoice_id` | `sales_invoices` | one-to-many (optional) | no | RESTRICT |
+| 95 | `bill_allocations` | `purchase_bill_id` | `purchase_bills` | one-to-many (optional) | no | RESTRICT |
+| 96 | `money_accounts` | `ledger_id` | `ledgers` | one-to-one | yes | RESTRICT |
+| 97 | `money_accounts` | `currency_code` | `currencies` | one-to-many | yes | RESTRICT |
+| 98 | `money_accounts` | `custodian_user_id` | `users` | one-to-many (optional) | no | RESTRICT |
+| 99 | `payment_details` | `journal_entry_id` | `journal_entries` | one-to-one | yes | CASCADE |
+| 100 | `payment_details` | `party_id` | `parties` | one-to-many (optional) | no | RESTRICT |
+| 101 | `payment_details` | `money_account_id` | `money_accounts` | one-to-many | yes | RESTRICT |
+| 102 | `payment_details` | `counter_money_account_id` | `money_accounts` | one-to-many (optional) | no | RESTRICT |
+| 103 | `ie_categories` | `ledger_id` | `ledgers` | one-to-one | yes | RESTRICT |
+| 104 | `recurring_templates` | `last_entry_id` | `journal_entries` | one-to-many (optional) | no | SET NULL |
+| 105 | `cash_counts` | `money_account_id` | `money_accounts` | one-to-many | yes | RESTRICT |
+| 106 | `cash_counts` | `counted_by` | `users` | one-to-many | yes | RESTRICT |
+| 107 | `cash_counts` | `adjustment_entry_id` | `journal_entries` | one-to-one (optional) | no | RESTRICT |
+| 108 | `cash_count_denominations` | `cash_count_id` | `cash_counts` | one-to-many | yes | CASCADE |
+| 109 | `bank_reconciliations` | `money_account_id` | `money_accounts` | one-to-many | yes | RESTRICT |
+| 110 | `bank_reconciliations` | `finished_by` | `users` | one-to-many (optional) | no | RESTRICT |
+| 111 | `bank_statement_imports` | `money_account_id` | `money_accounts` | one-to-many | yes | RESTRICT |
+| 112 | `bank_statement_lines` | `bank_statement_import_id` | `bank_statement_imports` | one-to-many | yes | CASCADE |
+| 113 | `bank_statement_lines` | `money_account_id` | `money_accounts` | one-to-many | yes | RESTRICT |
+| 114 | `bank_statement_lines` | `matched_journal_line_id` | `journal_lines` | one-to-one (optional) | no | RESTRICT |
+| 115 | `bank_statement_lines` | `paired_line_id` | `bank_statement_lines` | one-to-many (optional) | no | RESTRICT |
+| 116 | `bank_statement_lines` | `bank_reconciliation_id` | `bank_reconciliations` | one-to-many (optional) | no | RESTRICT |
+| 117 | `bank_statement_lines` | `matched_by` | `users` | one-to-many (optional) | no | RESTRICT |
+| 118 | `quotations` | `branch_id` | `branches` | one-to-many | yes | RESTRICT |
+| 119 | `quotations` | `party_id` | `parties` | one-to-many | yes | RESTRICT |
+| 120 | `quotations` | `warehouse_id` | `warehouses` | one-to-many (optional) | no | RESTRICT |
+| 121 | `quotations` | `payment_term_id` | `payment_terms` | one-to-many (optional) | no | RESTRICT |
+| 122 | `quotation_lines` | `quotation_id` | `quotations` | one-to-many | yes | CASCADE |
+| 123 | `quotation_lines` | `product_id` | `products` | one-to-many | yes | RESTRICT |
+| 124 | `quotation_lines` | `unit_id` | `units` | one-to-many (optional) | no | RESTRICT |
+| 125 | `quotation_lines` | `tax_rule_id` | `tax_rules` | one-to-many (optional) | no | RESTRICT |
+| 126 | `sales_invoices` | `branch_id` | `branches` | one-to-many | yes | RESTRICT |
+| 127 | `sales_invoices` | `party_id` | `parties` | one-to-many | yes | RESTRICT |
+| 128 | `sales_invoices` | `payment_term_id` | `payment_terms` | one-to-many (optional) | no | RESTRICT |
+| 129 | `sales_invoices` | `warehouse_id` | `warehouses` | one-to-many | yes | RESTRICT |
+| 130 | `sales_invoices` | `quotation_id` | `quotations` | one-to-many (optional) | no | RESTRICT |
+| 131 | `sales_invoices` | `journal_entry_id` | `journal_entries` | one-to-one (optional) | no | RESTRICT |
+| 132 | `sales_invoices` | `cancellation_entry_id` | `journal_entries` | one-to-one (optional) | no | RESTRICT |
+| 133 | `sales_invoices` | `cancelled_by` | `users` | one-to-many (optional) | no | RESTRICT |
+| 134 | `sales_invoices` | `posted_by` | `users` | one-to-many (optional) | no | RESTRICT |
+| 135 | `sales_invoice_lines` | `sales_invoice_id` | `sales_invoices` | one-to-many | yes | CASCADE |
+| 136 | `sales_invoice_lines` | `product_id` | `products` | one-to-many | yes | RESTRICT |
+| 137 | `sales_invoice_lines` | `unit_id` | `units` | one-to-many (optional) | no | RESTRICT |
+| 138 | `sales_invoice_lines` | `tax_rule_id` | `tax_rules` | one-to-many (optional) | no | RESTRICT |
+| 139 | `sales_invoice_lines` | `income_ledger_id` | `ledgers` | one-to-many | yes | RESTRICT |
+| 140 | `sales_returns` | `branch_id` | `branches` | one-to-many | yes | RESTRICT |
+| 141 | `sales_returns` | `party_id` | `parties` | one-to-many | yes | RESTRICT |
+| 142 | `sales_returns` | `sales_invoice_id` | `sales_invoices` | one-to-many | yes | RESTRICT |
+| 143 | `sales_returns` | `warehouse_id` | `warehouses` | one-to-many | yes | RESTRICT |
+| 144 | `sales_returns` | `journal_entry_id` | `journal_entries` | one-to-one (optional) | no | RESTRICT |
+| 145 | `sales_return_lines` | `sales_return_id` | `sales_returns` | one-to-many | yes | CASCADE |
+| 146 | `sales_return_lines` | `sales_invoice_line_id` | `sales_invoice_lines` | one-to-many | yes | RESTRICT |
+| 147 | `sales_return_lines` | `product_id` | `products` | one-to-many | yes | RESTRICT |
+| 148 | `credit_notes` | `branch_id` | `branches` | one-to-many | yes | RESTRICT |
+| 149 | `credit_notes` | `party_id` | `parties` | one-to-many | yes | RESTRICT |
+| 150 | `credit_notes` | `sales_return_id` | `sales_returns` | one-to-one (optional) | no | RESTRICT |
+| 151 | `credit_notes` | `sales_invoice_id` | `sales_invoices` | one-to-many (optional) | no | RESTRICT |
+| 152 | `credit_notes` | `journal_entry_id` | `journal_entries` | one-to-one (optional) | no | RESTRICT |
+| 153 | `purchase_orders` | `branch_id` | `branches` | one-to-many | yes | RESTRICT |
+| 154 | `purchase_orders` | `party_id` | `parties` | one-to-many | yes | RESTRICT |
+| 155 | `purchase_orders` | `warehouse_id` | `warehouses` | one-to-many | yes | RESTRICT |
+| 156 | `purchase_orders` | `payment_term_id` | `payment_terms` | one-to-many (optional) | no | RESTRICT |
+| 157 | `purchase_orders` | `currency_code` | `currencies` | one-to-many | yes | RESTRICT |
+| 158 | `purchase_order_lines` | `purchase_order_id` | `purchase_orders` | one-to-many | yes | CASCADE |
+| 159 | `purchase_order_lines` | `product_id` | `products` | one-to-many | yes | RESTRICT |
+| 160 | `purchase_order_lines` | `unit_id` | `units` | one-to-many (optional) | no | RESTRICT |
+| 161 | `purchase_order_lines` | `tax_rule_id` | `tax_rules` | one-to-many (optional) | no | RESTRICT |
+| 162 | `letters_of_credit` | `branch_id` | `branches` | one-to-many | yes | RESTRICT |
+| 163 | `letters_of_credit` | `party_id` | `parties` | one-to-many | yes | RESTRICT |
+| 164 | `letters_of_credit` | `purchase_order_id` | `purchase_orders` | one-to-many (optional) | no | RESTRICT |
+| 165 | `letters_of_credit` | `currency_code` | `currencies` | one-to-many | yes | RESTRICT |
+| 166 | `letters_of_credit` | `issuing_bank_account_id` | `money_accounts` | one-to-many (optional) | no | RESTRICT |
+| 167 | `letters_of_credit` | `margin_account_id` | `money_accounts` | one-to-many (optional) | no | RESTRICT |
+| 168 | `letters_of_credit` | `closed_by` | `users` | one-to-many (optional) | no | RESTRICT |
+| 169 | `lc_shipments` | `letter_of_credit_id` | `letters_of_credit` | one-to-many | yes | CASCADE |
+| 170 | `purchase_bills` | `branch_id` | `branches` | one-to-many | yes | RESTRICT |
+| 171 | `purchase_bills` | `party_id` | `parties` | one-to-many | yes | RESTRICT |
+| 172 | `purchase_bills` | `payment_term_id` | `payment_terms` | one-to-many (optional) | no | RESTRICT |
+| 173 | `purchase_bills` | `warehouse_id` | `warehouses` | one-to-many | yes | RESTRICT |
+| 174 | `purchase_bills` | `purchase_order_id` | `purchase_orders` | one-to-many (optional) | no | RESTRICT |
+| 175 | `purchase_bills` | `letter_of_credit_id` | `letters_of_credit` | one-to-many (optional) | no | RESTRICT |
+| 176 | `purchase_bills` | `lc_shipment_id` | `lc_shipments` | one-to-many (optional) | no | RESTRICT |
+| 177 | `purchase_bills` | `currency_code` | `currencies` | one-to-many | yes | RESTRICT |
+| 178 | `purchase_bills` | `received_by_user_id` | `users` | one-to-many (optional) | no | RESTRICT |
+| 179 | `purchase_bills` | `journal_entry_id` | `journal_entries` | one-to-one (optional) | no | RESTRICT |
+| 180 | `purchase_bills` | `cancellation_entry_id` | `journal_entries` | one-to-one (optional) | no | RESTRICT |
+| 181 | `purchase_bills` | `cancelled_by` | `users` | one-to-many (optional) | no | RESTRICT |
+| 182 | `purchase_bills` | `posted_by` | `users` | one-to-many (optional) | no | RESTRICT |
+| 183 | `purchase_bill_lines` | `purchase_bill_id` | `purchase_bills` | one-to-many | yes | CASCADE |
+| 184 | `purchase_bill_lines` | `product_id` | `products` | one-to-many | yes | RESTRICT |
+| 185 | `purchase_bill_lines` | `unit_id` | `units` | one-to-many (optional) | no | RESTRICT |
+| 186 | `purchase_bill_lines` | `tax_rule_id` | `tax_rules` | one-to-many (optional) | no | RESTRICT |
+| 187 | `purchase_bill_lines` | `debit_ledger_id` | `ledgers` | one-to-many | yes | RESTRICT |
+| 188 | `purchase_bill_lines` | `purchase_order_line_id` | `purchase_order_lines` | one-to-many (optional) | no | RESTRICT |
+| 189 | `purchase_returns` | `branch_id` | `branches` | one-to-many | yes | RESTRICT |
+| 190 | `purchase_returns` | `party_id` | `parties` | one-to-many | yes | RESTRICT |
+| 191 | `purchase_returns` | `purchase_bill_id` | `purchase_bills` | one-to-many | yes | RESTRICT |
+| 192 | `purchase_returns` | `warehouse_id` | `warehouses` | one-to-many | yes | RESTRICT |
+| 193 | `purchase_returns` | `journal_entry_id` | `journal_entries` | one-to-one (optional) | no | RESTRICT |
+| 194 | `purchase_return_lines` | `purchase_return_id` | `purchase_returns` | one-to-many | yes | CASCADE |
+| 195 | `purchase_return_lines` | `purchase_bill_line_id` | `purchase_bill_lines` | one-to-many | yes | RESTRICT |
+| 196 | `purchase_return_lines` | `product_id` | `products` | one-to-many | yes | RESTRICT |
+| 197 | `debit_notes` | `branch_id` | `branches` | one-to-many | yes | RESTRICT |
+| 198 | `debit_notes` | `party_id` | `parties` | one-to-many | yes | RESTRICT |
+| 199 | `debit_notes` | `purchase_return_id` | `purchase_returns` | one-to-one (optional) | no | RESTRICT |
+| 200 | `debit_notes` | `purchase_bill_id` | `purchase_bills` | one-to-many (optional) | no | RESTRICT |
+| 201 | `debit_notes` | `journal_entry_id` | `journal_entries` | one-to-one (optional) | no | RESTRICT |
+| 202 | `lc_document_template_items` | `lc_document_template_id` | `lc_document_templates` | one-to-many | yes | CASCADE |
+| 203 | `lc_documents` | `letter_of_credit_id` | `letters_of_credit` | one-to-many | yes | CASCADE |
+| 204 | `lc_documents` | `lc_shipment_id` | `lc_shipments` | one-to-many (optional) | no | SET NULL |
+| 205 | `lc_amendments` | `letter_of_credit_id` | `letters_of_credit` | one-to-many | yes | CASCADE |
+| 206 | `lc_amendment_changes` | `lc_amendment_id` | `lc_amendments` | one-to-many | yes | CASCADE |
+| 207 | `lc_amendment_lines` | `lc_amendment_id` | `lc_amendments` | one-to-many | yes | CASCADE |
+| 208 | `lc_amendment_lines` | `purchase_order_line_id` | `purchase_order_lines` | one-to-many (optional) | no | SET NULL |
+| 209 | `lc_amendment_lines` | `product_id` | `products` | one-to-many | yes | RESTRICT |
+| 210 | `lc_amendment_lines` | `unit_id` | `units` | one-to-many (optional) | no | RESTRICT |
+| 211 | `landed_cost_allocations` | `letter_of_credit_id` | `letters_of_credit` | one-to-many | yes | RESTRICT |
+| 212 | `landed_cost_allocations` | `purchase_bill_id` | `purchase_bills` | one-to-many | yes | RESTRICT |
+| 213 | `landed_cost_allocations` | `journal_entry_id` | `journal_entries` | one-to-one (optional) | no | RESTRICT |
+| 214 | `landed_cost_allocation_lines` | `landed_cost_allocation_id` | `landed_cost_allocations` | one-to-many | yes | CASCADE |
+| 215 | `landed_cost_allocation_lines` | `purchase_bill_line_id` | `purchase_bill_lines` | one-to-many | yes | RESTRICT |
+| 216 | `landed_cost_allocation_lines` | `product_id` | `products` | one-to-many | yes | RESTRICT |
+| 217 | `landed_cost_allocation_lines` | `warehouse_id` | `warehouses` | one-to-many | yes | RESTRICT |
+| 218 | `lc_charges` | `letter_of_credit_id` | `letters_of_credit` | one-to-many | yes | RESTRICT |
+| 219 | `lc_charges` | `lc_amendment_id` | `lc_amendments` | one-to-many (optional) | no | RESTRICT |
+| 220 | `lc_charges` | `lc_shipment_id` | `lc_shipments` | one-to-many (optional) | no | RESTRICT |
+| 221 | `lc_charges` | `payee_party_id` | `parties` | one-to-many (optional) | no | RESTRICT |
+| 222 | `lc_charges` | `paid_from_account_id` | `money_accounts` | one-to-many (optional) | no | RESTRICT |
+| 223 | `lc_charges` | `journal_entry_id` | `journal_entries` | one-to-one (optional) | no | RESTRICT |
+| 224 | `lc_charges` | `landed_cost_allocation_id` | `landed_cost_allocations` | one-to-many (optional) | no | SET NULL |
+| 225 | `lc_charges` | `tax_rule_id` | `tax_rules` | one-to-many (optional) | no | RESTRICT |
+| 226 | `lc_payments` | `letter_of_credit_id` | `letters_of_credit` | one-to-many | yes | RESTRICT |
+| 227 | `lc_payments` | `lc_shipment_id` | `lc_shipments` | one-to-many (optional) | no | RESTRICT |
+| 228 | `lc_payments` | `purchase_bill_id` | `purchase_bills` | one-to-many (optional) | no | RESTRICT |
+| 229 | `lc_payments` | `money_account_id` | `money_accounts` | one-to-many | yes | RESTRICT |
+| 230 | `lc_payments` | `journal_entry_id` | `journal_entries` | one-to-one (optional) | no | RESTRICT |
+| 231 | `bank_facilities` | `money_account_id` | `money_accounts` | one-to-many | yes | RESTRICT |
+| 232 | `lc_loans` | `letter_of_credit_id` | `letters_of_credit` | one-to-many | yes | RESTRICT |
+| 233 | `lc_loans` | `lc_payment_id` | `lc_payments` | one-to-one | yes | RESTRICT |
+| 234 | `lc_loans` | `money_account_id` | `money_accounts` | one-to-many | yes | RESTRICT |
+| 235 | `lc_loan_repayments` | `lc_loan_id` | `lc_loans` | one-to-many | yes | RESTRICT |
+| 236 | `lc_loan_repayments` | `money_account_id` | `money_accounts` | one-to-many | yes | RESTRICT |
+| 237 | `lc_loan_repayments` | `journal_entry_id` | `journal_entries` | one-to-one (optional) | no | RESTRICT |
+| 238 | `lc_loan_accruals` | `lc_loan_id` | `lc_loans` | one-to-many | yes | RESTRICT |
+| 239 | `lc_loan_accruals` | `journal_entry_id` | `journal_entries` | one-to-one (optional) | no | RESTRICT |
+| 240 | `fx_revaluations` | `journal_entry_id` | `journal_entries` | one-to-one (optional) | no | RESTRICT |
+| 241 | `fx_revaluations` | `reversal_entry_id` | `journal_entries` | one-to-one (optional) | no | RESTRICT |
+| 242 | `fx_revaluation_lines` | `fx_revaluation_id` | `fx_revaluations` | one-to-many | yes | CASCADE |
+| 243 | `fx_revaluation_lines` | `purchase_bill_id` | `purchase_bills` | one-to-many (optional) | no | RESTRICT |
+| 244 | `fx_revaluation_lines` | `letter_of_credit_id` | `letters_of_credit` | one-to-many (optional) | no | RESTRICT |
+| 245 | `fx_revaluation_lines` | `party_id` | `parties` | one-to-many (optional) | no | RESTRICT |
+| 246 | `fx_revaluation_lines` | `currency_code` | `currencies` | one-to-many | yes | RESTRICT |
 
 **Many-to-many relationships** are only ever implemented through junction tables:
 
@@ -5823,6 +5870,7 @@ For each table, the tables it references (must exist first). Self-references are
 | `export_jobs` | `companies`, `users` | — |
 | `party_groups` | `companies`, `users` | — |
 | `parties` | `companies`, `currencies`, `ledgers`, `party_groups`, `payment_terms`, `users` | — |
+| `payment_reminders` | `companies`, `parties`, `users` | — |
 | `party_bank_accounts` | `companies`, `parties`, `users` | — |
 | `units` | `companies`, `users` | — |
 | `stock_groups` | `companies`, `users` | parent_id |
@@ -5958,66 +6006,67 @@ Computed by topological sort of section 8, so every referenced table is created 
 52. `fx_revaluations`
 53. `party_bank_accounts`
 54. `payment_details`
-55. `products`
-56. `purchase_orders`
-57. `quotations`
-58. `recurring_templates`
-59. `stock_adjustments`
-60. `stock_transfers`
+55. `payment_reminders`
+56. `products`
+57. `purchase_orders`
+58. `quotations`
+59. `recurring_templates`
+60. `stock_adjustments`
+61. `stock_transfers`
 
 **Level 6**
 
-61. `cash_count_denominations`
-62. `letters_of_credit`
-63. `product_units`
-64. `product_warehouse_settings`
-65. `purchase_order_lines`
-66. `quotation_lines`
-67. `sales_invoices`
-68. `stock_adjustment_lines`
-69. `stock_balances`
-70. `stock_movements`
-71. `stock_transfer_lines`
+62. `cash_count_denominations`
+63. `letters_of_credit`
+64. `product_units`
+65. `product_warehouse_settings`
+66. `purchase_order_lines`
+67. `quotation_lines`
+68. `sales_invoices`
+69. `stock_adjustment_lines`
+70. `stock_balances`
+71. `stock_movements`
+72. `stock_transfer_lines`
 
 **Level 7**
 
-72. `journal_lines`
-73. `lc_amendments`
-74. `lc_shipments`
-75. `sales_invoice_lines`
-76. `sales_returns`
+73. `journal_lines`
+74. `lc_amendments`
+75. `lc_shipments`
+76. `sales_invoice_lines`
+77. `sales_returns`
 
 **Level 8**
 
-77. `bank_statement_lines`
-78. `credit_notes`
-79. `lc_amendment_changes`
-80. `lc_amendment_lines`
-81. `lc_documents`
-82. `purchase_bills`
-83. `sales_return_lines`
+78. `bank_statement_lines`
+79. `credit_notes`
+80. `lc_amendment_changes`
+81. `lc_amendment_lines`
+82. `lc_documents`
+83. `purchase_bills`
+84. `sales_return_lines`
 
 **Level 9**
 
-84. `bill_allocations`
-85. `fx_revaluation_lines`
-86. `landed_cost_allocations`
-87. `lc_payments`
-88. `purchase_bill_lines`
-89. `purchase_returns`
+85. `bill_allocations`
+86. `fx_revaluation_lines`
+87. `landed_cost_allocations`
+88. `lc_payments`
+89. `purchase_bill_lines`
+90. `purchase_returns`
 
 **Level 10**
 
-90. `debit_notes`
-91. `landed_cost_allocation_lines`
-92. `lc_charges`
-93. `lc_loans`
-94. `purchase_return_lines`
+91. `debit_notes`
+92. `landed_cost_allocation_lines`
+93. `lc_charges`
+94. `lc_loans`
+95. `purchase_return_lines`
 
 **Level 11**
 
-95. `lc_loan_accruals`
-96. `lc_loan_repayments`
+96. `lc_loan_accruals`
+97. `lc_loan_repayments`
 
 ## 10. Index and uniqueness recommendations
 

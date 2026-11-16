@@ -98,11 +98,11 @@ s("CompanyUpdate", "Editable company fields.", legal_name="str:190", trading_nam
 s("CompanySettings", "All company settings (see company_settings).", valuation_method="enum:weighted_average|fifo!", invoice_rounding="enum:none|nearest_1|nearest_5!", allow_negative_stock="bool!", require_approval="bool!",
   backdate_warning_days="int!", prices_include_tax="bool!", show_tax_no_on_invoice="bool!", default_warehouse_id="id?", default_payment_term_id="id?", symbol_position="enum:before|after!", table_decimals="int!",
   negative_format="enum:parentheses|minus!", number_grouping="enum:lakh|million!", date_format="str!", week_start="enum:saturday|sunday|monday!", print_language="enum:en|bn|both!",
-  invoice="obj!", require_two_factor="bool!", idle_timeout_minutes="int?", backup_enabled="bool", backup_retention_days="int", version="int!")
+  invoice="obj!", require_two_factor="bool!", idle_timeout_minutes="int?", backup_enabled="bool", backup_retention_days="int", reminders_auto="bool!", reminder_days_after_due="int!", version="int!")
 s("CompanySettingsUpdate", "Partial update; same fields as CompanySettings except version.", valuation_method="enum:weighted_average|fifo", invoice_rounding="enum:none|nearest_1|nearest_5", allow_negative_stock="bool",
   require_approval="bool", backdate_warning_days="int", prices_include_tax="bool", show_tax_no_on_invoice="bool", default_warehouse_id="id?", default_payment_term_id="id?", symbol_position="enum:before|after",
   table_decimals="int", negative_format="enum:parentheses|minus", number_grouping="enum:lakh|million", date_format="str:20", week_start="enum:saturday|sunday|monday", print_language="enum:en|bn|both",
-  invoice="obj", require_two_factor="bool", idle_timeout_minutes="int?", backup_enabled="bool", backup_retention_days="int")
+  invoice="obj", require_two_factor="bool", idle_timeout_minutes="int?", backup_enabled="bool", backup_retention_days="int", reminders_auto="bool", reminder_days_after_due="int")
 s("Branch", "Location.", id="id!", code="str!", name="str!", kind="str?", address="str?", phone="str?", is_head_office="bool!", is_active="bool!", version="int!")
 s("BranchInput", "Create or edit a location.", code="str:20!", name="str:120!", kind="str:120?", address="str:255?", phone="str:30?", is_head_office="bool", is_active="bool")
 s("PaymentTerm", "Payment terms.", id="id!", name="str!", days="int!", is_default="bool!")
@@ -164,6 +164,7 @@ s("LedgerStatement", "Ledger/book lines with running balance.", ledger="obj!", p
 s("LedgerLine", "One ledger line.", date="date!", voucher_id="id!", voucher_number="str!", entry_type="str!", particulars="str!", narration="str?", debit="money!", credit="money!", balance="money!", balance_side="enum:dr|cr!")
 s("OutstandingReport", "Aging across parties.", as_of="date!", buckets="[ref:AgingBucket]!", rows="[obj]!", totals="obj!")
 s("AgingBucket", "Aging bucket.", key="enum:not_due|d1_30|d31_60|d61_90|d90_plus|total!", amount="money!", count="int!")
+s("PaymentReminder", "A payment reminder e-mailed to a customer (PEP-516). trigger: manual (sent_by) or auto (the daily job).", id="id!", sent_at="datetime!", trigger="enum:manual|auto!", email="str!", invoices_count="int!", overdue_amount="money!", sent_by="ref:UserRef?")
 s("PartyStatement", "Statement of account.", statement_no="str!", party="ref:PartyRef!", period="obj!", summary="obj!", lines="[ref:LedgerLine]!", aging="[ref:AgingBucket]?", footer="str?")
 s("StatementSendRequest", "Send statements.", party_ids="[id]!", date_from="date!", date_to="date!", include_aging="bool")
 

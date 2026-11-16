@@ -45,6 +45,8 @@ class CompanySettingsResource extends JsonResource
                 'footer_note' => $this->invoice_footer_note,
             ],
             'require_two_factor' => (bool) $this->require_two_factor,
+            'reminders_auto' => (bool) $this->reminders_auto, // PEP-516
+            'reminder_days_after_due' => (int) ($this->reminder_days_after_due ?? 7),
             'version' => (int) $this->lock_version,
         ];
         if ($this->withAdminFields) {
