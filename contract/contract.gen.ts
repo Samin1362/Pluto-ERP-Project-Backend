@@ -588,6 +588,16 @@ export interface CompanyUpdate {
   brand_color?: string | null
 }
 
+/** How much a customer company uses Pluto (PEP-512): the latest sign-in of its own people, how many of them did something in the last 30 days, this month's sales invoices, purchase bills and vouchers (Dhaka month), and quiet = nothing recorded for 7 days or more. */
+export interface CompanyUsage {
+  last_sign_in_at?: string | null
+  active_people_30d: number
+  invoices_this_month: number
+  bills_this_month: number
+  vouchers_this_month: number
+  quiet: boolean
+}
+
 /** Parsed count sheet. */
 export interface CountSheetPreview {
   lines: Array<Record<string, unknown>>
@@ -1912,6 +1922,7 @@ export interface PlatformCompany {
   users_used?: number
   branches_used?: number
   billing?: CompanyBilling
+  usage?: CompanyUsage
 }
 
 /** A new customer company, the person who will own it and the Pluto plan it bought (PEP-499: required, so nobody gets Import Pro by accident). */

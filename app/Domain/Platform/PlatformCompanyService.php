@@ -114,6 +114,7 @@ final class PlatformCompanyService
         $activity = DB::table('audit_logs')->whereIn('company_id', $ids)->groupBy('company_id')->selectRaw('company_id, MAX(created_at) at')->pluck('at', 'company_id');
 
         $out = [];
+        $usage = self::usage($ids, $activity->all());
         $branches = DB::table('branches')->whereIn('company_id', $ids)->where('is_active', true)->groupBy('company_id')->selectRaw('company_id, COUNT(*) n')->pluck('n', 'company_id');
         $plans = Plan::all()->keyBy('id');
         $default = $plans->firstWhere('slug', Plans::DEFAULT_SLUG);
@@ -129,7 +130,45 @@ final class PlatformCompanyService
                 'plan' => ($pl = $plans[$c->plan_id] ?? $default) ? ['id' => $pl->id, 'slug' => $pl->slug, 'name' => $pl->name] : null,
                 'plan_overrides' => self::overridesOut(Plans::overrides($c->plan_overrides)), 'effective' => Plans::effective((int) $c->id),
                 'users_used' => CompanyService::seatsUsed((int) $c->id), 'branches_used' => (int) ($branches[$c->id] ?? 0),
-                'billing' => SubscriptionService::billing($c)]; // PEP-503
+                'billing' => SubscriptionService::billing($c), // PEP-503
+                'usage' => $usage[$c->id]]; // PEP-512
+        }
+
+        return $out;
+    }
+
+    /** Days without any recorded activity after which a company counts as quiet (PEP-512). */
+    public const QUIET_DAYS = 7;
+
+    private const VOUCHER_TYPES = ['journal', 'payment', 'receipt', 'contra', 'expense', 'income'];
+
+    /**
+     * PEP-512 usage per company, for a page of companies in a few grouped queries: the latest sign-in of its own
+     * people (Pluto support excluded), people who did something in 30 days, this month's (Dhaka) invoices, bills and
+     * vouchers, and quiet = no recorded activity for QUIET_DAYS.
+     *
+     * @param  list<int>  $ids
+     * @param  array<int, ?string>  $lastActivity  company id => latest audit_logs.created_at (UTC)
+     * @return array<int, array{last_sign_in_at: ?string, active_people_30d: int, invoices_this_month: int, bills_this_month: int, vouchers_this_month: int, quiet: bool}>
+     */
+    private static function usage(array $ids, array $lastActivity): array
+    {
+        $month = CarbonImmutable::now('Asia/Dhaka')->startOfMonth()->utc();
+        $count = fn ($q) => $q->whereIn('company_id', $ids)->where('created_at', '>=', $month)->groupBy('company_id')->selectRaw('company_id, COUNT(*) n')->pluck('n', 'company_id');
+        $signIn = DB::table('company_users as m')->join('users as u', 'u.id', '=', 'm.user_id')->whereIn('m.company_id', $ids)->where('m.joined_via', 'member')
+            ->groupBy('m.company_id')->selectRaw('m.company_id, MAX(u.last_login_at) at')->pluck('at', 'company_id');
+        $active = DB::table('audit_logs')->whereIn('company_id', $ids)->whereNotNull('user_id')->where('created_at', '>=', now()->subDays(30))
+            ->groupBy('company_id')->selectRaw('company_id, COUNT(DISTINCT user_id) n')->pluck('n', 'company_id');
+        $invoices = $count(DB::table('sales_invoices'));
+        $bills = $count(DB::table('purchase_bills'));
+        $vouchers = $count(DB::table('journal_entries')->whereIn('entry_type', self::VOUCHER_TYPES));
+        $quietSince = now()->subDays(self::QUIET_DAYS);
+        $out = [];
+        foreach ($ids as $id) {
+            $last = $lastActivity[$id] ?? null;
+            $out[$id] = ['last_sign_in_at' => self::ts($signIn[$id] ?? null), 'active_people_30d' => (int) ($active[$id] ?? 0),
+                'invoices_this_month' => (int) ($invoices[$id] ?? 0), 'bills_this_month' => (int) ($bills[$id] ?? 0), 'vouchers_this_month' => (int) ($vouchers[$id] ?? 0),
+                'quiet' => $last === null || CarbonImmutable::parse($last, 'UTC')->lessThan($quietSince)];
         }
 
         return $out;

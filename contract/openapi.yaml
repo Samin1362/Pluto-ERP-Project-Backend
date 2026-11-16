@@ -3439,7 +3439,7 @@ paths:
       - Platform console
       description: "Platform admins only: the e-mail is in PLUTO_PLATFORM_ADMINS (server setting, never a company role) and this sign-in used 2-step verification;\
         \ otherwise 403 platform_admin_only / platform_two_factor_required. Every change is written to the company's audit log.\n\n**Permission:** any signed-in user\
-        \  \n**Database:** read: audit_logs, companies, company_users, user_invitations, users  \n**Rules:** —"
+        \  \n**Database:** read: audit_logs, companies, company_users, journal_entries, purchase_bills, sales_invoices, user_invitations, users  \n**Rules:** —"
       x-permission: auth
       x-business-rules: []
       x-requirements:
@@ -3458,12 +3458,18 @@ paths:
       - users
       - user_invitations
       - audit_logs
+      - sales_invoices
+      - purchase_bills
+      - journal_entries
       x-db-operations:
         companies: R
         company_users: R
         users: R
         user_invitations: R
         audit_logs: R
+        sales_invoices: R
+        purchase_bills: R
+        journal_entries: R
       x-error-codes:
       - platform_admin_only
       - platform_two_factor_required
@@ -42331,6 +42337,8 @@ components:
           type: integer
         billing:
           $ref: '#/components/schemas/CompanyBilling'
+        usage:
+          $ref: '#/components/schemas/CompanyUsage'
       required:
       - id
       - legal_name
@@ -42338,6 +42346,32 @@ components:
       - created_at
       - owner_pending
       - members
+    CompanyUsage:
+      type: object
+      description: 'How much a customer company uses Pluto (PEP-512): the latest sign-in of its own people, how many of them did something in the last 30 days, this
+        month''s sales invoices, purchase bills and vouchers (Dhaka month), and quiet = nothing recorded for 7 days or more.'
+      properties:
+        last_sign_in_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        active_people_30d:
+          type: integer
+        invoices_this_month:
+          type: integer
+        bills_this_month:
+          type: integer
+        vouchers_this_month:
+          type: integer
+        quiet:
+          type: boolean
+      required:
+      - active_people_30d
+      - invoices_this_month
+      - bills_this_month
+      - vouchers_this_month
+      - quiet
     Announcement:
       type: object
       description: 'A message from the software owner to every company (PEP-513). tone: info, warning or success. Platform console rows also carry is_active and the

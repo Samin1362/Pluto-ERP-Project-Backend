@@ -3,8 +3,8 @@ Last run: 24 rules, **24 passed, 0 failed**; 6 negative tests, 6 detected. Offic
 | Rule | Check | Items | Result |
 |---|---|---|---|
 | A01 | Document validates against the official OpenAPI 3.1 schema (schema-base: documents incl. Schema Objects) | 1 | ✅ pass |
-| A02 | Every component schema is valid JSON Schema 2020-12 (meta-schema check) | 238 | ✅ pass |
-| A03 | All $refs resolve and every component schema is used | 241 | ✅ pass |
+| A02 | Every component schema is valid JSON Schema 2020-12 (meta-schema check) | 239 | ✅ pass |
+| A03 | All $refs resolve and every component schema is used | 242 | ✅ pass |
 | A04 | Operations have unique camelCase operationIds, summary, description, tags, a 2xx, a default, and problem+json errors | 353 | ✅ pass |
 | A05 | Path templates and declared path parameters match; path parameters are required | 353 | ✅ pass |
 | A06 | Security: public only for sign-in flows, cookie only for refresh/logout, X-Company-Id on company-scoped calls, known permissions | 353 | ✅ pass |
@@ -21,11 +21,11 @@ Last run: 24 rules, **24 passed, 0 failed**; 6 negative tests, 6 detected. Offic
 | A17 | Every data-changing endpoint is triggered by at least one page action (only token refresh is system-driven) | 202 | ✅ pass |
 | A18 | Every page has at least one endpoint (shared components use their host page's) | 163 | ✅ pass |
 | A19 | For every action, at least one role can both open the page and call the endpoint | 342 | ✅ pass |
-| A20 | Database operations name real tables; nothing deletes posted or append-only rows; every write changes something | 1475 | ✅ pass |
+| A20 | Database operations name real tables; nothing deletes posted or append-only rows; every write changes something | 1478 | ✅ pass |
 | A21 | Every parameter has a typed schema | 581 | ✅ pass |
 | A22 | Business rules exist; 46 rejecting rules map to error codes | 374 | ✅ pass |
 | A23 | Calculate/preview endpoints never reject on business state; they return warnings[] (BR-015) | 5 | ✅ pass |
-| A24 | Ledger/stock writes are coherent: entries have lines, stock movements update balances, system entries take an SJ number, bulk post = single post | 88 | ✅ pass |
+| A24 | Ledger/stock writes are coherent: entries have lines, stock movements update balances, system entries take an SJ number, bulk post = single post | 89 | ✅ pass |
 
 **Negative tests** (a deliberately broken copy of the document must fail the named rule):
 
