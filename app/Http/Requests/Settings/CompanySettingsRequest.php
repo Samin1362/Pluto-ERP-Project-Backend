@@ -11,7 +11,7 @@ class CompanySettingsRequest extends StrictRequest
 {
     protected function allowedFields(): array
     {
-        return ['valuation_method', 'invoice_rounding', 'allow_negative_stock', 'require_approval', 'backdate_warning_days', 'prices_include_tax', 'show_tax_no_on_invoice', 'default_warehouse_id', 'default_payment_term_id', 'symbol_position', 'table_decimals', 'negative_format', 'number_grouping', 'date_format', 'week_start', 'print_language', 'invoice', 'require_two_factor', 'idle_timeout_minutes', 'backup_enabled', 'backup_retention_days'];
+        return ['valuation_method', 'invoice_rounding', 'allow_negative_stock', 'require_approval', 'backdate_warning_days', 'prices_include_tax', 'show_tax_no_on_invoice', 'default_warehouse_id', 'default_payment_term_id', 'symbol_position', 'table_decimals', 'negative_format', 'number_grouping', 'date_format', 'week_start', 'print_language', 'invoice', 'require_two_factor', 'idle_timeout_minutes', 'backup_enabled', 'backup_retention_days', 'reminders_auto', 'reminder_days_after_due'];
     }
 
     public function rules(): array
@@ -45,6 +45,8 @@ class CompanySettingsRequest extends StrictRequest
             'idle_timeout_minutes' => ['sometimes', 'nullable', 'integer', Rule::in([15, 30, 60, 120, 240])],
             'backup_enabled' => ['sometimes', 'boolean'],
             'backup_retention_days' => ['sometimes', 'integer', 'between:7,365'],
+            'reminders_auto' => ['sometimes', 'boolean'], // PEP-516
+            'reminder_days_after_due' => ['sometimes', 'integer', 'between:1,90'],
         ];
     }
 

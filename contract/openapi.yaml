@@ -12279,6 +12279,229 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/Error'
+  /api/v1/parties/{id}/payment-reminder:
+    post:
+      operationId: postPartiesIdPaymentReminder
+      summary: E-mail a customer a reminder of their overdue invoices, statement attached (PEP-516)
+      tags:
+      - Parties
+      description: "**Permission:** `parties.view`  \n**Database:** lock: parties; insert: audit_logs, idempotency_keys; update: parties; read: payment_reminders,\
+        \ sales_invoices  \n**Rules:** —"
+      x-permission: parties.view
+      x-business-rules: []
+      x-requirements:
+      - FR-024
+      x-pages:
+      - B4
+      x-page-actions:
+      - 'B4: Send payment reminder (NEW, PEP-516)'
+      x-tables:
+      - parties
+      - sales_invoices
+      - payment_reminders
+      - audit_logs
+      x-db-operations:
+        parties: LU
+        sales_invoices: R
+        payment_reminders: R
+        audit_logs: C
+        idempotency_keys: C
+      x-error-codes:
+      - company_maintenance
+      - company_required
+      - idempotency_in_progress
+      - idempotency_key_reused
+      - no_overdue_invoices
+      - not_a_member
+      - not_found
+      - party_has_no_email
+      - permission_denied
+      - reminder_sent_recently
+      - server_error
+      - support_read_only
+      - token_expired
+      - token_invalid
+      - unauthenticated
+      x-contract-change: PEP-516 payment reminders
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+          minimum: 1
+      - $ref: '#/components/parameters/CompanyHeader'
+      - $ref: '#/components/parameters/IdempotencyKey'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                properties:
+                  data:
+                    $ref: '#/components/schemas/PaymentReminder'
+          headers:
+            Location:
+              schema:
+                type: string
+              description: URL of the created resource
+        '400':
+          description: 'Malformed request: `company_required`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: 'Not authenticated: `token_expired`, `token_invalid`, `unauthenticated`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: 'Not found (also for other companies'' records): `not_found`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: 'Conflict (version mismatch, state not allowed, duplicate): `idempotency_in_progress`, `reminder_sent_recently`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: 'Validation or business-rule failure: `idempotency_key_reused`, `no_overdue_invoices`, `party_has_no_email`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: 'Company temporarily unavailable (restore in progress): `company_maintenance`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+              description: Seconds to wait
+        default:
+          description: Unexpected error (`server_error`)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /api/v1/parties/{id}/payment-reminders:
+    get:
+      operationId: getPartiesIdPaymentReminders
+      summary: Reminders sent to this customer, newest first (PEP-516)
+      tags:
+      - Parties
+      description: "**Permission:** `parties.view`  \n**Database:** read: payment_reminders, users  \n**Rules:** —"
+      x-permission: parties.view
+      x-business-rules: []
+      x-requirements:
+      - FR-024
+      x-pages:
+      - B4
+      x-page-actions:
+      - 'B4: Send payment reminder (NEW, PEP-516)'
+      x-tables:
+      - payment_reminders
+      - users
+      x-db-operations:
+        payment_reminders: R
+        users: R
+      x-error-codes:
+      - company_maintenance
+      - company_required
+      - not_a_member
+      - not_found
+      - permission_denied
+      - server_error
+      - token_expired
+      - token_invalid
+      - unauthenticated
+      x-contract-change: PEP-516 payment reminders
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+          minimum: 1
+      - $ref: '#/components/parameters/CompanyHeader'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                - meta
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/PaymentReminder'
+                  meta:
+                    $ref: '#/components/schemas/PageMeta'
+        '400':
+          description: 'Malformed request: `company_required`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: 'Not authenticated: `token_expired`, `token_invalid`, `unauthenticated`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: 'Not found (also for other companies'' records): `not_found`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: 'Company temporarily unavailable (restore in progress): `company_maintenance`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+              description: Seconds to wait
+        default:
+          description: Unexpected error (`server_error`)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
   /api/v1/party-groups:
     get:
       operationId: getPartyGroups
@@ -41395,12 +41618,14 @@ components:
           - margin_exceeds_deposit
           - module_not_in_plan
           - nature_mismatch
+          - no_overdue_invoices
           - not_a_member
           - not_draft
           - not_found
           - note_applied
           - nothing_to_revalue
           - order_qty_exceeded
+          - party_has_no_email
           - period_locked
           - permission_denied
           - plan_in_use
@@ -41410,6 +41635,7 @@ components:
           - rate_limited
           - refresh_reuse_detected
           - refresh_token_invalid
+          - reminder_sent_recently
           - repayment_exceeds_outstanding
           - restore_confirmation_required
           - return_qty_exceeds
@@ -43190,6 +43416,10 @@ components:
           type: boolean
         backup_retention_days:
           type: integer
+        reminders_auto:
+          type: boolean
+        reminder_days_after_due:
+          type: integer
         version:
           type: integer
       required:
@@ -43209,6 +43439,8 @@ components:
       - print_language
       - invoice
       - require_two_factor
+      - reminders_auto
+      - reminder_days_after_due
       - version
     CompanySettingsUpdate:
       type: object
@@ -43291,6 +43523,10 @@ components:
         backup_enabled:
           type: boolean
         backup_retention_days:
+          type: integer
+        reminders_auto:
+          type: boolean
+        reminder_days_after_due:
           type: integer
       additionalProperties: false
     Branch:
@@ -45122,6 +45358,42 @@ components:
       - key
       - amount
       - count
+    PaymentReminder:
+      type: object
+      description: 'A payment reminder e-mailed to a customer (PEP-516). trigger: manual (sent_by) or auto (the daily job).'
+      properties:
+        id:
+          type: integer
+          format: int64
+          minimum: 1
+        sent_at:
+          type: string
+          format: date-time
+        trigger:
+          type: string
+          enum:
+          - manual
+          - auto
+        email:
+          type: string
+        invoices_count:
+          type: integer
+        overdue_amount:
+          type: string
+          pattern: ^-?\d{1,16}(\.\d{1,2})?$
+          example: '118450.00'
+          description: Decimal as string (money)
+        sent_by:
+          oneOf:
+          - $ref: '#/components/schemas/UserRef'
+          - type: 'null'
+      required:
+      - id
+      - sent_at
+      - trigger
+      - email
+      - invoices_count
+      - overdue_amount
     PartyStatement:
       type: object
       description: Statement of account.
@@ -45993,12 +46265,14 @@ components:
           - margin_exceeds_deposit
           - module_not_in_plan
           - nature_mismatch
+          - no_overdue_invoices
           - not_a_member
           - not_draft
           - not_found
           - note_applied
           - nothing_to_revalue
           - order_qty_exceeded
+          - party_has_no_email
           - period_locked
           - permission_denied
           - plan_in_use
@@ -46008,6 +46282,7 @@ components:
           - rate_limited
           - refresh_reuse_detected
           - refresh_token_invalid
+          - reminder_sent_recently
           - repayment_exceeds_outstanding
           - restore_confirmation_required
           - return_qty_exceeds

@@ -1205,6 +1205,8 @@ CREATE TABLE `company_settings` (
   `backup_enabled` tinyint(1) NOT NULL DEFAULT 1,
   `backup_retention_days` smallint unsigned NOT NULL DEFAULT 90,
   `setup_hidden_at` datetime NULL COMMENT 'When an Owner hid the setup checklist on the dashboard (PEP-511); NULL = shown until every step is done',
+  `reminders_auto` tinyint(1) NOT NULL DEFAULT 0 COMMENT 'PEP-516: e-mail customers with overdue invoices automatically (daily job)',
+  `reminder_days_after_due` smallint unsigned NOT NULL DEFAULT 7 COMMENT 'PEP-516: days past the due date before the first automatic reminder',
   `lock_version` int unsigned NOT NULL DEFAULT 1 COMMENT 'Optimistic concurrency counter; incremented on every update (If-Match)',
   `created_by` bigint unsigned NULL COMMENT 'User who created the row',
   `updated_by` bigint unsigned NULL COMMENT 'User who last changed the row',
@@ -3091,3 +3093,26 @@ CREATE TABLE `announcement_dismissals` (
   CONSTRAINT `announcement_dismissals_announcement_id_foreign` FOREIGN KEY (`announcement_id`) REFERENCES `announcements` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT,
   CONSTRAINT `announcement_dismissals_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Who closed which announcement (PEP-513), so it does not come back for them.';
+
+-- 97. payment_reminders (level 5)
+CREATE TABLE `payment_reminders` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT COMMENT 'Primary key, auto-increment',
+  `company_id` bigint unsigned NOT NULL COMMENT 'Tenant owner. Every query is scoped by it.',
+  `party_id` bigint unsigned NOT NULL,
+  `sent_at` datetime NOT NULL,
+  `trigger` varchar(30) NOT NULL COMMENT 'One of: manual, auto',
+  `email` varchar(190) NOT NULL,
+  `invoices_count` smallint unsigned NOT NULL,
+  `overdue_amount` decimal(18,2) NOT NULL,
+  `sent_by` bigint unsigned NULL COMMENT 'NULL = the daily job',
+  `created_at` datetime NULL COMMENT 'Set by Laravel',
+  `updated_at` datetime NULL COMMENT 'Set by Laravel',
+  PRIMARY KEY (`id`),
+  KEY `payment_reminders_company_id_index` (`company_id`),
+  KEY `payment_reminders_party_id_index` (`party_id`),
+  KEY `payment_reminders_sent_by_index` (`sent_by`),
+  CONSTRAINT `payment_reminders_company_id_foreign` FOREIGN KEY (`company_id`) REFERENCES `companies` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  CONSTRAINT `payment_reminders_party_id_foreign` FOREIGN KEY (`party_id`) REFERENCES `parties` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT,
+  CONSTRAINT `payment_reminders_sent_by_foreign` FOREIGN KEY (`sent_by`) REFERENCES `users` (`id`) ON DELETE SET NULL ON UPDATE RESTRICT,
+  CONSTRAINT `payment_reminders_trigger_check` CHECK (`trigger` IN ('manual', 'auto'))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Payment reminders e-mailed to a customer about overdue invoices (PEP-516): by hand or by the daily job; at most one a week per customer.';

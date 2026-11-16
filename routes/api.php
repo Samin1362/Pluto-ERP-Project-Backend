@@ -32,6 +32,7 @@ use App\Http\Controllers\Api\V1\MeController;
 use App\Http\Controllers\Api\V1\Parties\LookupController;
 use App\Http\Controllers\Api\V1\Parties\PartyAccountController;
 use App\Http\Controllers\Api\V1\Parties\PartyController;
+use App\Http\Controllers\Api\V1\Parties\PaymentReminderController;
 use App\Http\Controllers\Api\V1\Platform\DashboardController;
 use App\Http\Controllers\Api\V1\Platform\ExportJobController;
 use App\Http\Controllers\Api\V1\Platform\PlatformLookupController;
@@ -278,6 +279,9 @@ Route::middleware(['jwt', 'throttle:api-user'])->group(function () {
         // Party accounts (P6.1-BE-05). parties/outstanding sits before parties/{id}.
         Route::get('parties/outstanding', [PartyAccountController::class, 'outstanding'])->name('parties.outstanding')->middleware('perm:parties.view');
         Route::post('parties/statements/send', [PartyAccountController::class, 'send'])->middleware(['perm:parties.view', 'idempotent']);
+        // PEP-516: payment reminders to a customer (at most one a week).
+        Route::post('parties/{id}/payment-reminder', [PaymentReminderController::class, 'store'])->whereNumber('id')->middleware(['perm:parties.view', 'idempotent']);
+        Route::get('parties/{id}/payment-reminders', [PaymentReminderController::class, 'index'])->whereNumber('id')->middleware('perm:parties.view');
         Route::get('parties/{id}/ledger', [PartyAccountController::class, 'ledger'])->whereNumber('id')->name('parties.ledger')->middleware('perm:parties.view');
         Route::get('parties/{id}/transactions', [PartyAccountController::class, 'transactions'])->whereNumber('id')->name('parties.transactions')->middleware('perm:parties.view');
         Route::get('parties/{id}/statement', [PartyAccountController::class, 'statement'])->whereNumber('id')->name('parties.statement')->middleware('perm:parties.view');

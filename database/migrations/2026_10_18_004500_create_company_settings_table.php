@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Table `company_settings` (Platform): migration 45 of 96, dependency level 5.
+ * Table `company_settings` (Platform): migration 45 of 97, dependency level 5.
  * One row per company: preferences, controls, currency display and invoice design (K3, K5, K6, K7, K14, K15).
  * Depends on: companies, payment_terms, users, warehouses.
  *
@@ -53,6 +53,8 @@ return new class extends Migration
             $table->boolean('backup_enabled')->default(true);
             $table->unsignedSmallInteger('backup_retention_days')->default(90);
             $table->dateTime('setup_hidden_at')->nullable()->comment('When an Owner hid the setup checklist on the dashboard (PEP-511); NULL = shown until every step is done');
+            $table->boolean('reminders_auto')->default(false)->comment('PEP-516: e-mail customers with overdue invoices automatically (daily job)');
+            $table->unsignedSmallInteger('reminder_days_after_due')->default(7)->comment('PEP-516: days past the due date before the first automatic reminder');
             $table->unsignedInteger('lock_version')->default(1)->comment('Optimistic concurrency counter; incremented on every update (If-Match)');
             $table->unsignedBigInteger('created_by')->nullable()->comment('User who created the row');
             $table->unsignedBigInteger('updated_by')->nullable()->comment('User who last changed the row');

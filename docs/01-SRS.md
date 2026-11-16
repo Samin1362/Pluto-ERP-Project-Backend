@@ -114,7 +114,7 @@ Approval limits (defaults): Finance manager pays up to ৳ 5,00,000 without appr
 | FR-021 | Parties | Users add and edit customers and suppliers (contact, accounting, payment details); a ledger is created automatically. | B2, B3, C2, C3 | 4 |
 | FR-022 | Parties | Users view party details: KPIs, open documents, monthly trend, contact, terms and activity. | B4, C4 | 2 |
 | FR-023 | Parties | Users view a party's transaction history, ledger with running balance, and outstanding documents by age. | B5, B6, B7, C5, C6, C7 | 3 |
-| FR-024 | Parties | Users print, download or e-mail a statement of account with an aging summary. | B8, C8 | 3 |
+| FR-024 | Parties | Users print, download or e-mail a statement of account with an aging summary. | B8, C8 | 5 |
 | FR-025 | Parties | Users make a party inactive; parties without history can be deleted. | B3, C3, L7 | 3 |
 | FR-030 | Inventory | Users list products and services with stock status, and filter by type, category, warehouse and stock level. | D1 | 2 |
 | FR-031 | Inventory | Users add and edit products (stock-tracked) and services (no stock fields), with pricing, accounts and per-warehouse reorder levels. | D2, D3 | 3 |

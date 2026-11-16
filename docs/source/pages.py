@@ -619,7 +619,7 @@ page("LC-DrawerCharge", "Drawer · Add charge or import expense", "LC", "Drawer"
 
 # ---- Actions added by the API contract review (18 Oct 2026). Marked NEW: the design does not show them; each needs design sign-off.
 ADDED_ACTIONS = {
-    "B4": ["Apply advance or credit (NEW, R-08)", "Remove allocation (NEW, R-08)"],
+    "B4": ["Apply advance or credit (NEW, R-08)", "Remove allocation (NEW, R-08)", "Send payment reminder (NEW, PEP-516)"],
     "C4": ["Apply advance or credit (NEW, R-08)", "Remove allocation (NEW, R-08)"],
     "F4": ["Apply advance or credit (NEW, R-08)", "Remove allocation (NEW, R-08)"],
     "G2": ["Reverse cash-count adjustment (NEW, R-03)"],

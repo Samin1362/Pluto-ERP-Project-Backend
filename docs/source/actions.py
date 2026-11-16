@@ -32,7 +32,7 @@ A = {
     "B2": [DISCARD, "POST /parties → ui:reset the form", "POST /parties → nav:B4", "POST /party-groups"],
     "B3": [DISCARD, "PATCH /parties/{id}", "dlg:L6 → POST /parties/{id}/deactivate | POST /parties/{id}/reactivate", "dlg:L7 → DELETE /parties/{id}"],
     "B4": ["nav:B3", "nav:B8", "nav:E3", "nav:E7", "GET /parties/{id}/transactions | GET /parties/{id}/ledger | GET /audit-logs",
-           "GET /parties/{id}/open-documents → POST /allocations", "dlg:L6 → DELETE /allocations/{id}"],
+           "GET /parties/{id}/open-documents → POST /allocations", "dlg:L6 → DELETE /allocations/{id}", "dlg:L6 → POST /parties/{id}/payment-reminder → GET /parties/{id}/payment-reminders"],
     "B5": ["nav:*", "export:GET /parties/{id}/transactions"],
     "B6": [PRINT, "export:GET /parties/{id}/ledger", "nav:*"],
     "B7": ["GET /parties/outstanding", "POST /parties/statements/send", "nav:E7"],

@@ -2,7 +2,7 @@
 
 > Status: **Release candidate 1.0.0-rc.1 for approval** (18 Oct 2026), Laravel + Eloquent. **No endpoint is to be implemented until this contract is approved.** ⚑ Auth details (DEC-02) and the items in §12.7 are still open.
 >
-> **Generated file.** The endpoint reference (§9), schemas (§10), page action map (§11) and contract review (§12) come from `docs/source/api.py`, `schemas.py`, `actions.py`, `errors.py` and `contract_review.py`. The machine-readable contract is [`openapi.yaml`](openapi.yaml) (OpenAPI 3.1), validated against the official OpenAPI 3.1 schema (§8). Size: 353 endpoints, 239 schemas, 82 error codes, 163 pages with 550 mapped actions.
+> **Generated file.** The endpoint reference (§9), schemas (§10), page action map (§11) and contract review (§12) come from `docs/source/api.py`, `schemas.py`, `actions.py`, `errors.py` and `contract_review.py`. The machine-readable contract is [`openapi.yaml`](openapi.yaml) (OpenAPI 3.1), validated against the official OpenAPI 3.1 schema (§8). Size: 355 endpoints, 240 schemas, 85 error codes, 163 pages with 551 mapped actions.
 
 ## 1. Conventions
 
@@ -55,26 +55,26 @@
 | Code | HTTP | Title (shown to the user) | Rules | Endpoints |
 |---|---|---|---|---|
 | `approval_required` | 202 | Above your approval limit: submitted for approval | BR-007 | — (outcome) |
-| `company_required` | 400 | The X-Company-Id header is missing | BR-037 | 310 |
+| `company_required` | 400 | The X-Company-Id header is missing | BR-037 | 312 |
 | `malformed_json` | 400 | The request body is not valid JSON or has the wrong type | — | 149 |
 | `invalid_credentials` | 401 | E-mail or password is incorrect | BR-061 | 2 |
 | `refresh_reuse_detected` | 401 | A refresh token was reused; every session of this sign-in was revoked | FR-001 | 1 |
 | `refresh_token_invalid` | 401 | The session has ended; sign in again | FR-001 | 1 |
-| `token_expired` | 401 | The access token has expired; refresh and retry | NFR-012 | 341 |
-| `token_invalid` | 401 | The access token is not valid | NFR-012 | 341 |
+| `token_expired` | 401 | The access token has expired; refresh and retry | NFR-012 | 343 |
+| `token_invalid` | 401 | The access token is not valid | NFR-012 | 343 |
 | `two_factor_failed` | 401 | The authentication code is not valid | FR-004 | 2 |
-| `unauthenticated` | 401 | Sign-in is required | NFR-010 | 341 |
+| `unauthenticated` | 401 | Sign-in is required | NFR-010 | 343 |
 | `branch_restricted` | 403 | This record belongs to a branch you cannot access | BR-038 | 3 |
 | `module_not_in_plan` | 403 | This part of Pluto is not in your plan | FR-005 | 47 |
-| `not_a_member` | 403 | You are not an active member of this company | BR-037 | 310 |
-| `permission_denied` | 403 | Your role does not allow this action | BR-037 | 310 |
+| `not_a_member` | 403 | You are not an active member of this company | BR-037 | 312 |
+| `permission_denied` | 403 | Your role does not allow this action | BR-037 | 312 |
 | `platform_admin_only` | 403 | Only a platform admin can do this | FR-005 | 20 |
 | `platform_two_factor_required` | 403 | Platform admins must sign in with 2-step verification | FR-004 | 20 |
 | `self_approval_forbidden` | 403 | You cannot approve a voucher you submitted | BR-008 | 2 |
-| `support_read_only` | 403 | This is a read-only support view; nothing can be changed | FR-005 | 177 |
+| `support_read_only` | 403 | This is a read-only support view; nothing can be changed | FR-005 | 178 |
 | `system_role` | 403 | The Owner role cannot be changed or deleted | BR-060 | 4 |
 | `two_factor_required_by_company` | 403 | Your company requires 2-step verification | FR-004 | 1 |
-| `not_found` | 404 | Not found (or it belongs to another company) | BR-037 | 189 |
+| `not_found` | 404 | Not found (or it belongs to another company) | BR-037 | 191 |
 | `already_converted` | 409 | This quotation or purchase order has already been converted | BR-056 | 1 |
 | `already_posted` | 409 | This document has already been posted | BR-009 | 24 |
 | `already_reversed` | 409 | This entry has already been reversed or cancelled | BR-003 | 16 |
@@ -85,12 +85,13 @@
 | `duplicate_statement` | 409 | This statement file was already imported | BR-032 | 1 |
 | `duplicate_supplier_bill` | 409 | This supplier's bill number is already entered | BR-018 | 3 |
 | `has_history` | 409 | This record is used elsewhere; make it inactive instead | BR-026 | 9 |
-| `idempotency_in_progress` | 409 | The same request is still being processed | BR-050 | 82 |
+| `idempotency_in_progress` | 409 | The same request is still being processed | BR-050 | 83 |
 | `invalid_transition` | 409 | This status change is not allowed from the current status | BR-003, BR-040 | 22 |
 | `last_owner` | 409 | A company must keep at least one active Owner | BR-060 | 4 |
 | `not_draft` | 409 | Only a draft can be changed, posted or deleted | BR-025 | 26 |
 | `note_applied` | 409 | Remove the note's allocations before cancelling | BR-023 | 1 |
 | `plan_in_use` | 409 | Companies are still on this plan | FR-005 | 1 |
+| `reminder_sent_recently` | 409 | A reminder was sent to this customer in the last 7 days | FR-024 | 1 |
 | `role_in_use` | 409 | Move the members to another role first | BR-060 | 4 |
 | `seat_limit_reached` | 409 | All seats are in use | BR-059 | 3 |
 | `use_document_cancel` | 409 | System entries are corrected through their document | BR-003 | 16 |
@@ -106,7 +107,7 @@
 | `exceeds_tolerance` | 422 | Payments would exceed the LC amount plus tolerance | BR-042 | 1 |
 | `fiscal_year_not_closable` | 422 | The year has not ended or a period is still open | BR-034 | 1 |
 | `foreign_document` | 422 | The document belongs to another party | BR-021 | 14 |
-| `idempotency_key_reused` | 422 | This Idempotency-Key was used with a different request | BR-050 | 82 |
+| `idempotency_key_reused` | 422 | This Idempotency-Key was used with a different request | BR-050 | 83 |
 | `inactive_reference` | 422 | An inactive party, product, ledger, warehouse or account was used | BR-026 | 18 |
 | `insufficient_funds` | 422 | The account would go below zero (or below its overdraft limit) | BR-031 | 8 |
 | `insufficient_stock` | 422 | Not enough stock in the warehouse | BR-014, BR-030 | 10 |
@@ -121,8 +122,10 @@
 | `mapping_missing` | 422 | A posting ledger is not mapped in Accounting defaults | BR-064, BR-065 | 6 |
 | `margin_exceeds_deposit` | 422 | More margin applied than was deposited | BR-044 | 3 |
 | `nature_mismatch` | 422 | The group must have the same nature (asset, liability, …) | BR-027 | 3 |
+| `no_overdue_invoices` | 422 | This customer has no overdue invoices | FR-024 | 1 |
 | `nothing_to_revalue` | 422 | No open foreign-currency items at that date | BR-068 | 2 |
 | `order_qty_exceeded` | 422 | More than the purchase order still expects (plus the LC's tolerance) | BR-056 | 3 |
+| `party_has_no_email` | 422 | This customer has no e-mail address | FR-024 | 1 |
 | `period_locked` | 422 | The date is in a locked period or outside an open financial year | BR-004, BR-033 | 40 |
 | `purpose_required` | 422 | Choose what the ledger is for | BR-037 | 1 |
 | `repayment_exceeds_outstanding` | 422 | The principal repaid is more than the loan's outstanding principal | BR-067 | 2 |
@@ -134,8 +137,8 @@
 | `validation_failed` | 422 | The request has invalid fields | NFR-030 | 230 |
 | `if_match_required` | 428 | If-Match header with the current version is required | BR-049 | 36 |
 | `rate_limited` | 429 | Too many requests; try again later | NFR-013 | 13 |
-| `server_error` | 500 | Something went wrong; quote the request id | NFR-031 | 353 |
-| `company_maintenance` | 503 | This company is being restored from a backup; try again shortly (Retry-After) | BR-062 | 310 |
+| `server_error` | 500 | Something went wrong; quote the request id | NFR-031 | 355 |
+| `company_maintenance` | 503 | This company is being restored from a backup; try again shortly (Retry-After) | BR-062 | 312 |
 
 Non-blocking conditions (credit limit, overdue customer, low stock, budget, possible duplicate party) are returned as `warnings[]` in 2xx responses, not as errors (BR-015).
 
@@ -377,238 +380,240 @@ The journal debits the supplier ৳ 46,88,640 (an advance until the import bill 
 | 119 | `GET` | [`/api/v1/parties/{id}/statement`](#getpartiesidstatement) | Statement of account (JSON for the screen) | `parties.view` | 200 |
 | 120 | `GET` | [`/api/v1/parties/{id}/statement/pdf`](#getpartiesidstatementpdf) | Statement of account as PDF (same parameters as the JSON statement) | `parties.view` | 200 |
 | 121 | `POST` | [`/api/v1/parties/statements/send`](#postpartiesstatementssend) | E-mail statements to one or more parties (queued) | `parties.view` | 202 |
-| 122 | `GET` | [`/api/v1/party-groups`](#getpartygroups) | Customer or supplier groups | `parties.view` | 200 |
-| 123 | `POST` | [`/api/v1/party-groups`](#postpartygroups) | Add a group | `parties.create` | 201 |
-| 124 | `GET` | [`/api/v1/products`](#getproducts) | List products and services with stock status | `inventory.view` | 200 |
-| 125 | `POST` | [`/api/v1/products`](#postproducts) | Create a product or service (optional opening stock per warehouse) | `inventory.create` | 201 |
-| 126 | `POST` | [`/api/v1/products/import`](#postproductsimport) | Import products from CSV/XLSX: dry_run=true validates and previews, false creates in one transaction | `inventory.create` | 200 |
-| 127 | `GET` | [`/api/v1/products/{id}`](#getproductsid) | Product with stock by warehouse, costs (if permitted) and price history | `inventory.view` | 200 |
-| 128 | `PATCH` | [`/api/v1/products/{id}`](#patchproductsid) | Edit a product (quantities never change here) | `inventory.edit` | 200 |
-| 129 | `DELETE` | [`/api/v1/products/{id}`](#deleteproductsid) | Delete an unused product; used products are deactivated instead | `inventory.delete` | 204 |
-| 130 | `GET` | [`/api/v1/stock-movements`](#getstockmovements) | All stock movements | `inventory.view` | 200 |
-| 131 | `GET` | [`/api/v1/product-categories`](#getproductcategories) | List categorys | `inventory.view` | 200 |
-| 132 | `POST` | [`/api/v1/product-categories`](#postproductcategories) | Create a category | `inventory.create` | 201 |
-| 133 | `PATCH` | [`/api/v1/product-categories/{id}`](#patchproductcategoriesid) | Edit a category | `inventory.edit` | 200 |
-| 134 | `DELETE` | [`/api/v1/product-categories/{id}`](#deleteproductcategoriesid) | Delete an unused category | `inventory.delete` | 204 |
-| 135 | `GET` | [`/api/v1/stock-groups`](#getstockgroups) | List stock groups | `inventory.view` | 200 |
-| 136 | `POST` | [`/api/v1/stock-groups`](#poststockgroups) | Create a stock group | `inventory.create` | 201 |
-| 137 | `PATCH` | [`/api/v1/stock-groups/{id}`](#patchstockgroupsid) | Edit a stock group | `inventory.edit` | 200 |
-| 138 | `DELETE` | [`/api/v1/stock-groups/{id}`](#deletestockgroupsid) | Delete an unused stock group | `inventory.delete` | 204 |
-| 139 | `GET` | [`/api/v1/units`](#getunits) | List units | `inventory.view` | 200 |
-| 140 | `POST` | [`/api/v1/units`](#postunits) | Create a unit | `inventory.create` | 201 |
-| 141 | `GET` | [`/api/v1/warehouses`](#getwarehouses) | Warehouses with value, products, below-reorder count | `inventory.view` | 200 |
-| 142 | `POST` | [`/api/v1/warehouses`](#postwarehouses) | Create a warehouse (inventory ledger created under 1301 unless given) | `inventory.create` | 201 |
-| 143 | `GET` | [`/api/v1/warehouses/{id}`](#getwarehousesid) | Warehouse details and recent transfers | `inventory.view` | 200 |
-| 144 | `PATCH` | [`/api/v1/warehouses/{id}`](#patchwarehousesid) | Edit a warehouse | `inventory.edit` | 200 |
-| 145 | `GET` | [`/api/v1/warehouses/{id}/stock`](#getwarehousesidstock) | Stock in one warehouse | `inventory.view` | 200 |
-| 146 | `GET` | [`/api/v1/stock-adjustments`](#getstockadjustments) | List StockAdjustment documents | `inventory.view` | 200 |
-| 147 | `POST` | [`/api/v1/stock-adjustments`](#poststockadjustments) | Create a draft StockAdjustment | `inventory.create` | 201 |
-| 148 | `GET` | [`/api/v1/stock-adjustments/{id}`](#getstockadjustmentsid) | Get a StockAdjustment | `inventory.view` | 200 |
-| 149 | `PATCH` | [`/api/v1/stock-adjustments/{id}`](#patchstockadjustmentsid) | Edit a draft StockAdjustment | `inventory.edit` | 200 |
-| 150 | `DELETE` | [`/api/v1/stock-adjustments/{id}`](#deletestockadjustmentsid) | Delete a draft StockAdjustment (number voided) | `inventory.delete` | 204 |
-| 151 | `GET` | [`/api/v1/stock-transfers`](#getstocktransfers) | List StockTransfer documents | `inventory.view` | 200 |
-| 152 | `POST` | [`/api/v1/stock-transfers`](#poststocktransfers) | Create a draft StockTransfer | `inventory.create` | 201 |
-| 153 | `GET` | [`/api/v1/stock-transfers/{id}`](#getstocktransfersid) | Get a StockTransfer | `inventory.view` | 200 |
-| 154 | `PATCH` | [`/api/v1/stock-transfers/{id}`](#patchstocktransfersid) | Edit a draft StockTransfer | `inventory.edit` | 200 |
-| 155 | `DELETE` | [`/api/v1/stock-transfers/{id}`](#deletestocktransfersid) | Delete a draft StockTransfer (number voided) | `inventory.delete` | 204 |
-| 156 | `POST` | [`/api/v1/stock-adjustments/{id}/post`](#poststockadjustmentsidpost) | Post an adjustment: stock movements + value journal | `inventory.create` | 200 |
-| 157 | `POST` | [`/api/v1/stock-adjustments/{id}/reverse`](#poststockadjustmentsidreverse) | Reverse a posted adjustment | `inventory.approve` | 200 |
-| 158 | `POST` | [`/api/v1/stock-adjustments/count-sheet`](#poststockadjustmentscountsheet) | Parse an uploaded count sheet into adjustment lines (no save) | `inventory.create` | 200 |
-| 159 | `POST` | [`/api/v1/stock-transfers/{id}/dispatch`](#poststocktransfersiddispatch) | Dispatch: stock leaves the source (in transit) | `inventory.create` | 200 |
-| 160 | `POST` | [`/api/v1/stock-transfers/{id}/receive`](#poststocktransfersidreceive) | Receive at destination (optionally with received quantities) | `inventory.create` | 200 |
-| 161 | `POST` | [`/api/v1/stock-transfers/{id}/cancel`](#poststocktransfersidcancel) | Cancel a draft or dispatched transfer (dispatched stock returns to source) | `inventory.edit` | 200 |
-| 162 | `GET` | [`/api/v1/reports/inventory/summary`](#getreportsinventorysummary) | Inventory summary (value by group, flow, movers, attention) | `inventory.view` | 200 |
-| 163 | `GET` | [`/api/v1/reports/inventory/low-stock`](#getreportsinventorylowstock) | Items at or below reorder level with suggested quantities | `inventory.view` | 200 |
-| 164 | `GET` | [`/api/v1/reports/inventory/valuation`](#getreportsinventoryvaluation) | Stock valuation at weighted average cost as of a date | `inventory.view_costs` | 200 |
-| 165 | `GET` | [`/api/v1/reports/trial-balance`](#getreportstrialbalance) | Trial balance (JSON; xlsx/pdf/csv via format) | `reports.financial` | 200 |
-| 166 | `GET` | [`/api/v1/reports/profit-and-loss`](#getreportsprofitandloss) | Profit and loss (JSON; xlsx/pdf/csv via format) | `reports.financial` | 200 |
-| 167 | `GET` | [`/api/v1/reports/balance-sheet`](#getreportsbalancesheet) | Balance sheet (JSON; xlsx/pdf/csv via format) | `reports.financial` | 200 |
-| 168 | `GET` | [`/api/v1/reports/cash-flow`](#getreportscashflow) | Cash flow (indirect) (JSON; xlsx/pdf/csv via format) | `reports.financial` | 200 |
-| 169 | `GET` | [`/api/v1/reports/general-ledger`](#getreportsgeneralledger) | General ledger (JSON; xlsx/pdf/csv via format) | `reports.financial` | 200 |
-| 170 | `GET` | [`/api/v1/reports/receivables-aging`](#getreportsreceivablesaging) | Receivables aging (JSON; xlsx/pdf/csv via format) | `reports.financial` | 200 |
-| 171 | `GET` | [`/api/v1/reports/payables-aging`](#getreportspayablesaging) | Payables aging (JSON; xlsx/pdf/csv via format) | `reports.financial` | 200 |
-| 172 | `GET` | [`/api/v1/reports/sales`](#getreportssales) | Sales report | `reports.view` | 200 |
-| 173 | `GET` | [`/api/v1/reports/sales-returns`](#getreportssalesreturns) | Sales return report | `reports.view` | 200 |
-| 174 | `GET` | [`/api/v1/reports/purchases`](#getreportspurchases) | Purchase report | `reports.view` | 200 |
-| 175 | `GET` | [`/api/v1/reports/purchase-returns`](#getreportspurchasereturns) | Purchase return report | `reports.view` | 200 |
-| 176 | `GET` | [`/api/v1/reports/income`](#getreportsincome) | Income report | `reports.financial` | 200 |
-| 177 | `GET` | [`/api/v1/reports/expenses`](#getreportsexpenses) | Expense report | `reports.financial` | 200 |
-| 178 | `GET` | [`/api/v1/reports/lc/{report}`](#getreportslcreport) | LC reports: register, status, outstanding, expiry, docs, amendments, charges, cost, loans, exposure | `lc.view` | 200 |
-| 179 | `GET` | [`/api/v1/sales/overview`](#getsalesoverview) | Sales overview tiles, months, status breakdown, recent, top products | `sales.view` | 200 |
-| 180 | `POST` | [`/api/v1/sales-invoices/calculate`](#postsalesinvoicescalculate) | Authoritative totals for an unsaved invoice (no write) | `sales.create` | 200 |
-| 181 | `GET` | [`/api/v1/sales-invoices`](#getsalesinvoices) | List invoices | `sales.view` | 200 |
-| 182 | `POST` | [`/api/v1/sales-invoices`](#postsalesinvoices) | Create a draft invoice (number reserved) | `sales.create` | 201 |
-| 183 | `GET` | [`/api/v1/sales-invoices/{id}`](#getsalesinvoicesid) | Invoice with lines, payments (allocations), ledger entries and delivery | `sales.view` | 200 |
-| 184 | `PUT` | [`/api/v1/sales-invoices/{id}`](#putsalesinvoicesid) | Replace a draft invoice (header and lines) | `sales.edit` | 200 |
-| 185 | `PATCH` | [`/api/v1/sales-invoices/{id}/delivery`](#patchsalesinvoicesiddelivery) | Record challan, vehicle and delivery time (allowed after posting) | `sales.edit` | 200 |
-| 186 | `DELETE` | [`/api/v1/sales-invoices/{id}`](#deletesalesinvoicesid) | Delete a draft (number voided, never reused) | `sales.delete` | 204 |
-| 187 | `POST` | [`/api/v1/sales-invoices/{id}/post`](#postsalesinvoicesidpost) | Post: stock out at average cost, journal entry, customer balance | `sales.create` | 200 |
-| 188 | `POST` | [`/api/v1/sales-invoices/bulk-post`](#postsalesinvoicesbulkpost) | Post several drafts (each in its own transaction; per-item results) | `sales.create` | 200 |
-| 189 | `POST` | [`/api/v1/sales-invoices/{id}/cancel`](#postsalesinvoicesidcancel) | Cancel a posted invoice (reversal + stock back; payments become advance) | `sales.edit` | 200 |
-| 190 | `GET` | [`/api/v1/sales-invoices/{id}/pdf`](#getsalesinvoicesidpdf) | Invoice PDF per invoice design (also challan with ?variant=challan) | `sales.view` | 200 |
-| 191 | `POST` | [`/api/v1/sales-invoices/{id}/send`](#postsalesinvoicesidsend) | E-mail the invoice PDF to the customer (queued) | `sales.edit` | 202 |
-| 192 | `POST` | [`/api/v1/customer-receipts`](#postcustomerreceipts) | Record a customer payment with allocations (creates RV) | `sales.create` | 201 |
-| 193 | `GET` | [`/api/v1/customer-receipts`](#getcustomerreceipts) | List customer receipts (RV) with party, account, method and allocation status | `sales.view` | 200 |
-| 194 | `GET` | [`/api/v1/customer-receipts/{id}`](#getcustomerreceiptsid) | Get a customer receipt with its allocations | `sales.view` | 200 |
-| 195 | `GET` | [`/api/v1/customer-receipts/{id}/pdf`](#getcustomerreceiptsidpdf) | Printable receipt voucher | `sales.view` | 200 |
-| 196 | `POST` | [`/api/v1/allocations`](#postallocations) | Apply an advance, unapplied receipt/payment or open credit/debit note to an invoice or bill | contextual — party is a customer → `sales.create`; party is a supplier → `purchases.create` | 201 |
-| 197 | `DELETE` | [`/api/v1/allocations/{id}`](#deleteallocationsid) | Remove an allocation (sets reversed_at; balances restored) | contextual — party is a customer → `sales.edit`; party is a supplier → `purchases.edit` | 204 |
-| 198 | `GET` | [`/api/v1/quotations`](#getquotations) | List quotations | `sales.view` | 200 |
-| 199 | `POST` | [`/api/v1/quotations`](#postquotations) | Create a quotation | `sales.create` | 201 |
-| 200 | `GET` | [`/api/v1/quotations/{id}`](#getquotationsid) | Get a quotation | `sales.view` | 200 |
-| 201 | `PUT` | [`/api/v1/quotations/{id}`](#putquotationsid) | Replace a draft or sent quotation | `sales.edit` | 200 |
-| 202 | `POST` | [`/api/v1/quotations/{id}/send`](#postquotationsidsend) | Mark sent and e-mail it | `sales.edit` | 200 |
-| 203 | `POST` | [`/api/v1/quotations/{id}/convert`](#postquotationsidconvert) | Convert an accepted quotation into a draft invoice | `sales.create` | 201 |
-| 204 | `POST` | [`/api/v1/quotations/{id}/status`](#postquotationsidstatus) | Set accepted, declined or expired | `sales.edit` | 200 |
-| 205 | `DELETE` | [`/api/v1/quotations/{id}`](#deletequotationsid) | Delete a draft quotation (number voided and audited) | `sales.delete` | 204 |
-| 206 | `GET` | [`/api/v1/quotations/{id}/pdf`](#getquotationsidpdf) | Printable quotation (also attached when sent) | `sales.view` | 200 |
-| 207 | `GET` | [`/api/v1/sales-returns`](#getsalesreturns) | List sales returns | `sales.view` | 200 |
-| 208 | `POST` | [`/api/v1/sales-returns`](#postsalesreturns) | Create a draft return against an invoice | `sales.create` | 201 |
-| 209 | `GET` | [`/api/v1/sales-returns/{id}`](#getsalesreturnsid) | Get a return | `sales.view` | 200 |
-| 210 | `PUT` | [`/api/v1/sales-returns/{id}`](#putsalesreturnsid) | Replace a draft return | `sales.edit` | 200 |
-| 211 | `POST` | [`/api/v1/sales-returns/{id}/post`](#postsalesreturnsidpost) | Post the return (stock back if restock) and create a draft credit note | `sales.create` | 200 |
-| 212 | `DELETE` | [`/api/v1/sales-returns/{id}`](#deletesalesreturnsid) | Delete a draft sales return | `sales.delete` | 204 |
-| 213 | `POST` | [`/api/v1/sales-returns/{id}/cancel`](#postsalesreturnsidcancel) | Cancel a posted return: mirror stock entry; its credit note is cancelled if unapplied | `sales.edit` | 200 |
-| 214 | `GET` | [`/api/v1/credit-notes/{id}`](#getcreditnotesid) | Get a credit note | `sales.view` | 200 |
-| 215 | `PUT` | [`/api/v1/credit-notes/{id}`](#putcreditnotesid) | Edit a draft credit note (reason, amount, usage) | `sales.edit` | 200 |
-| 216 | `POST` | [`/api/v1/credit-notes`](#postcreditnotes) | Create a credit note without a return (price correction, goodwill) | `sales.create` | 201 |
-| 217 | `POST` | [`/api/v1/credit-notes/{id}/post`](#postcreditnotesidpost) | Post the credit note and apply it per usage | `sales.create` | 200 |
-| 218 | `GET` | [`/api/v1/credit-notes`](#getcreditnotes) | List credit notes | `sales.view` | 200 |
-| 219 | `DELETE` | [`/api/v1/credit-notes/{id}`](#deletecreditnotesid) | Delete a draft credit note | `sales.delete` | 204 |
-| 220 | `POST` | [`/api/v1/credit-notes/{id}/cancel`](#postcreditnotesidcancel) | Cancel a posted credit note (mirror entry; its allocations are reversed) | `sales.edit` | 200 |
-| 221 | `GET` | [`/api/v1/credit-notes/{id}/pdf`](#getcreditnotesidpdf) | Printable credit note | `sales.view` | 200 |
-| 222 | `GET` | [`/api/v1/purchases/overview`](#getpurchasesoverview) | Purchase overview | `purchases.view` | 200 |
-| 223 | `POST` | [`/api/v1/purchase-bills/calculate`](#postpurchasebillscalculate) | Authoritative totals for an unsaved bill (incl. foreign currency) | `purchases.create` | 200 |
-| 224 | `GET` | [`/api/v1/purchase-bills`](#getpurchasebills) | List bills | `purchases.view` | 200 |
-| 225 | `POST` | [`/api/v1/purchase-bills`](#postpurchasebills) | Create a draft bill (local or import mode) | `purchases.create` | 201 |
-| 226 | `GET` | [`/api/v1/purchase-bills/{id}`](#getpurchasebillsid) | Bill with lines, payments, ledger entries, receipt | `purchases.view` | 200 |
-| 227 | `PUT` | [`/api/v1/purchase-bills/{id}`](#putpurchasebillsid) | Replace a draft bill | `purchases.edit` | 200 |
-| 228 | `DELETE` | [`/api/v1/purchase-bills/{id}`](#deletepurchasebillsid) | Delete a draft bill | `purchases.delete` | 204 |
-| 229 | `POST` | [`/api/v1/purchase-bills/{id}/post`](#postpurchasebillsidpost) | Post: stock in, average cost update, journal, supplier balance, PO received qty | `purchases.create` | 200 |
-| 230 | `POST` | [`/api/v1/purchase-bills/{id}/cancel`](#postpurchasebillsidcancel) | Cancel a posted bill (reverse; stock out at bill cost; payments to advance) | `purchases.edit` | 200 |
-| 231 | `POST` | [`/api/v1/supplier-payments`](#postsupplierpayments) | Record a supplier payment with allocations (creates PV; may need approval) | `purchases.create` | 201 |
-| 232 | `GET` | [`/api/v1/supplier-payments`](#getsupplierpayments) | List supplier payments (PV) with party, account, method and status | `purchases.view` | 200 |
-| 233 | `GET` | [`/api/v1/supplier-payments/{id}`](#getsupplierpaymentsid) | Get a supplier payment with its allocations | `purchases.view` | 200 |
-| 234 | `GET` | [`/api/v1/supplier-payments/{id}/pdf`](#getsupplierpaymentsidpdf) | Printable payment voucher | `purchases.view` | 200 |
-| 235 | `GET` | [`/api/v1/purchase-orders`](#getpurchaseorders) | List purchase orders | `purchases.view` | 200 |
-| 236 | `POST` | [`/api/v1/purchase-orders`](#postpurchaseorders) | Create a purchase order | `purchases.create` | 201 |
-| 237 | `POST` | [`/api/v1/purchase-orders/from-low-stock`](#postpurchaseordersfromlowstock) | Create draft POs grouped by preferred supplier from selected low-stock rows | `purchases.create` | 201 |
-| 238 | `GET` | [`/api/v1/purchase-orders/{id}`](#getpurchaseordersid) | Get a purchase order | `purchases.view` | 200 |
-| 239 | `PUT` | [`/api/v1/purchase-orders/{id}`](#putpurchaseordersid) | Replace a draft or sent order | `purchases.edit` | 200 |
-| 240 | `POST` | [`/api/v1/purchase-orders/{id}/send`](#postpurchaseordersidsend) | Mark sent and e-mail it | `purchases.edit` | 200 |
-| 241 | `POST` | [`/api/v1/purchase-orders/{id}/convert`](#postpurchaseordersidconvert) | Create a draft bill from remaining quantities | `purchases.create` | 201 |
-| 242 | `POST` | [`/api/v1/purchase-orders/{id}/status`](#postpurchaseordersidstatus) | Close or cancel an order | `purchases.edit` | 200 |
-| 243 | `DELETE` | [`/api/v1/purchase-orders/{id}`](#deletepurchaseordersid) | Delete a draft purchase order | `purchases.delete` | 204 |
-| 244 | `GET` | [`/api/v1/purchase-orders/{id}/pdf`](#getpurchaseordersidpdf) | Printable purchase order (also attached when sent) | `purchases.view` | 200 |
-| 245 | `GET` | [`/api/v1/purchase-returns`](#getpurchasereturns) | List purchase returns | `purchases.view` | 200 |
-| 246 | `POST` | [`/api/v1/purchase-returns`](#postpurchasereturns) | Create a draft purchase return | `purchases.create` | 201 |
-| 247 | `GET` | [`/api/v1/purchase-returns/{id}`](#getpurchasereturnsid) | Get a purchase return | `purchases.view` | 200 |
-| 248 | `PUT` | [`/api/v1/purchase-returns/{id}`](#putpurchasereturnsid) | Replace a draft purchase return | `purchases.edit` | 200 |
-| 249 | `POST` | [`/api/v1/purchase-returns/{id}/post`](#postpurchasereturnsidpost) | Post the return: stock out at bill cost and Dr supplier / Cr inventory; the debit note is created posted, sharing that journal entry, and applied per usage | `purchases.create` | 200 |
-| 250 | `DELETE` | [`/api/v1/purchase-returns/{id}`](#deletepurchasereturnsid) | Delete a draft purchase return | `purchases.delete` | 204 |
-| 251 | `POST` | [`/api/v1/purchase-returns/{id}/cancel`](#postpurchasereturnsidcancel) | Cancel a posted purchase return: stock back at the same cost, supplier credited, its debit note cancelled | `purchases.edit` | 200 |
-| 252 | `GET` | [`/api/v1/debit-notes/{id}`](#getdebitnotesid) | Get a debit note | `purchases.view` | 200 |
-| 253 | `PUT` | [`/api/v1/debit-notes/{id}`](#putdebitnotesid) | Edit a draft debit note | `purchases.edit` | 200 |
-| 254 | `POST` | [`/api/v1/debit-notes`](#postdebitnotes) | Create a debit note without a return (price difference, quality claim) | `purchases.create` | 201 |
-| 255 | `POST` | [`/api/v1/debit-notes/{id}/post`](#postdebitnotesidpost) | Post a debit note that was not created from a return (price difference, short supply, quality claim) and apply it per usage | `purchases.create` | 200 |
-| 256 | `GET` | [`/api/v1/debit-notes`](#getdebitnotes) | List debit notes | `purchases.view` | 200 |
-| 257 | `DELETE` | [`/api/v1/debit-notes/{id}`](#deletedebitnotesid) | Delete a draft debit note | `purchases.delete` | 204 |
-| 258 | `POST` | [`/api/v1/debit-notes/{id}/cancel`](#postdebitnotesidcancel) | Cancel a posted debit note not created from a return (mirror entry; allocations reversed) | `purchases.edit` | 200 |
-| 259 | `GET` | [`/api/v1/debit-notes/{id}/pdf`](#getdebitnotesidpdf) | Printable debit note | `purchases.view` | 200 |
-| 260 | `GET` | [`/api/v1/banking/overview`](#getbankingoverview) | Accounts, combined balance series, quick stats, recent movements | `banking.view` | 200 |
-| 261 | `GET` | [`/api/v1/money-accounts`](#getmoneyaccounts) | Cash, bank, wallet and card accounts with book balance and reconciliation status | any signed-in user who is an active member of the company | 200 |
-| 262 | `POST` | [`/api/v1/money-accounts`](#postmoneyaccounts) | Add a bank, wallet or card account (ledger + opening balance) | `banking.create` | 201 |
-| 263 | `GET` | [`/api/v1/money-accounts/{id}`](#getmoneyaccountsid) | Account details, statement imports, last cash count | `banking.view` | 200 |
-| 264 | `PATCH` | [`/api/v1/money-accounts/{id}`](#patchmoneyaccountsid) | Edit account details and use-for switches | `banking.edit` | 200 |
-| 265 | `GET` | [`/api/v1/money-accounts/{id}/book`](#getmoneyaccountsidbook) | Cash book or bank book with running balance | `banking.view` | 200 |
-| 266 | `GET` | [`/api/v1/money-transactions`](#getmoneytransactions) | Cash and bank transactions across accounts | `banking.view` | 200 |
-| 267 | `POST` | [`/api/v1/cash-counts`](#postcashcounts) | Record a cash count; a difference creates a draft adjustment awaiting approval | `banking.create` | 201 |
-| 268 | `POST` | [`/api/v1/cash-counts/{id}/reverse`](#postcashcountsidreverse) | Reverse a posted cash-count adjustment (mirror entry) | `banking.approve` | 200 |
-| 269 | `POST` | [`/api/v1/bank-statement-imports`](#postbankstatementimports) | Import a CSV/XLSX statement (multipart; column mapping) | `banking.reconcile` | 201 |
-| 270 | `POST` | [`/api/v1/reconciliations`](#postreconciliations) | Start (or resume) a reconciliation for an account and statement date | `banking.reconcile` | 200 |
-| 271 | `GET` | [`/api/v1/reconciliations/{id}`](#getreconciliationsid) | Reconciliation with statement lines, suggestions and difference | `banking.reconcile` | 200 |
-| 272 | `POST` | [`/api/v1/reconciliations/{id}/lines/{lineId}/match`](#postreconciliationsidlineslineidmatch) | Match a statement line to a book line | `banking.reconcile` | 200 |
-| 273 | `POST` | [`/api/v1/reconciliations/{id}/lines/{lineId}/create-entry`](#postreconciliationsidlineslineidcreateentry) | Create the missing receipt or bank-charge voucher and match it | `banking.reconcile` | 200 |
-| 274 | `POST` | [`/api/v1/reconciliations/{id}/lines/pair`](#postreconciliationsidlinespair) | Mark offsetting statement lines (summing to zero) as a pair; a single line is marked ignored (no book effect) | `banking.reconcile` | 200 |
-| 275 | `POST` | [`/api/v1/reconciliations/{id}/lines/{lineId}/undo`](#postreconciliationsidlineslineidundo) | Undo a match, pair or ignore | `banking.reconcile` | 200 |
-| 276 | `POST` | [`/api/v1/reconciliations/{id}/accept-suggestions`](#postreconciliationsidacceptsuggestions) | Accept every same-amount, same-date suggestion | `banking.reconcile` | 200 |
-| 277 | `POST` | [`/api/v1/reconciliations/{id}/finish`](#postreconciliationsidfinish) | Finish (all lines handled and difference zero) | `banking.reconcile` | 200 |
-| 278 | `GET` | [`/api/v1/ie-categories`](#getiecategories) | Income or expense categories with ledger, budget and spent | `banking.view` | 200 |
-| 279 | `POST` | [`/api/v1/ie-categories`](#postiecategories) | Create a category (new or existing ledger) | `banking.create` | 201 |
-| 280 | `PATCH` | [`/api/v1/ie-categories/{id}`](#patchiecategoriesid) | Edit name, budget, warning | `banking.edit` | 200 |
-| 281 | `GET` | [`/api/v1/ie-entries`](#getieentries) | Income or expense lines on category ledgers (any voucher) | `banking.view` | 200 |
-| 282 | `POST` | [`/api/v1/ie-entries`](#postieentries) | Record an income or expense (creates INC/EXP voucher; optional recurrence) | `banking.create` | 201 |
-| 283 | `GET` | [`/api/v1/recurring-templates`](#getrecurringtemplates) | Recurring entries | `banking.view` | 200 |
-| 284 | `PATCH` | [`/api/v1/recurring-templates/{id}`](#patchrecurringtemplatesid) | Pause, edit or end a recurring entry | `banking.edit` | 200 |
-| 285 | `GET` | [`/api/v1/income-expenses/overview`](#getincomeexpensesoverview) | Income or expense overview for the FY | `banking.view` | 200 |
-| 286 | `GET` | [`/api/v1/accounting/overview`](#getaccountingoverview) | Totals and books-health checks | `accounting.view` | 200 |
-| 287 | `GET` | [`/api/v1/account-groups`](#getaccountgroups) | Chart of accounts tree with balances | `accounting.view` | 200 |
-| 288 | `POST` | [`/api/v1/account-groups`](#postaccountgroups) | Create a group | `accounting.create` | 201 |
-| 289 | `GET` | [`/api/v1/account-groups/{id}`](#getaccountgroupsid) | Group details and children | `accounting.view` | 200 |
-| 290 | `PATCH` | [`/api/v1/account-groups/{id}`](#patchaccountgroupsid) | Edit a group (name, parent within nature, order) | `accounting.edit` | 200 |
-| 291 | `GET` | [`/api/v1/ledgers`](#getledgers) | Ledger list (balances only with accounting.view) | any signed-in user who is an active member of the company | 200 |
-| 292 | `POST` | [`/api/v1/ledgers`](#postledgers) | Create a ledger (optional opening balance) | `accounting.create` | 201 |
-| 293 | `GET` | [`/api/v1/ledgers/{id}`](#getledgersid) | Ledger details with FY summary | `accounting.view` | 200 |
-| 294 | `PATCH` | [`/api/v1/ledgers/{id}`](#patchledgersid) | Edit a ledger (code and opening locked once used) | `accounting.edit` | 200 |
-| 295 | `POST` | [`/api/v1/ledgers/{id}/deactivate`](#postledgersiddeactivate) | Make a ledger inactive (system-mapped ledgers refused) | `accounting.edit` | 200 |
-| 296 | `GET` | [`/api/v1/ledgers/{id}/entries`](#getledgersidentries) | Ledger entries with running balance and monthly closings | `accounting.view` | 200 |
-| 297 | `GET` | [`/api/v1/vouchers`](#getvouchers) | Voucher list / day book | `accounting.view` | 200 |
-| 298 | `POST` | [`/api/v1/vouchers`](#postvouchers) | Create a journal, payment, receipt or contra voucher (draft or post immediately) | contextual — entry_type = journal → `accounting.create`; entry_type in (payment, receipt, contra) → `banking.create or accounting.create` | 201 |
-| 299 | `GET` | [`/api/v1/vouchers/{id}`](#getvouchersid) | Voucher with lines, allocations, payment details, audit trail, linked documents | `accounting.view` | 200 |
-| 300 | `PUT` | [`/api/v1/vouchers/{id}`](#putvouchersid) | Replace a draft or rejected voucher | contextual — entry_type = journal → `accounting.edit`; entry_type in (payment, receipt, contra) → `banking.edit or accounting.edit` | 200 |
-| 301 | `DELETE` | [`/api/v1/vouchers/{id}`](#deletevouchersid) | Delete a draft voucher (posted vouchers cannot be deleted) | `accounting.delete` | 204 |
-| 302 | `POST` | [`/api/v1/vouchers/{id}/submit`](#postvouchersidsubmit) | Submit a draft for approval | contextual — entry_type = journal → `accounting.create`; entry_type in (payment, receipt, contra) → `banking.create or accounting.create` | 200 |
-| 303 | `POST` | [`/api/v1/vouchers/{id}/post`](#postvouchersidpost) | Post a draft (or approved) voucher | contextual — entry_type = journal → `accounting.create`; entry_type in (payment, receipt, contra) → `banking.create or accounting.create` | 200 |
-| 304 | `POST` | [`/api/v1/vouchers/{id}/reverse`](#postvouchersidreverse) | Create a linked reversing entry | `accounting.create` | 201 |
-| 305 | `POST` | [`/api/v1/vouchers/calculate`](#postvoucherscalculate) | Authoritative balance and double-entry preview for an unsaved voucher (no write) | contextual — entry_type = journal → `accounting.create`; entry_type in (payment, receipt, contra) → `banking.create or accounting.create` | 200 |
-| 306 | `GET` | [`/api/v1/vouchers/{id}/pdf`](#getvouchersidpdf) | Printable voucher (A4) | `accounting.view` | 200 |
-| 307 | `GET` | [`/api/v1/voucher-templates`](#getvouchertemplates) | Journal templates (depreciation, accruals, reclassify) | `accounting.view` | 200 |
-| 308 | `GET` | [`/api/v1/lc/overview`](#getlcoverview) | LC KPIs, alerts, deadlines, by bank, pipeline, active, recent | `lc.view` | 200 |
-| 309 | `GET` | [`/api/v1/letters-of-credit`](#getlettersofcredit) | List LCs | `lc.view` | 200 |
-| 310 | `POST` | [`/api/v1/letters-of-credit`](#postlettersofcredit) | Create a draft LC (documents copied from template; items kept in a linked purchase order) | `lc.create` | 201 |
-| 311 | `GET` | [`/api/v1/letters-of-credit/{id}`](#getlettersofcreditid) | LC with milestones, terms, items, documents, shipments, charges, payments, amendments, money position | `lc.view` | 200 |
-| 312 | `PUT` | [`/api/v1/letters-of-credit/{id}`](#putlettersofcreditid) | Update a draft or awaiting-bank LC (opened LCs change only through amendments) | `lc.edit` | 200 |
-| 313 | `POST` | [`/api/v1/letters-of-credit/{id}/items`](#postlettersofcreditiditems) | Add the items to an LC that has none (creates the linked purchase order) | `lc.edit` | 201 |
-| 314 | `DELETE` | [`/api/v1/letters-of-credit/{id}`](#deletelettersofcreditid) | Delete a draft LC | `lc.delete` | 204 |
-| 315 | `POST` | [`/api/v1/letters-of-credit/{id}/transition`](#postlettersofcreditidtransition) | Change status: submit, mark_opened, mark_refused, documents_presented, cancel, expire, reopen | `lc.edit` | 200 |
-| 316 | `POST` | [`/api/v1/letters-of-credit/{id}/close`](#postlettersofcreditidclose) | Close after checks (or with override reason); margin release posted | `lc.edit` | 200 |
-| 317 | `GET` | [`/api/v1/letters-of-credit/{id}/documents`](#getlettersofcreditiddocuments) | Documents of an LC | `lc.view` | 200 |
-| 318 | `POST` | [`/api/v1/letters-of-credit/{id}/documents`](#postlettersofcreditiddocuments) | Add a required document | `lc.edit` | 201 |
-| 319 | `PATCH` | [`/api/v1/lc-documents/{id}`](#patchlcdocumentsid) | Update document status, dates, discrepancy note | `lc.edit` | 200 |
-| 320 | `GET` | [`/api/v1/lc-documents/matrix`](#getlcdocumentsmatrix) | Document status matrix across open LCs and follow-up list | `lc.view` | 200 |
-| 321 | `GET` | [`/api/v1/lc-document-templates`](#getlcdocumenttemplates) | Checklist templates with items | `lc.view` | 200 |
-| 322 | `PUT` | [`/api/v1/lc-document-templates/{id}`](#putlcdocumenttemplatesid) | Replace a template's items | `lc.edit` | 200 |
-| 323 | `POST` | [`/api/v1/lc-document-templates`](#postlcdocumenttemplates) | Create a template | `lc.create` | 201 |
-| 324 | `GET` | [`/api/v1/lc-amendments`](#getlcamendments) | All amendments (filter pending/accepted) | `lc.view` | 200 |
-| 325 | `POST` | [`/api/v1/letters-of-credit/{id}/amendments`](#postlettersofcreditidamendments) | Record an amendment with field and item changes | `lc.edit` | 201 |
-| 326 | `PATCH` | [`/api/v1/lc-amendments/{id}`](#patchlcamendmentsid) | Advance amendment status; on accepted the LC and its items are updated | `lc.edit` | 200 |
-| 327 | `POST` | [`/api/v1/letters-of-credit/{id}/shipments`](#postlettersofcreditidshipments) | Add a shipment lot | `lc.edit` | 201 |
-| 328 | `PATCH` | [`/api/v1/lc-shipments/{id}`](#patchlcshipmentsid) | Update a lot (status, B/L, vessel, ETD/ETA, arrived) | `lc.edit` | 200 |
-| 329 | `GET` | [`/api/v1/lc-charges`](#getlccharges) | Charges across LCs (filter by LC and paid status) | `lc.view` | 200 |
-| 330 | `POST` | [`/api/v1/lc-charges`](#postlccharges) | Add a charge or import expense (posts accrual or payment) | `lc.create` | 201 |
-| 331 | `POST` | [`/api/v1/lc-charges/{id}/reverse`](#postlcchargesidreverse) | Reverse an LC charge (refused once included in a posted landed-cost allocation) | `lc.edit` | 200 |
-| 332 | `POST` | [`/api/v1/lc-charges/{id}/pay`](#postlcchargesidpay) | Pay an unpaid charge | `lc.create` | 200 |
-| 333 | `POST` | [`/api/v1/letters-of-credit/{id}/payments`](#postlettersofcreditidpayments) | Record a payment to the beneficiary at the bank's rate (applies margin, FX) | `lc.create` | 201 |
-| 334 | `GET` | [`/api/v1/letters-of-credit/{id}/payments`](#getlettersofcreditidpayments) | Payments of an LC with bank rate, margin applied and FX difference | `lc.view` | 200 |
-| 335 | `POST` | [`/api/v1/lc-payments/{id}/reverse`](#postlcpaymentsidreverse) | Reverse an LC payment (restores margin and supplier balance; mirror entry) | `lc.edit` | 200 |
-| 336 | `POST` | [`/api/v1/letters-of-credit/{id}/landed-cost/preview`](#postlettersofcreditidlandedcostpreview) | Preview allocation of capitalised charges to an import bill's lines | `lc.view` | 200 |
-| 337 | `POST` | [`/api/v1/letters-of-credit/{id}/landed-cost`](#postlettersofcreditidlandedcost) | Post a landed-cost allocation (inventory and COGS split) | `lc.create` | 201 |
-| 338 | `POST` | [`/api/v1/landed-cost-allocations/{id}/reverse`](#postlandedcostallocationsidreverse) | Reverse a landed-cost allocation (inventory/COGS split and landed_cost movements) | `lc.edit` | 200 |
-| 339 | `GET` | [`/api/v1/letters-of-credit/{id}/pdf`](#getlettersofcreditidpdf) | Printable LC summary | `lc.view` | 200 |
-| 340 | `GET` | [`/api/v1/letters-of-credit/{id}/cost-summary`](#getlettersofcreditidcostsummary) | Landed cost breakdown and per-unit cost | `lc.view` | 200 |
-| 341 | `GET` | [`/api/v1/bank-facilities`](#getbankfacilities) | Bank facilities (LC and loan limits) with live utilisation | `lc.view` | 200 |
-| 342 | `POST` | [`/api/v1/bank-facilities`](#postbankfacilities) | Set a bank's LC and loan limits and default loan terms | `lc.edit` | 201 |
-| 343 | `PUT` | [`/api/v1/bank-facilities/{id}`](#putbankfacilitiesid) | Change a bank facility | `lc.edit` | 200 |
-| 344 | `GET` | [`/api/v1/lc-loans`](#getlcloans) | PAD/LTR loans (filter by status, bank, LC) | `lc.view` | 200 |
-| 345 | `GET` | [`/api/v1/lc-loans/{id}`](#getlcloansid) | One loan with its repayments and the interest due today | `lc.view` | 200 |
-| 346 | `GET` | [`/api/v1/lc-loans/{id}/interest`](#getlcloansidinterest) | Interest due on a loan at a date (for the repayment dialog) | `lc.view` | 200 |
-| 347 | `POST` | [`/api/v1/lc-loans/{id}/repayments`](#postlcloansidrepayments) | Repay principal with the interest due to the date | `lc.create` | 201 |
-| 348 | `POST` | [`/api/v1/lc-loans/{id}/convert`](#postlcloansidconvert) | Convert a PAD to an LTR on the agreed terms | `lc.edit` | 200 |
-| 349 | `POST` | [`/api/v1/lc-loan-repayments/{id}/reverse`](#postlcloanrepaymentsidreverse) | Reverse a loan repayment (mirror entry; principal and interest due again) | `lc.edit` | 200 |
-| 350 | `POST` | [`/api/v1/fx-revaluations/preview`](#postfxrevaluationspreview) | Preview revaluation of open foreign bills and acceptances at closing rates | `accounting.create` | 200 |
-| 351 | `POST` | [`/api/v1/fx-revaluations`](#postfxrevaluations) | Post a revaluation (unrealised gain/loss) and its reversal dated the next day | `accounting.create` | 201 |
-| 352 | `GET` | [`/api/v1/fx-revaluations`](#getfxrevaluations) | Revaluation history | `accounting.view` | 200 |
-| 353 | `POST` | [`/api/v1/fx-revaluations/{id}/reverse`](#postfxrevaluationsidreverse) | Reverse a revaluation (both its entries) | `accounting.edit` | 200 |
+| 122 | `POST` | [`/api/v1/parties/{id}/payment-reminder`](#postpartiesidpaymentreminder) | E-mail a customer a reminder of their overdue invoices, statement attached (PEP-516) | `parties.view` | 201 |
+| 123 | `GET` | [`/api/v1/parties/{id}/payment-reminders`](#getpartiesidpaymentreminders) | Reminders sent to this customer, newest first (PEP-516) | `parties.view` | 200 |
+| 124 | `GET` | [`/api/v1/party-groups`](#getpartygroups) | Customer or supplier groups | `parties.view` | 200 |
+| 125 | `POST` | [`/api/v1/party-groups`](#postpartygroups) | Add a group | `parties.create` | 201 |
+| 126 | `GET` | [`/api/v1/products`](#getproducts) | List products and services with stock status | `inventory.view` | 200 |
+| 127 | `POST` | [`/api/v1/products`](#postproducts) | Create a product or service (optional opening stock per warehouse) | `inventory.create` | 201 |
+| 128 | `POST` | [`/api/v1/products/import`](#postproductsimport) | Import products from CSV/XLSX: dry_run=true validates and previews, false creates in one transaction | `inventory.create` | 200 |
+| 129 | `GET` | [`/api/v1/products/{id}`](#getproductsid) | Product with stock by warehouse, costs (if permitted) and price history | `inventory.view` | 200 |
+| 130 | `PATCH` | [`/api/v1/products/{id}`](#patchproductsid) | Edit a product (quantities never change here) | `inventory.edit` | 200 |
+| 131 | `DELETE` | [`/api/v1/products/{id}`](#deleteproductsid) | Delete an unused product; used products are deactivated instead | `inventory.delete` | 204 |
+| 132 | `GET` | [`/api/v1/stock-movements`](#getstockmovements) | All stock movements | `inventory.view` | 200 |
+| 133 | `GET` | [`/api/v1/product-categories`](#getproductcategories) | List categorys | `inventory.view` | 200 |
+| 134 | `POST` | [`/api/v1/product-categories`](#postproductcategories) | Create a category | `inventory.create` | 201 |
+| 135 | `PATCH` | [`/api/v1/product-categories/{id}`](#patchproductcategoriesid) | Edit a category | `inventory.edit` | 200 |
+| 136 | `DELETE` | [`/api/v1/product-categories/{id}`](#deleteproductcategoriesid) | Delete an unused category | `inventory.delete` | 204 |
+| 137 | `GET` | [`/api/v1/stock-groups`](#getstockgroups) | List stock groups | `inventory.view` | 200 |
+| 138 | `POST` | [`/api/v1/stock-groups`](#poststockgroups) | Create a stock group | `inventory.create` | 201 |
+| 139 | `PATCH` | [`/api/v1/stock-groups/{id}`](#patchstockgroupsid) | Edit a stock group | `inventory.edit` | 200 |
+| 140 | `DELETE` | [`/api/v1/stock-groups/{id}`](#deletestockgroupsid) | Delete an unused stock group | `inventory.delete` | 204 |
+| 141 | `GET` | [`/api/v1/units`](#getunits) | List units | `inventory.view` | 200 |
+| 142 | `POST` | [`/api/v1/units`](#postunits) | Create a unit | `inventory.create` | 201 |
+| 143 | `GET` | [`/api/v1/warehouses`](#getwarehouses) | Warehouses with value, products, below-reorder count | `inventory.view` | 200 |
+| 144 | `POST` | [`/api/v1/warehouses`](#postwarehouses) | Create a warehouse (inventory ledger created under 1301 unless given) | `inventory.create` | 201 |
+| 145 | `GET` | [`/api/v1/warehouses/{id}`](#getwarehousesid) | Warehouse details and recent transfers | `inventory.view` | 200 |
+| 146 | `PATCH` | [`/api/v1/warehouses/{id}`](#patchwarehousesid) | Edit a warehouse | `inventory.edit` | 200 |
+| 147 | `GET` | [`/api/v1/warehouses/{id}/stock`](#getwarehousesidstock) | Stock in one warehouse | `inventory.view` | 200 |
+| 148 | `GET` | [`/api/v1/stock-adjustments`](#getstockadjustments) | List StockAdjustment documents | `inventory.view` | 200 |
+| 149 | `POST` | [`/api/v1/stock-adjustments`](#poststockadjustments) | Create a draft StockAdjustment | `inventory.create` | 201 |
+| 150 | `GET` | [`/api/v1/stock-adjustments/{id}`](#getstockadjustmentsid) | Get a StockAdjustment | `inventory.view` | 200 |
+| 151 | `PATCH` | [`/api/v1/stock-adjustments/{id}`](#patchstockadjustmentsid) | Edit a draft StockAdjustment | `inventory.edit` | 200 |
+| 152 | `DELETE` | [`/api/v1/stock-adjustments/{id}`](#deletestockadjustmentsid) | Delete a draft StockAdjustment (number voided) | `inventory.delete` | 204 |
+| 153 | `GET` | [`/api/v1/stock-transfers`](#getstocktransfers) | List StockTransfer documents | `inventory.view` | 200 |
+| 154 | `POST` | [`/api/v1/stock-transfers`](#poststocktransfers) | Create a draft StockTransfer | `inventory.create` | 201 |
+| 155 | `GET` | [`/api/v1/stock-transfers/{id}`](#getstocktransfersid) | Get a StockTransfer | `inventory.view` | 200 |
+| 156 | `PATCH` | [`/api/v1/stock-transfers/{id}`](#patchstocktransfersid) | Edit a draft StockTransfer | `inventory.edit` | 200 |
+| 157 | `DELETE` | [`/api/v1/stock-transfers/{id}`](#deletestocktransfersid) | Delete a draft StockTransfer (number voided) | `inventory.delete` | 204 |
+| 158 | `POST` | [`/api/v1/stock-adjustments/{id}/post`](#poststockadjustmentsidpost) | Post an adjustment: stock movements + value journal | `inventory.create` | 200 |
+| 159 | `POST` | [`/api/v1/stock-adjustments/{id}/reverse`](#poststockadjustmentsidreverse) | Reverse a posted adjustment | `inventory.approve` | 200 |
+| 160 | `POST` | [`/api/v1/stock-adjustments/count-sheet`](#poststockadjustmentscountsheet) | Parse an uploaded count sheet into adjustment lines (no save) | `inventory.create` | 200 |
+| 161 | `POST` | [`/api/v1/stock-transfers/{id}/dispatch`](#poststocktransfersiddispatch) | Dispatch: stock leaves the source (in transit) | `inventory.create` | 200 |
+| 162 | `POST` | [`/api/v1/stock-transfers/{id}/receive`](#poststocktransfersidreceive) | Receive at destination (optionally with received quantities) | `inventory.create` | 200 |
+| 163 | `POST` | [`/api/v1/stock-transfers/{id}/cancel`](#poststocktransfersidcancel) | Cancel a draft or dispatched transfer (dispatched stock returns to source) | `inventory.edit` | 200 |
+| 164 | `GET` | [`/api/v1/reports/inventory/summary`](#getreportsinventorysummary) | Inventory summary (value by group, flow, movers, attention) | `inventory.view` | 200 |
+| 165 | `GET` | [`/api/v1/reports/inventory/low-stock`](#getreportsinventorylowstock) | Items at or below reorder level with suggested quantities | `inventory.view` | 200 |
+| 166 | `GET` | [`/api/v1/reports/inventory/valuation`](#getreportsinventoryvaluation) | Stock valuation at weighted average cost as of a date | `inventory.view_costs` | 200 |
+| 167 | `GET` | [`/api/v1/reports/trial-balance`](#getreportstrialbalance) | Trial balance (JSON; xlsx/pdf/csv via format) | `reports.financial` | 200 |
+| 168 | `GET` | [`/api/v1/reports/profit-and-loss`](#getreportsprofitandloss) | Profit and loss (JSON; xlsx/pdf/csv via format) | `reports.financial` | 200 |
+| 169 | `GET` | [`/api/v1/reports/balance-sheet`](#getreportsbalancesheet) | Balance sheet (JSON; xlsx/pdf/csv via format) | `reports.financial` | 200 |
+| 170 | `GET` | [`/api/v1/reports/cash-flow`](#getreportscashflow) | Cash flow (indirect) (JSON; xlsx/pdf/csv via format) | `reports.financial` | 200 |
+| 171 | `GET` | [`/api/v1/reports/general-ledger`](#getreportsgeneralledger) | General ledger (JSON; xlsx/pdf/csv via format) | `reports.financial` | 200 |
+| 172 | `GET` | [`/api/v1/reports/receivables-aging`](#getreportsreceivablesaging) | Receivables aging (JSON; xlsx/pdf/csv via format) | `reports.financial` | 200 |
+| 173 | `GET` | [`/api/v1/reports/payables-aging`](#getreportspayablesaging) | Payables aging (JSON; xlsx/pdf/csv via format) | `reports.financial` | 200 |
+| 174 | `GET` | [`/api/v1/reports/sales`](#getreportssales) | Sales report | `reports.view` | 200 |
+| 175 | `GET` | [`/api/v1/reports/sales-returns`](#getreportssalesreturns) | Sales return report | `reports.view` | 200 |
+| 176 | `GET` | [`/api/v1/reports/purchases`](#getreportspurchases) | Purchase report | `reports.view` | 200 |
+| 177 | `GET` | [`/api/v1/reports/purchase-returns`](#getreportspurchasereturns) | Purchase return report | `reports.view` | 200 |
+| 178 | `GET` | [`/api/v1/reports/income`](#getreportsincome) | Income report | `reports.financial` | 200 |
+| 179 | `GET` | [`/api/v1/reports/expenses`](#getreportsexpenses) | Expense report | `reports.financial` | 200 |
+| 180 | `GET` | [`/api/v1/reports/lc/{report}`](#getreportslcreport) | LC reports: register, status, outstanding, expiry, docs, amendments, charges, cost, loans, exposure | `lc.view` | 200 |
+| 181 | `GET` | [`/api/v1/sales/overview`](#getsalesoverview) | Sales overview tiles, months, status breakdown, recent, top products | `sales.view` | 200 |
+| 182 | `POST` | [`/api/v1/sales-invoices/calculate`](#postsalesinvoicescalculate) | Authoritative totals for an unsaved invoice (no write) | `sales.create` | 200 |
+| 183 | `GET` | [`/api/v1/sales-invoices`](#getsalesinvoices) | List invoices | `sales.view` | 200 |
+| 184 | `POST` | [`/api/v1/sales-invoices`](#postsalesinvoices) | Create a draft invoice (number reserved) | `sales.create` | 201 |
+| 185 | `GET` | [`/api/v1/sales-invoices/{id}`](#getsalesinvoicesid) | Invoice with lines, payments (allocations), ledger entries and delivery | `sales.view` | 200 |
+| 186 | `PUT` | [`/api/v1/sales-invoices/{id}`](#putsalesinvoicesid) | Replace a draft invoice (header and lines) | `sales.edit` | 200 |
+| 187 | `PATCH` | [`/api/v1/sales-invoices/{id}/delivery`](#patchsalesinvoicesiddelivery) | Record challan, vehicle and delivery time (allowed after posting) | `sales.edit` | 200 |
+| 188 | `DELETE` | [`/api/v1/sales-invoices/{id}`](#deletesalesinvoicesid) | Delete a draft (number voided, never reused) | `sales.delete` | 204 |
+| 189 | `POST` | [`/api/v1/sales-invoices/{id}/post`](#postsalesinvoicesidpost) | Post: stock out at average cost, journal entry, customer balance | `sales.create` | 200 |
+| 190 | `POST` | [`/api/v1/sales-invoices/bulk-post`](#postsalesinvoicesbulkpost) | Post several drafts (each in its own transaction; per-item results) | `sales.create` | 200 |
+| 191 | `POST` | [`/api/v1/sales-invoices/{id}/cancel`](#postsalesinvoicesidcancel) | Cancel a posted invoice (reversal + stock back; payments become advance) | `sales.edit` | 200 |
+| 192 | `GET` | [`/api/v1/sales-invoices/{id}/pdf`](#getsalesinvoicesidpdf) | Invoice PDF per invoice design (also challan with ?variant=challan) | `sales.view` | 200 |
+| 193 | `POST` | [`/api/v1/sales-invoices/{id}/send`](#postsalesinvoicesidsend) | E-mail the invoice PDF to the customer (queued) | `sales.edit` | 202 |
+| 194 | `POST` | [`/api/v1/customer-receipts`](#postcustomerreceipts) | Record a customer payment with allocations (creates RV) | `sales.create` | 201 |
+| 195 | `GET` | [`/api/v1/customer-receipts`](#getcustomerreceipts) | List customer receipts (RV) with party, account, method and allocation status | `sales.view` | 200 |
+| 196 | `GET` | [`/api/v1/customer-receipts/{id}`](#getcustomerreceiptsid) | Get a customer receipt with its allocations | `sales.view` | 200 |
+| 197 | `GET` | [`/api/v1/customer-receipts/{id}/pdf`](#getcustomerreceiptsidpdf) | Printable receipt voucher | `sales.view` | 200 |
+| 198 | `POST` | [`/api/v1/allocations`](#postallocations) | Apply an advance, unapplied receipt/payment or open credit/debit note to an invoice or bill | contextual — party is a customer → `sales.create`; party is a supplier → `purchases.create` | 201 |
+| 199 | `DELETE` | [`/api/v1/allocations/{id}`](#deleteallocationsid) | Remove an allocation (sets reversed_at; balances restored) | contextual — party is a customer → `sales.edit`; party is a supplier → `purchases.edit` | 204 |
+| 200 | `GET` | [`/api/v1/quotations`](#getquotations) | List quotations | `sales.view` | 200 |
+| 201 | `POST` | [`/api/v1/quotations`](#postquotations) | Create a quotation | `sales.create` | 201 |
+| 202 | `GET` | [`/api/v1/quotations/{id}`](#getquotationsid) | Get a quotation | `sales.view` | 200 |
+| 203 | `PUT` | [`/api/v1/quotations/{id}`](#putquotationsid) | Replace a draft or sent quotation | `sales.edit` | 200 |
+| 204 | `POST` | [`/api/v1/quotations/{id}/send`](#postquotationsidsend) | Mark sent and e-mail it | `sales.edit` | 200 |
+| 205 | `POST` | [`/api/v1/quotations/{id}/convert`](#postquotationsidconvert) | Convert an accepted quotation into a draft invoice | `sales.create` | 201 |
+| 206 | `POST` | [`/api/v1/quotations/{id}/status`](#postquotationsidstatus) | Set accepted, declined or expired | `sales.edit` | 200 |
+| 207 | `DELETE` | [`/api/v1/quotations/{id}`](#deletequotationsid) | Delete a draft quotation (number voided and audited) | `sales.delete` | 204 |
+| 208 | `GET` | [`/api/v1/quotations/{id}/pdf`](#getquotationsidpdf) | Printable quotation (also attached when sent) | `sales.view` | 200 |
+| 209 | `GET` | [`/api/v1/sales-returns`](#getsalesreturns) | List sales returns | `sales.view` | 200 |
+| 210 | `POST` | [`/api/v1/sales-returns`](#postsalesreturns) | Create a draft return against an invoice | `sales.create` | 201 |
+| 211 | `GET` | [`/api/v1/sales-returns/{id}`](#getsalesreturnsid) | Get a return | `sales.view` | 200 |
+| 212 | `PUT` | [`/api/v1/sales-returns/{id}`](#putsalesreturnsid) | Replace a draft return | `sales.edit` | 200 |
+| 213 | `POST` | [`/api/v1/sales-returns/{id}/post`](#postsalesreturnsidpost) | Post the return (stock back if restock) and create a draft credit note | `sales.create` | 200 |
+| 214 | `DELETE` | [`/api/v1/sales-returns/{id}`](#deletesalesreturnsid) | Delete a draft sales return | `sales.delete` | 204 |
+| 215 | `POST` | [`/api/v1/sales-returns/{id}/cancel`](#postsalesreturnsidcancel) | Cancel a posted return: mirror stock entry; its credit note is cancelled if unapplied | `sales.edit` | 200 |
+| 216 | `GET` | [`/api/v1/credit-notes/{id}`](#getcreditnotesid) | Get a credit note | `sales.view` | 200 |
+| 217 | `PUT` | [`/api/v1/credit-notes/{id}`](#putcreditnotesid) | Edit a draft credit note (reason, amount, usage) | `sales.edit` | 200 |
+| 218 | `POST` | [`/api/v1/credit-notes`](#postcreditnotes) | Create a credit note without a return (price correction, goodwill) | `sales.create` | 201 |
+| 219 | `POST` | [`/api/v1/credit-notes/{id}/post`](#postcreditnotesidpost) | Post the credit note and apply it per usage | `sales.create` | 200 |
+| 220 | `GET` | [`/api/v1/credit-notes`](#getcreditnotes) | List credit notes | `sales.view` | 200 |
+| 221 | `DELETE` | [`/api/v1/credit-notes/{id}`](#deletecreditnotesid) | Delete a draft credit note | `sales.delete` | 204 |
+| 222 | `POST` | [`/api/v1/credit-notes/{id}/cancel`](#postcreditnotesidcancel) | Cancel a posted credit note (mirror entry; its allocations are reversed) | `sales.edit` | 200 |
+| 223 | `GET` | [`/api/v1/credit-notes/{id}/pdf`](#getcreditnotesidpdf) | Printable credit note | `sales.view` | 200 |
+| 224 | `GET` | [`/api/v1/purchases/overview`](#getpurchasesoverview) | Purchase overview | `purchases.view` | 200 |
+| 225 | `POST` | [`/api/v1/purchase-bills/calculate`](#postpurchasebillscalculate) | Authoritative totals for an unsaved bill (incl. foreign currency) | `purchases.create` | 200 |
+| 226 | `GET` | [`/api/v1/purchase-bills`](#getpurchasebills) | List bills | `purchases.view` | 200 |
+| 227 | `POST` | [`/api/v1/purchase-bills`](#postpurchasebills) | Create a draft bill (local or import mode) | `purchases.create` | 201 |
+| 228 | `GET` | [`/api/v1/purchase-bills/{id}`](#getpurchasebillsid) | Bill with lines, payments, ledger entries, receipt | `purchases.view` | 200 |
+| 229 | `PUT` | [`/api/v1/purchase-bills/{id}`](#putpurchasebillsid) | Replace a draft bill | `purchases.edit` | 200 |
+| 230 | `DELETE` | [`/api/v1/purchase-bills/{id}`](#deletepurchasebillsid) | Delete a draft bill | `purchases.delete` | 204 |
+| 231 | `POST` | [`/api/v1/purchase-bills/{id}/post`](#postpurchasebillsidpost) | Post: stock in, average cost update, journal, supplier balance, PO received qty | `purchases.create` | 200 |
+| 232 | `POST` | [`/api/v1/purchase-bills/{id}/cancel`](#postpurchasebillsidcancel) | Cancel a posted bill (reverse; stock out at bill cost; payments to advance) | `purchases.edit` | 200 |
+| 233 | `POST` | [`/api/v1/supplier-payments`](#postsupplierpayments) | Record a supplier payment with allocations (creates PV; may need approval) | `purchases.create` | 201 |
+| 234 | `GET` | [`/api/v1/supplier-payments`](#getsupplierpayments) | List supplier payments (PV) with party, account, method and status | `purchases.view` | 200 |
+| 235 | `GET` | [`/api/v1/supplier-payments/{id}`](#getsupplierpaymentsid) | Get a supplier payment with its allocations | `purchases.view` | 200 |
+| 236 | `GET` | [`/api/v1/supplier-payments/{id}/pdf`](#getsupplierpaymentsidpdf) | Printable payment voucher | `purchases.view` | 200 |
+| 237 | `GET` | [`/api/v1/purchase-orders`](#getpurchaseorders) | List purchase orders | `purchases.view` | 200 |
+| 238 | `POST` | [`/api/v1/purchase-orders`](#postpurchaseorders) | Create a purchase order | `purchases.create` | 201 |
+| 239 | `POST` | [`/api/v1/purchase-orders/from-low-stock`](#postpurchaseordersfromlowstock) | Create draft POs grouped by preferred supplier from selected low-stock rows | `purchases.create` | 201 |
+| 240 | `GET` | [`/api/v1/purchase-orders/{id}`](#getpurchaseordersid) | Get a purchase order | `purchases.view` | 200 |
+| 241 | `PUT` | [`/api/v1/purchase-orders/{id}`](#putpurchaseordersid) | Replace a draft or sent order | `purchases.edit` | 200 |
+| 242 | `POST` | [`/api/v1/purchase-orders/{id}/send`](#postpurchaseordersidsend) | Mark sent and e-mail it | `purchases.edit` | 200 |
+| 243 | `POST` | [`/api/v1/purchase-orders/{id}/convert`](#postpurchaseordersidconvert) | Create a draft bill from remaining quantities | `purchases.create` | 201 |
+| 244 | `POST` | [`/api/v1/purchase-orders/{id}/status`](#postpurchaseordersidstatus) | Close or cancel an order | `purchases.edit` | 200 |
+| 245 | `DELETE` | [`/api/v1/purchase-orders/{id}`](#deletepurchaseordersid) | Delete a draft purchase order | `purchases.delete` | 204 |
+| 246 | `GET` | [`/api/v1/purchase-orders/{id}/pdf`](#getpurchaseordersidpdf) | Printable purchase order (also attached when sent) | `purchases.view` | 200 |
+| 247 | `GET` | [`/api/v1/purchase-returns`](#getpurchasereturns) | List purchase returns | `purchases.view` | 200 |
+| 248 | `POST` | [`/api/v1/purchase-returns`](#postpurchasereturns) | Create a draft purchase return | `purchases.create` | 201 |
+| 249 | `GET` | [`/api/v1/purchase-returns/{id}`](#getpurchasereturnsid) | Get a purchase return | `purchases.view` | 200 |
+| 250 | `PUT` | [`/api/v1/purchase-returns/{id}`](#putpurchasereturnsid) | Replace a draft purchase return | `purchases.edit` | 200 |
+| 251 | `POST` | [`/api/v1/purchase-returns/{id}/post`](#postpurchasereturnsidpost) | Post the return: stock out at bill cost and Dr supplier / Cr inventory; the debit note is created posted, sharing that journal entry, and applied per usage | `purchases.create` | 200 |
+| 252 | `DELETE` | [`/api/v1/purchase-returns/{id}`](#deletepurchasereturnsid) | Delete a draft purchase return | `purchases.delete` | 204 |
+| 253 | `POST` | [`/api/v1/purchase-returns/{id}/cancel`](#postpurchasereturnsidcancel) | Cancel a posted purchase return: stock back at the same cost, supplier credited, its debit note cancelled | `purchases.edit` | 200 |
+| 254 | `GET` | [`/api/v1/debit-notes/{id}`](#getdebitnotesid) | Get a debit note | `purchases.view` | 200 |
+| 255 | `PUT` | [`/api/v1/debit-notes/{id}`](#putdebitnotesid) | Edit a draft debit note | `purchases.edit` | 200 |
+| 256 | `POST` | [`/api/v1/debit-notes`](#postdebitnotes) | Create a debit note without a return (price difference, quality claim) | `purchases.create` | 201 |
+| 257 | `POST` | [`/api/v1/debit-notes/{id}/post`](#postdebitnotesidpost) | Post a debit note that was not created from a return (price difference, short supply, quality claim) and apply it per usage | `purchases.create` | 200 |
+| 258 | `GET` | [`/api/v1/debit-notes`](#getdebitnotes) | List debit notes | `purchases.view` | 200 |
+| 259 | `DELETE` | [`/api/v1/debit-notes/{id}`](#deletedebitnotesid) | Delete a draft debit note | `purchases.delete` | 204 |
+| 260 | `POST` | [`/api/v1/debit-notes/{id}/cancel`](#postdebitnotesidcancel) | Cancel a posted debit note not created from a return (mirror entry; allocations reversed) | `purchases.edit` | 200 |
+| 261 | `GET` | [`/api/v1/debit-notes/{id}/pdf`](#getdebitnotesidpdf) | Printable debit note | `purchases.view` | 200 |
+| 262 | `GET` | [`/api/v1/banking/overview`](#getbankingoverview) | Accounts, combined balance series, quick stats, recent movements | `banking.view` | 200 |
+| 263 | `GET` | [`/api/v1/money-accounts`](#getmoneyaccounts) | Cash, bank, wallet and card accounts with book balance and reconciliation status | any signed-in user who is an active member of the company | 200 |
+| 264 | `POST` | [`/api/v1/money-accounts`](#postmoneyaccounts) | Add a bank, wallet or card account (ledger + opening balance) | `banking.create` | 201 |
+| 265 | `GET` | [`/api/v1/money-accounts/{id}`](#getmoneyaccountsid) | Account details, statement imports, last cash count | `banking.view` | 200 |
+| 266 | `PATCH` | [`/api/v1/money-accounts/{id}`](#patchmoneyaccountsid) | Edit account details and use-for switches | `banking.edit` | 200 |
+| 267 | `GET` | [`/api/v1/money-accounts/{id}/book`](#getmoneyaccountsidbook) | Cash book or bank book with running balance | `banking.view` | 200 |
+| 268 | `GET` | [`/api/v1/money-transactions`](#getmoneytransactions) | Cash and bank transactions across accounts | `banking.view` | 200 |
+| 269 | `POST` | [`/api/v1/cash-counts`](#postcashcounts) | Record a cash count; a difference creates a draft adjustment awaiting approval | `banking.create` | 201 |
+| 270 | `POST` | [`/api/v1/cash-counts/{id}/reverse`](#postcashcountsidreverse) | Reverse a posted cash-count adjustment (mirror entry) | `banking.approve` | 200 |
+| 271 | `POST` | [`/api/v1/bank-statement-imports`](#postbankstatementimports) | Import a CSV/XLSX statement (multipart; column mapping) | `banking.reconcile` | 201 |
+| 272 | `POST` | [`/api/v1/reconciliations`](#postreconciliations) | Start (or resume) a reconciliation for an account and statement date | `banking.reconcile` | 200 |
+| 273 | `GET` | [`/api/v1/reconciliations/{id}`](#getreconciliationsid) | Reconciliation with statement lines, suggestions and difference | `banking.reconcile` | 200 |
+| 274 | `POST` | [`/api/v1/reconciliations/{id}/lines/{lineId}/match`](#postreconciliationsidlineslineidmatch) | Match a statement line to a book line | `banking.reconcile` | 200 |
+| 275 | `POST` | [`/api/v1/reconciliations/{id}/lines/{lineId}/create-entry`](#postreconciliationsidlineslineidcreateentry) | Create the missing receipt or bank-charge voucher and match it | `banking.reconcile` | 200 |
+| 276 | `POST` | [`/api/v1/reconciliations/{id}/lines/pair`](#postreconciliationsidlinespair) | Mark offsetting statement lines (summing to zero) as a pair; a single line is marked ignored (no book effect) | `banking.reconcile` | 200 |
+| 277 | `POST` | [`/api/v1/reconciliations/{id}/lines/{lineId}/undo`](#postreconciliationsidlineslineidundo) | Undo a match, pair or ignore | `banking.reconcile` | 200 |
+| 278 | `POST` | [`/api/v1/reconciliations/{id}/accept-suggestions`](#postreconciliationsidacceptsuggestions) | Accept every same-amount, same-date suggestion | `banking.reconcile` | 200 |
+| 279 | `POST` | [`/api/v1/reconciliations/{id}/finish`](#postreconciliationsidfinish) | Finish (all lines handled and difference zero) | `banking.reconcile` | 200 |
+| 280 | `GET` | [`/api/v1/ie-categories`](#getiecategories) | Income or expense categories with ledger, budget and spent | `banking.view` | 200 |
+| 281 | `POST` | [`/api/v1/ie-categories`](#postiecategories) | Create a category (new or existing ledger) | `banking.create` | 201 |
+| 282 | `PATCH` | [`/api/v1/ie-categories/{id}`](#patchiecategoriesid) | Edit name, budget, warning | `banking.edit` | 200 |
+| 283 | `GET` | [`/api/v1/ie-entries`](#getieentries) | Income or expense lines on category ledgers (any voucher) | `banking.view` | 200 |
+| 284 | `POST` | [`/api/v1/ie-entries`](#postieentries) | Record an income or expense (creates INC/EXP voucher; optional recurrence) | `banking.create` | 201 |
+| 285 | `GET` | [`/api/v1/recurring-templates`](#getrecurringtemplates) | Recurring entries | `banking.view` | 200 |
+| 286 | `PATCH` | [`/api/v1/recurring-templates/{id}`](#patchrecurringtemplatesid) | Pause, edit or end a recurring entry | `banking.edit` | 200 |
+| 287 | `GET` | [`/api/v1/income-expenses/overview`](#getincomeexpensesoverview) | Income or expense overview for the FY | `banking.view` | 200 |
+| 288 | `GET` | [`/api/v1/accounting/overview`](#getaccountingoverview) | Totals and books-health checks | `accounting.view` | 200 |
+| 289 | `GET` | [`/api/v1/account-groups`](#getaccountgroups) | Chart of accounts tree with balances | `accounting.view` | 200 |
+| 290 | `POST` | [`/api/v1/account-groups`](#postaccountgroups) | Create a group | `accounting.create` | 201 |
+| 291 | `GET` | [`/api/v1/account-groups/{id}`](#getaccountgroupsid) | Group details and children | `accounting.view` | 200 |
+| 292 | `PATCH` | [`/api/v1/account-groups/{id}`](#patchaccountgroupsid) | Edit a group (name, parent within nature, order) | `accounting.edit` | 200 |
+| 293 | `GET` | [`/api/v1/ledgers`](#getledgers) | Ledger list (balances only with accounting.view) | any signed-in user who is an active member of the company | 200 |
+| 294 | `POST` | [`/api/v1/ledgers`](#postledgers) | Create a ledger (optional opening balance) | `accounting.create` | 201 |
+| 295 | `GET` | [`/api/v1/ledgers/{id}`](#getledgersid) | Ledger details with FY summary | `accounting.view` | 200 |
+| 296 | `PATCH` | [`/api/v1/ledgers/{id}`](#patchledgersid) | Edit a ledger (code and opening locked once used) | `accounting.edit` | 200 |
+| 297 | `POST` | [`/api/v1/ledgers/{id}/deactivate`](#postledgersiddeactivate) | Make a ledger inactive (system-mapped ledgers refused) | `accounting.edit` | 200 |
+| 298 | `GET` | [`/api/v1/ledgers/{id}/entries`](#getledgersidentries) | Ledger entries with running balance and monthly closings | `accounting.view` | 200 |
+| 299 | `GET` | [`/api/v1/vouchers`](#getvouchers) | Voucher list / day book | `accounting.view` | 200 |
+| 300 | `POST` | [`/api/v1/vouchers`](#postvouchers) | Create a journal, payment, receipt or contra voucher (draft or post immediately) | contextual — entry_type = journal → `accounting.create`; entry_type in (payment, receipt, contra) → `banking.create or accounting.create` | 201 |
+| 301 | `GET` | [`/api/v1/vouchers/{id}`](#getvouchersid) | Voucher with lines, allocations, payment details, audit trail, linked documents | `accounting.view` | 200 |
+| 302 | `PUT` | [`/api/v1/vouchers/{id}`](#putvouchersid) | Replace a draft or rejected voucher | contextual — entry_type = journal → `accounting.edit`; entry_type in (payment, receipt, contra) → `banking.edit or accounting.edit` | 200 |
+| 303 | `DELETE` | [`/api/v1/vouchers/{id}`](#deletevouchersid) | Delete a draft voucher (posted vouchers cannot be deleted) | `accounting.delete` | 204 |
+| 304 | `POST` | [`/api/v1/vouchers/{id}/submit`](#postvouchersidsubmit) | Submit a draft for approval | contextual — entry_type = journal → `accounting.create`; entry_type in (payment, receipt, contra) → `banking.create or accounting.create` | 200 |
+| 305 | `POST` | [`/api/v1/vouchers/{id}/post`](#postvouchersidpost) | Post a draft (or approved) voucher | contextual — entry_type = journal → `accounting.create`; entry_type in (payment, receipt, contra) → `banking.create or accounting.create` | 200 |
+| 306 | `POST` | [`/api/v1/vouchers/{id}/reverse`](#postvouchersidreverse) | Create a linked reversing entry | `accounting.create` | 201 |
+| 307 | `POST` | [`/api/v1/vouchers/calculate`](#postvoucherscalculate) | Authoritative balance and double-entry preview for an unsaved voucher (no write) | contextual — entry_type = journal → `accounting.create`; entry_type in (payment, receipt, contra) → `banking.create or accounting.create` | 200 |
+| 308 | `GET` | [`/api/v1/vouchers/{id}/pdf`](#getvouchersidpdf) | Printable voucher (A4) | `accounting.view` | 200 |
+| 309 | `GET` | [`/api/v1/voucher-templates`](#getvouchertemplates) | Journal templates (depreciation, accruals, reclassify) | `accounting.view` | 200 |
+| 310 | `GET` | [`/api/v1/lc/overview`](#getlcoverview) | LC KPIs, alerts, deadlines, by bank, pipeline, active, recent | `lc.view` | 200 |
+| 311 | `GET` | [`/api/v1/letters-of-credit`](#getlettersofcredit) | List LCs | `lc.view` | 200 |
+| 312 | `POST` | [`/api/v1/letters-of-credit`](#postlettersofcredit) | Create a draft LC (documents copied from template; items kept in a linked purchase order) | `lc.create` | 201 |
+| 313 | `GET` | [`/api/v1/letters-of-credit/{id}`](#getlettersofcreditid) | LC with milestones, terms, items, documents, shipments, charges, payments, amendments, money position | `lc.view` | 200 |
+| 314 | `PUT` | [`/api/v1/letters-of-credit/{id}`](#putlettersofcreditid) | Update a draft or awaiting-bank LC (opened LCs change only through amendments) | `lc.edit` | 200 |
+| 315 | `POST` | [`/api/v1/letters-of-credit/{id}/items`](#postlettersofcreditiditems) | Add the items to an LC that has none (creates the linked purchase order) | `lc.edit` | 201 |
+| 316 | `DELETE` | [`/api/v1/letters-of-credit/{id}`](#deletelettersofcreditid) | Delete a draft LC | `lc.delete` | 204 |
+| 317 | `POST` | [`/api/v1/letters-of-credit/{id}/transition`](#postlettersofcreditidtransition) | Change status: submit, mark_opened, mark_refused, documents_presented, cancel, expire, reopen | `lc.edit` | 200 |
+| 318 | `POST` | [`/api/v1/letters-of-credit/{id}/close`](#postlettersofcreditidclose) | Close after checks (or with override reason); margin release posted | `lc.edit` | 200 |
+| 319 | `GET` | [`/api/v1/letters-of-credit/{id}/documents`](#getlettersofcreditiddocuments) | Documents of an LC | `lc.view` | 200 |
+| 320 | `POST` | [`/api/v1/letters-of-credit/{id}/documents`](#postlettersofcreditiddocuments) | Add a required document | `lc.edit` | 201 |
+| 321 | `PATCH` | [`/api/v1/lc-documents/{id}`](#patchlcdocumentsid) | Update document status, dates, discrepancy note | `lc.edit` | 200 |
+| 322 | `GET` | [`/api/v1/lc-documents/matrix`](#getlcdocumentsmatrix) | Document status matrix across open LCs and follow-up list | `lc.view` | 200 |
+| 323 | `GET` | [`/api/v1/lc-document-templates`](#getlcdocumenttemplates) | Checklist templates with items | `lc.view` | 200 |
+| 324 | `PUT` | [`/api/v1/lc-document-templates/{id}`](#putlcdocumenttemplatesid) | Replace a template's items | `lc.edit` | 200 |
+| 325 | `POST` | [`/api/v1/lc-document-templates`](#postlcdocumenttemplates) | Create a template | `lc.create` | 201 |
+| 326 | `GET` | [`/api/v1/lc-amendments`](#getlcamendments) | All amendments (filter pending/accepted) | `lc.view` | 200 |
+| 327 | `POST` | [`/api/v1/letters-of-credit/{id}/amendments`](#postlettersofcreditidamendments) | Record an amendment with field and item changes | `lc.edit` | 201 |
+| 328 | `PATCH` | [`/api/v1/lc-amendments/{id}`](#patchlcamendmentsid) | Advance amendment status; on accepted the LC and its items are updated | `lc.edit` | 200 |
+| 329 | `POST` | [`/api/v1/letters-of-credit/{id}/shipments`](#postlettersofcreditidshipments) | Add a shipment lot | `lc.edit` | 201 |
+| 330 | `PATCH` | [`/api/v1/lc-shipments/{id}`](#patchlcshipmentsid) | Update a lot (status, B/L, vessel, ETD/ETA, arrived) | `lc.edit` | 200 |
+| 331 | `GET` | [`/api/v1/lc-charges`](#getlccharges) | Charges across LCs (filter by LC and paid status) | `lc.view` | 200 |
+| 332 | `POST` | [`/api/v1/lc-charges`](#postlccharges) | Add a charge or import expense (posts accrual or payment) | `lc.create` | 201 |
+| 333 | `POST` | [`/api/v1/lc-charges/{id}/reverse`](#postlcchargesidreverse) | Reverse an LC charge (refused once included in a posted landed-cost allocation) | `lc.edit` | 200 |
+| 334 | `POST` | [`/api/v1/lc-charges/{id}/pay`](#postlcchargesidpay) | Pay an unpaid charge | `lc.create` | 200 |
+| 335 | `POST` | [`/api/v1/letters-of-credit/{id}/payments`](#postlettersofcreditidpayments) | Record a payment to the beneficiary at the bank's rate (applies margin, FX) | `lc.create` | 201 |
+| 336 | `GET` | [`/api/v1/letters-of-credit/{id}/payments`](#getlettersofcreditidpayments) | Payments of an LC with bank rate, margin applied and FX difference | `lc.view` | 200 |
+| 337 | `POST` | [`/api/v1/lc-payments/{id}/reverse`](#postlcpaymentsidreverse) | Reverse an LC payment (restores margin and supplier balance; mirror entry) | `lc.edit` | 200 |
+| 338 | `POST` | [`/api/v1/letters-of-credit/{id}/landed-cost/preview`](#postlettersofcreditidlandedcostpreview) | Preview allocation of capitalised charges to an import bill's lines | `lc.view` | 200 |
+| 339 | `POST` | [`/api/v1/letters-of-credit/{id}/landed-cost`](#postlettersofcreditidlandedcost) | Post a landed-cost allocation (inventory and COGS split) | `lc.create` | 201 |
+| 340 | `POST` | [`/api/v1/landed-cost-allocations/{id}/reverse`](#postlandedcostallocationsidreverse) | Reverse a landed-cost allocation (inventory/COGS split and landed_cost movements) | `lc.edit` | 200 |
+| 341 | `GET` | [`/api/v1/letters-of-credit/{id}/pdf`](#getlettersofcreditidpdf) | Printable LC summary | `lc.view` | 200 |
+| 342 | `GET` | [`/api/v1/letters-of-credit/{id}/cost-summary`](#getlettersofcreditidcostsummary) | Landed cost breakdown and per-unit cost | `lc.view` | 200 |
+| 343 | `GET` | [`/api/v1/bank-facilities`](#getbankfacilities) | Bank facilities (LC and loan limits) with live utilisation | `lc.view` | 200 |
+| 344 | `POST` | [`/api/v1/bank-facilities`](#postbankfacilities) | Set a bank's LC and loan limits and default loan terms | `lc.edit` | 201 |
+| 345 | `PUT` | [`/api/v1/bank-facilities/{id}`](#putbankfacilitiesid) | Change a bank facility | `lc.edit` | 200 |
+| 346 | `GET` | [`/api/v1/lc-loans`](#getlcloans) | PAD/LTR loans (filter by status, bank, LC) | `lc.view` | 200 |
+| 347 | `GET` | [`/api/v1/lc-loans/{id}`](#getlcloansid) | One loan with its repayments and the interest due today | `lc.view` | 200 |
+| 348 | `GET` | [`/api/v1/lc-loans/{id}/interest`](#getlcloansidinterest) | Interest due on a loan at a date (for the repayment dialog) | `lc.view` | 200 |
+| 349 | `POST` | [`/api/v1/lc-loans/{id}/repayments`](#postlcloansidrepayments) | Repay principal with the interest due to the date | `lc.create` | 201 |
+| 350 | `POST` | [`/api/v1/lc-loans/{id}/convert`](#postlcloansidconvert) | Convert a PAD to an LTR on the agreed terms | `lc.edit` | 200 |
+| 351 | `POST` | [`/api/v1/lc-loan-repayments/{id}/reverse`](#postlcloanrepaymentsidreverse) | Reverse a loan repayment (mirror entry; principal and interest due again) | `lc.edit` | 200 |
+| 352 | `POST` | [`/api/v1/fx-revaluations/preview`](#postfxrevaluationspreview) | Preview revaluation of open foreign bills and acceptances at closing rates | `accounting.create` | 200 |
+| 353 | `POST` | [`/api/v1/fx-revaluations`](#postfxrevaluations) | Post a revaluation (unrealised gain/loss) and its reversal dated the next day | `accounting.create` | 201 |
+| 354 | `GET` | [`/api/v1/fx-revaluations`](#getfxrevaluations) | Revaluation history | `accounting.view` | 200 |
+| 355 | `POST` | [`/api/v1/fx-revaluations/{id}/reverse`](#postfxrevaluationsidreverse) | Reverse a revaluation (both its entries) | `accounting.edit` | 200 |
 
 ## 8. Contract validation
 
@@ -620,26 +625,26 @@ Last run: 24 rules, **24 passed, 0 failed**; 6 negative tests, 6 detected. Offic
 | Rule | Check | Items | Result |
 |---|---|---|---|
 | A01 | Document validates against the official OpenAPI 3.1 schema (schema-base: documents incl. Schema Objects) | 1 | ✅ pass |
-| A02 | Every component schema is valid JSON Schema 2020-12 (meta-schema check) | 239 | ✅ pass |
-| A03 | All $refs resolve and every component schema is used | 242 | ✅ pass |
-| A04 | Operations have unique camelCase operationIds, summary, description, tags, a 2xx, a default, and problem+json errors | 353 | ✅ pass |
-| A05 | Path templates and declared path parameters match; path parameters are required | 353 | ✅ pass |
-| A06 | Security: public only for sign-in flows, cookie only for refresh/logout, X-Company-Id on company-scoped calls, known permissions | 353 | ✅ pass |
-| A07 | Every operation that posts a journal entry takes an Idempotency-Key and documents its locking; every body can be rejected with 422 | 353 | ✅ pass |
-| A08 | Every 201 response declares a Location header | 59 | ✅ pass |
-| A09 | Collections use the paginated envelope {data[], meta} | 57 | ✅ pass |
-| A10 | Every error code exists in the catalogue, has its HTTP status documented on the operation, and every catalogue code is reachable | 82 | ✅ pass |
+| A02 | Every component schema is valid JSON Schema 2020-12 (meta-schema check) | 240 | ✅ pass |
+| A03 | All $refs resolve and every component schema is used | 243 | ✅ pass |
+| A04 | Operations have unique camelCase operationIds, summary, description, tags, a 2xx, a default, and problem+json errors | 355 | ✅ pass |
+| A05 | Path templates and declared path parameters match; path parameters are required | 355 | ✅ pass |
+| A06 | Security: public only for sign-in flows, cookie only for refresh/logout, X-Company-Id on company-scoped calls, known permissions | 355 | ✅ pass |
+| A07 | Every operation that posts a journal entry takes an Idempotency-Key and documents its locking; every body can be rejected with 422 | 355 | ✅ pass |
+| A08 | Every 201 response declares a Location header | 60 | ✅ pass |
+| A09 | Collections use the paginated envelope {data[], meta} | 58 | ✅ pass |
+| A10 | Every error code exists in the catalogue, has its HTTP status documented on the operation, and every catalogue code is reachable | 85 | ✅ pass |
 | A11 | Request-only schemas reject unknown properties (additionalProperties: false) | 108 | ✅ pass |
-| A12 | Money, quantity, cost and rate fields are decimal strings (never JSON numbers) | 241 | ✅ pass |
+| A12 | Money, quantity, cost and rate fields are decimal strings (never JSON numbers) | 242 | ✅ pass |
 | A13 | PUT/PATCH on a versioned table requires If-Match, and If-Match is only required where a version exists | 42 | ✅ pass |
-| A14 | Request fields are stored: each maps to a column (or is declared virtual) with a compatible length, enum values and nullability | 404 | ✅ pass |
+| A14 | Request fields are stored: each maps to a column (or is declared virtual) with a compatible length, enum values and nullability | 406 | ✅ pass |
 | A15 | Response enum fields have exactly the values the database allows | 29 | ✅ pass |
-| A16 | Every action of every page maps to API calls, a dialog, navigation or explicit client behaviour, and every target exists | 550 | ✅ pass |
-| A17 | Every data-changing endpoint is triggered by at least one page action (only token refresh is system-driven) | 202 | ✅ pass |
+| A16 | Every action of every page maps to API calls, a dialog, navigation or explicit client behaviour, and every target exists | 551 | ✅ pass |
+| A17 | Every data-changing endpoint is triggered by at least one page action (only token refresh is system-driven) | 203 | ✅ pass |
 | A18 | Every page has at least one endpoint (shared components use their host page's) | 163 | ✅ pass |
-| A19 | For every action, at least one role can both open the page and call the endpoint | 342 | ✅ pass |
-| A20 | Database operations name real tables; nothing deletes posted or append-only rows; every write changes something | 1478 | ✅ pass |
-| A21 | Every parameter has a typed schema | 581 | ✅ pass |
+| A19 | For every action, at least one role can both open the page and call the endpoint | 344 | ✅ pass |
+| A20 | Database operations name real tables; nothing deletes posted or append-only rows; every write changes something | 1485 | ✅ pass |
+| A21 | Every parameter has a typed schema | 583 | ✅ pass |
 | A22 | Business rules exist; 46 rejecting rules map to error codes | 374 | ✅ pass |
 | A23 | Calculate/preview endpoints never reject on business state; they return warnings[] (BR-015) | 5 | ✅ pass |
 | A24 | Ledger/stock writes are coherent: entries have lines, stock movements update balances, system entries take an SJ number, bulk post = single post | 89 | ✅ pass |
@@ -1275,7 +1280,7 @@ Update settings (partial). `require_two_factor` and backup fields additionally n
 | **Permission** | `settings.edit` — roles: Owner, Finance manager |
 | **Path / query params** | — / — |
 | **Request body** | [`CompanySettingsUpdate`](#schema-companysettingsupdate) |
-| **Validation** | `valuation_method` one of weighted_average/fifo; `invoice_rounding` one of none/nearest_1/nearest_5; `allow_negative_stock` boolean; `require_approval` boolean; `backdate_warning_days` integer; `prices_include_tax` boolean; `show_tax_no_on_invoice` boolean; `default_warehouse_id` id of a record in this company (nullable); `default_payment_term_id` id of a record in this company (nullable); `symbol_position` one of before/after; `table_decimals` integer; `negative_format` one of parentheses/minus; `number_grouping` one of lakh/million; `date_format` string ≤ 20; `week_start` one of saturday/sunday/monday; `print_language` one of en/bn/both; `invoice` object; `require_two_factor` boolean; `idle_timeout_minutes` integer (nullable); `backup_enabled` boolean; `backup_retention_days` integer<br>Unknown fields are rejected (422).<br>BR-035: The base currency cannot change once any journal entry exists. |
+| **Validation** | `valuation_method` one of weighted_average/fifo; `invoice_rounding` one of none/nearest_1/nearest_5; `allow_negative_stock` boolean; `require_approval` boolean; `backdate_warning_days` integer; `prices_include_tax` boolean; `show_tax_no_on_invoice` boolean; `default_warehouse_id` id of a record in this company (nullable); `default_payment_term_id` id of a record in this company (nullable); `symbol_position` one of before/after; `table_decimals` integer; `negative_format` one of parentheses/minus; `number_grouping` one of lakh/million; `date_format` string ≤ 20; `week_start` one of saturday/sunday/monday; `print_language` one of en/bn/both; `invoice` object; `require_two_factor` boolean; `idle_timeout_minutes` integer (nullable); `backup_enabled` boolean; `backup_retention_days` integer; `reminders_auto` boolean; `reminder_days_after_due` integer<br>Unknown fields are rejected (422).<br>BR-035: The base currency cannot change once any journal entry exists. |
 | **Success** | 200 `data`: [`CompanySettings`](#schema-companysettings) |
 | **Status codes** | 200, 400, 401, 403, 409, 422, 428, 503 |
 | **Error codes** | **`base_currency_locked`, `company_maintenance`, `support_read_only`**; standard: `company_required`, `if_match_required`, `malformed_json`, `not_a_member`, `permission_denied`, `server_error`, `token_expired`, `token_invalid`, `unauthenticated`, `validation_failed`, `version_conflict` |
@@ -3352,6 +3357,50 @@ E-mail statements to one or more parties (queued).
 | **Requirements** | FR-024 |
 | **Pages and actions** | B1, B8, C8, B7, C1, C7<br>B1 · Send statements (bulk)<br>B7 · Send reminders/statements (bulk)<br>B8 · Email to customer<br>C1 · Send statements (bulk)<br>C7 · Send reminders/statements (bulk)<br>C8 · Email to supplier |
 | **Transaction / concurrency** | Single transaction. |
+
+<a id="postpartiesidpaymentreminder"></a>
+#### `POST /api/v1/parties/{id}/payment-reminder`
+
+E-mail a customer a reminder of their overdue invoices, statement attached (PEP-516). _Contract change: PEP-516 payment reminders._
+
+| | |
+|---|---|
+| **Auth** | Bearer JWT + `X-Company-Id` |
+| **Permission** | `parties.view` — roles: Owner, Finance manager, Accountant, Sales staff, Viewer |
+| **Path / query params** | `id` / — |
+| **Request body** | — |
+| **Validation** | — |
+| **Success** | 201 `data`: [`PaymentReminder`](#schema-paymentreminder) |
+| **Status codes** | 201, 400, 401, 403, 404, 409, 422, 503 |
+| **Error codes** | **`company_maintenance`, `no_overdue_invoices`, `party_has_no_email`, `reminder_sent_recently`, `support_read_only`**; standard: `company_required`, `idempotency_in_progress`, `idempotency_key_reused`, `not_a_member`, `not_found`, `permission_denied`, `server_error`, `token_expired`, `token_invalid`, `unauthenticated` |
+| **Headers** | `Idempotency-Key`, `Location` on 201 |
+| **Database** | lock: parties; insert: audit_logs, idempotency_keys; update: parties; read: payment_reminders, sales_invoices |
+| **Business rules** | — |
+| **Requirements** | FR-024 |
+| **Pages and actions** | B4<br>B4 · Send payment reminder (NEW, PEP-516) |
+| **Transaction / concurrency** | Single transaction. |
+
+<a id="getpartiesidpaymentreminders"></a>
+#### `GET /api/v1/parties/{id}/payment-reminders`
+
+Reminders sent to this customer, newest first (PEP-516). _Contract change: PEP-516 payment reminders._
+
+| | |
+|---|---|
+| **Auth** | Bearer JWT + `X-Company-Id` |
+| **Permission** | `parties.view` — roles: Owner, Finance manager, Accountant, Sales staff, Viewer |
+| **Path / query params** | `id` / — |
+| **Request body** | — |
+| **Validation** | — |
+| **Success** | 200 `data[]` of [`PaymentReminder`](#schema-paymentreminder) + `meta` |
+| **Status codes** | 200, 400, 401, 403, 404, 503 |
+| **Error codes** | **`company_maintenance`**; standard: `company_required`, `not_a_member`, `not_found`, `permission_denied`, `server_error`, `token_expired`, `token_invalid`, `unauthenticated` |
+| **Headers** | — |
+| **Database** | read: payment_reminders, users |
+| **Business rules** | — |
+| **Requirements** | FR-024 |
+| **Pages and actions** | B4<br>B4 · Send payment reminder (NEW, PEP-516) |
+| **Transaction / concurrency** | Read-only; consistent snapshot. |
 
 <a id="getpartygroups"></a>
 #### `GET /api/v1/party-groups`
@@ -9366,6 +9415,8 @@ All company settings (see company_settings).
 | `idle_timeout_minutes` | `int \| null` | no |
 | `backup_enabled` | `bool` | no |
 | `backup_retention_days` | `int` | no |
+| `reminders_auto` | `bool` | yes |
+| `reminder_days_after_due` | `int` | yes |
 | `version` | `int` | yes |
 
 <a id="schema-companysettingsupdate"></a>
@@ -9396,6 +9447,8 @@ Partial update; same fields as CompanySettings except version. Unknown propertie
 | `idle_timeout_minutes` | `int \| null` | no |
 | `backup_enabled` | `bool` | no |
 | `backup_retention_days` | `int` | no |
+| `reminders_auto` | `bool` | no |
+| `reminder_days_after_due` | `int` | no |
 
 <a id="schema-branch"></a>
 #### `Branch`
@@ -10117,6 +10170,21 @@ Aging bucket.
 | `key` | `enum:not_due\|d1_30\|d31_60\|d61_90\|d90_plus\|total` | yes |
 | `amount` | `money` | yes |
 | `count` | `int` | yes |
+
+<a id="schema-paymentreminder"></a>
+#### `PaymentReminder`
+
+A payment reminder e-mailed to a customer (PEP-516). trigger: manual (sent_by) or auto (the daily job).
+
+| Property | Type | Required |
+|---|---|---|
+| `id` | `id` | yes |
+| `sent_at` | `datetime` | yes |
+| `trigger` | `enum:manual\|auto` | yes |
+| `email` | `str` | yes |
+| `invoices_count` | `int` | yes |
+| `overdue_amount` | `money` | yes |
+| `sent_by` | `ref:UserRef \| null` | no |
 
 <a id="schema-partystatement"></a>
 #### `PartyStatement`
@@ -12444,7 +12512,7 @@ View permission `parties.edit`. **Loads:** [`GET /parties/{id}`](#getpartiesid).
 <a id="actions-b4"></a>
 #### B4 · Customer details
 
-View permission `parties.view`. **Loads:** [`GET /audit-logs`](#getauditlogs), [`GET /parties/{id}`](#getpartiesid), [`GET /parties/{id}/open-documents`](#getpartiesidopendocuments).
+View permission `parties.view`. **Loads:** [`GET /audit-logs`](#getauditlogs), [`GET /parties/{id}`](#getpartiesid), [`GET /parties/{id}/open-documents`](#getpartiesidopendocuments), [`GET /parties/{id}/payment-reminders`](#getpartiesidpaymentreminders).
 
 | # | Action | Calls | Permission | Body → data | Success | Business errors to handle |
 |---|---|---|---|---|---|---|
@@ -12455,6 +12523,7 @@ View permission `parties.view`. **Loads:** [`GET /audit-logs`](#getauditlogs), [
 | 5 | Switch tab | [`GET /parties/{id}/transactions`](#getpartiesidtransactions) \| [`GET /parties/{id}/ledger`](#getpartiesidledger) \| [`GET /audit-logs`](#getauditlogs) | `parties.view`, contextual — any → `<module>.view of the record named by type/id (e.g. sales.view for a sales_invoice)` | — | 200 | — |
 | 6 | Apply advance or credit (NEW, R-08) | [`GET /parties/{id}/open-documents`](#getpartiesidopendocuments) → [`POST /allocations`](#postallocations) | `parties.view`, contextual — party is a customer → `sales.create`; party is a supplier → `purchases.create` | [`AllocationCreate`](#schema-allocationcreate) → [`Allocation`](#schema-allocation) | 200, 201 | `allocation_exceeds_balance`, `foreign_document`, `period_locked`, `support_read_only` |
 | 7 | Remove allocation (NEW, R-08) | dlg:L6 → [`DELETE /allocations/{id}`](#deleteallocationsid) | contextual — party is a customer → `sales.edit`; party is a supplier → `purchases.edit` | — → — | 204 | `allocation_exceeds_balance`, `period_locked`, `support_read_only` |
+| 8 | Send payment reminder (NEW, PEP-516) | dlg:L6 → [`POST /parties/{id}/payment-reminder`](#postpartiesidpaymentreminder) → [`GET /parties/{id}/payment-reminders`](#getpartiesidpaymentreminders) | `parties.view` | — → [`PaymentReminder`](#schema-paymentreminder) | 200, 201 | `no_overdue_invoices`, `party_has_no_email`, `reminder_sent_recently`, `support_read_only` |
 
 <a id="actions-b5"></a>
 #### B5 · Customer transaction history
@@ -14181,12 +14250,12 @@ View permission `lc.create`. **Loads:** nothing of its own (host page data).
 
 | | Before review | Contract |
 |---|---|---|
-| Endpoints | 280 | 353 |
-| Schemas | 191 | 239 |
+| Endpoints | 280 | 355 |
+| Schemas | 191 | 240 |
 | Pages | 155 | 163 |
-| Page actions mapped to API or client behaviour | 0 of 448 | 550 of 550 |
+| Page actions mapped to API or client behaviour | 0 of 448 | 551 of 551 |
 
-### 12.2 Missing endpoints, now added (72)
+### 12.2 Missing endpoints, now added (74)
 
 | Endpoint | Ref | Why it was missing |
 |---|---|---|
@@ -14217,6 +14286,8 @@ View permission `lc.create`. **Loads:** nothing of its own (host page data).
 | [`POST /setup-checklist/hide`](#postsetupchecklisthide) | PEP-511 setup checklist |  |
 | [`POST /parties/bulk-deactivate`](#postpartiesbulkdeactivate) | C-04 | B1/C1 'Mark inactive (bulk)' had no endpoint |
 | [`GET /parties/{id}/statement/pdf`](#getpartiesidstatementpdf) | C-01 | Documents that are printed or e-mailed need a server PDF (quotation, PO, notes, receipts, payments, statement, LC summary) |
+| [`POST /parties/{id}/payment-reminder`](#postpartiesidpaymentreminder) | PEP-516 payment reminders |  |
+| [`GET /parties/{id}/payment-reminders`](#getpartiesidpaymentreminders) | PEP-516 payment reminders |  |
 | [`POST /products/import`](#postproductsimport) | C-05 | D1 'Import' had no endpoint |
 | [`GET /customer-receipts`](#getcustomerreceipts) | R-07 | Sidebar list screens had no list endpoint; sales users could not see receipts without accounting.view (13 R-07) |
 | [`GET /customer-receipts/{id}`](#getcustomerreceiptsid) | R-07 | Sidebar list screens had no list endpoint; sales users could not see receipts without accounting.view (13 R-07) |
@@ -14331,6 +14402,7 @@ View permission `lc.create`. **Loads:** nothing of its own (host page data).
 | Platform console (PEP-483) | New /platform/companies endpoints (list, create with an Owner invitation, suspend, reactivate) for platform admins: e-mails in PLUTO_PLATFORM_ADMINS with 2-step sign-in, never a company role, so selling Pluto to many companies needs no shared membership. Me adds platform_admin (shows the console link; PEP-484). Schemas PlatformCompany, PlatformCompanyCreate; errors platform_admin_only, platform_two_factor_required. Owner request 12-13 Nov 2026. Additive. |
 | Read-only support access (PEP-485) | POST/DELETE /platform/companies/{id}/support-access: a platform admin opens a company read-only for 15-240 minutes with a reason (table support_access_grants); its owners get a notification and the audit log keeps the start and end; any change answers 403 support_read_only; Me adds support_access while the current company is such a view. Additive. |
 | Usage overview (PEP-512) | PlatformCompany adds usage: last sign-in of the company's own people, active people in 30 days, this month's sales invoices, purchase bills and vouchers, and quiet (no activity for 7+ days). Read-only, worked out from existing tables. Owner request 15 Nov 2026. Additive. |
+| Payment reminders (PEP-516) | payment_reminders log; company_settings adds reminders_auto, reminder_days_after_due (CompanySettings/Update). POST /parties/{id}/payment-reminder (parties.view) e-mails the customer's overdue invoices with the statement PDF; 422 party_has_no_email / no_overdue_invoices, 409 reminder_sent_recently (one a week). GET /parties/{id}/payment-reminders. Daily job pluto:reminders:send when reminders_auto is on. Owner 16 Nov 2026. Additive. |
 | Announcements (PEP-513) | announcements (platform-wide: title, body, tone, starts_at, ends_at, is_active) and announcement_dismissals. Platform console: GET/POST /platform/announcements, PUT/DELETE /platform/announcements/{id}. Everyone: GET /announcements (active, current, not closed by them) and POST /announcements/{id}/dismiss. Owner request 15 Nov 2026. Additive. |
 | Setup checklist (PEP-511) | GET /setup-checklist (dashboard.view): profile, logo, tax, money, warehouse, items, customers, first_invoice, team, each done from the company's own data; POST /setup-checklist/hide (settings.edit) stores company_settings.setup_hidden_at. The dashboard shows it until every step is done or an Owner hides it. Owner request 15 Nov 2026. Additive. |
 | Terms and privacy acceptance (PEP-502) | AcceptInvitationRequest adds accept_terms: a new account must accept the Terms of service and Privacy policy (422 on accept_terms otherwise); users adds terms_version and terms_accepted_at (the version in config pluto.terms_version). The texts are public pages of the web app (/terms, /privacy), a draft for the owner's lawyer. Owner request 15 Nov 2026 (roadmap A5). Additive. |
@@ -14372,6 +14444,7 @@ Each pair returns similar data but serves a different permission audience. Remov
 | C3 | Delete (L7 confirmation, only without history) | shown in the component's design description, missing from the inventory |
 | B4 | Apply advance or credit (NEW, R-08) | NEW |
 | B4 | Remove allocation (NEW, R-08) | NEW |
+| B4 | Send payment reminder (NEW, PEP-516) | NEW |
 | C4 | Apply advance or credit (NEW, R-08) | NEW |
 | C4 | Remove allocation (NEW, R-08) | NEW |
 | F4 | Apply advance or credit (NEW, R-08) | NEW |
