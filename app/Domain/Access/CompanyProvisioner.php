@@ -66,7 +66,7 @@ final class CompanyProvisioner
     private const MAPPINGS = [
         'cash_bank_group' => ['group', '1100'], 'sundry_debtors_group' => ['group', '1201'], 'inventory_group' => ['group', '1301'],
         'sundry_creditors_group' => ['group', '2101'], 'lc_margin' => ['ledger', '1403'], 'goods_in_transit' => ['ledger', '1404'],
-        'stock_in_transit' => ['ledger', '1405'], 'lc_acceptance' => ['ledger', '2302'], 'lc_loan' => ['ledger', '2303'], 'interest_payable' => ['ledger', '2304'], 'interest_expense' => ['ledger', '6601'], 'suspense' => ['ledger', '9999'],
+        'stock_in_transit' => ['ledger', '1405'], 'lc_acceptance' => ['ledger', '2302'], 'lc_loan' => ['ledger', '2303'], 'interest_payable' => ['ledger', '2304'], 'interest_expense' => ['ledger', '6601'], 'salaries_expense' => ['ledger', '6001'], 'salaries_payable' => ['ledger', '2201'], 'suspense' => ['ledger', '9999'],
         'retained_earnings' => ['ledger', '3201'], 'opening_balance_adjustment' => ['ledger', '3301'], 'sales_default' => ['ledger', '4101'],
         'sales_returns' => ['ledger', '4109'], 'discount_allowed' => ['ledger', '4110'], 'discount_received' => ['ledger', '4305'],
         'cogs' => ['ledger', '5001'], 'stock_adjustment' => ['ledger', '5002'], 'purchases_non_stock' => ['ledger', '5101'],

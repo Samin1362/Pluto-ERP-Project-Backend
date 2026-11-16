@@ -2010,6 +2010,54 @@ erDiagram
         date left_on
         varchar notes
     }
+    payroll_runs {
+        bigint id PK
+        bigint company_id FK
+        varchar kind
+        date period_month
+        date pay_date
+        varchar status
+        smallint employees_count
+        decimal total_gross
+        decimal total_deductions
+        decimal total_net
+        varchar notes
+        bigint journal_entry_id FK
+        bigint reversal_entry_id FK
+        datetime approved_at
+        bigint approved_by FK
+        datetime cancelled_at
+        varchar cancel_reason
+    }
+    payroll_lines {
+        bigint id PK
+        bigint payroll_run_id FK
+        bigint employee_id FK
+        varchar employee_code
+        varchar employee_name
+        varchar designation
+        tinyint days_in_month
+        tinyint days_paid
+        decimal basic_salary
+        decimal house_rent
+        decimal medical
+        decimal conveyance
+        decimal overtime
+        decimal other_earnings
+        decimal deductions
+        decimal advance_recovery
+        decimal gross
+        decimal net
+        decimal paid_amount
+        varchar note
+    }
+    journal_entries {
+        bigint id PK
+    }
+    employees ||--o{ payroll_lines : "employee_id"
+    journal_entries |o--o| payroll_runs : "journal_entry_id"
+    journal_entries |o--o| payroll_runs : "reversal_entry_id"
+    payroll_runs ||--o{ payroll_lines : "payroll_run_id"
 ```
 
 ## 6. Data dictionary
@@ -5698,7 +5746,97 @@ Standard columns are listed in each table: `id` (PK), `company_id` (tenant), `lo
 - **Check** `pay_method IN ('cash', 'bank', 'mobile')`
 - **Check** `status IN ('active', 'left')`
 
-_Total: 99 application tables._
+#### `payroll_runs`
+
+**Purpose:** A salary sheet for one month (PEP-521): draft while it is prepared, approved when posted (Dr salaries_expense / Cr salaries_payable), cancelled by reversal.  
+**Flags:** tenant-scoped, optimistic lock  
+**Primary key:** (id)
+
+| Column | Type | Null | Default | Keys | FK rule | Meaning / rules |
+|---|---|---|---|---|---|---|
+| `id` | BIGINT UNSIGNED | no | — | PK | — | Primary key, auto-increment |
+| `company_id` | BIGINT UNSIGNED | no | — | FK → `companies.id` | ON DELETE RESTRICT / ON UPDATE RESTRICT | Tenant owner. Every query is scoped by it. |
+| `kind` | VARCHAR(30) | no | 'salary' | — | — | enum: salary \| bonus. bonus: festival bonus sheets (PEP-524) |
+| `period_month` | DATE | no | — | — | — | First day of the month paid |
+| `pay_date` | DATE | no | — | — | — | Date of the salary entry; the month end by default |
+| `status` | VARCHAR(30) | no | 'draft' | — | — | enum: draft \| approved \| cancelled |
+| `employees_count` | SMALLINT UNSIGNED | no | 0 | — | — |  |
+| `total_gross` | DECIMAL(18,2) | no | 0 | — | — |  |
+| `total_deductions` | DECIMAL(18,2) | no | 0 | — | — |  |
+| `total_net` | DECIMAL(18,2) | no | 0 | — | — |  |
+| `notes` | VARCHAR(500) | yes | NULL | — | — |  |
+| `journal_entry_id` | BIGINT UNSIGNED | yes | NULL | FK → `journal_entries.id` · UQ | ON DELETE RESTRICT / ON UPDATE RESTRICT |  |
+| `reversal_entry_id` | BIGINT UNSIGNED | yes | NULL | FK → `journal_entries.id` · UQ | ON DELETE RESTRICT / ON UPDATE RESTRICT |  |
+| `approved_at` | DATETIME | yes | NULL | — | — |  |
+| `approved_by` | BIGINT UNSIGNED | yes | NULL | FK → `users.id` | ON DELETE RESTRICT / ON UPDATE RESTRICT |  |
+| `cancelled_at` | DATETIME | yes | NULL | — | — |  |
+| `cancel_reason` | VARCHAR(255) | yes | NULL | — | — |  |
+| `lock_version` | INT UNSIGNED | no | 1 | — | — | Optimistic concurrency counter; incremented on every update (If-Match) |
+| `created_by` | BIGINT UNSIGNED | yes | NULL | FK → `users.id` | ON DELETE RESTRICT / ON UPDATE RESTRICT | User who created the row |
+| `updated_by` | BIGINT UNSIGNED | yes | NULL | FK → `users.id` | ON DELETE RESTRICT / ON UPDATE RESTRICT | User who last changed the row |
+| `created_at` | DATETIME | yes | NULL | — | — | Set by Laravel |
+| `updated_at` | DATETIME | yes | NULL | — | — | Set by Laravel |
+
+- **Unique** (journal_entry_id)
+- **Unique** (reversal_entry_id)
+- Index (company_id, kind, period_month)
+- Index (company_id, status)
+- Index (approved_by)
+- Index (created_by)
+- Index (updated_by)
+- **Check** `total_gross >= 0`
+- **Check** `total_net >= 0`
+- **Check** `kind IN ('salary', 'bonus')`
+- **Check** `status IN ('draft', 'approved', 'cancelled')`
+
+**Relationships:**
+- `journal_entry_id` → `journal_entries`: one-to-one (optional)
+- `reversal_entry_id` → `journal_entries`: one-to-one (optional)
+- `approved_by` → `users`: one-to-many (optional)
+
+#### `payroll_lines`
+
+**Purpose:** One employee on a salary sheet (PEP-521): the salary structure for the days paid, plus overtime and other earnings, less deductions and advance recovery.  
+**Flags:** —  
+**Primary key:** (id)
+
+| Column | Type | Null | Default | Keys | FK rule | Meaning / rules |
+|---|---|---|---|---|---|---|
+| `id` | BIGINT UNSIGNED | no | — | PK | — | Primary key, auto-increment |
+| `payroll_run_id` | BIGINT UNSIGNED | no | — | FK → `payroll_runs.id` | ON DELETE CASCADE / ON UPDATE RESTRICT |  |
+| `employee_id` | BIGINT UNSIGNED | no | — | FK → `employees.id` | ON DELETE RESTRICT / ON UPDATE RESTRICT |  |
+| `employee_code` | VARCHAR(20) | no | — | — | — |  |
+| `employee_name` | VARCHAR(150) | no | — | — | — |  |
+| `designation` | VARCHAR(80) | yes | NULL | — | — |  |
+| `days_in_month` | TINYINT UNSIGNED | no | — | — | — |  |
+| `days_paid` | TINYINT UNSIGNED | no | — | — | — | Fewer when they joined or left in the month |
+| `basic_salary` | DECIMAL(18,2) | no | — | — | — |  |
+| `house_rent` | DECIMAL(18,2) | no | 0 | — | — |  |
+| `medical` | DECIMAL(18,2) | no | 0 | — | — |  |
+| `conveyance` | DECIMAL(18,2) | no | 0 | — | — |  |
+| `overtime` | DECIMAL(18,2) | no | 0 | — | — |  |
+| `other_earnings` | DECIMAL(18,2) | no | 0 | — | — | Commission, incentive, arrears |
+| `deductions` | DECIMAL(18,2) | no | 0 | — | — | Absence, fines, other |
+| `advance_recovery` | DECIMAL(18,2) | no | 0 | — | — | Staff advance taken back this month (PEP-523) |
+| `gross` | DECIMAL(18,2) | no | — | — | — |  |
+| `net` | DECIMAL(18,2) | no | — | — | — |  |
+| `paid_amount` | DECIMAL(18,2) | no | 0 | — | — | Paid so far (PEP-522) |
+| `note` | VARCHAR(255) | yes | NULL | — | — |  |
+| `created_at` | DATETIME | yes | NULL | — | — | Set by Laravel |
+| `updated_at` | DATETIME | yes | NULL | — | — | Set by Laravel |
+
+- **Unique** (payroll_run_id, employee_id)
+- Index (employee_id)
+- **Check** `net >= 0`
+- **Check** `deductions >= 0`
+- **Check** `overtime >= 0`
+- **Check** `other_earnings >= 0`
+
+**Relationships:**
+- `payroll_run_id` → `payroll_runs`: one-to-many
+- `employee_id` → `employees`: one-to-many
+
+_Total: 101 application tables._
 
 
 ## 7. Relationship matrix
@@ -5956,6 +6094,11 @@ Every foreign key except the uniform `company_id`, `created_by` and `updated_by`
 | 247 | `fx_revaluation_lines` | `letter_of_credit_id` | `letters_of_credit` | one-to-many (optional) | no | RESTRICT |
 | 248 | `fx_revaluation_lines` | `party_id` | `parties` | one-to-many (optional) | no | RESTRICT |
 | 249 | `fx_revaluation_lines` | `currency_code` | `currencies` | one-to-many | yes | RESTRICT |
+| 250 | `payroll_runs` | `journal_entry_id` | `journal_entries` | one-to-one (optional) | no | RESTRICT |
+| 251 | `payroll_runs` | `reversal_entry_id` | `journal_entries` | one-to-one (optional) | no | RESTRICT |
+| 252 | `payroll_runs` | `approved_by` | `users` | one-to-many (optional) | no | RESTRICT |
+| 253 | `payroll_lines` | `payroll_run_id` | `payroll_runs` | one-to-many | yes | CASCADE |
+| 254 | `payroll_lines` | `employee_id` | `employees` | one-to-many | yes | RESTRICT |
 
 **Many-to-many relationships** are only ever implemented through junction tables:
 
@@ -6069,6 +6212,8 @@ For each table, the tables it references (must exist first). Self-references are
 | `fx_revaluations` | `companies`, `journal_entries`, `users` | — |
 | `fx_revaluation_lines` | `currencies`, `fx_revaluations`, `letters_of_credit`, `parties`, `purchase_bills` | — |
 | `employees` | `companies`, `users` | — |
+| `payroll_runs` | `companies`, `journal_entries`, `users` | — |
+| `payroll_lines` | `employees`, `payroll_runs` | — |
 
 ## 9. Migration order
 
@@ -6148,67 +6293,69 @@ Computed by topological sort of section 8, so every referenced table is created 
 54. `party_bank_accounts`
 55. `payment_details`
 56. `payment_reminders`
-57. `products`
-58. `purchase_orders`
-59. `quotations`
-60. `recurring_templates`
-61. `stock_adjustments`
-62. `stock_transfers`
+57. `payroll_runs`
+58. `products`
+59. `purchase_orders`
+60. `quotations`
+61. `recurring_templates`
+62. `stock_adjustments`
+63. `stock_transfers`
 
 **Level 6**
 
-63. `cash_count_denominations`
-64. `letters_of_credit`
-65. `product_units`
-66. `product_warehouse_settings`
-67. `purchase_order_lines`
-68. `quotation_lines`
-69. `sales_invoices`
-70. `stock_adjustment_lines`
-71. `stock_balances`
-72. `stock_movements`
-73. `stock_transfer_lines`
+64. `cash_count_denominations`
+65. `letters_of_credit`
+66. `payroll_lines`
+67. `product_units`
+68. `product_warehouse_settings`
+69. `purchase_order_lines`
+70. `quotation_lines`
+71. `sales_invoices`
+72. `stock_adjustment_lines`
+73. `stock_balances`
+74. `stock_movements`
+75. `stock_transfer_lines`
 
 **Level 7**
 
-74. `journal_lines`
-75. `lc_amendments`
-76. `lc_shipments`
-77. `recurring_invoices`
-78. `sales_invoice_lines`
-79. `sales_returns`
+76. `journal_lines`
+77. `lc_amendments`
+78. `lc_shipments`
+79. `recurring_invoices`
+80. `sales_invoice_lines`
+81. `sales_returns`
 
 **Level 8**
 
-80. `bank_statement_lines`
-81. `credit_notes`
-82. `lc_amendment_changes`
-83. `lc_amendment_lines`
-84. `lc_documents`
-85. `purchase_bills`
-86. `sales_return_lines`
+82. `bank_statement_lines`
+83. `credit_notes`
+84. `lc_amendment_changes`
+85. `lc_amendment_lines`
+86. `lc_documents`
+87. `purchase_bills`
+88. `sales_return_lines`
 
 **Level 9**
 
-87. `bill_allocations`
-88. `fx_revaluation_lines`
-89. `landed_cost_allocations`
-90. `lc_payments`
-91. `purchase_bill_lines`
-92. `purchase_returns`
+89. `bill_allocations`
+90. `fx_revaluation_lines`
+91. `landed_cost_allocations`
+92. `lc_payments`
+93. `purchase_bill_lines`
+94. `purchase_returns`
 
 **Level 10**
 
-93. `debit_notes`
-94. `landed_cost_allocation_lines`
-95. `lc_charges`
-96. `lc_loans`
-97. `purchase_return_lines`
+95. `debit_notes`
+96. `landed_cost_allocation_lines`
+97. `lc_charges`
+98. `lc_loans`
+99. `purchase_return_lines`
 
 **Level 11**
 
-98. `lc_loan_accruals`
-99. `lc_loan_repayments`
+100. `lc_loan_accruals`
+101. `lc_loan_repayments`
 
 ## 10. Index and uniqueness recommendations
 
@@ -6297,7 +6444,7 @@ It reproduces the designed H2 chart and adds the ledgers needed by posting rules
 | 2 | Liabilities | Primary | Liability | |
 | 21 | Current liabilities | Group | Liability | |
 | 2101 | Sundry creditors | Group | Liability | `sundry_creditors_group` |
-| 2201 | Salaries payable | Ledger | Liability | |
+| 2201 | Salaries payable | Ledger | Liability | `salaries_payable` |
 | 2202 | Accrued expenses | Ledger | Liability | |
 | 2205 ✚ | Tax payable | Ledger (tax) | Liability | |
 | 2301 | Bank cash credit | Ledger | Liability | |
@@ -6327,7 +6474,8 @@ It reproduces the designed H2 chart and adds the ledgers needed by posting rules
 | 5109 ✚ | Purchase returns, non-stock items | Ledger | Expense (contra) | `purchase_returns_non_stock` |
 | 6 | Expenses | Primary | Expense | |
 | 61 | Operating expenses | Group | Expense | |
-| 6001, 6101, 6105, 6110, 6199, 6201 | Salaries and wages; Rent; Transport and delivery; Electricity and utilities; Other expenses; Marketing and promotion | Ledger | Expense | linked to `ie_categories` |
+| 6001 | Salaries and wages | Ledger | Expense | `salaries_expense` |
+| 6101, 6105, 6110, 6199, 6201 | Rent; Transport and delivery; Electricity and utilities; Other expenses; Marketing and promotion | Ledger | Expense | linked to `ie_categories` |
 | 6198 ✚ | Cash short and over | Ledger (system) | Expense | `cash_short_over` |
 | 62 | Depreciation and finance | Group | Expense | |
 | 6501 | Depreciation | Ledger | Expense | |

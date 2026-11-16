@@ -2,7 +2,7 @@
 
 > **Source of truth:** the Claude Design canvas "Pluto ERP" (13 module prototypes, about 180 state artboards, the design system).
 >
-> **Generated file.** The per-page sections come from `docs/source/pages.py`. The APIs, entities and allowed roles for each page are **derived** from the API registry and the role matrix, so they can't drift from 05 and 01. Coverage: 165 page entries (incl. dialogs, 4 new auth/settings screens and 7 new list screens, GAP-24/25) + 15 reused report entries.
+> **Generated file.** The per-page sections come from `docs/source/pages.py`. The APIs, entities and allowed roles for each page are **derived** from the API registry and the role matrix, so they can't drift from 05 and 01. Coverage: 167 page entries (incl. dialogs, 4 new auth/settings screens and 7 new list screens, GAP-24/25) + 15 reused report entries.
 
 ## 1. Design system to preserve
 
@@ -192,6 +192,8 @@
 | [LC-DrawerCharge](#page-lc-drawercharge) | Drawer · Add charge or import expense | LC | Drawer | `lc.create` | 1 | LC-DrawerCharge.dc.html |
 | [P1](#page-p1) | Employees | Payroll | List | `payroll.view` | 1 | — |
 | [P2](#page-p2) | Employee form | Payroll | Form | `payroll.create` | 3 | — |
+| [P3](#page-p3) | Salary sheets | Payroll | List | `payroll.view` | 2 | — |
+| [P4](#page-p4) | Salary sheet | Payroll | Detail | `payroll.view` | 5 | — |
 | J2 | Sales report | Reports | → E11 | as E11 | — | reused |
 | J3 | Purchase report | Reports | → F9 | as F9 | — | reused |
 | J4 | Income report | Reports | → I8 | as I8 | — | reused |
@@ -3732,3 +3734,35 @@ Each entry follows the 13 points of the brief: (1) purpose · (2) components and
 11. **Workflows:** — · FR: FR-100
 12. **States:** Loading: skeleton fields when editing. Validation: banner 'Fix N fields' (role=alert) and inline errors from 422 `errors` (L8). Saving: primary button busy and disabled; Idempotency-Key reused on retry. Success: toast and navigate to details. Conflict: 409 banner with reload, edits kept (L11). Unsaved changes dialog on leave (L13).
 13. **Depends on:** [P1](#page-p1)
+
+<a id="page-p3"></a>
+#### P3 · Salary sheets
+
+1. **Purpose:** One sheet per month: month, employees, gross, net, status (PEP-521).
+2. **Components and layout:** List; New sheet asks for the month.
+3–4. **Inputs:** none (read-only page; filters listed below)
+5. **Actions → API** ([full map](05-API-Specification.md#actions-p3)): New salary sheet → POST /payroll-runs → nav:P4<br>Open sheet → nav:P4
+6. **Table:** columns Month, Employees, Gross, Deductions, Net, Status; filters Status; server-side pagination and sorting.
+7. **Validation and rules:** Standard server validation (422).
+8. **Roles allowed:** `payroll.view` → Owner, Finance manager, Accountant. Actions additionally check their own permission (see endpoints).
+9. **APIs:** [`GET /payroll-runs`](05-API-Specification.md#getpayrollruns), [`POST /payroll-runs`](05-API-Specification.md#postpayrollruns)
+10. **Entities:** `audit_logs`, `employees`, `payroll_lines`, `payroll_runs`
+11. **Workflows:** — · FR: FR-101
+12. **States:** Loading: skeleton rows matching columns (L10). Empty: first-use empty state with primary action, or 'No matches' with Clear filters (L9). Error: inline banner with Retry; offline banner (L11). Success: toast after bulk actions (L12). 403 page if view permission missing (L14).
+13. **Depends on:** —
+
+<a id="page-p4"></a>
+#### P4 · Salary sheet
+
+1. **Purpose:** Lines per employee (days paid, structure, overtime, other earnings, deductions, gross, net) with totals from the server.
+2. **Components and layout:** Editable grid while draft; Approve posts; Cancel reverses.
+3–4. **Inputs:** none (read-only page; filters listed below)
+5. **Actions → API** ([full map](05-API-Specification.md#actions-p4)): Save changes → PUT /payroll-runs/{id}<br>Delete draft → dlg:L6 → DELETE /payroll-runs/{id}<br>Approve and post → dlg:L6 → POST /payroll-runs/{id}/approve<br>Cancel sheet → dlg:L6 → POST /payroll-runs/{id}/cancel
+6. **Tables:** —
+7. **Validation and rules:** Standard server validation (422).
+8. **Roles allowed:** `payroll.view` → Owner, Finance manager, Accountant. Actions additionally check their own permission (see endpoints).
+9. **APIs:** [`GET /payroll-runs/{id}`](05-API-Specification.md#getpayrollrunsid), [`PUT /payroll-runs/{id}`](05-API-Specification.md#putpayrollrunsid), [`DELETE /payroll-runs/{id}`](05-API-Specification.md#deletepayrollrunsid), [`POST /payroll-runs/{id}/approve`](05-API-Specification.md#postpayrollrunsidapprove), [`POST /payroll-runs/{id}/cancel`](05-API-Specification.md#postpayrollrunsidcancel)
+10. **Entities:** `account_mappings`, `audit_logs`, `journal_entries`, `journal_lines`, `number_sequences`, `payroll_lines`, `payroll_runs`
+11. **Workflows:** — · FR: FR-101
+12. **States:** Loading: skeleton strip and tabs. Not found: 404 page (L15). Error per card with Retry. Success toasts after actions.
+13. **Depends on:** [P3](#page-p3)

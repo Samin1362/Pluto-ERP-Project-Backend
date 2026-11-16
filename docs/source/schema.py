@@ -822,6 +822,21 @@ add(
        enum("pay_method", ["cash", "bank", "mobile"], default="'cash'"), c("bank_name", V(120), null=True), c("account_no", V(40), null=True),
        enum("status", ["active", "left"], default="'active'"), c("left_on", DATE, null=True), c("notes", V(500), null=True)],
       uniques=[["company_id", "code"]], indexes=[["company_id", "status"]], checks=["basic_salary >= 0", "house_rent >= 0", "medical >= 0", "conveyance >= 0"], version=True),
+    T("payroll_runs", "Payroll", "A salary sheet for one month (PEP-521): draft while it is prepared, approved when posted (Dr salaries_expense / Cr salaries_payable), cancelled by reversal.",
+      [enum("kind", ["salary", "bonus"], default="'salary'", note="bonus: festival bonus sheets (PEP-524)"), c("period_month", DATE, note="First day of the month paid"),
+       c("pay_date", DATE, note="Date of the salary entry; the month end by default"), enum("status", ["draft", "approved", "cancelled"], default="'draft'"),
+       c("employees_count", "SMALLINT UNSIGNED", default="0"), c("total_gross", MONEY, default="0"), c("total_deductions", MONEY, default="0"), c("total_net", MONEY, default="0"),
+       c("notes", V(500), null=True), fk("journal_entry_id", "journal_entries", null=True), fk("reversal_entry_id", "journal_entries", null=True),
+       c("approved_at", TS, null=True), fk("approved_by", "users", null=True), c("cancelled_at", TS, null=True), c("cancel_reason", V(255), null=True)],
+      uniques=[["journal_entry_id"], ["reversal_entry_id"]], indexes=[["company_id", "kind", "period_month"], ["company_id", "status"]], checks=["total_gross >= 0", "total_net >= 0"], version=True),
+    T("payroll_lines", "Payroll", "One employee on a salary sheet (PEP-521): the salary structure for the days paid, plus overtime and other earnings, less deductions and advance recovery.",
+      [fk("payroll_run_id", "payroll_runs", on_delete="CASCADE"), fk("employee_id", "employees"), c("employee_code", V(20)), c("employee_name", V(150)),
+       c("designation", V(80), null=True), c("days_in_month", "TINYINT UNSIGNED"), c("days_paid", "TINYINT UNSIGNED", note="Fewer when they joined or left in the month"),
+       c("basic_salary", MONEY), c("house_rent", MONEY, default="0"), c("medical", MONEY, default="0"), c("conveyance", MONEY, default="0"),
+       c("overtime", MONEY, default="0"), c("other_earnings", MONEY, default="0", note="Commission, incentive, arrears"), c("deductions", MONEY, default="0", note="Absence, fines, other"),
+       c("advance_recovery", MONEY, default="0", note="Staff advance taken back this month (PEP-523)"), c("gross", MONEY), c("net", MONEY),
+       c("paid_amount", MONEY, default="0", note="Paid so far (PEP-522)"), c("note", V(255), null=True)],
+      uniques=[["payroll_run_id", "employee_id"]], checks=["net >= 0", "deductions >= 0", "overtime >= 0", "other_earnings >= 0"], tenant=False, audit_cols=False),
 )
 
 MODULE_ORDER = ["Platform", "Access", "Accounting", "Parties", "Inventory", "Money", "Sales", "Purchases", "LC", "Payroll"]

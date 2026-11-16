@@ -19382,6 +19382,491 @@
     "employees_rule3_check": "`medical` >= 0",
     "employees_rule4_check": "`conveyance` >= 0"
    }
+  },
+  "payroll_runs": {
+   "seq": 100,
+   "level": 5,
+   "migration": "2026_10_18_010000_create_payroll_runs_table.php",
+   "module": "Payroll",
+   "columns": [
+    {
+     "name": "id",
+     "type": "bigint unsigned",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": true
+    },
+    {
+     "name": "company_id",
+     "type": "bigint unsigned",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "kind",
+     "type": "varchar(30)",
+     "nullable": false,
+     "default": "salary",
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "period_month",
+     "type": "date",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "pay_date",
+     "type": "date",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "status",
+     "type": "varchar(30)",
+     "nullable": false,
+     "default": "draft",
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "employees_count",
+     "type": "smallint unsigned",
+     "nullable": false,
+     "default": "0",
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "total_gross",
+     "type": "decimal(18,2)",
+     "nullable": false,
+     "default": "0",
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "total_deductions",
+     "type": "decimal(18,2)",
+     "nullable": false,
+     "default": "0",
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "total_net",
+     "type": "decimal(18,2)",
+     "nullable": false,
+     "default": "0",
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "notes",
+     "type": "varchar(500)",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "journal_entry_id",
+     "type": "bigint unsigned",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "reversal_entry_id",
+     "type": "bigint unsigned",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "approved_at",
+     "type": "datetime",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "approved_by",
+     "type": "bigint unsigned",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "cancelled_at",
+     "type": "datetime",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "cancel_reason",
+     "type": "varchar(255)",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "lock_version",
+     "type": "int unsigned",
+     "nullable": false,
+     "default": "1",
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "created_by",
+     "type": "bigint unsigned",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "updated_by",
+     "type": "bigint unsigned",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "created_at",
+     "type": "datetime",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "updated_at",
+     "type": "datetime",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    }
+   ],
+   "primary": [
+    "id"
+   ],
+   "unique": {
+    "payroll_runs_journal_entry_id_unique": [
+     "journal_entry_id"
+    ],
+    "payroll_runs_reversal_entry_id_unique": [
+     "reversal_entry_id"
+    ]
+   },
+   "index": {
+    "payroll_runs_company_id_kind_period_month_index": [
+     "company_id",
+     "kind",
+     "period_month"
+    ],
+    "payroll_runs_company_id_status_index": [
+     "company_id",
+     "status"
+    ],
+    "payroll_runs_approved_by_index": [
+     "approved_by"
+    ],
+    "payroll_runs_created_by_index": [
+     "created_by"
+    ],
+    "payroll_runs_updated_by_index": [
+     "updated_by"
+    ]
+   },
+   "foreign": {
+    "payroll_runs_company_id_foreign": {
+     "column": "company_id",
+     "references_table": "companies",
+     "references_column": "id",
+     "on_delete": "RESTRICT",
+     "on_update": "RESTRICT"
+    },
+    "payroll_runs_journal_entry_id_foreign": {
+     "column": "journal_entry_id",
+     "references_table": "journal_entries",
+     "references_column": "id",
+     "on_delete": "RESTRICT",
+     "on_update": "RESTRICT"
+    },
+    "payroll_runs_reversal_entry_id_foreign": {
+     "column": "reversal_entry_id",
+     "references_table": "journal_entries",
+     "references_column": "id",
+     "on_delete": "RESTRICT",
+     "on_update": "RESTRICT"
+    },
+    "payroll_runs_approved_by_foreign": {
+     "column": "approved_by",
+     "references_table": "users",
+     "references_column": "id",
+     "on_delete": "RESTRICT",
+     "on_update": "RESTRICT"
+    },
+    "payroll_runs_created_by_foreign": {
+     "column": "created_by",
+     "references_table": "users",
+     "references_column": "id",
+     "on_delete": "RESTRICT",
+     "on_update": "RESTRICT"
+    },
+    "payroll_runs_updated_by_foreign": {
+     "column": "updated_by",
+     "references_table": "users",
+     "references_column": "id",
+     "on_delete": "RESTRICT",
+     "on_update": "RESTRICT"
+    }
+   },
+   "check": {
+    "payroll_runs_kind_check": "`kind` IN ('salary', 'bonus')",
+    "payroll_runs_status_check": "`status` IN ('draft', 'approved', 'cancelled')",
+    "payroll_runs_rule1_check": "`total_gross` >= 0",
+    "payroll_runs_rule2_check": "`total_net` >= 0"
+   }
+  },
+  "payroll_lines": {
+   "seq": 101,
+   "level": 6,
+   "migration": "2026_10_18_010100_create_payroll_lines_table.php",
+   "module": "Payroll",
+   "columns": [
+    {
+     "name": "id",
+     "type": "bigint unsigned",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": true
+    },
+    {
+     "name": "payroll_run_id",
+     "type": "bigint unsigned",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "employee_id",
+     "type": "bigint unsigned",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "employee_code",
+     "type": "varchar(20)",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "employee_name",
+     "type": "varchar(150)",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "designation",
+     "type": "varchar(80)",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "days_in_month",
+     "type": "tinyint unsigned",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "days_paid",
+     "type": "tinyint unsigned",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "basic_salary",
+     "type": "decimal(18,2)",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "house_rent",
+     "type": "decimal(18,2)",
+     "nullable": false,
+     "default": "0",
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "medical",
+     "type": "decimal(18,2)",
+     "nullable": false,
+     "default": "0",
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "conveyance",
+     "type": "decimal(18,2)",
+     "nullable": false,
+     "default": "0",
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "overtime",
+     "type": "decimal(18,2)",
+     "nullable": false,
+     "default": "0",
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "other_earnings",
+     "type": "decimal(18,2)",
+     "nullable": false,
+     "default": "0",
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "deductions",
+     "type": "decimal(18,2)",
+     "nullable": false,
+     "default": "0",
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "advance_recovery",
+     "type": "decimal(18,2)",
+     "nullable": false,
+     "default": "0",
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "gross",
+     "type": "decimal(18,2)",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "net",
+     "type": "decimal(18,2)",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "paid_amount",
+     "type": "decimal(18,2)",
+     "nullable": false,
+     "default": "0",
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "note",
+     "type": "varchar(255)",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "created_at",
+     "type": "datetime",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "updated_at",
+     "type": "datetime",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    }
+   ],
+   "primary": [
+    "id"
+   ],
+   "unique": {
+    "payroll_lines_payroll_run_id_employee_id_unique": [
+     "payroll_run_id",
+     "employee_id"
+    ]
+   },
+   "index": {
+    "payroll_lines_employee_id_index": [
+     "employee_id"
+    ]
+   },
+   "foreign": {
+    "payroll_lines_payroll_run_id_foreign": {
+     "column": "payroll_run_id",
+     "references_table": "payroll_runs",
+     "references_column": "id",
+     "on_delete": "CASCADE",
+     "on_update": "RESTRICT"
+    },
+    "payroll_lines_employee_id_foreign": {
+     "column": "employee_id",
+     "references_table": "employees",
+     "references_column": "id",
+     "on_delete": "RESTRICT",
+     "on_update": "RESTRICT"
+    }
+   },
+   "check": {
+    "payroll_lines_rule1_check": "`net` >= 0",
+    "payroll_lines_rule2_check": "`deductions` >= 0",
+    "payroll_lines_rule3_check": "`overtime` >= 0",
+    "payroll_lines_rule4_check": "`other_earnings` >= 0"
+   }
   }
  }
 }
