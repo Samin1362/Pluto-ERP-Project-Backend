@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Table `subscription_payments` (Platform): migration 94 of 94, dependency level 2.
+ * Table `subscription_payments` (Platform): migration 94 of 96, dependency level 2.
  * Payments a customer company made for its Pluto subscription (PEP-503), recorded by the software owner in the platform console. Each extends companies.paid_until.
  * Depends on: companies, users.
  *

@@ -37,6 +37,8 @@ tags:
   description: Letters of credit and landed cost
 - name: Me
   description: The signed-in user's own profile, security and preferences
+- name: Notifications
+  description: Notifications
 - name: Parties
   description: Customers and suppliers
 - name: Platform
@@ -673,7 +675,7 @@ paths:
       - K17
       x-page-actions:
       - 'S0: Switch company (reloads all data)'
-      - 'S0: Create a company (NEW, company switcher)'
+      - 'S0: Close an announcement (PEP-513)'
       - 'K17: Open read-only (reason, time)'
       - 'K17: Open as Owner (reason)'
       x-tables:
@@ -1472,7 +1474,7 @@ paths:
       x-pages:
       - S0
       x-page-actions:
-      - 'S0: Create a company (NEW, company switcher)'
+      - 'S0: Close an announcement (PEP-513)'
       x-tables:
       - companies
       - company_settings
@@ -4242,6 +4244,352 @@ paths:
                 $ref: '#/components/schemas/Error'
         '409':
           description: 'Conflict (version mismatch, state not allowed, duplicate): `last_owner`, `role_in_use`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        default:
+          description: Unexpected error (`server_error`)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /api/v1/platform/announcements:
+    get:
+      operationId: getPlatformAnnouncements
+      summary: All announcements, newest first
+      tags:
+      - Platform console
+      description: "Platform admins only: the e-mail is in PLUTO_PLATFORM_ADMINS (server setting, never a company role) and this sign-in used 2-step verification;\
+        \ otherwise 403 platform_admin_only / platform_two_factor_required. Every change is written to the company's audit log.\n\n**Permission:** any signed-in user\
+        \  \n**Database:** read: announcements  \n**Rules:** —"
+      x-permission: auth
+      x-business-rules: []
+      x-requirements:
+      - FR-005
+      x-pages:
+      - K17
+      x-page-actions:
+      - 'K17: Announcements: post'
+      - 'K17: Announcements: edit or stop'
+      - 'K17: Announcements: delete'
+      x-tables:
+      - announcements
+      x-db-operations:
+        announcements: R
+      x-error-codes:
+      - platform_admin_only
+      - platform_two_factor_required
+      - server_error
+      - token_expired
+      - token_invalid
+      - unauthenticated
+      x-contract-change: PEP-513 announcements
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                - meta
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Announcement'
+                  meta:
+                    $ref: '#/components/schemas/PageMeta'
+        '401':
+          description: 'Not authenticated: `token_expired`, `token_invalid`, `unauthenticated`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: 'Not permitted: `platform_admin_only`, `platform_two_factor_required`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        default:
+          description: Unexpected error (`server_error`)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    post:
+      operationId: postPlatformAnnouncements
+      summary: Post an announcement to every company
+      tags:
+      - Platform console
+      description: "Platform admins only: the e-mail is in PLUTO_PLATFORM_ADMINS (server setting, never a company role) and this sign-in used 2-step verification;\
+        \ otherwise 403 platform_admin_only / platform_two_factor_required. Every change is written to the company's audit log.\n\n**Permission:** any signed-in user\
+        \  \n**Database:** insert: announcements, audit_logs, idempotency_keys  \n**Rules:** —"
+      x-permission: auth
+      x-business-rules: []
+      x-requirements:
+      - FR-005
+      x-pages:
+      - K17
+      x-page-actions:
+      - 'K17: Announcements: post'
+      x-tables:
+      - announcements
+      - audit_logs
+      x-db-operations:
+        announcements: C
+        audit_logs: C
+        idempotency_keys: C
+      x-error-codes:
+      - idempotency_in_progress
+      - idempotency_key_reused
+      - malformed_json
+      - platform_admin_only
+      - platform_two_factor_required
+      - server_error
+      - token_expired
+      - token_invalid
+      - unauthenticated
+      - validation_failed
+      x-contract-change: PEP-513 announcements
+      parameters:
+      - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AnnouncementInput'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Announcement'
+          headers:
+            Location:
+              schema:
+                type: string
+              description: URL of the created resource
+        '400':
+          description: 'Malformed request: `malformed_json`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: 'Not authenticated: `token_expired`, `token_invalid`, `unauthenticated`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: 'Not permitted: `platform_admin_only`, `platform_two_factor_required`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: 'Conflict (version mismatch, state not allowed, duplicate): `idempotency_in_progress`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: 'Validation or business-rule failure: `idempotency_key_reused`, `validation_failed`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        default:
+          description: Unexpected error (`server_error`)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /api/v1/platform/announcements/{id}:
+    put:
+      operationId: putPlatformAnnouncementsId
+      summary: Change or stop an announcement
+      tags:
+      - Platform console
+      description: "Platform admins only: the e-mail is in PLUTO_PLATFORM_ADMINS (server setting, never a company role) and this sign-in used 2-step verification;\
+        \ otherwise 403 platform_admin_only / platform_two_factor_required. Every change is written to the company's audit log.\n\n**Permission:** any signed-in user\
+        \  \n**Database:** insert: audit_logs; update: announcements  \n**Rules:** —"
+      x-permission: auth
+      x-business-rules: []
+      x-requirements:
+      - FR-005
+      x-pages:
+      - K17
+      x-page-actions:
+      - 'K17: Announcements: edit or stop'
+      x-tables:
+      - announcements
+      - audit_logs
+      x-db-operations:
+        announcements: U
+        audit_logs: C
+      x-error-codes:
+      - if_match_required
+      - malformed_json
+      - not_found
+      - platform_admin_only
+      - platform_two_factor_required
+      - server_error
+      - token_expired
+      - token_invalid
+      - unauthenticated
+      - validation_failed
+      - version_conflict
+      x-contract-change: PEP-513 announcements
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+          minimum: 1
+      - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AnnouncementInput'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Announcement'
+          headers:
+            ETag:
+              schema:
+                type: string
+              description: W/"<version>" for If-Match
+        '400':
+          description: 'Malformed request: `malformed_json`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: 'Not authenticated: `token_expired`, `token_invalid`, `unauthenticated`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: 'Not permitted: `platform_admin_only`, `platform_two_factor_required`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: 'Not found (also for other companies'' records): `not_found`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: 'Conflict (version mismatch, state not allowed, duplicate): `version_conflict`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: 'Validation or business-rule failure: `validation_failed`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '428':
+          description: 'Precondition required (If-Match missing): `if_match_required`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        default:
+          description: Unexpected error (`server_error`)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    delete:
+      operationId: deletePlatformAnnouncementsId
+      summary: Delete an announcement
+      tags:
+      - Platform console
+      description: "Platform admins only: the e-mail is in PLUTO_PLATFORM_ADMINS (server setting, never a company role) and this sign-in used 2-step verification;\
+        \ otherwise 403 platform_admin_only / platform_two_factor_required. Every change is written to the company's audit log.\n\n**Permission:** any signed-in user\
+        \  \n**Database:** insert: audit_logs; delete: announcements; read: announcement_dismissals  \n**Rules:** —"
+      x-permission: auth
+      x-business-rules: []
+      x-requirements:
+      - FR-005
+      x-pages:
+      - K17
+      x-page-actions:
+      - 'K17: Announcements: delete'
+      x-tables:
+      - announcements
+      - announcement_dismissals
+      - audit_logs
+      x-db-operations:
+        announcements: D
+        announcement_dismissals: R
+        audit_logs: C
+      x-error-codes:
+      - not_found
+      - platform_admin_only
+      - platform_two_factor_required
+      - server_error
+      - token_expired
+      - token_invalid
+      - unauthenticated
+      x-contract-change: PEP-513 announcements
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+          minimum: 1
+      responses:
+        '204':
+          description: No content
+        '401':
+          description: 'Not authenticated: `token_expired`, `token_invalid`, `unauthenticated`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: 'Not permitted: `platform_admin_only`, `platform_two_factor_required`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: 'Not found (also for other companies'' records): `not_found`'
           content:
             application/problem+json:
               schema:
@@ -7089,6 +7437,177 @@ paths:
                 $ref: '#/components/schemas/Error'
         '422':
           description: 'Validation or business-rule failure: `validation_failed`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: 'Company temporarily unavailable (restore in progress): `company_maintenance`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+              description: Seconds to wait
+        default:
+          description: Unexpected error (`server_error`)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /api/v1/announcements:
+    get:
+      operationId: getAnnouncements
+      summary: Announcements to show this person now (active, current, not closed by them)
+      tags:
+      - Notifications
+      description: "**Permission:** any signed-in user who is an active member of the company  \n**Database:** read: announcement_dismissals, announcements  \n**Rules:**\
+        \ —"
+      x-permission: auth.self
+      x-business-rules: []
+      x-requirements:
+      - FR-013
+      x-pages:
+      - S0
+      x-page-actions: []
+      x-tables:
+      - announcements
+      - announcement_dismissals
+      x-db-operations:
+        announcements: R
+        announcement_dismissals: R
+      x-error-codes:
+      - company_maintenance
+      - company_required
+      - not_a_member
+      - permission_denied
+      - server_error
+      - token_expired
+      - token_invalid
+      - unauthenticated
+      x-contract-change: PEP-513 announcements
+      parameters:
+      - $ref: '#/components/parameters/CompanyHeader'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                - meta
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Announcement'
+                  meta:
+                    $ref: '#/components/schemas/PageMeta'
+        '400':
+          description: 'Malformed request: `company_required`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: 'Not authenticated: `token_expired`, `token_invalid`, `unauthenticated`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: 'Company temporarily unavailable (restore in progress): `company_maintenance`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+              description: Seconds to wait
+        default:
+          description: Unexpected error (`server_error`)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /api/v1/announcements/{id}/dismiss:
+    post:
+      operationId: postAnnouncementsIdDismiss
+      summary: Close an announcement for this person
+      tags:
+      - Notifications
+      description: "**Permission:** any signed-in user who is an active member of the company  \n**Database:** lock: announcement_dismissals; insert: audit_logs;\
+        \ update: announcement_dismissals  \n**Rules:** —"
+      x-permission: auth.self
+      x-business-rules: []
+      x-requirements:
+      - FR-013
+      x-pages:
+      - S0
+      x-page-actions:
+      - 'S0: Create a company (NEW, company switcher)'
+      x-tables:
+      - announcement_dismissals
+      x-db-operations:
+        announcement_dismissals: LU
+        audit_logs: C
+      x-error-codes:
+      - company_maintenance
+      - company_required
+      - not_a_member
+      - not_found
+      - permission_denied
+      - server_error
+      - support_read_only
+      - token_expired
+      - token_invalid
+      - unauthenticated
+      x-contract-change: PEP-513 announcements
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+          minimum: 1
+      - $ref: '#/components/parameters/CompanyHeader'
+      responses:
+        '204':
+          description: No content
+        '400':
+          description: 'Malformed request: `company_required`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: 'Not authenticated: `token_expired`, `token_invalid`, `unauthenticated`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: 'Not found (also for other companies'' records): `not_found`'
           content:
             application/problem+json:
               schema:
@@ -41819,6 +42338,86 @@ components:
       - created_at
       - owner_pending
       - members
+    Announcement:
+      type: object
+      description: 'A message from the software owner to every company (PEP-513). tone: info, warning or success. Platform console rows also carry is_active and the
+        times; the banner list only active, current, not-dismissed ones.'
+      properties:
+        id:
+          type: integer
+          format: int64
+          minimum: 1
+        title:
+          type: string
+        body:
+          type:
+          - string
+          - 'null'
+        tone:
+          type: string
+          enum:
+          - info
+          - warning
+          - success
+        starts_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        ends_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        is_active:
+          type: boolean
+        created_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        version:
+          type: integer
+      required:
+      - id
+      - title
+      - tone
+      - is_active
+      - version
+    AnnouncementInput:
+      type: object
+      description: Create or change an announcement (PEP-513). starts_at null = at once; ends_at null = until stopped.
+      properties:
+        title:
+          type: string
+          maxLength: 120
+        body:
+          type:
+          - string
+          - 'null'
+          maxLength: 500
+        tone:
+          type: string
+          enum:
+          - info
+          - warning
+          - success
+        starts_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        ends_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        is_active:
+          type: boolean
+      required:
+      - title
+      - tone
+      additionalProperties: false
     SetupStep:
       type: object
       description: 'One step of the new-company setup checklist (PEP-511). key: profile, logo, tax, money, warehouse, items, customers, first_invoice, team. done

@@ -25,7 +25,7 @@ page("S0", "App shell", "Shell", "Shell", "dashboard.view",
      fields=["Company switcher | select | req | Only companies where the membership is active",
              "Financial-year selector | select | req | Open and closed FYs; 'Custom period…' sets report range"],
      actions=["Switch company (reloads all data)", "Open command palette (Ctrl K)", "Quick create menu: Sales invoice Alt S, Purchase bill Alt P, Receipt Alt R, Payment Alt Y, Contra Alt C, Journal Alt J, Customer, Supplier, Product",
-              "Open notifications", "Profile menu: profile, security, sign out"],
+              "Open notifications", "Profile menu: profile, security, sign out", "Close an announcement (PEP-513)"],
      workflows=["Find anything fast"], deps=["L2", "L3", "L5"], fr=["FR-005", "FR-012", "FR-013"], artboard="Shell.dc.html (04)")
 page("S1", "Sign in (NEW: not in design)", "Shell", "Auth", "public",
      "Authenticate with e-mail and password; second step asks the TOTP or a recovery code when 2-step is on.",
@@ -541,7 +541,7 @@ K = [
   ["Prepare export pack", "Download backup", "Back up now", "Restore… (dialog)", "Export all my data"], ["FR-087"]),
  ("K17", "Platform console", "List", "auth.self", "Platform admins only (PLUTO_PLATFORM_ADMINS e-mail and a 2-step sign-in): every customer company with its owner, members, status and last activity; create a company for a customer (the Owner gets an invitation); suspend or reactivate a company with a reason; open a company as an Owner to work in it (a reason is asked, its Owners are told, every change is in its audit log under the admin's name) and leave it again; manage Pluto plans (user limit, branch limit, LC modules) and put each company on a plan with its own exceptions.",
   ["Search companies | text | opt | name or owner e-mail", "Status | segmented | opt | all/active/suspended", "Company name, business type, owner e-mail, owner name | text | req | create dialog"],
-  ["Create company", "Suspend (reason)", "Reactivate (reason)", "Open read-only (reason, time)", "End support view", "Open as Owner (reason)", "Leave (confirm)", "Create plan", "Edit plan", "Delete plan (confirm)", "Change plan (plan, exceptions)", "Billing: set price, paid until, grace days", "Billing: payment history", "Billing: record payment"], ["FR-005"]),
+  ["Create company", "Suspend (reason)", "Reactivate (reason)", "Open read-only (reason, time)", "End support view", "Open as Owner (reason)", "Leave (confirm)", "Create plan", "Edit plan", "Delete plan (confirm)", "Change plan (plan, exceptions)", "Billing: set price, paid until, grace days", "Billing: payment history", "Billing: record payment", "Announcements: post", "Announcements: edit or stop", "Announcements: delete"], ["FR-005"]),
 ]
 for code, name, tmpl, perm, desc, fields, actions, fr in K:
     page(code, name, "Settings", tmpl, perm, desc, "Settings layout: section rail (Business, People, You, Data) on the left, grouped cards on the right, sticky unsaved-changes bar.",

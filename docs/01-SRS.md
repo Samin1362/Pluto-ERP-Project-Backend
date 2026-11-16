@@ -100,7 +100,7 @@ Approval limits (defaults): Finance manager pays up to ৳ 5,00,000 without appr
 | FR-002 | Auth | Users can sign out of the current session, or of every session except the current one. | K14 | 2 |
 | FR-003 | Auth | Users can reset a forgotten password by e-mail link (single use, 60 min). | S2 | 2 |
 | FR-004 | Auth | Users can enable or disable 2-step verification and regenerate recovery codes. | K14 | 3 |
-| FR-005 | Auth | A user belonging to several companies can switch the active company; every screen then shows only that company's data. | S0, K17 | 18 |
+| FR-005 | Auth | A user belonging to several companies can switch the active company; every screen then shows only that company's data. | S0, K17 | 22 |
 | FR-006 | Access | Owners invite users by e-mail with a role; invitations expire after 7 days. | S3, K8, K9 | 7 |
 | FR-007 | Access | Owners create, duplicate and edit roles, ticking View/Create/Edit/Approve/Delete per module, and set approval limits. | K11 | 7 |
 | FR-008 | Access | Owners deactivate and reactivate users. | K10 | 3 |
@@ -108,7 +108,7 @@ Approval limits (defaults): Finance manager pays up to ৳ 5,00,000 without appr
 | FR-010 | Dashboard | The dashboard shows KPI tiles, revenue vs expenses, cash position, money owed by age, upcoming payments, recent transactions and inventory alerts for a chosen period. | A1 | 1 |
 | FR-011 | Dashboard | Seven dashboard lenses (financial, sales, expenses, receivables, payables, cash and bank, inventory) summarise a module and deep-link into it. | A2, A3, A4, A5, A6, A7, A8 | 1 |
 | FR-012 | Search | Global search and the Ctrl K palette find parties, documents, vouchers, ledgers and products, filtered by the user's permissions. | S0, L1, L2 | 1 |
-| FR-013 | Notifications | Users receive in-app notifications (approvals, alerts) and can mark them read; preferences choose in-app, e-mail and SMS per event. | S0, K12, L3 | 5 |
+| FR-013 | Notifications | Users receive in-app notifications (approvals, alerts) and can mark them read; preferences choose in-app, e-mail and SMS per event. | S0, K12, L3 | 7 |
 | FR-014 | Approvals | Approvers see pending vouchers, and approve or reject them with a comment. | H13, L4 | 4 |
 | FR-020 | Parties | Users list, search, filter and sort customers and suppliers, with balance, overdue and status. | B1, C1 | 2 |
 | FR-021 | Parties | Users add and edit customers and suppliers (contact, accounting, payment details); a ledger is created automatically. | B2, B3, C2, C3 | 4 |

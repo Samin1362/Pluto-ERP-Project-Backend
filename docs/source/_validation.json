@@ -3,31 +3,31 @@
   {
    "id": "V01",
    "title": "Every table has a primary key",
-   "checked": 94,
+   "checked": 96,
    "failures": []
   },
   {
    "id": "V02",
    "title": "Every FK references an existing primary or unique key",
-   "checked": 439,
+   "checked": 443,
    "failures": []
   },
   {
    "id": "V03",
    "title": "FK column type equals referenced column type exactly (incl. UNSIGNED, CHAR length)",
-   "checked": 439,
+   "checked": 443,
    "failures": []
   },
   {
    "id": "V04",
    "title": "ON DELETE SET NULL only on nullable columns; self-references nullable",
-   "checked": 439,
+   "checked": 443,
    "failures": []
   },
   {
    "id": "V05",
    "title": "No CHECK constraint uses a column whose FK has a CASCADE/SET NULL action (MySQL error 3823)",
-   "checked": 174,
+   "checked": 175,
    "failures": []
   },
   {
@@ -39,37 +39,37 @@
   {
    "id": "V07",
    "title": "CHECK expressions reference only existing, non-AUTO_INCREMENT columns",
-   "checked": 174,
+   "checked": 175,
    "failures": []
   },
   {
    "id": "V08",
    "title": "Identifiers ≤ 64 chars; FK and CHECK names unique schema-wide; index names unique per table",
-   "checked": 2677,
+   "checked": 2706,
    "failures": []
   },
   {
    "id": "V09",
    "title": "Every FK column is the leftmost column of an index (no implicit InnoDB index)",
-   "checked": 439,
+   "checked": 443,
    "failures": []
   },
   {
    "id": "V10",
    "title": "No redundant index (left prefix of another key)",
-   "checked": 377,
+   "checked": 381,
    "failures": []
   },
   {
    "id": "V11",
    "title": "Index key length ≤ 3072 bytes (utf8mb4, DYNAMIC rows); no TEXT/JSON keys",
-   "checked": 565,
+   "checked": 572,
    "failures": []
   },
   {
    "id": "V12",
    "title": "Maximum row size < 65,535 bytes",
-   "checked": 94,
+   "checked": 96,
    "failures": []
   },
   {
@@ -87,7 +87,7 @@
   {
    "id": "V15",
    "title": "Defaults are valid for their type; enum defaults and values fit",
-   "checked": 261,
+   "checked": 264,
    "failures": []
   },
   {
@@ -111,19 +111,19 @@
   {
    "id": "V19",
    "title": "ON UPDATE RESTRICT on every FK (surrogate keys are immutable)",
-   "checked": 439,
+   "checked": 443,
    "failures": []
   },
   {
    "id": "V20",
    "title": "Dependency graph is acyclic (12 migration levels; self-references created in the same migration)",
-   "checked": 94,
+   "checked": 96,
    "failures": []
   },
   {
    "id": "V21",
    "title": "Every non-tenant table is global reference data or a dependant (CASCADE) of a tenant or global row",
-   "checked": 22,
+   "checked": 23,
    "failures": []
   },
   {
@@ -146,12 +146,12 @@
   }
  ],
  "summary": {
-  "tables": 94,
-  "columns": 1499,
-  "fks": 439,
-  "uniques": 94,
-  "indexes": 377,
-  "checks": 174,
+  "tables": 96,
+  "columns": 1516,
+  "fks": 443,
+  "uniques": 95,
+  "indexes": 381,
+  "checks": 175,
   "levels": 12,
   "decimal_inventory": {
    "DECIMAL(18,2)": 111,
