@@ -21,7 +21,7 @@ use Illuminate\Support\Facades\DB;
  */
 final class TradeReportQuery
 {
-    private const LABEL = ['customer' => 'Customer', 'supplier' => 'Supplier', 'category' => 'Category', 'month' => 'Month'];
+    private const LABEL = ['customer' => 'Customer', 'supplier' => 'Supplier', 'category' => 'Category', 'month' => 'Month', 'product' => 'Item'];
 
     /** @param  array{date_from: string, date_to: string, group_by?: string, branch_id?: ?int, party_id?: ?int}  $f */
     public function sales(int $c, array $f, bool $margin): array
@@ -163,6 +163,8 @@ final class TradeReportQuery
     {
         return match ($by) {
             'category' => $q->selectRaw("COALESCE(CONCAT('c', pc.id), 'c0') k, COALESCE(pc.name, 'Uncategorised') label")->groupByRaw('k, label'),
+            // PEP-515: profit per item (the line's product; its code after the name).
+            'product' => $q->selectRaw("COALESCE(CONCAT('i', p.id), 'i0') k, COALESCE(CONCAT(p.name, ' · ', p.code), 'No item') label")->groupByRaw('k, label'),
             'month' => $q->selectRaw("DATE_FORMAT({$dateCol}, '%Y-%m') k, DATE_FORMAT({$dateCol}, '%b %Y') label")->groupByRaw('k, label'),
             default => $q->selectRaw("CONCAT('p', {$partyCol}) k, {$partyName} label")->groupByRaw("k, {$partyName}"),
         };
@@ -171,7 +173,7 @@ final class TradeReportQuery
     /** Notes without items: by party or month as usual; under one "not by item" row when grouping by category. */
     private function noteGroups($q, string $by, string $dateCol, string $partyCol, string $partyName)
     {
-        return $by === 'category' ? $q->selectRaw("'notes' k, 'Notes (not by item)' label")->groupByRaw('k, label') : $this->grouped($q, $by, $dateCol, $partyCol, $partyName);
+        return in_array($by, ['category', 'product'], true) ? $q->selectRaw("'notes' k, 'Notes (not by item)' label")->groupByRaw('k, label') : $this->grouped($q, $by, $dateCol, $partyCol, $partyName);
     }
 
     private function summary(string $title, array $f, string $by, array $groups, string $countKey, string $countLabel, bool $margin, string $basis): array
@@ -189,6 +191,8 @@ final class TradeReportQuery
             if ($margin) {
                 $row['cogs'] = (string) $g['cogs'];
                 $row['margin'] = (string) $gNet->minus($g['cogs']);
+                // PEP-515: gross margin as a share of the group's net sales.
+                $row['margin_pct'] = $gNet->isPositive() ? (string) $gNet->minus($g['cogs'])->multipliedBy(100)->dividedBy($gNet, 1) : '0.0';
                 $totals['cogs'] = $totals['cogs']->plus($g['cogs']);
             }
             $rows[] = $row;
@@ -205,6 +209,7 @@ final class TradeReportQuery
         if ($margin) {
             $columns[] = ['key' => 'cogs', 'label' => 'Cost of sales (৳)', 'type' => 'amount'];
             $columns[] = ['key' => 'margin', 'label' => 'Gross margin (৳)', 'type' => 'amount'];
+            $columns[] = ['key' => 'margin_pct', 'label' => 'Margin', 'type' => 'pct'];
             $out += ['cogs' => (string) $totals['cogs'], 'margin' => (string) $totals['margin'],
                 'margin_pct' => $totals['net']->isPositive() ? (string) $totals['margin']->multipliedBy(100)->dividedBy($totals['net'], 1) : '0.0'];
         }
