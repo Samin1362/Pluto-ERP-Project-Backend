@@ -3241,7 +3241,51 @@ CREATE TABLE `payroll_runs` (
   CONSTRAINT `payroll_runs_rule2_check` CHECK (`total_net` >= 0)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='A salary sheet for one month (PEP-521): draft while it is prepared, approved when posted (Dr salaries_expense / Cr salaries_payable), cancelled by reversal.';
 
--- 101. payroll_lines (level 6)
+-- 101. staff_advances (level 5)
+CREATE TABLE `staff_advances` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT COMMENT 'Primary key, auto-increment',
+  `company_id` bigint unsigned NOT NULL COMMENT 'Tenant owner. Every query is scoped by it.',
+  `employee_id` bigint unsigned NOT NULL,
+  `money_account_id` bigint unsigned NOT NULL,
+  `given_on` date NOT NULL,
+  `amount` decimal(18,2) NOT NULL,
+  `instalment` decimal(18,2) NOT NULL COMMENT 'Taken back each month',
+  `recovered` decimal(18,2) NOT NULL DEFAULT 0 COMMENT 'Taken back by approved salary sheets so far',
+  `status` varchar(30) NOT NULL DEFAULT 'open' COMMENT 'One of: open, settled, reversed',
+  `reference` varchar(60) NULL,
+  `notes` varchar(255) NULL,
+  `journal_entry_id` bigint unsigned NULL COMMENT 'Set in the same transaction as the advance',
+  `reversal_entry_id` bigint unsigned NULL,
+  `reversed_at` datetime NULL,
+  `reverse_reason` varchar(255) NULL,
+  `lock_version` int unsigned NOT NULL DEFAULT 1 COMMENT 'Optimistic concurrency counter; incremented on every update (If-Match)',
+  `created_by` bigint unsigned NULL COMMENT 'User who created the row',
+  `updated_by` bigint unsigned NULL COMMENT 'User who last changed the row',
+  `created_at` datetime NULL COMMENT 'Set by Laravel',
+  `updated_at` datetime NULL COMMENT 'Set by Laravel',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `staff_advances_journal_entry_id_unique` (`journal_entry_id`),
+  UNIQUE KEY `staff_advances_reversal_entry_id_unique` (`reversal_entry_id`),
+  KEY `staff_advances_company_id_employee_id_status_index` (`company_id`, `employee_id`, `status`),
+  KEY `staff_advances_employee_id_index` (`employee_id`),
+  KEY `staff_advances_money_account_id_index` (`money_account_id`),
+  KEY `staff_advances_created_by_index` (`created_by`),
+  KEY `staff_advances_updated_by_index` (`updated_by`),
+  CONSTRAINT `staff_advances_company_id_foreign` FOREIGN KEY (`company_id`) REFERENCES `companies` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  CONSTRAINT `staff_advances_employee_id_foreign` FOREIGN KEY (`employee_id`) REFERENCES `employees` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  CONSTRAINT `staff_advances_money_account_id_foreign` FOREIGN KEY (`money_account_id`) REFERENCES `money_accounts` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  CONSTRAINT `staff_advances_journal_entry_id_foreign` FOREIGN KEY (`journal_entry_id`) REFERENCES `journal_entries` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  CONSTRAINT `staff_advances_reversal_entry_id_foreign` FOREIGN KEY (`reversal_entry_id`) REFERENCES `journal_entries` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  CONSTRAINT `staff_advances_created_by_foreign` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  CONSTRAINT `staff_advances_updated_by_foreign` FOREIGN KEY (`updated_by`) REFERENCES `users` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  CONSTRAINT `staff_advances_status_check` CHECK (`status` IN ('open', 'settled', 'reversed')),
+  CONSTRAINT `staff_advances_rule1_check` CHECK (`amount` > 0),
+  CONSTRAINT `staff_advances_rule2_check` CHECK (`instalment` > 0),
+  CONSTRAINT `staff_advances_rule3_check` CHECK (`recovered` >= 0),
+  CONSTRAINT `staff_advances_rule4_check` CHECK (`recovered` <= `amount`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Money given to an employee before payday (PEP-523): Dr staff_advances / Cr the money account; recovered from salary sheets, an instalment a month.';
+
+-- 102. payroll_lines (level 6)
 CREATE TABLE `payroll_lines` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT COMMENT 'Primary key, auto-increment',
   `payroll_run_id` bigint unsigned NOT NULL,
@@ -3276,7 +3320,7 @@ CREATE TABLE `payroll_lines` (
   CONSTRAINT `payroll_lines_rule4_check` CHECK (`other_earnings` >= 0)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='One employee on a salary sheet (PEP-521): the salary structure for the days paid, plus overtime and other earnings, less deductions and advance recovery.';
 
--- 102. payroll_payments (level 6)
+-- 103. payroll_payments (level 6)
 CREATE TABLE `payroll_payments` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT COMMENT 'Primary key, auto-increment',
   `company_id` bigint unsigned NOT NULL COMMENT 'Tenant owner. Every query is scoped by it.',
@@ -3315,7 +3359,7 @@ CREATE TABLE `payroll_payments` (
   CONSTRAINT `payroll_payments_rule1_check` CHECK (`amount` > 0)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Salaries paid from one money account on one day against an approved sheet (PEP-522): Dr salaries_payable / Cr the account; reversed by a mirror entry.';
 
--- 103. payroll_payment_lines (level 7)
+-- 104. payroll_payment_lines (level 7)
 CREATE TABLE `payroll_payment_lines` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT COMMENT 'Primary key, auto-increment',
   `payroll_payment_id` bigint unsigned NOT NULL,
@@ -3330,3 +3374,19 @@ CREATE TABLE `payroll_payment_lines` (
   CONSTRAINT `payroll_payment_lines_payroll_line_id_foreign` FOREIGN KEY (`payroll_line_id`) REFERENCES `payroll_lines` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `payroll_payment_lines_rule1_check` CHECK (`amount` > 0)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='How much of a salary payment went to each employee (PEP-522).';
+
+-- 105. staff_advance_recoveries (level 7)
+CREATE TABLE `staff_advance_recoveries` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT COMMENT 'Primary key, auto-increment',
+  `staff_advance_id` bigint unsigned NOT NULL,
+  `payroll_line_id` bigint unsigned NOT NULL,
+  `amount` decimal(18,2) NOT NULL,
+  `created_at` datetime NULL COMMENT 'Set by Laravel',
+  `updated_at` datetime NULL COMMENT 'Set by Laravel',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `staff_advance_recoveries_staff_advance_id_payroll_line_id_unique` (`staff_advance_id`, `payroll_line_id`),
+  KEY `staff_advance_recoveries_payroll_line_id_index` (`payroll_line_id`),
+  CONSTRAINT `staff_advance_recoveries_staff_advance_id_foreign` FOREIGN KEY (`staff_advance_id`) REFERENCES `staff_advances` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT,
+  CONSTRAINT `staff_advance_recoveries_payroll_line_id_foreign` FOREIGN KEY (`payroll_line_id`) REFERENCES `payroll_lines` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT,
+  CONSTRAINT `staff_advance_recoveries_rule1_check` CHECK (`amount` > 0)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Which advance a salary sheet line took back, and how much (PEP-523); removed when the sheet is cancelled.';

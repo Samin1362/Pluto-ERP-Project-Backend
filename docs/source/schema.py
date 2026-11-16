@@ -845,6 +845,15 @@ add(
     T("payroll_payment_lines", "Payroll", "How much of a salary payment went to each employee (PEP-522).",
       [fk("payroll_payment_id", "payroll_payments", on_delete="CASCADE"), fk("payroll_line_id", "payroll_lines"), c("amount", MONEY)],
       uniques=[["payroll_payment_id", "payroll_line_id"]], checks=["amount > 0"], tenant=False, audit_cols=False),
+    T("staff_advances", "Payroll", "Money given to an employee before payday (PEP-523): Dr staff_advances / Cr the money account; recovered from salary sheets, an instalment a month.",
+      [fk("employee_id", "employees"), fk("money_account_id", "money_accounts"), c("given_on", DATE), c("amount", MONEY), c("instalment", MONEY, note="Taken back each month"),
+       c("recovered", MONEY, default="0", note="Taken back by approved salary sheets so far"), enum("status", ["open", "settled", "reversed"], default="'open'"),
+       c("reference", V(60), null=True), c("notes", V(255), null=True), fk("journal_entry_id", "journal_entries", null=True, note="Set in the same transaction as the advance"),
+       fk("reversal_entry_id", "journal_entries", null=True), c("reversed_at", TS, null=True), c("reverse_reason", V(255), null=True)],
+      uniques=[["journal_entry_id"], ["reversal_entry_id"]], indexes=[["company_id", "employee_id", "status"]], checks=["amount > 0", "instalment > 0", "recovered >= 0", "recovered <= amount"], version=True),
+    T("staff_advance_recoveries", "Payroll", "Which advance a salary sheet line took back, and how much (PEP-523); removed when the sheet is cancelled.",
+      [fk("staff_advance_id", "staff_advances", on_delete="CASCADE"), fk("payroll_line_id", "payroll_lines", on_delete="CASCADE"), c("amount", MONEY)],
+      uniques=[["staff_advance_id", "payroll_line_id"]], checks=["amount > 0"], tenant=False, audit_cols=False),
 )
 
 MODULE_ORDER = ["Platform", "Access", "Accounting", "Parties", "Inventory", "Money", "Sales", "Purchases", "LC", "Payroll"]

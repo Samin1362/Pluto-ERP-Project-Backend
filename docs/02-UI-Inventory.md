@@ -2,7 +2,7 @@
 
 > **Source of truth:** the Claude Design canvas "Pluto ERP" (13 module prototypes, about 180 state artboards, the design system).
 >
-> **Generated file.** The per-page sections come from `docs/source/pages.py`. The APIs, entities and allowed roles for each page are **derived** from the API registry and the role matrix, so they can't drift from 05 and 01. Coverage: 167 page entries (incl. dialogs, 4 new auth/settings screens and 7 new list screens, GAP-24/25) + 15 reused report entries.
+> **Generated file.** The per-page sections come from `docs/source/pages.py`. The APIs, entities and allowed roles for each page are **derived** from the API registry and the role matrix, so they can't drift from 05 and 01. Coverage: 168 page entries (incl. dialogs, 4 new auth/settings screens and 7 new list screens, GAP-24/25) + 15 reused report entries.
 
 ## 1. Design system to preserve
 
@@ -191,9 +191,10 @@
 | [LC-DlgClose](#page-lc-dlgclose) | Dialog · Close LC | LC | Dialog | `lc.edit` | 1 | LC-DlgClose.dc.html |
 | [LC-DrawerCharge](#page-lc-drawercharge) | Drawer · Add charge or import expense | LC | Drawer | `lc.create` | 1 | LC-DrawerCharge.dc.html |
 | [P1](#page-p1) | Employees | Payroll | List | `payroll.view` | 1 | — |
-| [P2](#page-p2) | Employee form | Payroll | Form | `payroll.create` | 3 | — |
+| [P2](#page-p2) | Employee form | Payroll | Form | `payroll.create` | 4 | — |
 | [P3](#page-p3) | Salary sheets | Payroll | List | `payroll.view` | 2 | — |
 | [P4](#page-p4) | Salary sheet | Payroll | Detail | `payroll.view` | 9 | — |
+| [P5](#page-p5) | Staff advances | Payroll | List | `payroll.view` | 5 | — |
 | J2 | Sales report | Reports | → E11 | as E11 | — | reused |
 | J3 | Purchase report | Reports | → F9 | as F9 | — | reused |
 | J4 | Income report | Reports | → I8 | as I8 | — | reused |
@@ -3729,8 +3730,8 @@ Each entry follows the 13 points of the brief: (1) purpose · (2) components and
 6. **Tables:** —
 7. **Validation and rules:** Standard server validation (422).
 8. **Roles allowed:** `payroll.create` → Owner, Finance manager, Accountant. Actions additionally check their own permission (see endpoints).
-9. **APIs:** [`POST /employees`](05-API-Specification.md#postemployees), [`GET /employees/{id}`](05-API-Specification.md#getemployeesid), [`PATCH /employees/{id}`](05-API-Specification.md#patchemployeesid)
-10. **Entities:** `audit_logs`, `employees`, `number_sequences`
+9. **APIs:** [`POST /employees`](05-API-Specification.md#postemployees), [`GET /employees/{id}`](05-API-Specification.md#getemployeesid), [`PATCH /employees/{id}`](05-API-Specification.md#patchemployeesid), [`GET /staff-advances`](05-API-Specification.md#getstaffadvances)
+10. **Entities:** `audit_logs`, `employees`, `money_accounts`, `number_sequences`, `staff_advances`
 11. **Workflows:** — · FR: FR-100
 12. **States:** Loading: skeleton fields when editing. Validation: banner 'Fix N fields' (role=alert) and inline errors from 422 `errors` (L8). Saving: primary button busy and disabled; Idempotency-Key reused on retry. Success: toast and navigate to details. Conflict: 409 banner with reload, edits kept (L11). Unsaved changes dialog on leave (L13).
 13. **Depends on:** [P1](#page-p1)
@@ -3755,7 +3756,7 @@ Each entry follows the 13 points of the brief: (1) purpose · (2) components and
 #### P4 · Salary sheet
 
 1. **Purpose:** Lines per employee (days paid, structure, overtime, other earnings, deductions, gross, net) with totals from the server.
-2. **Components and layout:** Editable grid while draft; Approve posts; Cancel reverses.
+2. **Components and layout:** Editable grid while draft (advance recovery too, PEP-523); Approve posts; Cancel reverses.
 3–4. **Inputs:** none (read-only page; filters listed below)
 5. **Actions → API** ([full map](05-API-Specification.md#actions-p4)): Save changes → PUT /payroll-runs/{id}<br>Delete draft → dlg:L6 → DELETE /payroll-runs/{id}<br>Approve and post → dlg:L6 → POST /payroll-runs/{id}/approve<br>Cancel sheet → dlg:L6 → POST /payroll-runs/{id}/cancel<br>Pay salaries → GET /money-accounts → POST /payroll-runs/{id}/payments<br>Reverse a payment → GET /payroll-runs/{id}/payments → dlg:L6 → POST /payroll-payments/{id}/reverse
 6. **Tables:** —
@@ -3766,3 +3767,19 @@ Each entry follows the 13 points of the brief: (1) purpose · (2) components and
 11. **Workflows:** — · FR: FR-101, FR-102
 12. **States:** Loading: skeleton strip and tabs. Not found: 404 page (L15). Error per card with Retry. Success toasts after actions.
 13. **Depends on:** [P3](#page-p3)
+
+<a id="page-p5"></a>
+#### P5 · Staff advances
+
+1. **Purpose:** Advances given to employees: who, when, amount, instalment, recovered, still owed, status (PEP-523).
+2. **Components and layout:** List with Open / Settled tabs; Give advance dialog; Reverse on an advance nothing was taken back from.
+3–4. **Inputs:** none (read-only page; filters listed below)
+5. **Actions → API** ([full map](05-API-Specification.md#actions-p5)): Give advance → GET /employees → GET /money-accounts → POST /staff-advances<br>Reverse an advance → GET /staff-advances → dlg:L6 → POST /staff-advances/{id}/reverse
+6. **Table:** columns Employee, Given on, Amount, Instalment, Recovered, Still owed, Status; filters Status; server-side pagination and sorting.
+7. **Validation and rules:** Standard server validation (422).
+8. **Roles allowed:** `payroll.view` → Owner, Finance manager, Accountant. Actions additionally check their own permission (see endpoints).
+9. **APIs:** [`GET /money-accounts`](05-API-Specification.md#getmoneyaccounts), [`GET /employees`](05-API-Specification.md#getemployees), [`GET /staff-advances`](05-API-Specification.md#getstaffadvances), [`POST /staff-advances`](05-API-Specification.md#poststaffadvances), [`POST /staff-advances/{id}/reverse`](05-API-Specification.md#poststaffadvancesidreverse)
+10. **Entities:** `account_mappings`, `audit_logs`, `bank_statement_lines`, `employees`, `journal_entries`, `journal_lines`, `ledgers`, `money_accounts`, `number_sequences`, `staff_advances`
+11. **Workflows:** — · FR: FR-103
+12. **States:** Loading: skeleton rows matching columns (L10). Empty: first-use empty state with primary action, or 'No matches' with Clear filters (L9). Error: inline banner with Retry; offline banner (L11). Success: toast after bulk actions (L12). 403 page if view permission missing (L14).
+13. **Depends on:** —

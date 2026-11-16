@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Table `payroll_payment_lines` (Payroll): migration 103 of 103, dependency level 7.
+ * Table `payroll_payment_lines` (Payroll): migration 104 of 105, dependency level 7.
  * How much of a salary payment went to each employee (PEP-522).
  * Depends on: payroll_lines, payroll_payments.
  *

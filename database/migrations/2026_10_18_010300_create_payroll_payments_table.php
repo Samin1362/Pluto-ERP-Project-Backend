@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Table `payroll_payments` (Payroll): migration 102 of 103, dependency level 6.
+ * Table `payroll_payments` (Payroll): migration 103 of 105, dependency level 6.
  * Salaries paid from one money account on one day against an approved sheet (PEP-522): Dr salaries_payable / Cr the account; reversed by a mirror entry.
  * Depends on: companies, journal_entries, money_accounts, payroll_runs, users.
  *

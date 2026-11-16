@@ -5,6 +5,7 @@
 export type Decimal = string
 
 export type ErrorCode =
+  | 'advance_recovered'
   | 'allocation_exceeds_balance'
   | 'already_converted'
   | 'already_posted'
@@ -693,6 +694,7 @@ export interface Employee {
   medical: Decimal
   conveyance: Decimal
   gross_salary: Decimal
+  advance_balance: Decimal
   pay_method: 'cash' | 'bank' | 'mobile'
   bank_name?: string | null
   account_no?: string | null
@@ -1941,12 +1943,13 @@ export interface PayrollLine {
   note?: string | null
 }
 
-/** Change one line of a draft sheet (PEP-521). */
+/** Change one line of a draft sheet (PEP-521). advance_recovery (PEP-523): at most what the employee still owes on advances. */
 export interface PayrollLineChange {
   id: number
   overtime?: Decimal | null
   other_earnings?: Decimal | null
   deductions?: Decimal | null
+  advance_recovery?: Decimal | null
   note?: string | null
 }
 
@@ -2725,6 +2728,36 @@ export interface SetupStep {
 export interface SignedUrl {
   url: string
   expires_at: string
+}
+
+/** A salary advance (PEP-523). balance = amount − recovered, from the server. */
+export interface StaffAdvance {
+  id: number
+  employee: Record<string, unknown>
+  money_account: Record<string, unknown>
+  given_on: string
+  amount: Decimal
+  instalment: Decimal
+  recovered: Decimal
+  balance: Decimal
+  status: 'open' | 'settled' | 'reversed'
+  reference?: string | null
+  notes?: string | null
+  voucher_number?: string | null
+  reversed_at?: string | null
+  reverse_reason?: string | null
+  version: number
+}
+
+/** Give an advance (PEP-523). instalment = what each salary sheet takes back (at most the amount). */
+export interface StaffAdvanceInput {
+  employee_id: number
+  money_account_id: number
+  given_on: string
+  amount: Decimal
+  instalment: Decimal
+  reference?: string | null
+  notes?: string | null
 }
 
 /** multipart: file, money_account_id, column mapping. */

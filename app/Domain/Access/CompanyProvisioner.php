@@ -42,7 +42,7 @@ final class CompanyProvisioner
         '1101-01' => ['Cash in hand', '1100', 'cash'], '1301-01' => ['Inventory, main warehouse', '1301', 'inventory'],
         '1401' => ['Advances and deposits', '11', 'general'], '1402' => ['Tax receivable', '11', 'tax'],
         '1403' => ['LC margin deposits', '11', 'general'], '1404' => ['Import goods in transit (LC)', '11', 'general'],
-        '1405' => ['Stock in transit (between warehouses)', '11', 'general'], '1501' => ['Delivery vans', '12', 'general'],
+        '1405' => ['Stock in transit (between warehouses)', '11', 'general'], '1406' => ['Staff advances', '11', 'general'], '1501' => ['Delivery vans', '12', 'general'],
         '1502' => ['Furniture and fixtures', '12', 'general'], '1503' => ['Office equipment', '12', 'general'],
         '1509' => ['Accumulated depreciation', '12', 'general'], '2201' => ['Salaries payable', '21', 'general'],
         '2202' => ['Accrued expenses', '21', 'general'], '2205' => ['Tax payable', '21', 'tax'], '2301' => ['Bank cash credit', '21', 'general'],
@@ -66,7 +66,7 @@ final class CompanyProvisioner
     private const MAPPINGS = [
         'cash_bank_group' => ['group', '1100'], 'sundry_debtors_group' => ['group', '1201'], 'inventory_group' => ['group', '1301'],
         'sundry_creditors_group' => ['group', '2101'], 'lc_margin' => ['ledger', '1403'], 'goods_in_transit' => ['ledger', '1404'],
-        'stock_in_transit' => ['ledger', '1405'], 'lc_acceptance' => ['ledger', '2302'], 'lc_loan' => ['ledger', '2303'], 'interest_payable' => ['ledger', '2304'], 'interest_expense' => ['ledger', '6601'], 'salaries_expense' => ['ledger', '6001'], 'salaries_payable' => ['ledger', '2201'], 'suspense' => ['ledger', '9999'],
+        'stock_in_transit' => ['ledger', '1405'], 'lc_acceptance' => ['ledger', '2302'], 'lc_loan' => ['ledger', '2303'], 'interest_payable' => ['ledger', '2304'], 'interest_expense' => ['ledger', '6601'], 'salaries_expense' => ['ledger', '6001'], 'salaries_payable' => ['ledger', '2201'], 'staff_advances' => ['ledger', '1406'], 'suspense' => ['ledger', '9999'],
         'retained_earnings' => ['ledger', '3201'], 'opening_balance_adjustment' => ['ledger', '3301'], 'sales_default' => ['ledger', '4101'],
         'sales_returns' => ['ledger', '4109'], 'discount_allowed' => ['ledger', '4110'], 'discount_received' => ['ledger', '4305'],
         'cogs' => ['ledger', '5001'], 'stock_adjustment' => ['ledger', '5002'], 'purchases_non_stock' => ['ledger', '5101'],

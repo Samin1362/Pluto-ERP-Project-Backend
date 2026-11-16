@@ -508,7 +508,7 @@ T = "Banking"
 E("GET", "/banking/overview", "Accounts, combined balance series, quick stats, recent movements", "banking.view", ["money_accounts", "journal_lines", "bank_statement_lines"], ["G1"], resp="ReportData", tag=T, fr=["FR-060"])
 E("GET", "/money-accounts", "Cash, bank, wallet and card accounts with book balance and reconciliation status", "auth.self",
   ["money_accounts", "ledgers", "journal_lines", "bank_statement_lines"],
-  ['G3', 'E7', 'F5', 'G6', 'G7', 'G8', 'G9', 'H10', 'H11', 'H12', 'I3', 'I6', 'M3', 'LC-DlgPay', 'E14', 'F12', 'P4'], params=["type", "purpose"],
+  ['G3', 'E7', 'F5', 'G6', 'G7', 'G8', 'G9', 'H10', 'H11', 'H12', 'I3', 'I6', 'M3', 'LC-DlgPay', 'E14', 'F12', 'P4', 'P5'], params=["type", "purpose"],
   resp="Page<MoneyAccount>", tag=T, fr=["FR-060"],
   desc="Open to every member so receipt and payment forms can pick an account (e.g. Sales staff on E7). Without `banking.view` only id, name, type and use-for flags are returned (no balances, numbers or reconciliation data).")
 E("POST", "/money-accounts", "Add a bank, wallet or card account (ledger + opening balance)", "banking.create", ["money_accounts", "ledgers", "journal_entries", "journal_lines", "account_mappings"], ["G4"], rules=["BR-028"], req="MoneyAccountInput", resp="MoneyAccount", idem=True, tx="One transaction.", tag=T, fr=["FR-061"], codes=[201, 422])
@@ -698,6 +698,15 @@ E("POST", "/employees", "Add an employee (code from the EMP series)", "payroll.c
 E("GET", "/employees/{id}", "One employee", "payroll.view", ["employees"], ["P2"], resp="Employee", tag=T, fr=["FR-100"], added="PEP-520 payroll")
 E("PATCH", "/employees/{id}", "Change an employee, or mark them left", "payroll.edit", ["employees", "audit_logs"], ["P2"], req="EmployeeInput", resp="Employee", ifmatch=True,
   tag=T, fr=["FR-100"], codes=[200, 409, 422], added="PEP-520 payroll")
+E("GET", "/staff-advances", "Salary advances with what is still to recover", "payroll.view", ["staff_advances", "employees", "money_accounts"], ["P5", "P2"],
+  params=["page", "per_page", "employee_id", "status"], resp="Page<StaffAdvance>", tag=T, fr=["FR-103"], added="PEP-523 staff advances")
+E("POST", "/staff-advances", "Give an advance: Dr staff_advances / Cr the money account", "payroll.approve",
+  ["staff_advances", "employees", "money_accounts", "journal_entries", "journal_lines", "account_mappings", "number_sequences", "audit_logs"], ["P5"],
+  rules=["BR-001", "BR-004", "BR-031"], req="StaffAdvanceInput", resp="StaffAdvance", idem=True, tx=TXP, tag=T, fr=["FR-103"], codes=[201, 422],
+  errors=["insufficient_funds", "mapping_missing"], added="PEP-523 staff advances")
+E("POST", "/staff-advances/{id}/reverse", "Reverse an advance nothing was recovered from (mirror entry)", "payroll.approve",
+  ["staff_advances", "journal_entries", "journal_lines", "number_sequences", "audit_logs"], ["P5"], rules=["BR-003", "BR-004"], req="ReasonRequest", resp="StaffAdvance", idem=True,
+  tx=TXP, tag=T, fr=["FR-103"], codes=[200, 409], errors=["already_reversed", "advance_recovered"], added="PEP-523 staff advances")
 E("GET", "/payroll-runs", "Salary sheets, newest month first", "payroll.view", ["payroll_runs"], ["P3"], params=["page", "per_page", "status", "kind"], resp="Page<PayrollRun>",
   tag=T, fr=["FR-101"], added="PEP-521 salary sheet")
 E("POST", "/payroll-runs", "Start a month's salary sheet (draft) with everyone employed that month", "payroll.create", ["payroll_runs", "payroll_lines", "employees", "audit_logs"], ["P3"],
@@ -759,7 +768,7 @@ _fix("POST", "/purchase-orders/{id}/convert", ops={"purchase_bills": "C", "purch
 # PEP-498: LC management and LC finance are plan modules; their endpoints answer 403 module_not_in_plan when the
 # company's plan does not include them (middleware module:lc_management / module:lc_finance).
 _LC_PATHS = ("/letters-of-credit", "/lc/", "/lc-", "/landed-cost-allocations", "/reports/lc/", "/bank-facilities", "/fx-revaluations",
-             "/employees", "/payroll-runs", "/payroll-payments")  # PEP-520: payroll is a plan module too (module:payroll)
+             "/employees", "/payroll-runs", "/payroll-payments", "/staff-advances")  # PEP-520: payroll is a plan module too (module:payroll)
 for _e in EP:
     if _e["path"].startswith(_LC_PATHS) and "module_not_in_plan" not in _e["errors"]:
         _e["errors"].append("module_not_in_plan")

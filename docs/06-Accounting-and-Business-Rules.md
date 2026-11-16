@@ -59,6 +59,7 @@
 | `interest_expense` | Expense | Interest on PAD/LTR loans (P16 LC finance) | 6601 |
 | `salaries_expense` | Expense | Salary sheets: earnings less deductions (PEP-521 payroll) | 6001 |
 | `salaries_payable` | Liability | Net salaries approved, not yet paid (PEP-521 payroll) | 2201 |
+| `staff_advances` | Asset | Salary advances given to employees, not yet recovered (PEP-523 payroll) | 1406 |
 | `fx_gain_loss` | Expense (or Income) | Exchange differences | 6603 |
 | `bank_charges` | Expense | Bank fees not capitalised | 6702 |
 | `rounding` | Expense | Invoice/bill rounding | 6799 |
@@ -345,10 +346,12 @@ Difference = foreign outstanding × (closing − book rate), rounded per item; a
 | Bank charge or interest found in reconciliation | `bank_charges` / money account | money account / interest income | G10 "Record charge" |
 | Cash count difference (G2) | `cash_short_over` (shortage) or cash (excess) | cash or `cash_short_over` | BR-058 approval |
 | Recurring expense run | — (draft only) | — | BR-048 |
-| Salary sheet approved (P4, PEP-521) | `salaries_expense` (gross − deductions) | `salaries_payable` (net) (+ staff advances recovered, PEP-523) | BR-001, BR-004; entry_type journal, source payroll_runs |
+| Salary sheet approved (P4, PEP-521) | `salaries_expense` (gross − deductions) | `salaries_payable` (net) + `staff_advances` (advance recovery, PEP-523) | BR-001, BR-004; entry_type journal, source payroll_runs |
 | Salary sheet cancelled | mirror of the approval entry | | BR-003; only before any salary is paid |
 | Salaries paid (P4, PEP-522) | `salaries_payable` | Money account | BR-031 funds; never more than each line still due |
 | Salary payment reversed | Money account | `salaries_payable` | BR-003 |
+| Staff advance given (P5, PEP-523) | `staff_advances` | Money account | BR-031 funds |
+| Advance recovered on a salary sheet | (part of the sheet's entry) | `staff_advances` | oldest advance first; undone when the sheet is cancelled |
 
 Expense budgets (I7) are informational. Warnings at `warn_at_percent` of the monthly budget never block.
 
