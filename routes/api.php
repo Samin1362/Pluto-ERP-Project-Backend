@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\V1\Accounting\AccountMappingController;
 use App\Http\Controllers\Api\V1\Accounting\FiscalYearController;
 use App\Http\Controllers\Api\V1\Accounting\LedgerController;
 use App\Http\Controllers\Api\V1\Accounting\VoucherController;
+use App\Http\Controllers\Api\V1\AnnouncementController;
 use App\Http\Controllers\Api\V1\Approvals\ApprovalController;
 use App\Http\Controllers\Api\V1\Approvals\NotificationController;
 use App\Http\Controllers\Api\V1\Attachments\AttachmentController;
@@ -36,6 +37,7 @@ use App\Http\Controllers\Api\V1\Platform\ExportJobController;
 use App\Http\Controllers\Api\V1\Platform\PlatformLookupController;
 use App\Http\Controllers\Api\V1\Platform\SearchController;
 use App\Http\Controllers\Api\V1\Platform\SetupChecklistController;
+use App\Http\Controllers\Api\V1\PlatformConsole\PlatformAnnouncementController;
 use App\Http\Controllers\Api\V1\PlatformConsole\PlatformCompanyController;
 use App\Http\Controllers\Api\V1\PlatformConsole\PlatformPlanController;
 use App\Http\Controllers\Api\V1\Purchases\DebitNoteController;
@@ -89,6 +91,9 @@ Route::middleware(['jwt', 'throttle:api-user'])->group(function () {
     Route::get('me/sessions', [AccountController::class, 'sessions']);
     Route::delete('me/sessions/{id}', [AccountController::class, 'revokeSession'])->whereNumber('id');
     Route::post('me/sessions/revoke-others', [AccountController::class, 'revokeOthers']);
+    // PEP-513: announcements from the software owner (any signed-in person, any company).
+    Route::get('announcements', [AnnouncementController::class, 'index']);
+    Route::post('announcements/{id}/dismiss', [AnnouncementController::class, 'dismiss'])->whereNumber('id');
     Route::get('me/preferences', [AccountController::class, 'preferences']);
     Route::put('me/preferences', [AccountController::class, 'savePreferences']);
     Route::post('companies', [CompanyController::class, 'store'])->middleware('idempotent');
@@ -104,6 +109,11 @@ Route::middleware(['jwt', 'throttle:api-user'])->group(function () {
         Route::post('companies/{id}/owner-access', [PlatformCompanyController::class, 'joinAsOwner'])->whereNumber('id')->middleware('idempotent');
         Route::delete('companies/{id}/owner-access', [PlatformCompanyController::class, 'leaveAsOwner'])->whereNumber('id');
         // PEP-498: Pluto plans and each company's plan.
+        // PEP-513: announcements to every company.
+        Route::get('announcements', [PlatformAnnouncementController::class, 'index']);
+        Route::post('announcements', [PlatformAnnouncementController::class, 'store'])->middleware('idempotent');
+        Route::put('announcements/{id}', [PlatformAnnouncementController::class, 'update'])->whereNumber('id');
+        Route::delete('announcements/{id}', [PlatformAnnouncementController::class, 'destroy'])->whereNumber('id');
         Route::get('plans', [PlatformPlanController::class, 'index']);
         Route::post('plans', [PlatformPlanController::class, 'store'])->middleware('idempotent');
         Route::put('plans/{id}', [PlatformPlanController::class, 'update'])->whereNumber('id');

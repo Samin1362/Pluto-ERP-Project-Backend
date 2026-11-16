@@ -18525,6 +18525,224 @@
    "check": {
     "subscription_payments_method_check": "`method` IN ('bank', 'bkash', 'nagad', 'cash', 'card', 'other')"
    }
+  },
+  "announcements": {
+   "seq": 95,
+   "level": 1,
+   "migration": "2026_10_18_009500_create_announcements_table.php",
+   "module": "Platform",
+   "columns": [
+    {
+     "name": "id",
+     "type": "bigint unsigned",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": true
+    },
+    {
+     "name": "title",
+     "type": "varchar(120)",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "body",
+     "type": "varchar(500)",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "tone",
+     "type": "varchar(30)",
+     "nullable": false,
+     "default": "info",
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "starts_at",
+     "type": "datetime",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "ends_at",
+     "type": "datetime",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "is_active",
+     "type": "tinyint(1)",
+     "nullable": false,
+     "default": "1",
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "lock_version",
+     "type": "int unsigned",
+     "nullable": false,
+     "default": "1",
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "created_by",
+     "type": "bigint unsigned",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "updated_by",
+     "type": "bigint unsigned",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "created_at",
+     "type": "datetime",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "updated_at",
+     "type": "datetime",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    }
+   ],
+   "primary": [
+    "id"
+   ],
+   "unique": {},
+   "index": {
+    "announcements_is_active_starts_at_index": [
+     "is_active",
+     "starts_at"
+    ],
+    "announcements_created_by_index": [
+     "created_by"
+    ],
+    "announcements_updated_by_index": [
+     "updated_by"
+    ]
+   },
+   "foreign": {
+    "announcements_created_by_foreign": {
+     "column": "created_by",
+     "references_table": "users",
+     "references_column": "id",
+     "on_delete": "RESTRICT",
+     "on_update": "RESTRICT"
+    },
+    "announcements_updated_by_foreign": {
+     "column": "updated_by",
+     "references_table": "users",
+     "references_column": "id",
+     "on_delete": "RESTRICT",
+     "on_update": "RESTRICT"
+    }
+   },
+   "check": {
+    "announcements_tone_check": "`tone` IN ('info', 'warning', 'success')"
+   }
+  },
+  "announcement_dismissals": {
+   "seq": 96,
+   "level": 2,
+   "migration": "2026_10_18_009600_create_announcement_dismissals_table.php",
+   "module": "Platform",
+   "columns": [
+    {
+     "name": "id",
+     "type": "bigint unsigned",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": true
+    },
+    {
+     "name": "announcement_id",
+     "type": "bigint unsigned",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "user_id",
+     "type": "bigint unsigned",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "created_at",
+     "type": "datetime",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "updated_at",
+     "type": "datetime",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    }
+   ],
+   "primary": [
+    "id"
+   ],
+   "unique": {
+    "announcement_dismissals_announcement_id_user_id_unique": [
+     "announcement_id",
+     "user_id"
+    ]
+   },
+   "index": {
+    "announcement_dismissals_user_id_index": [
+     "user_id"
+    ]
+   },
+   "foreign": {
+    "announcement_dismissals_announcement_id_foreign": {
+     "column": "announcement_id",
+     "references_table": "announcements",
+     "references_column": "id",
+     "on_delete": "CASCADE",
+     "on_update": "RESTRICT"
+    },
+    "announcement_dismissals_user_id_foreign": {
+     "column": "user_id",
+     "references_table": "users",
+     "references_column": "id",
+     "on_delete": "CASCADE",
+     "on_update": "RESTRICT"
+    }
+   },
+   "check": {}
   }
  }
 }

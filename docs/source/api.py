@@ -132,6 +132,14 @@ E("DELETE", "/platform/companies/{id}/owner-access", "Leave a company joined fro
   ["company_users", "companies", "roles", "audit_logs"], ["K17"], tag="Platform console", fr=["FR-005"], codes=[204], rules=["BR-060"],
   desc=PLAT + " Refused with 409 last_owner while the platform admin is the company's only active Owner. Nothing happens when they are not an active member.",
   errors=["platform_admin_only", "platform_two_factor_required", "last_owner"], added="PEP-496 owner access")
+E("GET", "/platform/announcements", "All announcements, newest first", "auth", ["announcements"], ["K17"], resp="Page<Announcement>", tag="Platform console", fr=["FR-005"],
+  desc=PLAT, errors=["platform_admin_only", "platform_two_factor_required"], added="PEP-513 announcements")
+E("POST", "/platform/announcements", "Post an announcement to every company", "auth", ["announcements", "audit_logs"], ["K17"], req="AnnouncementInput", resp="Announcement", idem=True,
+  tag="Platform console", fr=["FR-005"], codes=[201, 422], desc=PLAT, errors=["platform_admin_only", "platform_two_factor_required"], added="PEP-513 announcements")
+E("PUT", "/platform/announcements/{id}", "Change or stop an announcement", "auth", ["announcements", "audit_logs"], ["K17"], req="AnnouncementInput", resp="Announcement",
+  ifmatch=True, tag="Platform console", fr=["FR-005"], codes=[200, 409, 422], desc=PLAT, errors=["platform_admin_only", "platform_two_factor_required"], added="PEP-513 announcements")
+E("DELETE", "/platform/announcements/{id}", "Delete an announcement", "auth", ["announcements", "announcement_dismissals", "audit_logs"], ["K17"], codes=[204], tag="Platform console",
+  fr=["FR-005"], desc=PLAT, errors=["platform_admin_only", "platform_two_factor_required"], added="PEP-513 announcements")
 E("GET", "/platform/plans", "Pluto plans with how many companies are on each", "auth", ["plans", "companies"], ["K17"], resp="Page<Plan>", tag="Platform console", fr=["FR-005"],
   desc=PLAT + " Plans set each company's user limit, branch limit and modules (PEP-498).", errors=["platform_admin_only", "platform_two_factor_required"], added="PEP-498 plans")
 E("POST", "/platform/plans", "Create a Pluto plan", "auth", ["plans"], ["K17"], req="PlanInput", resp="Plan", idem=True, tag="Platform console", fr=["FR-005"], codes=[201, 422],
@@ -189,6 +197,10 @@ T = "Platform"
 E("GET", "/search", "Global search across parties, documents, vouchers, ledgers and products (permission-filtered)", "auth.self",
   ["parties", "sales_invoices", "purchase_bills", "journal_entries", "ledgers", "products", "letters_of_credit"], ["L1", "L2", "S0"], rules=["BR-037", "BR-052"],
   params=["q", "type", "limit"], resp="SearchResults", tag=T, fr=["FR-012"], desc="`q` >= 2 characters; numbers and amounts matched exactly, names by prefix. Types the user cannot view are omitted.")
+E("GET", "/announcements", "Announcements to show this person now (active, current, not closed by them)", "auth.self", ["announcements", "announcement_dismissals"], ["S0"],
+  resp="Page<Announcement>", tag="Notifications", fr=["FR-013"], added="PEP-513 announcements")
+E("POST", "/announcements/{id}/dismiss", "Close an announcement for this person", "auth.self", ["announcement_dismissals"], ["S0"], codes=[204], tag="Notifications", fr=["FR-013"],
+  added="PEP-513 announcements")
 E("GET", "/notifications", "Notification feed", "auth.self", ["notifications"], ["L3", "S0"], params=["page", "per_page", "category", "unread"], resp="Page<Notification>", tag=T, fr=["FR-013"])
 E("POST", "/notifications/{id}/read", "Mark a notification read", "auth.self", ["notifications"], ["L3"], tag=T, fr=["FR-013"], codes=[204])
 E("POST", "/notifications/read-all", "Mark all read", "auth.self", ["notifications"], ["L3"], tag=T, fr=["FR-013"], codes=[204])

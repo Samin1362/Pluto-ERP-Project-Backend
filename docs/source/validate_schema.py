@@ -23,7 +23,7 @@ def all_fks():
     return [(t, c) for t in TB.values() for c in t.cols if c.fk]
 
 
-GLOBAL_TABLES = {"currencies", "users", "permissions", "companies", "plans"}  # plans: Pluto plans, platform-wide (PEP-498)
+GLOBAL_TABLES = {"currencies", "users", "permissions", "companies", "plans", "announcements"}  # plans: Pluto plans, platform-wide (PEP-498)
 CASCADING = {"CASCADE", "SET NULL"}
 
 # V01 primary keys

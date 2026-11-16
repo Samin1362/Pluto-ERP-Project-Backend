@@ -218,6 +218,29 @@ export interface AmendmentChange {
   new_value: string
 }
 
+/** A message from the software owner to every company (PEP-513). tone: info, warning or success. Platform console rows also carry is_active and the times; the banner list only active, current, not-dismissed ones. */
+export interface Announcement {
+  id: number
+  title: string
+  body?: string | null
+  tone: 'info' | 'warning' | 'success'
+  starts_at?: string | null
+  ends_at?: string | null
+  is_active: boolean
+  created_at?: string | null
+  version: number
+}
+
+/** Create or change an announcement (PEP-513). starts_at null = at once; ends_at null = until stopped. */
+export interface AnnouncementInput {
+  title: string
+  body?: string | null
+  tone: 'info' | 'warning' | 'success'
+  starts_at?: string | null
+  ends_at?: string | null
+  is_active?: boolean
+}
+
 /** Approve or reject. Comment required to reject. */
 export interface ApprovalDecision {
   comment?: string | null

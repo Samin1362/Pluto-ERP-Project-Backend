@@ -19,7 +19,7 @@ PRINT = "ui:browser print of the loaded view (print stylesheet)"
 A = {
     # ------------------------------------------------------------------ shell & auth
     "S0": ["GET /me → GET /company/settings → GET /fiscal-years (with the new X-Company-Id)", "dlg:L2", "dlg:L5", "GET /notifications",
-           "nav:K14 | POST /auth/logout", "POST /companies → GET /me"],
+           "nav:K14 | POST /auth/logout", "POST /companies → GET /me", "POST /announcements/{id}/dismiss"],
     "S1": ["POST /auth/login", "POST /auth/two-factor", "nav:S2"],
     "S2": ["POST /auth/password/forgot", "POST /auth/password/reset"],
     "S3": ["POST /invitations/{token}/accept"],
@@ -184,7 +184,8 @@ A = {
             "POST /platform/companies/{id}/support-access → GET /me (with its X-Company-Id) → nav:A1", "DELETE /platform/companies/{id}/support-access → nav:K17",
             "POST /platform/companies/{id}/owner-access → GET /me → nav:A1", "dlg:L6 → DELETE /platform/companies/{id}/owner-access → GET /platform/companies",
             "POST /platform/plans → GET /platform/plans", "PUT /platform/plans/{id} → GET /platform/plans", "dlg:L6 → DELETE /platform/plans/{id} → GET /platform/plans", "POST /platform/companies/{id}/plan → GET /platform/companies",
-            "POST /platform/companies/{id}/billing → GET /platform/companies", "GET /platform/companies/{id}/payments", "POST /platform/companies/{id}/payments → GET /platform/companies"],
+            "POST /platform/companies/{id}/billing → GET /platform/companies", "GET /platform/companies/{id}/payments", "POST /platform/companies/{id}/payments → GET /platform/companies",
+            "POST /platform/announcements → GET /platform/announcements", "PUT /platform/announcements/{id} → GET /platform/announcements", "dlg:L6 → DELETE /platform/announcements/{id} → GET /platform/announcements"],
     "K10": ["nav:K11", "PATCH /users/{id}", "dlg:L6 → POST /users/{id}/deactivate", "POST /users/{id}/reactivate", "POST /invitations/{id}/resend",
             "dlg:L6 → DELETE /invitations/{id}"],
     "K11": ["POST /roles", "POST /roles (copy_from_role_id)", DISCARD, "PUT /roles/{id} (each changed role)", "dlg:L7 → DELETE /roles/{id}"],

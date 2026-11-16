@@ -1044,6 +1044,16 @@ class OpenApiConformanceTest extends TestCase
         $gone = $this->api('DELETE', "/api/v1/platform/plans/{$id}", $t);
         $gone->assertNoContent();
         $this->assertConforms($gone, 'DELETE', '/platform/plans/{id}');
+        // PEP-513: announcements.
+        $ann = $this->api('POST', '/api/v1/platform/announcements', $t, null, ['title' => 'Update tonight', 'tone' => 'warning'], $key());
+        $ann->assertCreated();
+        $this->assertConforms($ann, 'POST', '/platform/announcements');
+        $this->assertConforms($this->api('GET', '/api/v1/platform/announcements', $t), 'GET', '/platform/announcements');
+        $this->assertConforms($this->api('PUT', '/api/v1/platform/announcements/'.$ann->json('data.id'), $t, null, ['title' => 'Update tonight', 'tone' => 'info'], ['If-Match' => 'W/"1"']),
+            'PUT', '/platform/announcements/{id}');
+        $this->assertConforms($this->api('GET', '/api/v1/announcements', $t), 'GET', '/announcements');
+        $this->assertConforms($this->api('POST', '/api/v1/announcements/'.$ann->json('data.id').'/dismiss', $t), 'POST', '/announcements/{id}/dismiss');
+        $this->assertConforms($this->api('DELETE', '/api/v1/platform/announcements/'.$ann->json('data.id'), $t), 'DELETE', '/platform/announcements/{id}');
         // PEP-503: subscription terms and payments.
         $this->assertConforms($this->api('POST', "/api/v1/platform/companies/{$c}/billing", $t, null, ['price' => '3000', 'paid_until' => now()->addDays(5)->toDateString(), 'grace_days' => 7]),
             'POST', '/platform/companies/{id}/billing');

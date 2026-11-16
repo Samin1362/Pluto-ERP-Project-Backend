@@ -3054,3 +3054,40 @@ CREATE TABLE `subscription_payments` (
   CONSTRAINT `subscription_payments_updated_by_foreign` FOREIGN KEY (`updated_by`) REFERENCES `users` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `subscription_payments_method_check` CHECK (`method` IN ('bank', 'bkash', 'nagad', 'cash', 'card', 'other'))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Payments a customer company made for its Pluto subscription (PEP-503), recorded by the software owner in the platform console. Each extends companies.paid_until.';
+
+-- 95. announcements (level 1)
+CREATE TABLE `announcements` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT COMMENT 'Primary key, auto-increment',
+  `title` varchar(120) NOT NULL,
+  `body` varchar(500) NULL,
+  `tone` varchar(30) NOT NULL DEFAULT 'info' COMMENT 'One of: info, warning, success',
+  `starts_at` datetime NULL COMMENT 'Shown from this moment; NULL = at once',
+  `ends_at` datetime NULL COMMENT 'Hidden after this moment; NULL = until stopped',
+  `is_active` tinyint(1) NOT NULL DEFAULT 1 COMMENT '0 = stopped by the software owner',
+  `lock_version` int unsigned NOT NULL DEFAULT 1 COMMENT 'Optimistic concurrency counter; incremented on every update (If-Match)',
+  `created_by` bigint unsigned NULL COMMENT 'User who created the row',
+  `updated_by` bigint unsigned NULL COMMENT 'User who last changed the row',
+  `created_at` datetime NULL COMMENT 'Set by Laravel',
+  `updated_at` datetime NULL COMMENT 'Set by Laravel',
+  PRIMARY KEY (`id`),
+  KEY `announcements_is_active_starts_at_index` (`is_active`, `starts_at`),
+  KEY `announcements_created_by_index` (`created_by`),
+  KEY `announcements_updated_by_index` (`updated_by`),
+  CONSTRAINT `announcements_created_by_foreign` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  CONSTRAINT `announcements_updated_by_foreign` FOREIGN KEY (`updated_by`) REFERENCES `users` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  CONSTRAINT `announcements_tone_check` CHECK (`tone` IN ('info', 'warning', 'success'))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Messages the software owner shows to every company (PEP-513), e.g. ''Update tonight 11 pm''. Platform-wide, not a company''s data.';
+
+-- 96. announcement_dismissals (level 2)
+CREATE TABLE `announcement_dismissals` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT COMMENT 'Primary key, auto-increment',
+  `announcement_id` bigint unsigned NOT NULL,
+  `user_id` bigint unsigned NOT NULL,
+  `created_at` datetime NULL COMMENT 'Set by Laravel',
+  `updated_at` datetime NULL COMMENT 'Set by Laravel',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `announcement_dismissals_announcement_id_user_id_unique` (`announcement_id`, `user_id`),
+  KEY `announcement_dismissals_user_id_index` (`user_id`),
+  CONSTRAINT `announcement_dismissals_announcement_id_foreign` FOREIGN KEY (`announcement_id`) REFERENCES `announcements` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT,
+  CONSTRAINT `announcement_dismissals_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Who closed which announcement (PEP-513), so it does not come back for them.';
