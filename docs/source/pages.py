@@ -626,7 +626,10 @@ page("P3", "Salary sheets", "Payroll", "List", "payroll.view", "One sheet per mo
      "List; New sheet asks for the month.", actions=["New salary sheet", "Open sheet"],
      table={"cols": ["Month", "Employees", "Gross", "Deductions", "Net", "Status"], "filters": ["Status"], "search": False}, fr=["FR-101"])
 page("P4", "Salary sheet", "Payroll", "Detail", "payroll.view", "Lines per employee (days paid, structure, overtime, other earnings, deductions, gross, net) with totals from the server.",
-     "Editable grid while draft; Approve posts; Cancel reverses.", actions=["Save changes", "Delete draft", "Approve and post", "Cancel sheet", "Pay salaries", "Reverse a payment"], deps=["P3"], fr=["FR-101", "FR-102"])
+     "Editable grid while draft (advance recovery too, PEP-523); Approve posts; Cancel reverses.", actions=["Save changes", "Delete draft", "Approve and post", "Cancel sheet", "Pay salaries", "Reverse a payment"], deps=["P3"], fr=["FR-101", "FR-102"])
+page("P5", "Staff advances", "Payroll", "List", "payroll.view", "Advances given to employees: who, when, amount, instalment, recovered, still owed, status (PEP-523).",
+     "List with Open / Settled tabs; Give advance dialog; Reverse on an advance nothing was taken back from.", actions=["Give advance", "Reverse an advance"],
+     table={"cols": ["Employee", "Given on", "Amount", "Instalment", "Recovered", "Still owed", "Status"], "filters": ["Status"], "search": False}, fr=["FR-103"])
 
 
 # ---- Actions added by the API contract review (18 Oct 2026). Marked NEW: the design does not show them; each needs design sign-off.

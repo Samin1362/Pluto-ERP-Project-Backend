@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Table `employees` (Payroll): migration 99 of 103, dependency level 2.
+ * Table `employees` (Payroll): migration 99 of 105, dependency level 2.
  * A person the company pays a salary (PEP-520). Monthly gross = basic + house rent + medical + conveyance.
  * Depends on: companies, users.
  *

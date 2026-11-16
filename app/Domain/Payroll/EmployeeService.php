@@ -68,6 +68,7 @@ class EmployeeService
             'email' => $e->email, 'national_id' => $e->national_id, 'joining_date' => $e->joining_date->toDateString(),
             'basic_salary' => (string) Money::of((string) $e->basic_salary), 'house_rent' => (string) Money::of((string) $e->house_rent),
             'medical' => (string) Money::of((string) $e->medical), 'conveyance' => (string) Money::of((string) $e->conveyance), 'gross_salary' => (string) $gross,
+            'advance_balance' => (string) StaffAdvanceService::balance($e->id), // PEP-523
             'pay_method' => $e->pay_method, 'bank_name' => $e->bank_name, 'account_no' => $e->account_no, 'status' => $e->status,
             'left_on' => $e->left_on?->toDateString(), 'notes' => $e->notes, 'version' => $e->lock_version];
     }

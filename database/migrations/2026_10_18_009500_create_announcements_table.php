@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Table `announcements` (Platform): migration 95 of 103, dependency level 1.
+ * Table `announcements` (Platform): migration 95 of 105, dependency level 1.
  * Messages the software owner shows to every company (PEP-513), e.g. 'Update tonight 11 pm'. Platform-wide, not a company's data.
  * Depends on: users.
  *

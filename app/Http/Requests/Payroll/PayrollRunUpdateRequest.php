@@ -20,11 +20,12 @@ class PayrollRunUpdateRequest extends StrictRequest
             'pay_date' => ['sometimes', 'date_format:Y-m-d'],
             'notes' => ['sometimes', 'nullable', 'string', 'max:500'],
             'lines' => ['sometimes', 'array', 'max:1000'],
-            'lines.*' => ['array:id,overtime,other_earnings,deductions,note'],
+            'lines.*' => ['array:id,overtime,other_earnings,deductions,advance_recovery,note'],
             'lines.*.id' => ['required', 'integer'],
             'lines.*.overtime' => ['sometimes', 'nullable', 'string', 'regex:'.self::MONEY],
             'lines.*.other_earnings' => ['sometimes', 'nullable', 'string', 'regex:'.self::MONEY],
             'lines.*.deductions' => ['sometimes', 'nullable', 'string', 'regex:'.self::MONEY],
+            'lines.*.advance_recovery' => ['sometimes', 'nullable', 'string', 'regex:'.self::MONEY],
             'lines.*.note' => ['sometimes', 'nullable', 'string', 'max:255'],
         ];
     }
@@ -33,6 +34,6 @@ class PayrollRunUpdateRequest extends StrictRequest
     {
         $m = 'Enter an amount of 0 or more with up to 2 decimals';
 
-        return ['lines.*.overtime.regex' => $m, 'lines.*.other_earnings.regex' => $m, 'lines.*.deductions.regex' => $m];
+        return ['lines.*.overtime.regex' => $m, 'lines.*.other_earnings.regex' => $m, 'lines.*.deductions.regex' => $m, 'lines.*.advance_recovery.regex' => $m];
     }
 }

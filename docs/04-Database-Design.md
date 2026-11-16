@@ -2072,6 +2072,29 @@ erDiagram
         bigint payroll_line_id FK
         decimal amount
     }
+    staff_advances {
+        bigint id PK
+        bigint company_id FK
+        bigint employee_id FK
+        bigint money_account_id FK
+        date given_on
+        decimal amount
+        decimal instalment
+        decimal recovered
+        varchar status
+        varchar reference
+        varchar notes
+        bigint journal_entry_id FK
+        bigint reversal_entry_id FK
+        datetime reversed_at
+        varchar reverse_reason
+    }
+    staff_advance_recoveries {
+        bigint id PK
+        bigint staff_advance_id FK
+        bigint payroll_line_id FK
+        decimal amount
+    }
     journal_entries {
         bigint id PK
     }
@@ -2079,15 +2102,21 @@ erDiagram
         bigint id PK
     }
     employees ||--o{ payroll_lines : "employee_id"
+    employees ||--o{ staff_advances : "employee_id"
     journal_entries |o--o| payroll_payments : "journal_entry_id"
     journal_entries |o--o| payroll_payments : "reversal_entry_id"
     journal_entries |o--o| payroll_runs : "journal_entry_id"
     journal_entries |o--o| payroll_runs : "reversal_entry_id"
+    journal_entries |o--o| staff_advances : "journal_entry_id"
+    journal_entries |o--o| staff_advances : "reversal_entry_id"
     money_accounts ||--o{ payroll_payments : "money_account_id"
+    money_accounts ||--o{ staff_advances : "money_account_id"
     payroll_lines ||--o{ payroll_payment_lines : "payroll_line_id"
+    payroll_lines ||--o{ staff_advance_recoveries : "payroll_line_id"
     payroll_payments ||--o{ payroll_payment_lines : "payroll_payment_id"
     payroll_runs ||--o{ payroll_lines : "payroll_run_id"
     payroll_runs ||--o{ payroll_payments : "payroll_run_id"
+    staff_advances ||--o{ staff_advance_recoveries : "staff_advance_id"
 ```
 
 ## 6. Data dictionary
@@ -5932,7 +5961,78 @@ Standard columns are listed in each table: `id` (PK), `company_id` (tenant), `lo
 - `payroll_payment_id` → `payroll_payments`: one-to-many
 - `payroll_line_id` → `payroll_lines`: one-to-many
 
-_Total: 103 application tables._
+#### `staff_advances`
+
+**Purpose:** Money given to an employee before payday (PEP-523): Dr staff_advances / Cr the money account; recovered from salary sheets, an instalment a month.  
+**Flags:** tenant-scoped, optimistic lock  
+**Primary key:** (id)
+
+| Column | Type | Null | Default | Keys | FK rule | Meaning / rules |
+|---|---|---|---|---|---|---|
+| `id` | BIGINT UNSIGNED | no | — | PK | — | Primary key, auto-increment |
+| `company_id` | BIGINT UNSIGNED | no | — | FK → `companies.id` | ON DELETE RESTRICT / ON UPDATE RESTRICT | Tenant owner. Every query is scoped by it. |
+| `employee_id` | BIGINT UNSIGNED | no | — | FK → `employees.id` | ON DELETE RESTRICT / ON UPDATE RESTRICT |  |
+| `money_account_id` | BIGINT UNSIGNED | no | — | FK → `money_accounts.id` | ON DELETE RESTRICT / ON UPDATE RESTRICT |  |
+| `given_on` | DATE | no | — | — | — |  |
+| `amount` | DECIMAL(18,2) | no | — | — | — |  |
+| `instalment` | DECIMAL(18,2) | no | — | — | — | Taken back each month |
+| `recovered` | DECIMAL(18,2) | no | 0 | — | — | Taken back by approved salary sheets so far |
+| `status` | VARCHAR(30) | no | 'open' | — | — | enum: open \| settled \| reversed |
+| `reference` | VARCHAR(60) | yes | NULL | — | — |  |
+| `notes` | VARCHAR(255) | yes | NULL | — | — |  |
+| `journal_entry_id` | BIGINT UNSIGNED | yes | NULL | FK → `journal_entries.id` · UQ | ON DELETE RESTRICT / ON UPDATE RESTRICT | Set in the same transaction as the advance |
+| `reversal_entry_id` | BIGINT UNSIGNED | yes | NULL | FK → `journal_entries.id` · UQ | ON DELETE RESTRICT / ON UPDATE RESTRICT |  |
+| `reversed_at` | DATETIME | yes | NULL | — | — |  |
+| `reverse_reason` | VARCHAR(255) | yes | NULL | — | — |  |
+| `lock_version` | INT UNSIGNED | no | 1 | — | — | Optimistic concurrency counter; incremented on every update (If-Match) |
+| `created_by` | BIGINT UNSIGNED | yes | NULL | FK → `users.id` | ON DELETE RESTRICT / ON UPDATE RESTRICT | User who created the row |
+| `updated_by` | BIGINT UNSIGNED | yes | NULL | FK → `users.id` | ON DELETE RESTRICT / ON UPDATE RESTRICT | User who last changed the row |
+| `created_at` | DATETIME | yes | NULL | — | — | Set by Laravel |
+| `updated_at` | DATETIME | yes | NULL | — | — | Set by Laravel |
+
+- **Unique** (journal_entry_id)
+- **Unique** (reversal_entry_id)
+- Index (company_id, employee_id, status)
+- Index (employee_id)
+- Index (money_account_id)
+- Index (created_by)
+- Index (updated_by)
+- **Check** `amount > 0`
+- **Check** `instalment > 0`
+- **Check** `recovered >= 0`
+- **Check** `recovered <= amount`
+- **Check** `status IN ('open', 'settled', 'reversed')`
+
+**Relationships:**
+- `employee_id` → `employees`: one-to-many
+- `money_account_id` → `money_accounts`: one-to-many
+- `journal_entry_id` → `journal_entries`: one-to-one (optional)
+- `reversal_entry_id` → `journal_entries`: one-to-one (optional)
+
+#### `staff_advance_recoveries`
+
+**Purpose:** Which advance a salary sheet line took back, and how much (PEP-523); removed when the sheet is cancelled.  
+**Flags:** —  
+**Primary key:** (id)
+
+| Column | Type | Null | Default | Keys | FK rule | Meaning / rules |
+|---|---|---|---|---|---|---|
+| `id` | BIGINT UNSIGNED | no | — | PK | — | Primary key, auto-increment |
+| `staff_advance_id` | BIGINT UNSIGNED | no | — | FK → `staff_advances.id` | ON DELETE CASCADE / ON UPDATE RESTRICT |  |
+| `payroll_line_id` | BIGINT UNSIGNED | no | — | FK → `payroll_lines.id` | ON DELETE CASCADE / ON UPDATE RESTRICT |  |
+| `amount` | DECIMAL(18,2) | no | — | — | — |  |
+| `created_at` | DATETIME | yes | NULL | — | — | Set by Laravel |
+| `updated_at` | DATETIME | yes | NULL | — | — | Set by Laravel |
+
+- **Unique** (staff_advance_id, payroll_line_id)
+- Index (payroll_line_id)
+- **Check** `amount > 0`
+
+**Relationships:**
+- `staff_advance_id` → `staff_advances`: one-to-many
+- `payroll_line_id` → `payroll_lines`: one-to-many
+
+_Total: 105 application tables._
 
 
 ## 7. Relationship matrix
@@ -6201,6 +6301,12 @@ Every foreign key except the uniform `company_id`, `created_by` and `updated_by`
 | 258 | `payroll_payments` | `reversal_entry_id` | `journal_entries` | one-to-one (optional) | no | RESTRICT |
 | 259 | `payroll_payment_lines` | `payroll_payment_id` | `payroll_payments` | one-to-many | yes | CASCADE |
 | 260 | `payroll_payment_lines` | `payroll_line_id` | `payroll_lines` | one-to-many | yes | RESTRICT |
+| 261 | `staff_advances` | `employee_id` | `employees` | one-to-many | yes | RESTRICT |
+| 262 | `staff_advances` | `money_account_id` | `money_accounts` | one-to-many | yes | RESTRICT |
+| 263 | `staff_advances` | `journal_entry_id` | `journal_entries` | one-to-one (optional) | no | RESTRICT |
+| 264 | `staff_advances` | `reversal_entry_id` | `journal_entries` | one-to-one (optional) | no | RESTRICT |
+| 265 | `staff_advance_recoveries` | `staff_advance_id` | `staff_advances` | one-to-many | yes | CASCADE |
+| 266 | `staff_advance_recoveries` | `payroll_line_id` | `payroll_lines` | one-to-many | yes | CASCADE |
 
 **Many-to-many relationships** are only ever implemented through junction tables:
 
@@ -6318,6 +6424,8 @@ For each table, the tables it references (must exist first). Self-references are
 | `payroll_lines` | `employees`, `payroll_runs` | — |
 | `payroll_payments` | `companies`, `journal_entries`, `money_accounts`, `payroll_runs`, `users` | — |
 | `payroll_payment_lines` | `payroll_lines`, `payroll_payments` | — |
+| `staff_advances` | `companies`, `employees`, `journal_entries`, `money_accounts`, `users` | — |
+| `staff_advance_recoveries` | `payroll_lines`, `staff_advances` | — |
 
 ## 9. Migration order
 
@@ -6402,66 +6510,68 @@ Computed by topological sort of section 8, so every referenced table is created 
 59. `purchase_orders`
 60. `quotations`
 61. `recurring_templates`
-62. `stock_adjustments`
-63. `stock_transfers`
+62. `staff_advances`
+63. `stock_adjustments`
+64. `stock_transfers`
 
 **Level 6**
 
-64. `cash_count_denominations`
-65. `letters_of_credit`
-66. `payroll_lines`
-67. `payroll_payments`
-68. `product_units`
-69. `product_warehouse_settings`
-70. `purchase_order_lines`
-71. `quotation_lines`
-72. `sales_invoices`
-73. `stock_adjustment_lines`
-74. `stock_balances`
-75. `stock_movements`
-76. `stock_transfer_lines`
+65. `cash_count_denominations`
+66. `letters_of_credit`
+67. `payroll_lines`
+68. `payroll_payments`
+69. `product_units`
+70. `product_warehouse_settings`
+71. `purchase_order_lines`
+72. `quotation_lines`
+73. `sales_invoices`
+74. `stock_adjustment_lines`
+75. `stock_balances`
+76. `stock_movements`
+77. `stock_transfer_lines`
 
 **Level 7**
 
-77. `journal_lines`
-78. `lc_amendments`
-79. `lc_shipments`
-80. `payroll_payment_lines`
-81. `recurring_invoices`
-82. `sales_invoice_lines`
-83. `sales_returns`
+78. `journal_lines`
+79. `lc_amendments`
+80. `lc_shipments`
+81. `payroll_payment_lines`
+82. `recurring_invoices`
+83. `sales_invoice_lines`
+84. `sales_returns`
+85. `staff_advance_recoveries`
 
 **Level 8**
 
-84. `bank_statement_lines`
-85. `credit_notes`
-86. `lc_amendment_changes`
-87. `lc_amendment_lines`
-88. `lc_documents`
-89. `purchase_bills`
-90. `sales_return_lines`
+86. `bank_statement_lines`
+87. `credit_notes`
+88. `lc_amendment_changes`
+89. `lc_amendment_lines`
+90. `lc_documents`
+91. `purchase_bills`
+92. `sales_return_lines`
 
 **Level 9**
 
-91. `bill_allocations`
-92. `fx_revaluation_lines`
-93. `landed_cost_allocations`
-94. `lc_payments`
-95. `purchase_bill_lines`
-96. `purchase_returns`
+93. `bill_allocations`
+94. `fx_revaluation_lines`
+95. `landed_cost_allocations`
+96. `lc_payments`
+97. `purchase_bill_lines`
+98. `purchase_returns`
 
 **Level 10**
 
-97. `debit_notes`
-98. `landed_cost_allocation_lines`
-99. `lc_charges`
-100. `lc_loans`
-101. `purchase_return_lines`
+99. `debit_notes`
+100. `landed_cost_allocation_lines`
+101. `lc_charges`
+102. `lc_loans`
+103. `purchase_return_lines`
 
 **Level 11**
 
-102. `lc_loan_accruals`
-103. `lc_loan_repayments`
+104. `lc_loan_accruals`
+105. `lc_loan_repayments`
 
 ## 10. Index and uniqueness recommendations
 
@@ -6544,6 +6654,7 @@ It reproduces the designed H2 chart and adds the ledgers needed by posting rules
 | 1403 ✚ | LC margin deposits | Ledger | Asset | `lc_margin` |
 | 1404 ✚ | Import goods in transit (LC) | Ledger | Asset | `goods_in_transit` |
 | 1405 ✚ | Stock in transit (between warehouses) | Ledger | Asset | `stock_in_transit` |
+| 1406 ✚ | Staff advances | Ledger | Asset | `staff_advances` |
 | 12 | Fixed assets | Group | Asset | |
 | 1501–1503 | Delivery vans; Furniture and fixtures; Office equipment | Ledger | Asset | |
 | 1509 | Accumulated depreciation | Ledger | Asset (contra) | |

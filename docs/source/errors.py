@@ -84,6 +84,7 @@ E = {
     "payroll_run_not_draft": (409, "Only a draft salary sheet can be changed", ["FR-101"]),
     "payroll_run_not_approved": (409, "Only an approved salary sheet can be cancelled or paid", ["FR-101"]),
     "nothing_to_pay": (422, "Everyone on this sheet is already paid", ["FR-102"]),
+    "advance_recovered": (409, "Part of this advance was already taken back from a salary sheet", ["FR-103"]),
     "payroll_overpaid": (422, "A payment is more than what is still due to the employee", ["FR-102"]),
     "party_has_no_email": (422, "This customer has no e-mail address", ["FR-024"]),
     "no_overdue_invoices": (422, "This customer has no overdue invoices", ["FR-024"]),

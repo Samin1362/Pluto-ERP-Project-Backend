@@ -80,6 +80,7 @@ It reproduces the designed H2 chart and adds the ledgers needed by posting rules
 | 1403 ✚ | LC margin deposits | Ledger | Asset | `lc_margin` |
 | 1404 ✚ | Import goods in transit (LC) | Ledger | Asset | `goods_in_transit` |
 | 1405 ✚ | Stock in transit (between warehouses) | Ledger | Asset | `stock_in_transit` |
+| 1406 ✚ | Staff advances | Ledger | Asset | `staff_advances` |
 | 12 | Fixed assets | Group | Asset | |
 | 1501–1503 | Delivery vans; Furniture and fixtures; Office equipment | Ledger | Asset | |
 | 1509 | Accumulated depreciation | Ledger | Asset (contra) | |

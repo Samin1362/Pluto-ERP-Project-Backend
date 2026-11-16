@@ -77,6 +77,7 @@ A = {
            "PATCH /sales-invoices/{id}/delivery", "POST /sales-invoices/{id}/send", "POST /sales-invoices/{id}/repeat"],
     "P1": ["nav:P2", "GET /employees"],
     "P3": ["POST /payroll-runs → nav:P4", "nav:P4"],
+    "P5": ["GET /employees → GET /money-accounts → POST /staff-advances", "GET /staff-advances → dlg:L6 → POST /staff-advances/{id}/reverse"],
     "P4": ["PUT /payroll-runs/{id}", "dlg:L6 → DELETE /payroll-runs/{id}", "dlg:L6 → POST /payroll-runs/{id}/approve", "dlg:L6 → POST /payroll-runs/{id}/cancel", "GET /money-accounts → POST /payroll-runs/{id}/payments", "GET /payroll-runs/{id}/payments → dlg:L6 → POST /payroll-payments/{id}/reverse"],
     "P2": [DISCARD, "POST /employees | PATCH /employees/{id}", "PATCH /employees/{id}"],
     "E6": ["dlg:Sal-DlgDelete", "PUT /sales-invoices/{id}", "PUT /sales-invoices/{id} → nav:E4", "PUT /sales-invoices/{id} → dlg:Sal-DlgPost"],

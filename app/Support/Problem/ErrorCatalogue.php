@@ -9,6 +9,7 @@ namespace App\Support\Problem;
 final class ErrorCatalogue
 {
     public const CODES = [
+        'advance_recovered' => [409, 'Part of this advance was already taken back from a salary sheet'],
         'allocation_exceeds_balance' => [422, 'The allocation is more than the document\'s open balance or the payment'],
         'already_converted' => [409, 'This quotation or purchase order has already been converted'],
         'already_posted' => [409, 'This document has already been posted'],

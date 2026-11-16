@@ -29,7 +29,7 @@ class PayrollRunService
 {
     private const STRUCTURE = ['basic_salary', 'house_rent', 'medical', 'conveyance'];
 
-    private const EDITABLE = ['overtime', 'other_earnings', 'deductions', 'note'];
+    private const EDITABLE = ['overtime', 'other_earnings', 'deductions', 'advance_recovery', 'note'];
 
     public function __construct(private readonly AccountMapper $mapper, private readonly PostingService $posting, private readonly AuditLogger $audit) {}
 
@@ -57,9 +57,13 @@ class PayrollRunService
                 $line = new PayrollLine(['payroll_run_id' => $run->id, 'employee_id' => $e->id, 'employee_code' => $e->code, 'employee_name' => $e->name,
                     'designation' => $e->designation, 'days_in_month' => $daysInMonth, 'days_paid' => min($days, $daysInMonth),
                     'overtime' => '0', 'other_earnings' => '0', 'deductions' => '0', 'advance_recovery' => '0', 'paid_amount' => '0']);
+                $pay = Money::zero();
                 foreach (self::STRUCTURE as $k) {
                     $line->{$k} = (string) self::prorate((string) $e->{$k}, $line->days_paid, $daysInMonth);
+                    $pay = $pay->plus(Money::of($line->{$k}));
                 }
+                // PEP-523: this month's advance instalments, never more than the month's pay.
+                $line->advance_recovery = (string) StaffAdvanceService::dueInstalments($e->id, $pay);
                 $this->work($line);
                 $line->save();
             }
@@ -90,8 +94,11 @@ class PayrollRunService
                         $line->{$k} = $k === 'note' ? $change[$k] : (string) Money::of($change[$k] ?? '0');
                     }
                 }
+                if (array_key_exists('advance_recovery', $change) && Money::of($line->advance_recovery)->isGreaterThan(StaffAdvanceService::balance((int) $line->employee_id))) {
+                    throw new ApiProblem('validation_failed', errors: ["lines.{$i}.advance_recovery" => ["{$line->employee_name} owes ".StaffAdvanceService::balance((int) $line->employee_id).' on advances']]);
+                }
                 if ($this->work($line)->isNegative()) {
-                    throw new ApiProblem('validation_failed', errors: ["lines.{$i}.deductions" => ["Deductions are more than {$line->employee_name}'s pay this month"]]);
+                    throw new ApiProblem('validation_failed', errors: ["lines.{$i}.deductions" => ["Deductions and advance recovery are more than {$line->employee_name}'s pay this month"]]);
                 }
                 $line->save();
             }
@@ -119,15 +126,25 @@ class PayrollRunService
             $lines = $run->lines()->get();
             $expense = Money::zero();
             $net = Money::zero();
+            $recovered = Money::zero();
             foreach ($lines as $l) {
                 $expense = $expense->plus(Money::of((string) $l->gross))->minus(Money::of((string) $l->deductions));
                 $net = $net->plus(Money::of((string) $l->net));
+                $recovered = $recovered->plus(Money::of((string) $l->advance_recovery));
+                if (Money::of((string) $l->advance_recovery)->isPositive()) {
+                    StaffAdvanceService::recover($l); // PEP-523: oldest advance first
+                }
             }
             $label = self::label($run);
             $entry = null;
             if ($expense->isPositive()) {
-                $b = (new JournalBuilder)->debit($this->mapper->ledgerFor('salaries_expense'), $expense, ['line_narration' => $label])
-                    ->credit($this->mapper->ledgerFor('salaries_payable'), $net, ['line_narration' => $label]);
+                $b = (new JournalBuilder)->debit($this->mapper->ledgerFor('salaries_expense'), $expense, ['line_narration' => $label]);
+                if ($net->isPositive()) {
+                    $b->credit($this->mapper->ledgerFor('salaries_payable'), $net, ['line_narration' => $label]);
+                }
+                if ($recovered->isPositive()) {
+                    $b->credit($this->mapper->ledgerFor('staff_advances'), $recovered, ['line_narration' => "{$label}: advances taken back"]);
+                }
                 $entry = $this->posting->persist($b, $run, 'journal', $run->pay_date->toDateString(), null, "{$label}: {$run->employees_count} employees", $label);
             }
             $run->forceFill(['status' => 'approved', 'journal_entry_id' => $entry?->id, 'approved_at' => now(), 'approved_by' => Auth::id()])->save();
@@ -147,6 +164,7 @@ class PayrollRunService
             if ($run->lines()->where('paid_amount', '>', 0)->exists()) {
                 throw new ApiProblem('payroll_run_not_approved', 'Some salaries on this sheet are paid; reverse those payments first.');
             }
+            StaffAdvanceService::undo($run->lines()->pluck('id')->all()); // PEP-523: the advances are owed again
             $reversal = null;
             if ($run->journal_entry_id) {
                 $entry = JournalEntry::with('lines')->whereKey($run->journal_entry_id)->lockForUpdate()->firstOrFail();

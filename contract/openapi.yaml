@@ -28087,8 +28087,10 @@ paths:
       - E14
       - F12
       - P4
+      - P5
       x-page-actions:
       - 'P4: Pay salaries'
+      - 'P5: Give advance'
       x-tables:
       - money_accounts
       - ledgers
@@ -41916,8 +41918,10 @@ paths:
       - FR-100
       x-pages:
       - P1
+      - P5
       x-page-actions:
       - 'P1: Open employee'
+      - 'P5: Give advance'
       x-tables:
       - employees
       x-db-operations:
@@ -42355,6 +42359,398 @@ paths:
                 $ref: '#/components/schemas/Error'
         '428':
           description: 'Precondition required (If-Match missing): `if_match_required`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: 'Company temporarily unavailable (restore in progress): `company_maintenance`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+              description: Seconds to wait
+        default:
+          description: Unexpected error (`server_error`)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /api/v1/staff-advances:
+    get:
+      operationId: getStaffAdvances
+      summary: Salary advances with what is still to recover
+      tags:
+      - Payroll
+      description: "**Permission:** `payroll.view`  \n**Database:** read: employees, money_accounts, staff_advances  \n**Rules:** —"
+      x-permission: payroll.view
+      x-business-rules: []
+      x-requirements:
+      - FR-103
+      x-pages:
+      - P5
+      - P2
+      x-page-actions:
+      - 'P5: Reverse an advance'
+      x-tables:
+      - staff_advances
+      - employees
+      - money_accounts
+      x-db-operations:
+        staff_advances: R
+        employees: R
+        money_accounts: R
+      x-error-codes:
+      - company_maintenance
+      - company_required
+      - module_not_in_plan
+      - not_a_member
+      - permission_denied
+      - server_error
+      - token_expired
+      - token_invalid
+      - unauthenticated
+      - validation_failed
+      x-contract-change: PEP-523 staff advances
+      parameters:
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+        description: Page number
+      - name: per_page
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 25
+        description: Rows per page (max 100)
+      - name: employee_id
+        in: query
+        required: false
+        schema:
+          type: string
+        description: employee id
+      - name: status
+        in: query
+        required: false
+        schema:
+          type: string
+          maxLength: 30
+        description: Status filter (values as in the resource's status enum)
+      - $ref: '#/components/parameters/CompanyHeader'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                - meta
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/StaffAdvance'
+                  meta:
+                    $ref: '#/components/schemas/PageMeta'
+        '400':
+          description: 'Malformed request: `company_required`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: 'Not authenticated: `token_expired`, `token_invalid`, `unauthenticated`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: 'Not permitted: `module_not_in_plan`, `not_a_member`, `permission_denied`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: 'Validation or business-rule failure: `validation_failed`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: 'Company temporarily unavailable (restore in progress): `company_maintenance`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+              description: Seconds to wait
+        default:
+          description: Unexpected error (`server_error`)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    post:
+      operationId: postStaffAdvances
+      summary: 'Give an advance: Dr staff_advances / Cr the money account'
+      tags:
+      - Payroll
+      description: "**Permission:** `payroll.approve`  \n**Database:** insert: audit_logs, idempotency_keys, staff_advances; read: account_mappings, employees, journal_entries,\
+        \ journal_lines, money_accounts, number_sequences  \n**Rules:** BR-001, BR-004, BR-031  \n**Transaction:** One DB transaction; SELECT ... FOR UPDATE on the\
+        \ document row, number_sequences, stock_balances in a fixed order (sequence -> document -> products by id) to avoid deadlocks."
+      x-permission: payroll.approve
+      x-business-rules:
+      - BR-001
+      - BR-004
+      - BR-031
+      x-requirements:
+      - FR-103
+      x-pages:
+      - P5
+      x-page-actions:
+      - 'P5: Give advance'
+      x-tables:
+      - staff_advances
+      - employees
+      - money_accounts
+      - journal_entries
+      - journal_lines
+      - account_mappings
+      - number_sequences
+      - audit_logs
+      x-db-operations:
+        staff_advances: C
+        employees: R
+        money_accounts: R
+        journal_entries: R
+        journal_lines: R
+        account_mappings: R
+        number_sequences: R
+        audit_logs: C
+        idempotency_keys: C
+      x-error-codes:
+      - company_maintenance
+      - company_required
+      - idempotency_in_progress
+      - idempotency_key_reused
+      - insufficient_funds
+      - malformed_json
+      - mapping_missing
+      - module_not_in_plan
+      - not_a_member
+      - period_locked
+      - permission_denied
+      - server_error
+      - support_read_only
+      - token_expired
+      - token_invalid
+      - unauthenticated
+      - unbalanced_entry
+      - validation_failed
+      x-contract-change: PEP-523 staff advances
+      parameters:
+      - $ref: '#/components/parameters/CompanyHeader'
+      - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StaffAdvanceInput'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                properties:
+                  data:
+                    $ref: '#/components/schemas/StaffAdvance'
+          headers:
+            Location:
+              schema:
+                type: string
+              description: URL of the created resource
+        '400':
+          description: 'Malformed request: `company_required`, `malformed_json`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: 'Not authenticated: `token_expired`, `token_invalid`, `unauthenticated`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: 'Not permitted: `module_not_in_plan`, `not_a_member`, `permission_denied`, `support_read_only`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: 'Conflict (version mismatch, state not allowed, duplicate): `idempotency_in_progress`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: 'Validation or business-rule failure: `idempotency_key_reused`, `insufficient_funds`, `mapping_missing`, `period_locked`, `unbalanced_entry`,
+            `validation_failed`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: 'Company temporarily unavailable (restore in progress): `company_maintenance`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+              description: Seconds to wait
+        default:
+          description: Unexpected error (`server_error`)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /api/v1/staff-advances/{id}/reverse:
+    post:
+      operationId: postStaffAdvancesIdReverse
+      summary: Reverse an advance nothing was recovered from (mirror entry)
+      tags:
+      - Payroll
+      description: "**Permission:** `payroll.approve`  \n**Database:** lock: number_sequences, staff_advances; insert: audit_logs, idempotency_keys, journal_entries,\
+        \ journal_lines; update: journal_entries, number_sequences, staff_advances  \n**Rules:** BR-003, BR-004  \n**Transaction:** One DB transaction; SELECT ...\
+        \ FOR UPDATE on the document row, number_sequences, stock_balances in a fixed order (sequence -> document -> products by id) to avoid deadlocks."
+      x-permission: payroll.approve
+      x-business-rules:
+      - BR-003
+      - BR-004
+      x-requirements:
+      - FR-103
+      x-pages:
+      - P5
+      x-page-actions:
+      - 'P5: Reverse an advance'
+      x-tables:
+      - staff_advances
+      - journal_entries
+      - journal_lines
+      - number_sequences
+      - audit_logs
+      x-db-operations:
+        staff_advances: LU
+        journal_entries: CU
+        journal_lines: C
+        number_sequences: LU
+        audit_logs: C
+        idempotency_keys: C
+      x-error-codes:
+      - advance_recovered
+      - already_reversed
+      - company_maintenance
+      - company_required
+      - idempotency_in_progress
+      - idempotency_key_reused
+      - malformed_json
+      - module_not_in_plan
+      - not_a_member
+      - not_found
+      - period_locked
+      - permission_denied
+      - server_error
+      - support_read_only
+      - token_expired
+      - token_invalid
+      - unauthenticated
+      - use_document_cancel
+      - validation_failed
+      x-contract-change: PEP-523 staff advances
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+          minimum: 1
+      - $ref: '#/components/parameters/CompanyHeader'
+      - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReasonRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                properties:
+                  data:
+                    $ref: '#/components/schemas/StaffAdvance'
+        '400':
+          description: 'Malformed request: `company_required`, `malformed_json`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: 'Not authenticated: `token_expired`, `token_invalid`, `unauthenticated`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: 'Not permitted: `module_not_in_plan`, `not_a_member`, `permission_denied`, `support_read_only`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: 'Not found (also for other companies'' records): `not_found`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: 'Conflict (version mismatch, state not allowed, duplicate): `advance_recovered`, `already_reversed`, `idempotency_in_progress`, `use_document_cancel`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: 'Validation or business-rule failure: `idempotency_key_reused`, `period_locked`, `validation_failed`'
           content:
             application/problem+json:
               schema:
@@ -43649,6 +44045,7 @@ components:
         code:
           type: string
           enum:
+          - advance_recovered
           - allocation_exceeds_balance
           - already_converted
           - already_posted
@@ -48302,6 +48699,7 @@ components:
         code:
           type: string
           enum:
+          - advance_recovered
           - allocation_exceeds_balance
           - already_converted
           - already_posted
@@ -51672,6 +52070,11 @@ components:
           pattern: ^-?\d{1,16}(\.\d{1,2})?$
           example: '118450.00'
           description: Decimal as string (money)
+        advance_balance:
+          type: string
+          pattern: ^-?\d{1,16}(\.\d{1,2})?$
+          example: '118450.00'
+          description: Decimal as string (money)
         pay_method:
           type: string
           enum:
@@ -51712,6 +52115,7 @@ components:
       - medical
       - conveyance
       - gross_salary
+      - advance_balance
       - pay_method
       - status
       - version
@@ -52019,6 +52423,125 @@ components:
       - total_paid
       - payment_status
       - version
+    StaffAdvanceInput:
+      type: object
+      description: Give an advance (PEP-523). instalment = what each salary sheet takes back (at most the amount).
+      properties:
+        employee_id:
+          type: integer
+          format: int64
+          minimum: 1
+        money_account_id:
+          type: integer
+          format: int64
+          minimum: 1
+        given_on:
+          type: string
+          format: date
+        amount:
+          type: string
+          pattern: ^-?\d{1,16}(\.\d{1,2})?$
+          example: '118450.00'
+          description: Decimal as string (money)
+        instalment:
+          type: string
+          pattern: ^-?\d{1,16}(\.\d{1,2})?$
+          example: '118450.00'
+          description: Decimal as string (money)
+        reference:
+          type:
+          - string
+          - 'null'
+          maxLength: 60
+        notes:
+          type:
+          - string
+          - 'null'
+          maxLength: 255
+      required:
+      - employee_id
+      - money_account_id
+      - given_on
+      - amount
+      - instalment
+      additionalProperties: false
+    StaffAdvance:
+      type: object
+      description: A salary advance (PEP-523). balance = amount − recovered, from the server.
+      properties:
+        id:
+          type: integer
+          format: int64
+          minimum: 1
+        employee:
+          type: object
+          additionalProperties: true
+        money_account:
+          type: object
+          additionalProperties: true
+        given_on:
+          type: string
+          format: date
+        amount:
+          type: string
+          pattern: ^-?\d{1,16}(\.\d{1,2})?$
+          example: '118450.00'
+          description: Decimal as string (money)
+        instalment:
+          type: string
+          pattern: ^-?\d{1,16}(\.\d{1,2})?$
+          example: '118450.00'
+          description: Decimal as string (money)
+        recovered:
+          type: string
+          pattern: ^-?\d{1,16}(\.\d{1,2})?$
+          example: '118450.00'
+          description: Decimal as string (money)
+        balance:
+          type: string
+          pattern: ^-?\d{1,16}(\.\d{1,2})?$
+          example: '118450.00'
+          description: Decimal as string (money)
+        status:
+          type: string
+          enum:
+          - open
+          - settled
+          - reversed
+        reference:
+          type:
+          - string
+          - 'null'
+        notes:
+          type:
+          - string
+          - 'null'
+        voucher_number:
+          type:
+          - string
+          - 'null'
+        reversed_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        reverse_reason:
+          type:
+          - string
+          - 'null'
+        version:
+          type: integer
+      required:
+      - id
+      - employee
+      - money_account
+      - given_on
+      - amount
+      - instalment
+      - recovered
+      - balance
+      - status
+      - version
     PayrollPaymentLineInput:
       type: object
       description: Pay one line (PEP-522).
@@ -52164,7 +52687,7 @@ components:
       additionalProperties: false
     PayrollLineChange:
       type: object
-      description: Change one line of a draft sheet (PEP-521).
+      description: 'Change one line of a draft sheet (PEP-521). advance_recovery (PEP-523): at most what the employee still owes on advances.'
       properties:
         id:
           type: integer
@@ -52185,6 +52708,13 @@ components:
           example: '118450.00'
           description: Decimal as string (money)
         deductions:
+          type:
+          - string
+          - 'null'
+          pattern: ^-?\d{1,16}(\.\d{1,2})?$
+          example: '118450.00'
+          description: Decimal as string (money)
+        advance_recovery:
           type:
           - string
           - 'null'
