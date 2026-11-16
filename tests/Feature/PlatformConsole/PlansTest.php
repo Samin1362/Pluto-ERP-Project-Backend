@@ -60,13 +60,13 @@ class PlansTest extends TestCase
         $r = $this->api('GET', '/api/v1/platform/plans', $this->admin)->assertOk();
         $this->assertSame(['basic', 'business', 'import_pro'], array_column($r->json('data'), 'slug'));
         $r->assertJsonPath('data.0.max_users', 3)->assertJsonPath('data.0.max_branches', 1)->assertJsonPath('data.0.modules', [])
-            ->assertJsonPath('data.1.modules', ['lc_management'])->assertJsonPath('data.2.max_branches', null)->assertJsonPath('data.2.modules', ['lc_management', 'lc_finance']);
+            ->assertJsonPath('data.1.modules', ['lc_management', 'payroll'])->assertJsonPath('data.2.max_branches', null)->assertJsonPath('data.2.modules', ['lc_management', 'lc_finance', 'payroll']);
 
-        $this->asOwner('GET', '/api/v1/me')->assertJsonPath('data.plan_name', 'Import Pro')->assertJsonPath('data.modules', ['lc_finance', 'lc_management']);
+        $this->asOwner('GET', '/api/v1/me')->assertJsonPath('data.plan_name', 'Import Pro')->assertJsonPath('data.modules', ['lc_finance', 'lc_management', 'payroll']);
         $this->asOwner('GET', '/api/v1/letters-of-credit')->assertOk();
         $row = collect($this->api('GET', '/api/v1/platform/companies', $this->admin)->json('data'))->firstWhere('id', $this->books->id);
         $this->assertSame('import_pro', $row['plan']['slug']);
-        $this->assertSame(['lc_finance', 'lc_management'], $row['effective']['modules']);
+        $this->assertSame(['lc_finance', 'lc_management', 'payroll'], $row['effective']['modules']);
     }
 
     public function test_only_a_platform_admin_on_two_step_manages_plans(): void
@@ -87,7 +87,7 @@ class PlansTest extends TestCase
         $this->assertProblem($this->api('POST', '/api/v1/platform/plans', $this->admin, null, ['slug' => 'x', 'name' => 'X', 'max_users' => 1, 'max_branches' => null,
             'modules' => ['lc_finance']], ['Idempotency-Key' => (string) Str::uuid()]), 422, 'validation_failed');
         $this->assertProblem($this->api('POST', '/api/v1/platform/plans', $this->admin, null, ['slug' => 'y', 'name' => 'Y', 'max_users' => 1, 'max_branches' => null,
-            'modules' => ['payroll']], ['Idempotency-Key' => (string) Str::uuid()]), 422, 'validation_failed');
+            'modules' => ['hr']], ['Idempotency-Key' => (string) Str::uuid()]), 422, 'validation_failed'); // payroll is a module since PEP-520
 
         $this->api('PUT', "/api/v1/platform/plans/{$id}", $this->admin, null, ['max_users' => 4] + $body, ['If-Match' => 'W/"1"'])->assertOk()
             ->assertJsonPath('data.max_users', 4)->assertJsonPath('data.version', 2);
@@ -115,7 +115,7 @@ class PlansTest extends TestCase
         $this->assertProblem($this->asOwner('GET', '/api/v1/bank-facilities'), 403, 'module_not_in_plan');
 
         // A company exception switches LC finance on for this company only.
-        $this->assign('business', ['modules_on' => ['lc_finance']])->assertOk()->assertJsonPath('data.effective.modules', ['lc_finance', 'lc_management'])
+        $this->assign('business', ['modules_on' => ['lc_finance']])->assertOk()->assertJsonPath('data.effective.modules', ['lc_finance', 'lc_management', 'payroll'])
             ->assertJsonPath('data.plan_overrides.modules_on', ['lc_finance']);
         $this->asOwner('GET', '/api/v1/lc-loans')->assertOk();
     }

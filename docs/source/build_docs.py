@@ -237,7 +237,7 @@ def build_openapi():
                 "Parties": "Customers and suppliers", "Inventory": "Products, warehouses, stock adjustments and transfers",
                 "Sales": "Quotations, invoices, receipts, returns, credit notes", "Purchases": "Purchase orders, bills, payments, returns, debit notes",
                 "Banking": "Money accounts, cash counts, statement import, reconciliation", "Income and expenses": "Categories, quick entries, recurring templates",
-                "Accounting": "Chart of accounts, ledgers, vouchers", "Reports": "Financial statements and operational reports", "LC": "Letters of credit and landed cost"}
+                "Accounting": "Chart of accounts, ledgers, vouchers", "Reports": "Financial statements and operational reports", "LC": "Letters of credit and landed cost", "Payroll": "Employees, salary sheets, salary payments, advances and payslips"}
     doc = {
         "openapi": "3.1.0",
         "info": {"title": "Pluto ERP API", "version": "1.0.0-rc.1",

@@ -1984,6 +1984,34 @@ erDiagram
     warehouses ||--o{ landed_cost_allocation_lines : "warehouse_id"
 ```
 
+### 5.11 Payroll module
+
+```mermaid
+erDiagram
+    employees {
+        bigint id PK
+        bigint company_id FK
+        varchar code
+        varchar name
+        varchar designation
+        varchar department
+        varchar mobile
+        varchar email
+        varchar national_id
+        date joining_date
+        decimal basic_salary
+        decimal house_rent
+        decimal medical
+        decimal conveyance
+        varchar pay_method
+        varchar bank_name
+        varchar account_no
+        varchar status
+        date left_on
+        varchar notes
+    }
+```
+
 ## 6. Data dictionary
 
 Standard columns are listed in each table: `id` (PK), `company_id` (tenant), `lock_version` (optimistic locking, where editable), `created_by`/`updated_by`, `created_at`/`updated_at`. All FKs are indexed. "Default —" means a value is required on insert.
@@ -5622,7 +5650,55 @@ Standard columns are listed in each table: `id` (PK), `company_id` (tenant), `lo
 - `party_id` → `parties`: one-to-many (optional)
 - `currency_code` → `currencies`: one-to-many
 
-_Total: 98 application tables._
+### 6.10 Payroll
+
+
+#### `employees`
+
+**Purpose:** A person the company pays a salary (PEP-520). Monthly gross = basic + house rent + medical + conveyance.  
+**Flags:** tenant-scoped, optimistic lock  
+**Primary key:** (id)
+
+| Column | Type | Null | Default | Keys | FK rule | Meaning / rules |
+|---|---|---|---|---|---|---|
+| `id` | BIGINT UNSIGNED | no | — | PK | — | Primary key, auto-increment |
+| `company_id` | BIGINT UNSIGNED | no | — | FK → `companies.id` | ON DELETE RESTRICT / ON UPDATE RESTRICT | Tenant owner. Every query is scoped by it. |
+| `code` | VARCHAR(20) | no | — | — | — | EMP-0001, from the employee number series |
+| `name` | VARCHAR(150) | no | — | — | — |  |
+| `designation` | VARCHAR(80) | yes | NULL | — | — |  |
+| `department` | VARCHAR(80) | yes | NULL | — | — |  |
+| `mobile` | VARCHAR(20) | yes | NULL | — | — |  |
+| `email` | VARCHAR(190) | yes | NULL | — | — |  |
+| `national_id` | VARCHAR(30) | yes | NULL | — | — |  |
+| `joining_date` | DATE | no | — | — | — |  |
+| `basic_salary` | DECIMAL(18,2) | no | — | — | — |  |
+| `house_rent` | DECIMAL(18,2) | no | 0 | — | — |  |
+| `medical` | DECIMAL(18,2) | no | 0 | — | — |  |
+| `conveyance` | DECIMAL(18,2) | no | 0 | — | — |  |
+| `pay_method` | VARCHAR(30) | no | 'cash' | — | — | enum: cash \| bank \| mobile |
+| `bank_name` | VARCHAR(120) | yes | NULL | — | — |  |
+| `account_no` | VARCHAR(40) | yes | NULL | — | — |  |
+| `status` | VARCHAR(30) | no | 'active' | — | — | enum: active \| left |
+| `left_on` | DATE | yes | NULL | — | — |  |
+| `notes` | VARCHAR(500) | yes | NULL | — | — |  |
+| `lock_version` | INT UNSIGNED | no | 1 | — | — | Optimistic concurrency counter; incremented on every update (If-Match) |
+| `created_by` | BIGINT UNSIGNED | yes | NULL | FK → `users.id` | ON DELETE RESTRICT / ON UPDATE RESTRICT | User who created the row |
+| `updated_by` | BIGINT UNSIGNED | yes | NULL | FK → `users.id` | ON DELETE RESTRICT / ON UPDATE RESTRICT | User who last changed the row |
+| `created_at` | DATETIME | yes | NULL | — | — | Set by Laravel |
+| `updated_at` | DATETIME | yes | NULL | — | — | Set by Laravel |
+
+- **Unique** (company_id, code)
+- Index (company_id, status)
+- Index (created_by)
+- Index (updated_by)
+- **Check** `basic_salary >= 0`
+- **Check** `house_rent >= 0`
+- **Check** `medical >= 0`
+- **Check** `conveyance >= 0`
+- **Check** `pay_method IN ('cash', 'bank', 'mobile')`
+- **Check** `status IN ('active', 'left')`
+
+_Total: 99 application tables._
 
 
 ## 7. Relationship matrix
@@ -5992,6 +6068,7 @@ For each table, the tables it references (must exist first). Self-references are
 | `lc_loan_accruals` | `companies`, `journal_entries`, `lc_loans`, `users` | — |
 | `fx_revaluations` | `companies`, `journal_entries`, `users` | — |
 | `fx_revaluation_lines` | `currencies`, `fx_revaluations`, `letters_of_credit`, `parties`, `purchase_bills` | — |
+| `employees` | `companies`, `users` | — |
 
 ## 9. Migration order
 
@@ -6021,116 +6098,117 @@ Computed by topological sort of section 8, so every referenced table is created 
 13. `audit_logs`
 14. `branches`
 15. `company_backups`
-16. `export_jobs`
-17. `fiscal_years`
-18. `idempotency_keys`
-19. `lc_document_templates`
-20. `notification_preferences`
-21. `notifications`
-22. `party_groups`
-23. `payment_terms`
-24. `roles`
-25. `stock_groups`
-26. `subscription_payments`
-27. `support_access_grants`
-28. `units`
-29. `user_preferences`
+16. `employees`
+17. `export_jobs`
+18. `fiscal_years`
+19. `idempotency_keys`
+20. `lc_document_templates`
+21. `notification_preferences`
+22. `notifications`
+23. `party_groups`
+24. `payment_terms`
+25. `roles`
+26. `stock_groups`
+27. `subscription_payments`
+28. `support_access_grants`
+29. `units`
+30. `user_preferences`
 
 **Level 3**
 
-30. `accounting_periods`
-31. `company_users`
-32. `lc_document_template_items`
-33. `ledgers`
-34. `number_sequences`
-35. `product_categories`
-36. `role_permissions`
-37. `user_invitations`
+31. `accounting_periods`
+32. `company_users`
+33. `lc_document_template_items`
+34. `ledgers`
+35. `number_sequences`
+36. `product_categories`
+37. `role_permissions`
+38. `user_invitations`
 
 **Level 4**
 
-38. `account_mappings`
-39. `company_user_branches`
-40. `ie_categories`
-41. `journal_entries`
-42. `money_accounts`
-43. `parties`
-44. `tax_rules`
-45. `user_invitation_branches`
-46. `warehouses`
+39. `account_mappings`
+40. `company_user_branches`
+41. `ie_categories`
+42. `journal_entries`
+43. `money_accounts`
+44. `parties`
+45. `tax_rules`
+46. `user_invitation_branches`
+47. `warehouses`
 
 **Level 5**
 
-47. `bank_facilities`
-48. `bank_reconciliations`
-49. `bank_statement_imports`
-50. `cash_counts`
-51. `company_settings`
-52. `fx_revaluations`
-53. `party_bank_accounts`
-54. `payment_details`
-55. `payment_reminders`
-56. `products`
-57. `purchase_orders`
-58. `quotations`
-59. `recurring_templates`
-60. `stock_adjustments`
-61. `stock_transfers`
+48. `bank_facilities`
+49. `bank_reconciliations`
+50. `bank_statement_imports`
+51. `cash_counts`
+52. `company_settings`
+53. `fx_revaluations`
+54. `party_bank_accounts`
+55. `payment_details`
+56. `payment_reminders`
+57. `products`
+58. `purchase_orders`
+59. `quotations`
+60. `recurring_templates`
+61. `stock_adjustments`
+62. `stock_transfers`
 
 **Level 6**
 
-62. `cash_count_denominations`
-63. `letters_of_credit`
-64. `product_units`
-65. `product_warehouse_settings`
-66. `purchase_order_lines`
-67. `quotation_lines`
-68. `sales_invoices`
-69. `stock_adjustment_lines`
-70. `stock_balances`
-71. `stock_movements`
-72. `stock_transfer_lines`
+63. `cash_count_denominations`
+64. `letters_of_credit`
+65. `product_units`
+66. `product_warehouse_settings`
+67. `purchase_order_lines`
+68. `quotation_lines`
+69. `sales_invoices`
+70. `stock_adjustment_lines`
+71. `stock_balances`
+72. `stock_movements`
+73. `stock_transfer_lines`
 
 **Level 7**
 
-73. `journal_lines`
-74. `lc_amendments`
-75. `lc_shipments`
-76. `recurring_invoices`
-77. `sales_invoice_lines`
-78. `sales_returns`
+74. `journal_lines`
+75. `lc_amendments`
+76. `lc_shipments`
+77. `recurring_invoices`
+78. `sales_invoice_lines`
+79. `sales_returns`
 
 **Level 8**
 
-79. `bank_statement_lines`
-80. `credit_notes`
-81. `lc_amendment_changes`
-82. `lc_amendment_lines`
-83. `lc_documents`
-84. `purchase_bills`
-85. `sales_return_lines`
+80. `bank_statement_lines`
+81. `credit_notes`
+82. `lc_amendment_changes`
+83. `lc_amendment_lines`
+84. `lc_documents`
+85. `purchase_bills`
+86. `sales_return_lines`
 
 **Level 9**
 
-86. `bill_allocations`
-87. `fx_revaluation_lines`
-88. `landed_cost_allocations`
-89. `lc_payments`
-90. `purchase_bill_lines`
-91. `purchase_returns`
+87. `bill_allocations`
+88. `fx_revaluation_lines`
+89. `landed_cost_allocations`
+90. `lc_payments`
+91. `purchase_bill_lines`
+92. `purchase_returns`
 
 **Level 10**
 
-92. `debit_notes`
-93. `landed_cost_allocation_lines`
-94. `lc_charges`
-95. `lc_loans`
-96. `purchase_return_lines`
+93. `debit_notes`
+94. `landed_cost_allocation_lines`
+95. `lc_charges`
+96. `lc_loans`
+97. `purchase_return_lines`
 
 **Level 11**
 
-97. `lc_loan_accruals`
-98. `lc_loan_repayments`
+98. `lc_loan_accruals`
+99. `lc_loan_repayments`
 
 ## 10. Index and uniqueness recommendations
 

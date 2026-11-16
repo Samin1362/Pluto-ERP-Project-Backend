@@ -5,21 +5,21 @@ if any reference points to an ID that does not exist here.
 """
 
 # ---------------------------------------------------------------- roles (K11 matrix, seeded exactly)
-MODULES = ["dashboard", "sales", "purchases", "parties", "inventory", "banking", "lc", "accounting", "reports", "settings"]
+MODULES = ["dashboard", "sales", "purchases", "parties", "inventory", "banking", "lc", "accounting", "reports", "settings", "payroll"]
 ACTIONS = ["view", "create", "edit", "approve", "delete"]
 # V C E A D per module; LC row added (GAP-23): mirrors Purchases for Finance manager/Accountant.
 ROLE_MATRIX = {
     "owner":      {m: "VCEAD" for m in MODULES},
     "finance":    {"dashboard": "V", "sales": "VCEA", "purchases": "VCEA", "parties": "VCE", "inventory": "VA", "banking": "VCEA",
-                   "lc": "VCEA", "accounting": "VCEA", "reports": "VC", "settings": "VE"},
+                   "lc": "VCEA", "accounting": "VCEA", "reports": "VC", "settings": "VE", "payroll": "VCEA"},
     "accountant": {"dashboard": "V", "sales": "VCE", "purchases": "VCE", "parties": "VCE", "inventory": "V", "banking": "VCE",
-                   "lc": "VCE", "accounting": "VCEA", "reports": "VC", "settings": ""},
+                   "lc": "VCE", "accounting": "VCEA", "reports": "VC", "settings": "", "payroll": "VC"},
     "sales":      {"dashboard": "V", "sales": "VCE", "purchases": "", "parties": "VC", "inventory": "V", "banking": "", "lc": "",
-                   "accounting": "", "reports": "V", "settings": ""},
+                   "accounting": "", "reports": "V", "settings": "", "payroll": ""},
     "store":      {"dashboard": "", "sales": "", "purchases": "V", "parties": "", "inventory": "VCE", "banking": "", "lc": "",
-                   "accounting": "", "reports": "", "settings": ""},
+                   "accounting": "", "reports": "", "settings": "", "payroll": ""},
     "viewer":     {"dashboard": "V", "sales": "V", "purchases": "V", "parties": "V", "inventory": "V", "banking": "V", "lc": "V",
-                   "accounting": "V", "reports": "V", "settings": ""},
+                   "accounting": "V", "reports": "V", "settings": "", "payroll": ""},  # salaries are private (PEP-519)
 }
 ROLE_NAMES = {"owner": "Owner", "finance": "Finance manager", "accountant": "Accountant", "sales": "Sales staff",
               "store": "Store keeper", "viewer": "Viewer"}
@@ -212,6 +212,7 @@ FR = {
  "FR-097": ("LC", "Users record LC charges and import expenses, and payments at the bank's rate."),
  "FR-098": ("LC", "Users receive LC goods through an import purchase bill and allocate landed cost."),
  "FR-099": ("LC", "Users close an LC, after checks, and view the eight LC reports."),
+ "FR-100": ("Payroll", "Users keep employees with their salary structure (basic, house rent, medical, conveyance), pay method and status (PEP-520)."),
 }
 
 # ---------------------------------------------------------------- non-functional requirements

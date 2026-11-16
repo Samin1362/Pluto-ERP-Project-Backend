@@ -690,6 +690,15 @@ E("POST", "/fx-revaluations/{id}/reverse", "Reverse a revaluation (both its entr
 E("GET", "/reports/lc/{report}", "LC reports: register, status, outstanding, expiry, docs, amendments, charges, cost, loans, exposure", "lc.view",
   ["letters_of_credit", "lc_payments", "lc_charges", "lc_documents", "lc_amendments", "landed_cost_allocations", "lc_loans", "lc_loan_repayments", "bank_facilities"], ["M8"], params=DATEQ + ["bank_account_id", "segment", "format"], resp="ReportData", tag="Reports", fr=["FR-099"])
 
+T = "Payroll"
+E("GET", "/employees", "Employees with their monthly gross salary", "payroll.view", ["employees"], ["P1"], params=LISTQ + ["status", "department"], resp="Page<Employee>",
+  tag=T, fr=["FR-100"], added="PEP-520 payroll")
+E("POST", "/employees", "Add an employee (code from the EMP series)", "payroll.create", ["employees", "number_sequences", "audit_logs"], ["P2"], req="EmployeeInput", resp="Employee",
+  idem=True, tag=T, fr=["FR-100"], codes=[201, 422], added="PEP-520 payroll")
+E("GET", "/employees/{id}", "One employee", "payroll.view", ["employees"], ["P2"], resp="Employee", tag=T, fr=["FR-100"], added="PEP-520 payroll")
+E("PATCH", "/employees/{id}", "Change an employee, or mark them left", "payroll.edit", ["employees", "audit_logs"], ["P2"], req="EmployeeInput", resp="Employee", ifmatch=True,
+  tag=T, fr=["FR-100"], codes=[200, 409, 422], added="PEP-520 payroll")
+
 
 # ---------------------------------------------------------------- contract-review corrections, second pass (18 Oct 2026)
 # Found by sweeping the derived database operations of every endpoint that writes the books or stock.
@@ -727,7 +736,8 @@ _fix("POST", "/purchase-orders/{id}/convert", ops={"purchase_bills": "C", "purch
 
 # PEP-498: LC management and LC finance are plan modules; their endpoints answer 403 module_not_in_plan when the
 # company's plan does not include them (middleware module:lc_management / module:lc_finance).
-_LC_PATHS = ("/letters-of-credit", "/lc/", "/lc-", "/landed-cost-allocations", "/reports/lc/", "/bank-facilities", "/fx-revaluations")
+_LC_PATHS = ("/letters-of-credit", "/lc/", "/lc-", "/landed-cost-allocations", "/reports/lc/", "/bank-facilities", "/fx-revaluations",
+             "/employees")  # PEP-520: payroll is a plan module too (module:payroll)
 for _e in EP:
     if _e["path"].startswith(_LC_PATHS) and "module_not_in_plan" not in _e["errors"]:
         _e["errors"].append("module_not_in_plan")

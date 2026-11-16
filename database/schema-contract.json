@@ -19122,6 +19122,266 @@
     "recurring_invoices_frequency_check": "`frequency` IN ('weekly', 'monthly', 'quarterly', 'yearly')",
     "recurring_invoices_ends_type_check": "`ends_type` IN ('never', 'after_count', 'on_date')"
    }
+  },
+  "employees": {
+   "seq": 99,
+   "level": 2,
+   "migration": "2026_10_18_009900_create_employees_table.php",
+   "module": "Payroll",
+   "columns": [
+    {
+     "name": "id",
+     "type": "bigint unsigned",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": true
+    },
+    {
+     "name": "company_id",
+     "type": "bigint unsigned",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "code",
+     "type": "varchar(20)",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "name",
+     "type": "varchar(150)",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "designation",
+     "type": "varchar(80)",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "department",
+     "type": "varchar(80)",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "mobile",
+     "type": "varchar(20)",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "email",
+     "type": "varchar(190)",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "national_id",
+     "type": "varchar(30)",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "joining_date",
+     "type": "date",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "basic_salary",
+     "type": "decimal(18,2)",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "house_rent",
+     "type": "decimal(18,2)",
+     "nullable": false,
+     "default": "0",
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "medical",
+     "type": "decimal(18,2)",
+     "nullable": false,
+     "default": "0",
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "conveyance",
+     "type": "decimal(18,2)",
+     "nullable": false,
+     "default": "0",
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "pay_method",
+     "type": "varchar(30)",
+     "nullable": false,
+     "default": "cash",
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "bank_name",
+     "type": "varchar(120)",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "account_no",
+     "type": "varchar(40)",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "status",
+     "type": "varchar(30)",
+     "nullable": false,
+     "default": "active",
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "left_on",
+     "type": "date",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "notes",
+     "type": "varchar(500)",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "lock_version",
+     "type": "int unsigned",
+     "nullable": false,
+     "default": "1",
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "created_by",
+     "type": "bigint unsigned",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "updated_by",
+     "type": "bigint unsigned",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "created_at",
+     "type": "datetime",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "updated_at",
+     "type": "datetime",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    }
+   ],
+   "primary": [
+    "id"
+   ],
+   "unique": {
+    "employees_company_id_code_unique": [
+     "company_id",
+     "code"
+    ]
+   },
+   "index": {
+    "employees_company_id_status_index": [
+     "company_id",
+     "status"
+    ],
+    "employees_created_by_index": [
+     "created_by"
+    ],
+    "employees_updated_by_index": [
+     "updated_by"
+    ]
+   },
+   "foreign": {
+    "employees_company_id_foreign": {
+     "column": "company_id",
+     "references_table": "companies",
+     "references_column": "id",
+     "on_delete": "RESTRICT",
+     "on_update": "RESTRICT"
+    },
+    "employees_created_by_foreign": {
+     "column": "created_by",
+     "references_table": "users",
+     "references_column": "id",
+     "on_delete": "RESTRICT",
+     "on_update": "RESTRICT"
+    },
+    "employees_updated_by_foreign": {
+     "column": "updated_by",
+     "references_table": "users",
+     "references_column": "id",
+     "on_delete": "RESTRICT",
+     "on_update": "RESTRICT"
+    }
+   },
+   "check": {
+    "employees_pay_method_check": "`pay_method` IN ('cash', 'bank', 'mobile')",
+    "employees_status_check": "`status` IN ('active', 'left')",
+    "employees_rule1_check": "`basic_salary` >= 0",
+    "employees_rule2_check": "`house_rent` >= 0",
+    "employees_rule3_check": "`medical` >= 0",
+    "employees_rule4_check": "`conveyance` >= 0"
+   }
   }
  }
 }

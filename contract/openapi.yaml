@@ -41,6 +41,8 @@ tags:
   description: Notifications
 - name: Parties
   description: Customers and suppliers
+- name: Payroll
+  description: Employees, salary sheets, salary payments, advances and payslips
 - name: Platform
   description: Search, notifications, approvals, attachments, audit, dashboard, backups, exports
 - name: Platform console
@@ -41899,6 +41901,479 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/Error'
+  /api/v1/employees:
+    get:
+      operationId: getEmployees
+      summary: Employees with their monthly gross salary
+      tags:
+      - Payroll
+      description: "**Permission:** `payroll.view`  \n**Database:** read: employees  \n**Rules:** —"
+      x-permission: payroll.view
+      x-business-rules: []
+      x-requirements:
+      - FR-100
+      x-pages:
+      - P1
+      x-page-actions:
+      - 'P1: Open employee'
+      x-tables:
+      - employees
+      x-db-operations:
+        employees: R
+      x-error-codes:
+      - company_maintenance
+      - company_required
+      - module_not_in_plan
+      - not_a_member
+      - permission_denied
+      - server_error
+      - token_expired
+      - token_invalid
+      - unauthenticated
+      - validation_failed
+      x-contract-change: PEP-520 payroll
+      parameters:
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+        description: Page number
+      - name: per_page
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 25
+        description: Rows per page (max 100)
+      - name: sort
+        in: query
+        required: false
+        schema:
+          type: string
+        description: Sort field; prefix '-' for descending, e.g. -date
+      - name: q
+        in: query
+        required: false
+        schema:
+          type: string
+          maxLength: 100
+        description: Free-text search
+      - name: status
+        in: query
+        required: false
+        schema:
+          type: string
+          maxLength: 30
+        description: Status filter (values as in the resource's status enum)
+      - name: department
+        in: query
+        required: false
+        schema:
+          type: string
+        description: department
+      - $ref: '#/components/parameters/CompanyHeader'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                - meta
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Employee'
+                  meta:
+                    $ref: '#/components/schemas/PageMeta'
+        '400':
+          description: 'Malformed request: `company_required`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: 'Not authenticated: `token_expired`, `token_invalid`, `unauthenticated`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: 'Not permitted: `module_not_in_plan`, `not_a_member`, `permission_denied`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: 'Validation or business-rule failure: `validation_failed`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: 'Company temporarily unavailable (restore in progress): `company_maintenance`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+              description: Seconds to wait
+        default:
+          description: Unexpected error (`server_error`)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    post:
+      operationId: postEmployees
+      summary: Add an employee (code from the EMP series)
+      tags:
+      - Payroll
+      description: "**Permission:** `payroll.create`  \n**Database:** insert: audit_logs, employees, idempotency_keys; read: number_sequences  \n**Rules:** —"
+      x-permission: payroll.create
+      x-business-rules: []
+      x-requirements:
+      - FR-100
+      x-pages:
+      - P2
+      x-page-actions:
+      - 'P2: Save'
+      x-tables:
+      - employees
+      - number_sequences
+      - audit_logs
+      x-db-operations:
+        employees: C
+        number_sequences: R
+        audit_logs: C
+        idempotency_keys: C
+      x-error-codes:
+      - company_maintenance
+      - company_required
+      - idempotency_in_progress
+      - idempotency_key_reused
+      - malformed_json
+      - module_not_in_plan
+      - not_a_member
+      - permission_denied
+      - server_error
+      - support_read_only
+      - token_expired
+      - token_invalid
+      - unauthenticated
+      - validation_failed
+      x-contract-change: PEP-520 payroll
+      parameters:
+      - $ref: '#/components/parameters/CompanyHeader'
+      - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmployeeInput'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Employee'
+          headers:
+            Location:
+              schema:
+                type: string
+              description: URL of the created resource
+        '400':
+          description: 'Malformed request: `company_required`, `malformed_json`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: 'Not authenticated: `token_expired`, `token_invalid`, `unauthenticated`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: 'Not permitted: `module_not_in_plan`, `not_a_member`, `permission_denied`, `support_read_only`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: 'Conflict (version mismatch, state not allowed, duplicate): `idempotency_in_progress`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: 'Validation or business-rule failure: `idempotency_key_reused`, `validation_failed`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: 'Company temporarily unavailable (restore in progress): `company_maintenance`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+              description: Seconds to wait
+        default:
+          description: Unexpected error (`server_error`)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /api/v1/employees/{id}:
+    get:
+      operationId: getEmployeesId
+      summary: One employee
+      tags:
+      - Payroll
+      description: "**Permission:** `payroll.view`  \n**Database:** read: employees  \n**Rules:** —"
+      x-permission: payroll.view
+      x-business-rules: []
+      x-requirements:
+      - FR-100
+      x-pages:
+      - P2
+      x-page-actions: []
+      x-tables:
+      - employees
+      x-db-operations:
+        employees: R
+      x-error-codes:
+      - company_maintenance
+      - company_required
+      - module_not_in_plan
+      - not_a_member
+      - not_found
+      - permission_denied
+      - server_error
+      - token_expired
+      - token_invalid
+      - unauthenticated
+      x-contract-change: PEP-520 payroll
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+          minimum: 1
+      - $ref: '#/components/parameters/CompanyHeader'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Employee'
+          headers:
+            ETag:
+              schema:
+                type: string
+              description: W/"<version>" for If-Match
+        '400':
+          description: 'Malformed request: `company_required`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: 'Not authenticated: `token_expired`, `token_invalid`, `unauthenticated`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: 'Not permitted: `module_not_in_plan`, `not_a_member`, `permission_denied`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: 'Not found (also for other companies'' records): `not_found`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: 'Company temporarily unavailable (restore in progress): `company_maintenance`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+              description: Seconds to wait
+        default:
+          description: Unexpected error (`server_error`)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    patch:
+      operationId: patchEmployeesId
+      summary: Change an employee, or mark them left
+      tags:
+      - Payroll
+      description: "**Permission:** `payroll.edit`  \n**Database:** insert: audit_logs; update: employees  \n**Rules:** —"
+      x-permission: payroll.edit
+      x-business-rules: []
+      x-requirements:
+      - FR-100
+      x-pages:
+      - P2
+      x-page-actions:
+      - 'P2: Save'
+      - 'P2: Mark as left'
+      x-tables:
+      - employees
+      - audit_logs
+      x-db-operations:
+        employees: U
+        audit_logs: C
+      x-error-codes:
+      - company_maintenance
+      - company_required
+      - if_match_required
+      - malformed_json
+      - module_not_in_plan
+      - not_a_member
+      - not_found
+      - permission_denied
+      - server_error
+      - support_read_only
+      - token_expired
+      - token_invalid
+      - unauthenticated
+      - validation_failed
+      - version_conflict
+      x-contract-change: PEP-520 payroll
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+          minimum: 1
+      - $ref: '#/components/parameters/CompanyHeader'
+      - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmployeeInput'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Employee'
+          headers:
+            ETag:
+              schema:
+                type: string
+              description: W/"<version>" for If-Match
+        '400':
+          description: 'Malformed request: `company_required`, `malformed_json`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: 'Not authenticated: `token_expired`, `token_invalid`, `unauthenticated`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: 'Not permitted: `module_not_in_plan`, `not_a_member`, `permission_denied`, `support_read_only`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: 'Not found (also for other companies'' records): `not_found`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: 'Conflict (version mismatch, state not allowed, duplicate): `version_conflict`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: 'Validation or business-rule failure: `validation_failed`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '428':
+          description: 'Precondition required (If-Match missing): `if_match_required`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: 'Company temporarily unavailable (restore in progress): `company_maintenance`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+              description: Seconds to wait
+        default:
+          description: Unexpected error (`server_error`)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
 components:
   securitySchemes:
     bearerAuth:
@@ -49903,6 +50378,207 @@ components:
       - payload
       - description
       - version
+    Employee:
+      type: object
+      description: An employee (PEP-520). gross_salary = basic + house rent + medical + conveyance, from the server.
+      properties:
+        id:
+          type: integer
+          format: int64
+          minimum: 1
+        code:
+          type: string
+        name:
+          type: string
+        designation:
+          type:
+          - string
+          - 'null'
+        department:
+          type:
+          - string
+          - 'null'
+        mobile:
+          type:
+          - string
+          - 'null'
+        email:
+          type:
+          - string
+          - 'null'
+        national_id:
+          type:
+          - string
+          - 'null'
+        joining_date:
+          type: string
+          format: date
+        basic_salary:
+          type: string
+          pattern: ^-?\d{1,16}(\.\d{1,2})?$
+          example: '118450.00'
+          description: Decimal as string (money)
+        house_rent:
+          type: string
+          pattern: ^-?\d{1,16}(\.\d{1,2})?$
+          example: '118450.00'
+          description: Decimal as string (money)
+        medical:
+          type: string
+          pattern: ^-?\d{1,16}(\.\d{1,2})?$
+          example: '118450.00'
+          description: Decimal as string (money)
+        conveyance:
+          type: string
+          pattern: ^-?\d{1,16}(\.\d{1,2})?$
+          example: '118450.00'
+          description: Decimal as string (money)
+        gross_salary:
+          type: string
+          pattern: ^-?\d{1,16}(\.\d{1,2})?$
+          example: '118450.00'
+          description: Decimal as string (money)
+        pay_method:
+          type: string
+          enum:
+          - cash
+          - bank
+          - mobile
+        bank_name:
+          type:
+          - string
+          - 'null'
+        account_no:
+          type:
+          - string
+          - 'null'
+        status:
+          type: string
+          enum:
+          - active
+          - left
+        left_on:
+          type:
+          - string
+          - 'null'
+          format: date
+        notes:
+          type:
+          - string
+          - 'null'
+        version:
+          type: integer
+      required:
+      - id
+      - code
+      - name
+      - joining_date
+      - basic_salary
+      - house_rent
+      - medical
+      - conveyance
+      - gross_salary
+      - pay_method
+      - status
+      - version
+    EmployeeInput:
+      type: object
+      description: Add or change an employee (PEP-520). left_on is required when status is left.
+      properties:
+        name:
+          type: string
+          maxLength: 150
+        designation:
+          type:
+          - string
+          - 'null'
+          maxLength: 80
+        department:
+          type:
+          - string
+          - 'null'
+          maxLength: 80
+        mobile:
+          type:
+          - string
+          - 'null'
+          maxLength: 20
+        email:
+          type:
+          - string
+          - 'null'
+          format: email
+          maxLength: 190
+        national_id:
+          type:
+          - string
+          - 'null'
+          maxLength: 30
+        joining_date:
+          type: string
+          format: date
+        basic_salary:
+          type: string
+          pattern: ^-?\d{1,16}(\.\d{1,2})?$
+          example: '118450.00'
+          description: Decimal as string (money)
+        house_rent:
+          type:
+          - string
+          - 'null'
+          pattern: ^-?\d{1,16}(\.\d{1,2})?$
+          example: '118450.00'
+          description: Decimal as string (money)
+        medical:
+          type:
+          - string
+          - 'null'
+          pattern: ^-?\d{1,16}(\.\d{1,2})?$
+          example: '118450.00'
+          description: Decimal as string (money)
+        conveyance:
+          type:
+          - string
+          - 'null'
+          pattern: ^-?\d{1,16}(\.\d{1,2})?$
+          example: '118450.00'
+          description: Decimal as string (money)
+        pay_method:
+          type: string
+          enum:
+          - cash
+          - bank
+          - mobile
+        bank_name:
+          type:
+          - string
+          - 'null'
+          maxLength: 120
+        account_no:
+          type:
+          - string
+          - 'null'
+          maxLength: 40
+        status:
+          type: string
+          enum:
+          - active
+          - left
+        left_on:
+          type:
+          - string
+          - 'null'
+          format: date
+        notes:
+          type:
+          - string
+          - 'null'
+          maxLength: 500
+      required:
+      - name
+      - joining_date
+      - basic_salary
+      additionalProperties: false
     RecurringInvoiceCreate:
       type: object
       description: Repeat an invoice (PEP-517). next_run_on must come after the invoice's date.

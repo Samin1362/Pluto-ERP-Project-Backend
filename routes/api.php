@@ -33,6 +33,7 @@ use App\Http\Controllers\Api\V1\Parties\LookupController;
 use App\Http\Controllers\Api\V1\Parties\PartyAccountController;
 use App\Http\Controllers\Api\V1\Parties\PartyController;
 use App\Http\Controllers\Api\V1\Parties\PaymentReminderController;
+use App\Http\Controllers\Api\V1\Payroll\EmployeeController;
 use App\Http\Controllers\Api\V1\Platform\DashboardController;
 use App\Http\Controllers\Api\V1\Platform\ExportJobController;
 use App\Http\Controllers\Api\V1\Platform\PlatformLookupController;
@@ -167,6 +168,13 @@ Route::middleware(['jwt', 'throttle:api-user'])->group(function () {
         Route::get('notifications', [NotificationController::class, 'index']);
         Route::post('notifications/read-all', [NotificationController::class, 'readAll']);
         Route::post('notifications/{id}/read', [NotificationController::class, 'read'])->whereNumber('id');
+        // PEP-520: payroll is a plan module and private (payroll.* permissions; Owner and Finance by default).
+        Route::middleware('module:payroll')->group(function () {
+            Route::get('employees', [EmployeeController::class, 'index'])->middleware('perm:payroll.view');
+            Route::post('employees', [EmployeeController::class, 'store'])->middleware(['perm:payroll.create', 'idempotent']);
+            Route::get('employees/{id}', [EmployeeController::class, 'show'])->whereNumber('id')->middleware('perm:payroll.view');
+            Route::patch('employees/{id}', [EmployeeController::class, 'update'])->whereNumber('id')->middleware('perm:payroll.edit');
+        });
         // PEP-498: LC management and LC finance are plan modules (403 module_not_in_plan when the plan leaves them out).
         Route::middleware('module:lc_management')->group(function () {
             // Letters of credit and landed cost (M1-M8; P16.1). Status and money rules are checked by LcService / LcPostingService.

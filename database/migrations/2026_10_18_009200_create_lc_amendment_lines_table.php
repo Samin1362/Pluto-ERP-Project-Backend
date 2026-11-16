@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Table `lc_amendment_lines` (LC): migration 92 of 98, dependency level 8.
+ * Table `lc_amendment_lines` (LC): migration 92 of 99, dependency level 8.
  * Item change of an amendment (PEP-487): add, change or remove an item of the LC. An accepted amendment applies them to the linked purchase order's lines.
  * Depends on: lc_amendments, products, purchase_order_lines, units.
  *

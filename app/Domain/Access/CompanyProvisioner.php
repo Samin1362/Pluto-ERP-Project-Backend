@@ -171,7 +171,7 @@ final class CompanyProvisioner
         // Current financial year (July-June) and its 12 periods; months up to today are open, later ones future.
         $startYear = $today->month >= $company->fy_start_month ? $today->year : $today->year - 1;
         $this->openYear($company->id, $startYear, (int) $company->fy_start_month, $today);
-        foreach (['customer' => 'CUS-', 'supplier' => 'SUP-'] as $type => $prefix) {
+        foreach (['customer' => 'CUS-', 'supplier' => 'SUP-', 'employee' => 'EMP-'] as $type => $prefix) { // employee: PEP-520
             NumberSequence::create(['fiscal_year_id' => null, 'document_type' => $type, 'prefix' => $prefix,
                 'next_number' => 1, 'padding' => 4, 'reset_policy' => 'never']);
         }

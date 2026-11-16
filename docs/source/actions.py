@@ -75,6 +75,8 @@ A = {
            "GET /sales-invoices/{id}/pdf", "dlg:Sal-DlgCancel", "POST /attachments",
            "GET /parties/{id}/open-documents → POST /allocations", "dlg:L6 → DELETE /allocations/{id}",
            "PATCH /sales-invoices/{id}/delivery", "POST /sales-invoices/{id}/send", "POST /sales-invoices/{id}/repeat"],
+    "P1": ["nav:P2", "GET /employees"],
+    "P2": [DISCARD, "POST /employees | PATCH /employees/{id}", "PATCH /employees/{id}"],
     "E6": ["dlg:Sal-DlgDelete", "PUT /sales-invoices/{id}", "PUT /sales-invoices/{id} → nav:E4", "PUT /sales-invoices/{id} → dlg:Sal-DlgPost"],
     "E7": ["ui:re-allocate oldest due first on the client (the server re-validates, BR-020)", DISCARD, "GET /customer-receipts/{id}/pdf",
            "dlg:L6 → POST /customer-receipts"],

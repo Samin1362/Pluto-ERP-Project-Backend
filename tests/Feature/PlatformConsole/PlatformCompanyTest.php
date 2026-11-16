@@ -47,7 +47,7 @@ class PlatformCompanyTest extends TestCase
             ->assertJsonPath('data.owner_name', 'Karim Uddin')->assertJsonPath('data.owner_pending', true)->assertJsonPath('data.members', 0);
         $id = $r->json('data.id');
         // PEP-499: on the plan the customer bought, with its user limit as seats.
-        $r->assertJsonPath('data.plan.slug', 'business')->assertJsonPath('data.effective.max_users', 10)->assertJsonPath('data.effective.modules', ['lc_management']);
+        $r->assertJsonPath('data.plan.slug', 'business')->assertJsonPath('data.effective.max_users', 10)->assertJsonPath('data.effective.modules', ['lc_management', 'payroll']);
         $this->assertSame(10, (int) DB::table('companies')->where('id', $id)->value('seat_limit'));
 
         $this->assertSame(0, DB::table('company_users')->where('company_id', $id)->count(), 'the admin is not a member');
