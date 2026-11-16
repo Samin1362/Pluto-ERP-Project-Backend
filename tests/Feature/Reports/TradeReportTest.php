@@ -118,6 +118,15 @@ class TradeReportTest extends TestCase
         $this->assertSame('16920.00', $this->row($cat, 'Edible oil')['net']);
         $this->assertSame('18500.00', $this->row($cat, 'Rice and grain')['net']);
         $this->assertSame('300.00', $this->row($cat, 'Notes (not by item)')['returns']);
+        // PEP-515: profit per item; the code follows the name; notes without items stay apart.
+        $items = $this->req('GET', '/api/v1/reports/sales?group_by=product')->assertOk();
+        $items->assertJsonPath('data.columns.0.label', 'Item');
+        $oil = collect($items->json('data.rows'))->first(fn ($r) => str_starts_with((string) $r['label'], 'Soybean oil 5L jar · '));
+        $this->assertNotNull($oil, 'a row for the oil item');
+        $this->assertSame(['16920.00', '14400.00', '2520.00', '14.9'], [$oil['net'], $oil['cogs'], $oil['margin'], $oil['margin_pct']]);
+        $this->assertSame('300.00', $this->row($items->json('data.rows'), 'Notes (not by item)')['returns']);
+        $this->assertSame('5720.00', $items->json('data.totals.margin'), 'the same total margin whatever the grouping');
+        $this->assertContains('margin_pct', array_column($items->json('data.columns'), 'key'));
         $month = $this->req('GET', '/api/v1/reports/sales?group_by=month')->json('data.rows');
         $this->assertCount(1, $month);
         $this->req('GET', '/api/v1/reports/sales?party_id='.$this->rahim->id)->assertJsonPath('data.totals.net', '18200.00');

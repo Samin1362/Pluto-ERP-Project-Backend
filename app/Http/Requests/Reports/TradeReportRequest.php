@@ -30,7 +30,7 @@ class TradeReportRequest extends StrictRequest
             'period' => ['sometimes', Rule::in(['this_month', 'last_month', 'this_quarter', 'this_year'])],
             'date_from' => ['sometimes', 'date_format:Y-m-d'],
             'date_to' => ['sometimes', 'date_format:Y-m-d', 'after_or_equal:date_from'],
-            'group_by' => ['sometimes', Rule::in([$purchases ? 'supplier' : 'customer', 'category', 'month'])],
+            'group_by' => ['sometimes', Rule::in([$purchases ? 'supplier' : 'customer', 'category', 'month', 'product'])], // product: PEP-515
             'branch_id' => ['sometimes', 'integer', Rule::exists('branches', 'id')->where('company_id', $c)],
             'party_id' => ['sometimes', 'integer', Rule::exists('parties', 'id')->where('company_id', $c)->where('party_type', $purchases ? 'supplier' : 'customer')],
             'reason' => ['sometimes', Rule::in($purchases ? PurchaseReturnService::REASONS : SalesReturnService::REASONS)],
