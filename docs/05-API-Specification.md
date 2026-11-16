@@ -2,7 +2,7 @@
 
 > Status: **Release candidate 1.0.0-rc.1 for approval** (18 Oct 2026), Laravel + Eloquent. **No endpoint is to be implemented until this contract is approved.** ⚑ Auth details (DEC-02) and the items in §12.7 are still open.
 >
-> **Generated file.** The endpoint reference (§9), schemas (§10), page action map (§11) and contract review (§12) come from `docs/source/api.py`, `schemas.py`, `actions.py`, `errors.py` and `contract_review.py`. The machine-readable contract is [`openapi.yaml`](openapi.yaml) (OpenAPI 3.1), validated against the official OpenAPI 3.1 schema (§8). Size: 353 endpoints, 238 schemas, 82 error codes, 163 pages with 550 mapped actions.
+> **Generated file.** The endpoint reference (§9), schemas (§10), page action map (§11) and contract review (§12) come from `docs/source/api.py`, `schemas.py`, `actions.py`, `errors.py` and `contract_review.py`. The machine-readable contract is [`openapi.yaml`](openapi.yaml) (OpenAPI 3.1), validated against the official OpenAPI 3.1 schema (§8). Size: 353 endpoints, 239 schemas, 82 error codes, 163 pages with 550 mapped actions.
 
 ## 1. Conventions
 
@@ -620,8 +620,8 @@ Last run: 24 rules, **24 passed, 0 failed**; 6 negative tests, 6 detected. Offic
 | Rule | Check | Items | Result |
 |---|---|---|---|
 | A01 | Document validates against the official OpenAPI 3.1 schema (schema-base: documents incl. Schema Objects) | 1 | ✅ pass |
-| A02 | Every component schema is valid JSON Schema 2020-12 (meta-schema check) | 238 | ✅ pass |
-| A03 | All $refs resolve and every component schema is used | 241 | ✅ pass |
+| A02 | Every component schema is valid JSON Schema 2020-12 (meta-schema check) | 239 | ✅ pass |
+| A03 | All $refs resolve and every component schema is used | 242 | ✅ pass |
 | A04 | Operations have unique camelCase operationIds, summary, description, tags, a 2xx, a default, and problem+json errors | 353 | ✅ pass |
 | A05 | Path templates and declared path parameters match; path parameters are required | 353 | ✅ pass |
 | A06 | Security: public only for sign-in flows, cookie only for refresh/logout, X-Company-Id on company-scoped calls, known permissions | 353 | ✅ pass |
@@ -638,11 +638,11 @@ Last run: 24 rules, **24 passed, 0 failed**; 6 negative tests, 6 detected. Offic
 | A17 | Every data-changing endpoint is triggered by at least one page action (only token refresh is system-driven) | 202 | ✅ pass |
 | A18 | Every page has at least one endpoint (shared components use their host page's) | 163 | ✅ pass |
 | A19 | For every action, at least one role can both open the page and call the endpoint | 342 | ✅ pass |
-| A20 | Database operations name real tables; nothing deletes posted or append-only rows; every write changes something | 1475 | ✅ pass |
+| A20 | Database operations name real tables; nothing deletes posted or append-only rows; every write changes something | 1478 | ✅ pass |
 | A21 | Every parameter has a typed schema | 581 | ✅ pass |
 | A22 | Business rules exist; 46 rejecting rules map to error codes | 374 | ✅ pass |
 | A23 | Calculate/preview endpoints never reject on business state; they return warnings[] (BR-015) | 5 | ✅ pass |
-| A24 | Ledger/stock writes are coherent: entries have lines, stock movements update balances, system entries take an SJ number, bulk post = single post | 88 | ✅ pass |
+| A24 | Ledger/stock writes are coherent: entries have lines, stock movements update balances, system entries take an SJ number, bulk post = single post | 89 | ✅ pass |
 
 **Negative tests** (a deliberately broken copy of the document must fail the named rule):
 
@@ -1547,7 +1547,7 @@ Every customer company with its owner, members, status and last activity (platfo
 | **Status codes** | 200, 401, 403, 422 |
 | **Error codes** | **`platform_admin_only`, `platform_two_factor_required`**; standard: `server_error`, `token_expired`, `token_invalid`, `unauthenticated`, `validation_failed` |
 | **Headers** | — |
-| **Database** | read: audit_logs, companies, company_users, user_invitations, users |
+| **Database** | read: audit_logs, companies, company_users, journal_entries, purchase_bills, sales_invoices, user_invitations, users |
 | **Business rules** | — |
 | **Requirements** | FR-005 |
 | **Pages and actions** | K17<br>K17 · Create company<br>K17 · Leave (confirm)<br>K17 · Change plan (plan, exceptions)<br>K17 · Billing: set price, paid until, grace days<br>K17 · Billing: record payment |
@@ -8990,6 +8990,21 @@ A customer company as the platform console lists it.
 | `users_used` | `int` | no |
 | `branches_used` | `int` | no |
 | `billing` | `ref:CompanyBilling` | no |
+| `usage` | `ref:CompanyUsage` | no |
+
+<a id="schema-companyusage"></a>
+#### `CompanyUsage`
+
+How much a customer company uses Pluto (PEP-512): the latest sign-in of its own people, how many of them did something in the last 30 days, this month's sales invoices, purchase bills and vouchers (Dhaka month), and quiet = nothing recorded for 7 days or more.
+
+| Property | Type | Required |
+|---|---|---|
+| `last_sign_in_at` | `datetime \| null` | no |
+| `active_people_30d` | `int` | yes |
+| `invoices_this_month` | `int` | yes |
+| `bills_this_month` | `int` | yes |
+| `vouchers_this_month` | `int` | yes |
+| `quiet` | `bool` | yes |
 
 <a id="schema-announcement"></a>
 #### `Announcement`
@@ -14167,7 +14182,7 @@ View permission `lc.create`. **Loads:** nothing of its own (host page data).
 | | Before review | Contract |
 |---|---|---|
 | Endpoints | 280 | 353 |
-| Schemas | 191 | 238 |
+| Schemas | 191 | 239 |
 | Pages | 155 | 163 |
 | Page actions mapped to API or client behaviour | 0 of 448 | 550 of 550 |
 
@@ -14315,6 +14330,7 @@ View permission `lc.create`. **Loads:** nothing of its own (host page data).
 | Checks before posting (UI redesign A+) | DocumentCalculation adds checks: [PostingCheck { key, status pass\|warn\|block, label, line_no }] for sales invoices and purchase bills — the period is open, stock, credit limit, overdue invoices, back-dating, purchase-order quantities — so E3/F3 show what passed as well as what needs attention. Built from the same warnings and PeriodGuard the post uses. PEP-480, 12 Nov 2026. Additive. |
 | Platform console (PEP-483) | New /platform/companies endpoints (list, create with an Owner invitation, suspend, reactivate) for platform admins: e-mails in PLUTO_PLATFORM_ADMINS with 2-step sign-in, never a company role, so selling Pluto to many companies needs no shared membership. Me adds platform_admin (shows the console link; PEP-484). Schemas PlatformCompany, PlatformCompanyCreate; errors platform_admin_only, platform_two_factor_required. Owner request 12-13 Nov 2026. Additive. |
 | Read-only support access (PEP-485) | POST/DELETE /platform/companies/{id}/support-access: a platform admin opens a company read-only for 15-240 minutes with a reason (table support_access_grants); its owners get a notification and the audit log keeps the start and end; any change answers 403 support_read_only; Me adds support_access while the current company is such a view. Additive. |
+| Usage overview (PEP-512) | PlatformCompany adds usage: last sign-in of the company's own people, active people in 30 days, this month's sales invoices, purchase bills and vouchers, and quiet (no activity for 7+ days). Read-only, worked out from existing tables. Owner request 15 Nov 2026. Additive. |
 | Announcements (PEP-513) | announcements (platform-wide: title, body, tone, starts_at, ends_at, is_active) and announcement_dismissals. Platform console: GET/POST /platform/announcements, PUT/DELETE /platform/announcements/{id}. Everyone: GET /announcements (active, current, not closed by them) and POST /announcements/{id}/dismiss. Owner request 15 Nov 2026. Additive. |
 | Setup checklist (PEP-511) | GET /setup-checklist (dashboard.view): profile, logo, tax, money, warehouse, items, customers, first_invoice, team, each done from the company's own data; POST /setup-checklist/hide (settings.edit) stores company_settings.setup_hidden_at. The dashboard shows it until every step is done or an Owner hides it. Owner request 15 Nov 2026. Additive. |
 | Terms and privacy acceptance (PEP-502) | AcceptInvitationRequest adds accept_terms: a new account must accept the Terms of service and Privacy policy (422 on accept_terms otherwise); users adds terms_version and terms_accepted_at (the version in config pluto.terms_version). The texts are public pages of the web app (/terms, /privacy), a draft for the owner's lawyer. Owner request 15 Nov 2026 (roadmap A5). Additive. |

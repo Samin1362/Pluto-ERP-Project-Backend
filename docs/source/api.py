@@ -106,7 +106,7 @@ E("PUT", "/account-mappings", "Save mappings (nature-checked per key)", "setting
 T = "Platform console"
 PLAT = "Platform admins only: the e-mail is in PLUTO_PLATFORM_ADMINS (server setting, never a company role) and this sign-in used 2-step verification; otherwise 403 platform_admin_only / platform_two_factor_required. Every change is written to the company's audit log."
 E("GET", "/platform/companies", "Every customer company with its owner, members, status and last activity (platform console)", "auth",
-  ["companies", "company_users", "users", "user_invitations", "audit_logs"], ["K17"], params=["page", "per_page", "q", "status"], resp="Page<PlatformCompany>", tag=T, fr=["FR-005"],
+  ["companies", "company_users", "users", "user_invitations", "audit_logs", "sales_invoices", "purchase_bills", "journal_entries"], ["K17"], params=["page", "per_page", "q", "status"], resp="Page<PlatformCompany>", tag=T, fr=["FR-005"],
   desc=PLAT, errors=["platform_admin_only", "platform_two_factor_required"], added="PEP-483 platform console")
 E("POST", "/platform/companies", "Create a company for a customer and e-mail its Owner an invitation (the platform admin is not added)", "auth",
   ["companies", "company_settings", "company_users", "roles", "role_permissions", "fiscal_years", "accounting_periods", "account_groups", "ledgers", "account_mappings", "number_sequences", "payment_terms", "branches", "warehouses", "user_invitations", "audit_logs"],
