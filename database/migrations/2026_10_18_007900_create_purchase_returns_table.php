@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Table `purchase_returns` (Purchases): migration 79 of 98, dependency level 9.
+ * Table `purchase_returns` (Purchases): migration 79 of 99, dependency level 9.
  * Goods going back to a supplier (F6).
  * Depends on: branches, companies, journal_entries, parties, purchase_bills, users, warehouses.
  *

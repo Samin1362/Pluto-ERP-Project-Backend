@@ -815,9 +815,16 @@ add(
        fk("currency_code", "currencies", ref="code"), c("foreign_outstanding", MONEY), c("book_rate", RATE), c("closing_rate", RATE),
        c("difference", MONEY, note="foreign_outstanding x (closing - book), signed: + loss, - gain")],
       indexes=[["fx_revaluation_id"]], tenant=False, audit_cols=False),
+    T("employees", "Payroll", "A person the company pays a salary (PEP-520). Monthly gross = basic + house rent + medical + conveyance.",
+      [c("code", V(20), note="EMP-0001, from the employee number series"), c("name", V(150)), c("designation", V(80), null=True), c("department", V(80), null=True),
+       c("mobile", V(20), null=True), c("email", V(190), null=True), c("national_id", V(30), null=True), c("joining_date", DATE),
+       c("basic_salary", MONEY), c("house_rent", MONEY, default="0"), c("medical", MONEY, default="0"), c("conveyance", MONEY, default="0"),
+       enum("pay_method", ["cash", "bank", "mobile"], default="'cash'"), c("bank_name", V(120), null=True), c("account_no", V(40), null=True),
+       enum("status", ["active", "left"], default="'active'"), c("left_on", DATE, null=True), c("notes", V(500), null=True)],
+      uniques=[["company_id", "code"]], indexes=[["company_id", "status"]], checks=["basic_salary >= 0", "house_rent >= 0", "medical >= 0", "conveyance >= 0"], version=True),
 )
 
-MODULE_ORDER = ["Platform", "Access", "Accounting", "Parties", "Inventory", "Money", "Sales", "Purchases", "LC"]
+MODULE_ORDER = ["Platform", "Access", "Accounting", "Parties", "Inventory", "Money", "Sales", "Purchases", "LC", "Payroll"]
 
 # Columns ending in _id that deliberately have no FK constraint (polymorphic or soft references).
 # The validator fails on any other *_id column without a FK.

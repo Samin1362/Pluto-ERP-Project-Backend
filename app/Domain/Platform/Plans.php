@@ -18,17 +18,20 @@ final class Plans
 
     public const LC_FINANCE = 'lc_finance';
 
-    public const MODULES = [self::LC_MANAGEMENT, self::LC_FINANCE];
+    /** PEP-520: employees, salary sheets and payments. */
+    public const PAYROLL = 'payroll';
 
-    public const LABELS = [self::LC_MANAGEMENT => 'LC management', self::LC_FINANCE => 'LC finance'];
+    public const MODULES = [self::LC_MANAGEMENT, self::LC_FINANCE, self::PAYROLL];
+
+    public const LABELS = [self::LC_MANAGEMENT => 'LC management', self::LC_FINANCE => 'LC finance', self::PAYROLL => 'Payroll'];
 
     public const DEFAULT_SLUG = 'import_pro';
 
     /** The starting plans (owner decision 14 Nov 2026); the platform console changes them later. */
     public const DEFAULTS = [
         ['slug' => 'basic', 'name' => 'Basic', 'max_users' => 3, 'max_branches' => 1, 'modules' => []],
-        ['slug' => 'business', 'name' => 'Business', 'max_users' => 10, 'max_branches' => 3, 'modules' => [self::LC_MANAGEMENT]],
-        ['slug' => 'import_pro', 'name' => 'Import Pro', 'max_users' => 25, 'max_branches' => null, 'modules' => [self::LC_MANAGEMENT, self::LC_FINANCE]],
+        ['slug' => 'business', 'name' => 'Business', 'max_users' => 10, 'max_branches' => 3, 'modules' => [self::LC_MANAGEMENT, self::PAYROLL]],
+        ['slug' => 'import_pro', 'name' => 'Import Pro', 'max_users' => 25, 'max_branches' => null, 'modules' => [self::LC_MANAGEMENT, self::LC_FINANCE, self::PAYROLL]],
     ];
 
     /** Inserts the starting plans that are missing (by slug); never changes a plan the owner has edited. */

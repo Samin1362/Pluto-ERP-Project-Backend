@@ -2,7 +2,7 @@
 
 > Status: **Release candidate 1.0.0-rc.1 for approval** (18 Oct 2026), Laravel + Eloquent. **No endpoint is to be implemented until this contract is approved.** ⚑ Auth details (DEC-02) and the items in §12.7 are still open.
 >
-> **Generated file.** The endpoint reference (§9), schemas (§10), page action map (§11) and contract review (§12) come from `docs/source/api.py`, `schemas.py`, `actions.py`, `errors.py` and `contract_review.py`. The machine-readable contract is [`openapi.yaml`](openapi.yaml) (OpenAPI 3.1), validated against the official OpenAPI 3.1 schema (§8). Size: 358 endpoints, 242 schemas, 85 error codes, 163 pages with 553 mapped actions.
+> **Generated file.** The endpoint reference (§9), schemas (§10), page action map (§11) and contract review (§12) come from `docs/source/api.py`, `schemas.py`, `actions.py`, `errors.py` and `contract_review.py`. The machine-readable contract is [`openapi.yaml`](openapi.yaml) (OpenAPI 3.1), validated against the official OpenAPI 3.1 schema (§8). Size: 362 endpoints, 244 schemas, 85 error codes, 165 pages with 558 mapped actions.
 
 ## 1. Conventions
 
@@ -55,26 +55,26 @@
 | Code | HTTP | Title (shown to the user) | Rules | Endpoints |
 |---|---|---|---|---|
 | `approval_required` | 202 | Above your approval limit: submitted for approval | BR-007 | — (outcome) |
-| `company_required` | 400 | The X-Company-Id header is missing | BR-037 | 315 |
-| `malformed_json` | 400 | The request body is not valid JSON or has the wrong type | — | 151 |
+| `company_required` | 400 | The X-Company-Id header is missing | BR-037 | 319 |
+| `malformed_json` | 400 | The request body is not valid JSON or has the wrong type | — | 153 |
 | `invalid_credentials` | 401 | E-mail or password is incorrect | BR-061 | 2 |
 | `refresh_reuse_detected` | 401 | A refresh token was reused; every session of this sign-in was revoked | FR-001 | 1 |
 | `refresh_token_invalid` | 401 | The session has ended; sign in again | FR-001 | 1 |
-| `token_expired` | 401 | The access token has expired; refresh and retry | NFR-012 | 346 |
-| `token_invalid` | 401 | The access token is not valid | NFR-012 | 346 |
+| `token_expired` | 401 | The access token has expired; refresh and retry | NFR-012 | 350 |
+| `token_invalid` | 401 | The access token is not valid | NFR-012 | 350 |
 | `two_factor_failed` | 401 | The authentication code is not valid | FR-004 | 2 |
-| `unauthenticated` | 401 | Sign-in is required | NFR-010 | 346 |
+| `unauthenticated` | 401 | Sign-in is required | NFR-010 | 350 |
 | `branch_restricted` | 403 | This record belongs to a branch you cannot access | BR-038 | 3 |
-| `module_not_in_plan` | 403 | This part of Pluto is not in your plan | FR-005 | 47 |
-| `not_a_member` | 403 | You are not an active member of this company | BR-037 | 315 |
-| `permission_denied` | 403 | Your role does not allow this action | BR-037 | 315 |
+| `module_not_in_plan` | 403 | This part of Pluto is not in your plan | FR-005 | 51 |
+| `not_a_member` | 403 | You are not an active member of this company | BR-037 | 319 |
+| `permission_denied` | 403 | Your role does not allow this action | BR-037 | 319 |
 | `platform_admin_only` | 403 | Only a platform admin can do this | FR-005 | 20 |
 | `platform_two_factor_required` | 403 | Platform admins must sign in with 2-step verification | FR-004 | 20 |
 | `self_approval_forbidden` | 403 | You cannot approve a voucher you submitted | BR-008 | 2 |
-| `support_read_only` | 403 | This is a read-only support view; nothing can be changed | FR-005 | 180 |
+| `support_read_only` | 403 | This is a read-only support view; nothing can be changed | FR-005 | 182 |
 | `system_role` | 403 | The Owner role cannot be changed or deleted | BR-060 | 4 |
 | `two_factor_required_by_company` | 403 | Your company requires 2-step verification | FR-004 | 1 |
-| `not_found` | 404 | Not found (or it belongs to another company) | BR-037 | 193 |
+| `not_found` | 404 | Not found (or it belongs to another company) | BR-037 | 195 |
 | `already_converted` | 409 | This quotation or purchase order has already been converted | BR-056 | 1 |
 | `already_posted` | 409 | This document has already been posted | BR-009 | 24 |
 | `already_reversed` | 409 | This entry has already been reversed or cancelled | BR-003 | 16 |
@@ -85,7 +85,7 @@
 | `duplicate_statement` | 409 | This statement file was already imported | BR-032 | 1 |
 | `duplicate_supplier_bill` | 409 | This supplier's bill number is already entered | BR-018 | 3 |
 | `has_history` | 409 | This record is used elsewhere; make it inactive instead | BR-026 | 9 |
-| `idempotency_in_progress` | 409 | The same request is still being processed | BR-050 | 84 |
+| `idempotency_in_progress` | 409 | The same request is still being processed | BR-050 | 85 |
 | `invalid_transition` | 409 | This status change is not allowed from the current status | BR-003, BR-040 | 22 |
 | `last_owner` | 409 | A company must keep at least one active Owner | BR-060 | 4 |
 | `not_draft` | 409 | Only a draft can be changed, posted or deleted | BR-025 | 26 |
@@ -95,7 +95,7 @@
 | `role_in_use` | 409 | Move the members to another role first | BR-060 | 4 |
 | `seat_limit_reached` | 409 | All seats are in use | BR-059 | 3 |
 | `use_document_cancel` | 409 | System entries are corrected through their document | BR-003 | 16 |
-| `version_conflict` | 409 | Someone else changed this record; reload to see their changes | BR-049 | 37 |
+| `version_conflict` | 409 | Someone else changed this record; reload to see their changes | BR-049 | 38 |
 | `gone` | 410 | This link has expired | — | 2 |
 | `file_too_large` | 413 | Files may be up to 10 MB | BR-051 | 5 |
 | `file_type_not_allowed` | 415 | Only JPG, PNG or PDF up to 10 MB | BR-051 | 5 |
@@ -107,7 +107,7 @@
 | `exceeds_tolerance` | 422 | Payments would exceed the LC amount plus tolerance | BR-042 | 1 |
 | `fiscal_year_not_closable` | 422 | The year has not ended or a period is still open | BR-034 | 1 |
 | `foreign_document` | 422 | The document belongs to another party | BR-021 | 14 |
-| `idempotency_key_reused` | 422 | This Idempotency-Key was used with a different request | BR-050 | 84 |
+| `idempotency_key_reused` | 422 | This Idempotency-Key was used with a different request | BR-050 | 85 |
 | `inactive_reference` | 422 | An inactive party, product, ledger, warehouse or account was used | BR-026 | 18 |
 | `insufficient_funds` | 422 | The account would go below zero (or below its overdraft limit) | BR-031 | 8 |
 | `insufficient_stock` | 422 | Not enough stock in the warehouse | BR-014, BR-030 | 10 |
@@ -134,11 +134,11 @@
 | `rounding_ledger_missing` | 422 | Map the rounding ledger in Accounting defaults first | BR-012 | 2 |
 | `same_warehouse` | 422 | Source and destination warehouses must differ | BR-030 | 3 |
 | `unbalanced_entry` | 422 | Total debit must equal total credit | BR-001, BR-002 | 31 |
-| `validation_failed` | 422 | The request has invalid fields | NFR-030 | 233 |
-| `if_match_required` | 428 | If-Match header with the current version is required | BR-049 | 37 |
+| `validation_failed` | 422 | The request has invalid fields | NFR-030 | 236 |
+| `if_match_required` | 428 | If-Match header with the current version is required | BR-049 | 38 |
 | `rate_limited` | 429 | Too many requests; try again later | NFR-013 | 13 |
-| `server_error` | 500 | Something went wrong; quote the request id | NFR-031 | 358 |
-| `company_maintenance` | 503 | This company is being restored from a backup; try again shortly (Retry-After) | BR-062 | 315 |
+| `server_error` | 500 | Something went wrong; quote the request id | NFR-031 | 362 |
+| `company_maintenance` | 503 | This company is being restored from a backup; try again shortly (Retry-After) | BR-062 | 319 |
 
 Non-blocking conditions (credit limit, overdue customer, low stock, budget, possible duplicate party) are returned as `warnings[]` in 2xx responses, not as errors (BR-015).
 
@@ -617,6 +617,10 @@ The journal debits the supplier ৳ 46,88,640 (an advance until the import bill 
 | 356 | `POST` | [`/api/v1/fx-revaluations`](#postfxrevaluations) | Post a revaluation (unrealised gain/loss) and its reversal dated the next day | `accounting.create` | 201 |
 | 357 | `GET` | [`/api/v1/fx-revaluations`](#getfxrevaluations) | Revaluation history | `accounting.view` | 200 |
 | 358 | `POST` | [`/api/v1/fx-revaluations/{id}/reverse`](#postfxrevaluationsidreverse) | Reverse a revaluation (both its entries) | `accounting.edit` | 200 |
+| 359 | `GET` | [`/api/v1/employees`](#getemployees) | Employees with their monthly gross salary | `payroll.view` | 200 |
+| 360 | `POST` | [`/api/v1/employees`](#postemployees) | Add an employee (code from the EMP series) | `payroll.create` | 201 |
+| 361 | `GET` | [`/api/v1/employees/{id}`](#getemployeesid) | One employee | `payroll.view` | 200 |
+| 362 | `PATCH` | [`/api/v1/employees/{id}`](#patchemployeesid) | Change an employee, or mark them left | `payroll.edit` | 200 |
 
 ## 8. Contract validation
 
@@ -628,26 +632,26 @@ Last run: 24 rules, **24 passed, 0 failed**; 6 negative tests, 6 detected. Offic
 | Rule | Check | Items | Result |
 |---|---|---|---|
 | A01 | Document validates against the official OpenAPI 3.1 schema (schema-base: documents incl. Schema Objects) | 1 | ✅ pass |
-| A02 | Every component schema is valid JSON Schema 2020-12 (meta-schema check) | 242 | ✅ pass |
-| A03 | All $refs resolve and every component schema is used | 245 | ✅ pass |
-| A04 | Operations have unique camelCase operationIds, summary, description, tags, a 2xx, a default, and problem+json errors | 358 | ✅ pass |
-| A05 | Path templates and declared path parameters match; path parameters are required | 358 | ✅ pass |
-| A06 | Security: public only for sign-in flows, cookie only for refresh/logout, X-Company-Id on company-scoped calls, known permissions | 358 | ✅ pass |
-| A07 | Every operation that posts a journal entry takes an Idempotency-Key and documents its locking; every body can be rejected with 422 | 358 | ✅ pass |
-| A08 | Every 201 response declares a Location header | 61 | ✅ pass |
-| A09 | Collections use the paginated envelope {data[], meta} | 59 | ✅ pass |
+| A02 | Every component schema is valid JSON Schema 2020-12 (meta-schema check) | 244 | ✅ pass |
+| A03 | All $refs resolve and every component schema is used | 247 | ✅ pass |
+| A04 | Operations have unique camelCase operationIds, summary, description, tags, a 2xx, a default, and problem+json errors | 362 | ✅ pass |
+| A05 | Path templates and declared path parameters match; path parameters are required | 362 | ✅ pass |
+| A06 | Security: public only for sign-in flows, cookie only for refresh/logout, X-Company-Id on company-scoped calls, known permissions | 362 | ✅ pass |
+| A07 | Every operation that posts a journal entry takes an Idempotency-Key and documents its locking; every body can be rejected with 422 | 362 | ✅ pass |
+| A08 | Every 201 response declares a Location header | 62 | ✅ pass |
+| A09 | Collections use the paginated envelope {data[], meta} | 60 | ✅ pass |
 | A10 | Every error code exists in the catalogue, has its HTTP status documented on the operation, and every catalogue code is reachable | 85 | ✅ pass |
-| A11 | Request-only schemas reject unknown properties (additionalProperties: false) | 109 | ✅ pass |
+| A11 | Request-only schemas reject unknown properties (additionalProperties: false) | 110 | ✅ pass |
 | A12 | Money, quantity, cost and rate fields are decimal strings (never JSON numbers) | 242 | ✅ pass |
-| A13 | PUT/PATCH on a versioned table requires If-Match, and If-Match is only required where a version exists | 43 | ✅ pass |
+| A13 | PUT/PATCH on a versioned table requires If-Match, and If-Match is only required where a version exists | 44 | ✅ pass |
 | A14 | Request fields are stored: each maps to a column (or is declared virtual) with a compatible length, enum values and nullability | 406 | ✅ pass |
 | A15 | Response enum fields have exactly the values the database allows | 29 | ✅ pass |
-| A16 | Every action of every page maps to API calls, a dialog, navigation or explicit client behaviour, and every target exists | 553 | ✅ pass |
-| A17 | Every data-changing endpoint is triggered by at least one page action (only token refresh is system-driven) | 205 | ✅ pass |
-| A18 | Every page has at least one endpoint (shared components use their host page's) | 163 | ✅ pass |
-| A19 | For every action, at least one role can both open the page and call the endpoint | 347 | ✅ pass |
-| A20 | Database operations name real tables; nothing deletes posted or append-only rows; every write changes something | 1495 | ✅ pass |
-| A21 | Every parameter has a typed schema | 589 | ✅ pass |
+| A16 | Every action of every page maps to API calls, a dialog, navigation or explicit client behaviour, and every target exists | 558 | ✅ pass |
+| A17 | Every data-changing endpoint is triggered by at least one page action (only token refresh is system-driven) | 207 | ✅ pass |
+| A18 | Every page has at least one endpoint (shared components use their host page's) | 165 | ✅ pass |
+| A19 | For every action, at least one role can both open the page and call the endpoint | 351 | ✅ pass |
+| A20 | Database operations name real tables; nothing deletes posted or append-only rows; every write changes something | 1503 | ✅ pass |
+| A21 | Every parameter has a typed schema | 597 | ✅ pass |
 | A22 | Business rules exist; 46 rejecting rules map to error codes | 374 | ✅ pass |
 | A23 | Calculate/preview endpoints never reject on business state; they return warnings[] (BR-015) | 5 | ✅ pass |
 | A24 | Ledger/stock writes are coherent: entries have lines, stock movements update balances, system entries take an SJ number, bulk post = single post | 89 | ✅ pass |
@@ -8599,6 +8603,97 @@ Reverse a revaluation (both its entries). _Contract change: P16 LC finance._
 | **Pages and actions** | M8<br>M8 · Reverse a revaluation (NEW, P16 LC finance) |
 | **Transaction / concurrency** | One DB transaction; SELECT ... FOR UPDATE on the document row, number_sequences, stock_balances in a fixed order (sequence -> document -> products by id) to avoid deadlocks. |
 
+### Payroll
+
+
+<a id="getemployees"></a>
+#### `GET /api/v1/employees`
+
+Employees with their monthly gross salary. _Contract change: PEP-520 payroll._
+
+| | |
+|---|---|
+| **Auth** | Bearer JWT + `X-Company-Id` |
+| **Permission** | `payroll.view` — roles: Owner, Finance manager, Accountant |
+| **Path / query params** | — / `page`, `per_page`, `sort`, `q`, `status`, `department` |
+| **Request body** | — |
+| **Validation** | Query parameters only (unknown parameters: 422). |
+| **Success** | 200 `data[]` of [`Employee`](#schema-employee) + `meta` |
+| **Status codes** | 200, 400, 401, 403, 422, 503 |
+| **Error codes** | **`company_maintenance`, `module_not_in_plan`**; standard: `company_required`, `not_a_member`, `permission_denied`, `server_error`, `token_expired`, `token_invalid`, `unauthenticated`, `validation_failed` |
+| **Headers** | — |
+| **Database** | read: employees |
+| **Business rules** | — |
+| **Requirements** | FR-100 |
+| **Pages and actions** | P1<br>P1 · Open employee |
+| **Transaction / concurrency** | Read-only; consistent snapshot. |
+
+<a id="postemployees"></a>
+#### `POST /api/v1/employees`
+
+Add an employee (code from the EMP series). _Contract change: PEP-520 payroll._
+
+| | |
+|---|---|
+| **Auth** | Bearer JWT + `X-Company-Id` |
+| **Permission** | `payroll.create` — roles: Owner, Finance manager, Accountant |
+| **Path / query params** | — / — |
+| **Request body** | [`EmployeeInput`](#schema-employeeinput) |
+| **Validation** | `name`* string ≤ 150; `designation` string ≤ 80 (nullable); `department` string ≤ 80 (nullable); `mobile` string ≤ 20 (nullable); `email` e-mail (nullable); `national_id` string ≤ 30 (nullable); `joining_date`* YYYY-MM-DD; `basic_salary`* decimal string, 2 dp; `house_rent` decimal string, 2 dp (nullable); `medical` decimal string, 2 dp (nullable); `conveyance` decimal string, 2 dp (nullable); `pay_method` one of cash/bank/mobile; `bank_name` string ≤ 120 (nullable); `account_no` string ≤ 40 (nullable); `status` one of active/left; `left_on` YYYY-MM-DD (nullable); `notes` string ≤ 500 (nullable)<br>Unknown fields are rejected (422). |
+| **Success** | 201 `data`: [`Employee`](#schema-employee) |
+| **Status codes** | 201, 400, 401, 403, 409, 422, 503 |
+| **Error codes** | **`company_maintenance`, `module_not_in_plan`, `support_read_only`**; standard: `company_required`, `idempotency_in_progress`, `idempotency_key_reused`, `malformed_json`, `not_a_member`, `permission_denied`, `server_error`, `token_expired`, `token_invalid`, `unauthenticated`, `validation_failed` |
+| **Headers** | `Idempotency-Key`, `Location` on 201 |
+| **Database** | insert: audit_logs, employees, idempotency_keys; read: number_sequences |
+| **Business rules** | — |
+| **Requirements** | FR-100 |
+| **Pages and actions** | P2<br>P2 · Save |
+| **Transaction / concurrency** | Single transaction. |
+
+<a id="getemployeesid"></a>
+#### `GET /api/v1/employees/{id}`
+
+One employee. _Contract change: PEP-520 payroll._
+
+| | |
+|---|---|
+| **Auth** | Bearer JWT + `X-Company-Id` |
+| **Permission** | `payroll.view` — roles: Owner, Finance manager, Accountant |
+| **Path / query params** | `id` / — |
+| **Request body** | — |
+| **Validation** | — |
+| **Success** | 200 `data`: [`Employee`](#schema-employee) |
+| **Status codes** | 200, 400, 401, 403, 404, 503 |
+| **Error codes** | **`company_maintenance`, `module_not_in_plan`**; standard: `company_required`, `not_a_member`, `not_found`, `permission_denied`, `server_error`, `token_expired`, `token_invalid`, `unauthenticated` |
+| **Headers** | — |
+| **Database** | read: employees |
+| **Business rules** | — |
+| **Requirements** | FR-100 |
+| **Pages and actions** | P2 |
+| **Transaction / concurrency** | Read-only; consistent snapshot. |
+
+<a id="patchemployeesid"></a>
+#### `PATCH /api/v1/employees/{id}`
+
+Change an employee, or mark them left. _Contract change: PEP-520 payroll._
+
+| | |
+|---|---|
+| **Auth** | Bearer JWT + `X-Company-Id` |
+| **Permission** | `payroll.edit` — roles: Owner, Finance manager |
+| **Path / query params** | `id` / — |
+| **Request body** | [`EmployeeInput`](#schema-employeeinput) |
+| **Validation** | `name`* string ≤ 150; `designation` string ≤ 80 (nullable); `department` string ≤ 80 (nullable); `mobile` string ≤ 20 (nullable); `email` e-mail (nullable); `national_id` string ≤ 30 (nullable); `joining_date`* YYYY-MM-DD; `basic_salary`* decimal string, 2 dp; `house_rent` decimal string, 2 dp (nullable); `medical` decimal string, 2 dp (nullable); `conveyance` decimal string, 2 dp (nullable); `pay_method` one of cash/bank/mobile; `bank_name` string ≤ 120 (nullable); `account_no` string ≤ 40 (nullable); `status` one of active/left; `left_on` YYYY-MM-DD (nullable); `notes` string ≤ 500 (nullable)<br>Unknown fields are rejected (422). |
+| **Success** | 200 `data`: [`Employee`](#schema-employee) |
+| **Status codes** | 200, 400, 401, 403, 404, 409, 422, 428, 503 |
+| **Error codes** | **`company_maintenance`, `module_not_in_plan`, `support_read_only`**; standard: `company_required`, `if_match_required`, `malformed_json`, `not_a_member`, `not_found`, `permission_denied`, `server_error`, `token_expired`, `token_invalid`, `unauthenticated`, `validation_failed`, `version_conflict` |
+| **Headers** | `If-Match` (required) |
+| **Database** | insert: audit_logs; update: employees |
+| **Business rules** | — |
+| **Requirements** | FR-100 |
+| **Pages and actions** | P2<br>P2 · Save<br>P2 · Mark as left |
+| **Transaction / concurrency** | Single-row write; optimistic lock via If-Match. |
+
 ## 10. Schemas
 
 Shorthand types: `money`/`rate`/`qty`/`cost`/`pct` are decimal strings; `id` is int64; `ccy` is an ISO 4217 code; `[x]` is an array; `| null` means nullable. Exact JSON Schema is in `openapi.yaml`.
@@ -11586,6 +11681,60 @@ Recurring entry.
 | `last_entry_id` | `id \| null` | no |
 | `version` | `int` | yes |
 
+<a id="schema-employee"></a>
+#### `Employee`
+
+An employee (PEP-520). gross_salary = basic + house rent + medical + conveyance, from the server.
+
+| Property | Type | Required |
+|---|---|---|
+| `id` | `id` | yes |
+| `code` | `str` | yes |
+| `name` | `str` | yes |
+| `designation` | `str \| null` | no |
+| `department` | `str \| null` | no |
+| `mobile` | `str \| null` | no |
+| `email` | `str \| null` | no |
+| `national_id` | `str \| null` | no |
+| `joining_date` | `date` | yes |
+| `basic_salary` | `money` | yes |
+| `house_rent` | `money` | yes |
+| `medical` | `money` | yes |
+| `conveyance` | `money` | yes |
+| `gross_salary` | `money` | yes |
+| `pay_method` | `enum:cash\|bank\|mobile` | yes |
+| `bank_name` | `str \| null` | no |
+| `account_no` | `str \| null` | no |
+| `status` | `enum:active\|left` | yes |
+| `left_on` | `date \| null` | no |
+| `notes` | `str \| null` | no |
+| `version` | `int` | yes |
+
+<a id="schema-employeeinput"></a>
+#### `EmployeeInput`
+
+Add or change an employee (PEP-520). left_on is required when status is left. Unknown properties are rejected.
+
+| Property | Type | Required |
+|---|---|---|
+| `name` | `str:150` | yes |
+| `designation` | `str:80 \| null` | no |
+| `department` | `str:80 \| null` | no |
+| `mobile` | `str:20 \| null` | no |
+| `email` | `email \| null` | no |
+| `national_id` | `str:30 \| null` | no |
+| `joining_date` | `date` | yes |
+| `basic_salary` | `money` | yes |
+| `house_rent` | `money \| null` | no |
+| `medical` | `money \| null` | no |
+| `conveyance` | `money \| null` | no |
+| `pay_method` | `enum:cash\|bank\|mobile` | no |
+| `bank_name` | `str:120 \| null` | no |
+| `account_no` | `str:40 \| null` | no |
+| `status` | `enum:active\|left` | no |
+| `left_on` | `date \| null` | no |
+| `notes` | `str:500 \| null` | no |
+
 <a id="schema-recurringinvoicecreate"></a>
 #### `RecurringInvoiceCreate`
 
@@ -14320,6 +14469,30 @@ View permission `lc.create`. **Loads:** nothing of its own (host page data).
 | 1 | Cancel | ui:close the drawer | — | — | — | — |
 | 2 | Add charge | [`POST /lc-charges`](#postlccharges) | `lc.create` | [`LcChargeInput`](#schema-lcchargeinput) → [`LcCharge`](#schema-lccharge) | 201 | `charge_allocated`, `insufficient_funds`, `margin_exceeds_deposit`, `module_not_in_plan`, `period_locked`, `support_read_only`, `unbalanced_entry` |
 
+### Payroll
+
+
+<a id="actions-p1"></a>
+#### P1 · Employees
+
+View permission `payroll.view`. **Loads:** [`GET /employees`](#getemployees).
+
+| # | Action | Calls | Permission | Body → data | Success | Business errors to handle |
+|---|---|---|---|---|---|---|
+| 1 | Add employee | nav:P2 | — | — | — | — |
+| 2 | Open employee | [`GET /employees`](#getemployees) | `payroll.view` | — | 200 | `module_not_in_plan` |
+
+<a id="actions-p2"></a>
+#### P2 · Employee form
+
+View permission `payroll.create`. **Loads:** [`GET /employees/{id}`](#getemployeesid).
+
+| # | Action | Calls | Permission | Body → data | Success | Business errors to handle |
+|---|---|---|---|---|---|---|
+| 1 | Cancel | ui:discard changes (L13 unsaved-changes dialog when dirty) | — | — | — | — |
+| 2 | Save | [`POST /employees`](#postemployees) \| [`PATCH /employees/{id}`](#patchemployeesid) | `payroll.create`, `payroll.edit` | [`EmployeeInput`](#schema-employeeinput) → [`Employee`](#schema-employee) | 200, 201 | `module_not_in_plan`, `support_read_only` |
+| 3 | Mark as left | [`PATCH /employees/{id}`](#patchemployeesid) | `payroll.edit` | [`EmployeeInput`](#schema-employeeinput) → [`Employee`](#schema-employee) | 200 | `module_not_in_plan`, `support_read_only` |
+
 - J2 · Sales report: same as [E11](#actions-e11) (reused screen, Reports breadcrumb)
 
 - J3 · Purchase report: same as [F9](#actions-f9) (reused screen, Reports breadcrumb)
@@ -14356,12 +14529,12 @@ View permission `lc.create`. **Loads:** nothing of its own (host page data).
 
 | | Before review | Contract |
 |---|---|---|
-| Endpoints | 280 | 358 |
-| Schemas | 191 | 242 |
-| Pages | 155 | 163 |
-| Page actions mapped to API or client behaviour | 0 of 448 | 553 of 553 |
+| Endpoints | 280 | 362 |
+| Schemas | 191 | 244 |
+| Pages | 155 | 165 |
+| Page actions mapped to API or client behaviour | 0 of 448 | 558 of 558 |
 
-### 12.2 Missing endpoints, now added (77)
+### 12.2 Missing endpoints, now added (81)
 
 | Endpoint | Ref | Why it was missing |
 |---|---|---|
@@ -14442,6 +14615,10 @@ View permission `lc.create`. **Loads:** nothing of its own (host page data).
 | [`POST /fx-revaluations`](#postfxrevaluations) | P16 LC finance |  |
 | [`GET /fx-revaluations`](#getfxrevaluations) | P16 LC finance |  |
 | [`POST /fx-revaluations/{id}/reverse`](#postfxrevaluationsidreverse) | P16 LC finance |  |
+| [`GET /employees`](#getemployees) | PEP-520 payroll |  |
+| [`POST /employees`](#postemployees) | PEP-520 payroll |  |
+| [`GET /employees/{id}`](#getemployeesid) | PEP-520 payroll |  |
+| [`PATCH /employees/{id}`](#patchemployeesid) | PEP-520 payroll |  |
 
 ### 12.3 Redundant or unused endpoints, removed (6)
 
@@ -14511,6 +14688,7 @@ View permission `lc.create`. **Loads:** nothing of its own (host page data).
 | Platform console (PEP-483) | New /platform/companies endpoints (list, create with an Owner invitation, suspend, reactivate) for platform admins: e-mails in PLUTO_PLATFORM_ADMINS with 2-step sign-in, never a company role, so selling Pluto to many companies needs no shared membership. Me adds platform_admin (shows the console link; PEP-484). Schemas PlatformCompany, PlatformCompanyCreate; errors platform_admin_only, platform_two_factor_required. Owner request 12-13 Nov 2026. Additive. |
 | Read-only support access (PEP-485) | POST/DELETE /platform/companies/{id}/support-access: a platform admin opens a company read-only for 15-240 minutes with a reason (table support_access_grants); its owners get a notification and the audit log keeps the start and end; any change answers 403 support_read_only; Me adds support_access while the current company is such a view. Additive. |
 | Usage overview (PEP-512) | PlatformCompany adds usage: last sign-in of the company's own people, active people in 30 days, this month's sales invoices, purchase bills and vouchers, and quiet (no activity for 7+ days). Read-only, worked out from existing tables. Owner request 15 Nov 2026. Additive. |
+| Payroll setup and employees (PEP-520) | Payroll module: permissions payroll.view/create/edit/approve (Owner all; Finance VCEA; Accountant VC; others none, salaries are private); plan module payroll (module_not_in_plan). employees table; GET/POST /employees, GET/PATCH /employees/{id}; Employee.gross_salary from the server. Owner 16 Nov 2026. Additive. |
 | Recurring sales invoices (PEP-517) | recurring_invoices (party, frequency, next_run_on, ends, payload = draft body without dates, last_invoice_id). POST /sales-invoices/{id}/repeat (sales.create, RecurringInvoiceCreate) → RecurringInvoice; GET /recurring-invoices (sales.view); PATCH /recurring-invoices/{id} (sales.edit, RecurringTemplateInput, If-Match). The 06:00 pluto:recurring:run also writes the due draft invoices (never posted). Owner 16 Nov 2026. Additive. |
 | Payment reminders (PEP-516) | payment_reminders log; company_settings adds reminders_auto, reminder_days_after_due (CompanySettings/Update). POST /parties/{id}/payment-reminder (parties.view) e-mails the customer's overdue invoices with the statement PDF; 422 party_has_no_email / no_overdue_invoices, 409 reminder_sent_recently (one a week). GET /parties/{id}/payment-reminders. Daily job pluto:reminders:send when reminders_auto is on. Owner 16 Nov 2026. Additive. |
 | Announcements (PEP-513) | announcements (platform-wide: title, body, tone, starts_at, ends_at, is_active) and announcement_dismissals. Platform console: GET/POST /platform/announcements, PUT/DELETE /platform/announcements/{id}. Everyone: GET /announcements (active, current, not closed by them) and POST /announcements/{id}/dismiss. Owner request 15 Nov 2026. Additive. |

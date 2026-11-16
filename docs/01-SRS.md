@@ -78,6 +78,7 @@ V = view, C = create, E = edit, A = approve, D = delete. Rows in `code` style ar
 | accounting | VCEAD | VCEA | VCEA | — | — | V |
 | reports | VCEAD | VC | VC | V | — | V |
 | settings | VCEAD | VE | — | — | — | — |
+| payroll | VCEAD | VCEA | VC | — | — | — |
 | `inventory.view_costs` | ✓ | ✓ | ✓ | ✓ | — | ✓ |
 | `reports.export` | ✓ | ✓ | ✓ | — | — | — |
 | `reports.financial` | ✓ | ✓ | ✓ | — | — | — |
@@ -172,6 +173,7 @@ Approval limits (defaults): Finance manager pays up to ৳ 5,00,000 without appr
 | FR-097 | LC | Users record LC charges and import expenses, and payments at the bank's rate. | M7, LC-DlgPay, LC-DrawerCharge | 17 |
 | FR-098 | LC | Users receive LC goods through an import purchase bill and allocate landed cost. | F3, M4, M7 | 5 |
 | FR-099 | LC | Users close an LC, after checks, and view the eight LC reports. | M8, LC-DlgClose | 5 |
+| FR-100 | Payroll | Users keep employees with their salary structure (basic, house rent, medical, conveyance), pay method and status (PEP-520). | P1, P2 | 4 |
 
 ## 6. Non-functional requirements
 

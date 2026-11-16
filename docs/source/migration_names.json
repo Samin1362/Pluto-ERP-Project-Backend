@@ -95,5 +95,6 @@
  "subscription_payments": "2026_10_18_009400_create_subscription_payments_table.php",
  "announcements": "2026_10_18_009500_create_announcements_table.php",
  "announcement_dismissals": "2026_10_18_009600_create_announcement_dismissals_table.php",
- "payment_reminders": "2026_10_18_009700_create_payment_reminders_table.php"
+ "payment_reminders": "2026_10_18_009700_create_payment_reminders_table.php",
+ "recurring_invoices": "2026_10_18_009800_create_recurring_invoices_table.php"
 }

@@ -671,6 +671,52 @@ export interface EmailRequest {
   message?: string | null
 }
 
+/** An employee (PEP-520). gross_salary = basic + house rent + medical + conveyance, from the server. */
+export interface Employee {
+  id: number
+  code: string
+  name: string
+  designation?: string | null
+  department?: string | null
+  mobile?: string | null
+  email?: string | null
+  national_id?: string | null
+  joining_date: string
+  basic_salary: Decimal
+  house_rent: Decimal
+  medical: Decimal
+  conveyance: Decimal
+  gross_salary: Decimal
+  pay_method: 'cash' | 'bank' | 'mobile'
+  bank_name?: string | null
+  account_no?: string | null
+  status: 'active' | 'left'
+  left_on?: string | null
+  notes?: string | null
+  version: number
+}
+
+/** Add or change an employee (PEP-520). left_on is required when status is left. */
+export interface EmployeeInput {
+  name: string
+  designation?: string | null
+  department?: string | null
+  mobile?: string | null
+  email?: string | null
+  national_id?: string | null
+  joining_date: string
+  basic_salary: Decimal
+  house_rent?: Decimal | null
+  medical?: Decimal | null
+  conveyance?: Decimal | null
+  pay_method?: 'cash' | 'bank' | 'mobile'
+  bank_name?: string | null
+  account_no?: string | null
+  status?: 'active' | 'left'
+  left_on?: string | null
+  notes?: string | null
+}
+
 /** RFC 9457 problem details (application/problem+json), extended with a stable application error code (see the error catalogue), the request id and, for 422, field errors keyed by JSON path (e.g. lines.2.quantity). */
 export interface Error {
   type: string

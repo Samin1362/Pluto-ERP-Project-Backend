@@ -2,7 +2,7 @@
 
 > **Source of truth:** the Claude Design canvas "Pluto ERP" (13 module prototypes, about 180 state artboards, the design system).
 >
-> **Generated file.** The per-page sections come from `docs/source/pages.py`. The APIs, entities and allowed roles for each page are **derived** from the API registry and the role matrix, so they can't drift from 05 and 01. Coverage: 163 page entries (incl. dialogs, 4 new auth/settings screens and 7 new list screens, GAP-24/25) + 15 reused report entries.
+> **Generated file.** The per-page sections come from `docs/source/pages.py`. The APIs, entities and allowed roles for each page are **derived** from the API registry and the role matrix, so they can't drift from 05 and 01. Coverage: 165 page entries (incl. dialogs, 4 new auth/settings screens and 7 new list screens, GAP-24/25) + 15 reused report entries.
 
 ## 1. Design system to preserve
 
@@ -190,6 +190,8 @@
 | [LC-DlgPay](#page-lc-dlgpay) | Dialog · Record LC payment | LC | Dialog | `lc.create` | 2 | LC-DlgPay.dc.html |
 | [LC-DlgClose](#page-lc-dlgclose) | Dialog · Close LC | LC | Dialog | `lc.edit` | 1 | LC-DlgClose.dc.html |
 | [LC-DrawerCharge](#page-lc-drawercharge) | Drawer · Add charge or import expense | LC | Drawer | `lc.create` | 1 | LC-DrawerCharge.dc.html |
+| [P1](#page-p1) | Employees | Payroll | List | `payroll.view` | 1 | — |
+| [P2](#page-p2) | Employee form | Payroll | Form | `payroll.create` | 3 | — |
 | J2 | Sales report | Reports | → E11 | as E11 | — | reused |
 | J3 | Purchase report | Reports | → F9 | as F9 | — | reused |
 | J4 | Income report | Reports | → I8 | as I8 | — | reused |
@@ -3688,3 +3690,45 @@ Each entry follows the 13 points of the brief: (1) purpose · (2) components and
 11. **Workflows:** — · FR: FR-097
 12. **States:** As Dialog.
 13. **Depends on:** [M4](#page-m4)
+
+### Payroll
+
+
+<a id="page-p1"></a>
+#### P1 · Employees
+
+1. **Purpose:** Everyone the company pays: code, name, designation, department, gross salary, pay method, status (PEP-520).
+2. **Components and layout:** List with Active / Left tabs, search, department filter.
+3–4. **Inputs:** none (read-only page; filters listed below)
+5. **Actions → API** ([full map](05-API-Specification.md#actions-p1)): Add employee → nav:P2<br>Open employee → GET /employees
+6. **Table:** columns Code, Name, Designation, Department, Gross salary, Pay method, Status; filters Status, Department; search; server-side pagination and sorting.
+7. **Validation and rules:** Standard server validation (422).
+8. **Roles allowed:** `payroll.view` → Owner, Finance manager, Accountant. Actions additionally check their own permission (see endpoints).
+9. **APIs:** [`GET /employees`](05-API-Specification.md#getemployees)
+10. **Entities:** `employees`
+11. **Workflows:** — · FR: FR-100
+12. **States:** Loading: skeleton rows matching columns (L10). Empty: first-use empty state with primary action, or 'No matches' with Clear filters (L9). Error: inline banner with Retry; offline banner (L11). Success: toast after bulk actions (L12). 403 page if view permission missing (L14).
+13. **Depends on:** —
+
+<a id="page-p2"></a>
+#### P2 · Employee form
+
+1. **Purpose:** Name, designation, department, contacts, joining date, salary structure (basic, house rent, medical, conveyance), pay method and account, status.
+2. **Components and layout:** Form with a salary card showing the server's gross.
+3. **Inputs** (and 4. required/optional):
+
+   | Field | Type | Req. | Rule |
+   |---|---|---|---|
+   | Name | text | req |  |
+   | Joining date | date | req |  |
+   | Basic salary | money | req | >= 0 |
+   | Pay method | select | opt | cash/bank/mobile |
+5. **Actions → API** ([full map](05-API-Specification.md#actions-p2)): Cancel → ui:discard changes (L13 unsaved-changes dialog when dirty)<br>Save → POST /employees \| PATCH /employees/{id}<br>Mark as left → PATCH /employees/{id}
+6. **Tables:** —
+7. **Validation and rules:** Standard server validation (422).
+8. **Roles allowed:** `payroll.create` → Owner, Finance manager, Accountant. Actions additionally check their own permission (see endpoints).
+9. **APIs:** [`POST /employees`](05-API-Specification.md#postemployees), [`GET /employees/{id}`](05-API-Specification.md#getemployeesid), [`PATCH /employees/{id}`](05-API-Specification.md#patchemployeesid)
+10. **Entities:** `audit_logs`, `employees`, `number_sequences`
+11. **Workflows:** — · FR: FR-100
+12. **States:** Loading: skeleton fields when editing. Validation: banner 'Fix N fields' (role=alert) and inline errors from 422 `errors` (L8). Saving: primary button busy and disabled; Idempotency-Key reused on retry. Success: toast and navigate to details. Conflict: 409 banner with reload, edits kept (L11). Unsaved changes dialog on leave (L13).
+13. **Depends on:** [P1](#page-p1)

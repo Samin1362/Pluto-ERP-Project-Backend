@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Table `recurring_invoices` (Sales): migration 98 of 98, dependency level 7.
+ * Table `recurring_invoices` (Sales): migration 98 of 99, dependency level 7.
  * A sales invoice that repeats (PEP-517: rent, service contracts, monthly supply); each run creates a draft invoice for review, never posts.
  * Depends on: companies, parties, sales_invoices, users.
  *

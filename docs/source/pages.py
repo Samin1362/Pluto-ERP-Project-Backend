@@ -616,6 +616,13 @@ page("LC-DrawerCharge", "Drawer · Add charge or import expense", "LC", "Drawer"
      "Drawer.", fields=["LC | select | req | ", "Type | select | req | 13 types", "Amount (৳) | money | req | > 0", "Paid to | text | opt | ", "Payment status | segmented | req | unpaid/paid", "Paid from | select | cond | when paid", "Add to landed cost | switch | opt | not for margin"],
      actions=["Cancel", "Add charge"], rules=["BR-044", "BR-045", "BR-047"], deps=["M4"], fr=["FR-097"], artboard="LC-DrawerCharge.dc.html")
 
+page("P1", "Employees", "Payroll", "List", "payroll.view", "Everyone the company pays: code, name, designation, department, gross salary, pay method, status (PEP-520).",
+     "List with Active / Left tabs, search, department filter.", actions=["Add employee", "Open employee"],
+     table={"cols": ["Code", "Name", "Designation", "Department", "Gross salary", "Pay method", "Status"], "filters": ["Status", "Department"], "search": True}, fr=["FR-100"])
+page("P2", "Employee form", "Payroll", "Form", "payroll.create", "Name, designation, department, contacts, joining date, salary structure (basic, house rent, medical, conveyance), pay method and account, status.",
+     "Form with a salary card showing the server's gross.", fields=["Name | text | req | ", "Joining date | date | req | ", "Basic salary | money | req | >= 0", "Pay method | select | opt | cash/bank/mobile"],
+     actions=["Cancel", "Save", "Mark as left"], deps=["P1"], fr=["FR-100"])
+
 
 # ---- Actions added by the API contract review (18 Oct 2026). Marked NEW: the design does not show them; each needs design sign-off.
 ADDED_ACTIONS = {
