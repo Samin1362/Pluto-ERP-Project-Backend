@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Table `payroll_runs` (Payroll): migration 100 of 101, dependency level 5.
+ * Table `payroll_runs` (Payroll): migration 100 of 103, dependency level 5.
  * A salary sheet for one month (PEP-521): draft while it is prepared, approved when posted (Dr salaries_expense / Cr salaries_payable), cancelled by reversal.
  * Depends on: companies, journal_entries, users.
  *

@@ -20,7 +20,7 @@ final class BooksIntegrity
 {
     /** Tables whose rows are posted through journal_entry_id (documents, not lines or movements). */
     public const DOCUMENT_TABLES = ['purchase_bills', 'purchase_returns', 'debit_notes', 'sales_invoices', 'sales_returns', 'credit_notes',
-        'stock_adjustments', 'lc_charges', 'lc_payments', 'landed_cost_allocations', 'payroll_runs'];
+        'stock_adjustments', 'lc_charges', 'lc_payments', 'landed_cost_allocations', 'payroll_runs', 'payroll_payments'];
 
     /** @return array<string, list<string>> check name => failures */
     public function check(int $companyId): array

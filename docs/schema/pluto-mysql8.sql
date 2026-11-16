@@ -3275,3 +3275,58 @@ CREATE TABLE `payroll_lines` (
   CONSTRAINT `payroll_lines_rule3_check` CHECK (`overtime` >= 0),
   CONSTRAINT `payroll_lines_rule4_check` CHECK (`other_earnings` >= 0)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='One employee on a salary sheet (PEP-521): the salary structure for the days paid, plus overtime and other earnings, less deductions and advance recovery.';
+
+-- 102. payroll_payments (level 6)
+CREATE TABLE `payroll_payments` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT COMMENT 'Primary key, auto-increment',
+  `company_id` bigint unsigned NOT NULL COMMENT 'Tenant owner. Every query is scoped by it.',
+  `payroll_run_id` bigint unsigned NOT NULL,
+  `money_account_id` bigint unsigned NOT NULL,
+  `paid_on` date NOT NULL,
+  `amount` decimal(18,2) NOT NULL,
+  `employees_count` smallint unsigned NOT NULL,
+  `reference` varchar(60) NULL COMMENT 'Cheque, transfer or bKash reference',
+  `status` varchar(30) NOT NULL DEFAULT 'posted' COMMENT 'One of: posted, reversed',
+  `journal_entry_id` bigint unsigned NULL COMMENT 'Set in the same transaction as the payment',
+  `reversal_entry_id` bigint unsigned NULL,
+  `reversed_at` datetime NULL,
+  `reverse_reason` varchar(255) NULL,
+  `lock_version` int unsigned NOT NULL DEFAULT 1 COMMENT 'Optimistic concurrency counter; incremented on every update (If-Match)',
+  `created_by` bigint unsigned NULL COMMENT 'User who created the row',
+  `updated_by` bigint unsigned NULL COMMENT 'User who last changed the row',
+  `created_at` datetime NULL COMMENT 'Set by Laravel',
+  `updated_at` datetime NULL COMMENT 'Set by Laravel',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `payroll_payments_journal_entry_id_unique` (`journal_entry_id`),
+  UNIQUE KEY `payroll_payments_reversal_entry_id_unique` (`reversal_entry_id`),
+  KEY `payroll_payments_company_id_payroll_run_id_index` (`company_id`, `payroll_run_id`),
+  KEY `payroll_payments_payroll_run_id_index` (`payroll_run_id`),
+  KEY `payroll_payments_money_account_id_index` (`money_account_id`),
+  KEY `payroll_payments_created_by_index` (`created_by`),
+  KEY `payroll_payments_updated_by_index` (`updated_by`),
+  CONSTRAINT `payroll_payments_company_id_foreign` FOREIGN KEY (`company_id`) REFERENCES `companies` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  CONSTRAINT `payroll_payments_payroll_run_id_foreign` FOREIGN KEY (`payroll_run_id`) REFERENCES `payroll_runs` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  CONSTRAINT `payroll_payments_money_account_id_foreign` FOREIGN KEY (`money_account_id`) REFERENCES `money_accounts` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  CONSTRAINT `payroll_payments_journal_entry_id_foreign` FOREIGN KEY (`journal_entry_id`) REFERENCES `journal_entries` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  CONSTRAINT `payroll_payments_reversal_entry_id_foreign` FOREIGN KEY (`reversal_entry_id`) REFERENCES `journal_entries` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  CONSTRAINT `payroll_payments_created_by_foreign` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  CONSTRAINT `payroll_payments_updated_by_foreign` FOREIGN KEY (`updated_by`) REFERENCES `users` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  CONSTRAINT `payroll_payments_status_check` CHECK (`status` IN ('posted', 'reversed')),
+  CONSTRAINT `payroll_payments_rule1_check` CHECK (`amount` > 0)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Salaries paid from one money account on one day against an approved sheet (PEP-522): Dr salaries_payable / Cr the account; reversed by a mirror entry.';
+
+-- 103. payroll_payment_lines (level 7)
+CREATE TABLE `payroll_payment_lines` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT COMMENT 'Primary key, auto-increment',
+  `payroll_payment_id` bigint unsigned NOT NULL,
+  `payroll_line_id` bigint unsigned NOT NULL,
+  `amount` decimal(18,2) NOT NULL,
+  `created_at` datetime NULL COMMENT 'Set by Laravel',
+  `updated_at` datetime NULL COMMENT 'Set by Laravel',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `payroll_payment_lines_payroll_payment_id_payroll_line_id_unique` (`payroll_payment_id`, `payroll_line_id`),
+  KEY `payroll_payment_lines_payroll_line_id_index` (`payroll_line_id`),
+  CONSTRAINT `payroll_payment_lines_payroll_payment_id_foreign` FOREIGN KEY (`payroll_payment_id`) REFERENCES `payroll_payments` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT,
+  CONSTRAINT `payroll_payment_lines_payroll_line_id_foreign` FOREIGN KEY (`payroll_line_id`) REFERENCES `payroll_lines` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  CONSTRAINT `payroll_payment_lines_rule1_check` CHECK (`amount` > 0)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='How much of a salary payment went to each employee (PEP-522).';

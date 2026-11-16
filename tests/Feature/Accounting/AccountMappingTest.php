@@ -44,7 +44,7 @@ class AccountMappingTest extends TestCase
         $r = $this->req('GET', '/api/v1/account-mappings')->assertOk();
         $this->assertNotNull($r->headers->get('ETag'));
         $rows = collect($r->json('data.mappings'))->keyBy('mapping_key');
-        $this->assertCount(26, $rows); // P16 LC finance added lc_loan, interest_payable, interest_expense
+        $this->assertCount(28, $rows); // P16 LC finance added lc_loan, interest_payable, interest_expense; PEP-521 salaries_expense, salaries_payable
         $this->assertSame(['ledger_id' => $this->ledger('2303'), 'required_nature' => 'liability'],
             array_intersect_key($rows['lc_loan'], array_flip(['ledger_id', 'required_nature'])));
         $this->assertSame(['ledger_id' => $this->ledger('5001'), 'account_group_id' => null, 'required_nature' => 'expense'],

@@ -347,6 +347,8 @@ Difference = foreign outstanding × (closing − book rate), rounded per item; a
 | Recurring expense run | — (draft only) | — | BR-048 |
 | Salary sheet approved (P4, PEP-521) | `salaries_expense` (gross − deductions) | `salaries_payable` (net) (+ staff advances recovered, PEP-523) | BR-001, BR-004; entry_type journal, source payroll_runs |
 | Salary sheet cancelled | mirror of the approval entry | | BR-003; only before any salary is paid |
+| Salaries paid (P4, PEP-522) | `salaries_payable` | Money account | BR-031 funds; never more than each line still due |
+| Salary payment reversed | Money account | `salaries_payable` | BR-003 |
 
 Expense budgets (I7) are informational. Warnings at `warn_at_percent` of the monthly budget never block.
 

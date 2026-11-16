@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Table `stock_transfer_lines` (Inventory): migration 63 of 101, dependency level 6.
+ * Table `stock_transfer_lines` (Inventory): migration 63 of 103, dependency level 6.
  * Products and quantities in a transfer.
  * Depends on: products, stock_transfers.
  *
