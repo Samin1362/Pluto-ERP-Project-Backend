@@ -50,6 +50,7 @@ use App\Http\Controllers\Api\V1\Reports\InventoryReportController;
 use App\Http\Controllers\Api\V1\Reports\TradeReportController;
 use App\Http\Controllers\Api\V1\Sales\CreditNoteController;
 use App\Http\Controllers\Api\V1\Sales\QuotationController;
+use App\Http\Controllers\Api\V1\Sales\RecurringInvoiceController;
 use App\Http\Controllers\Api\V1\Sales\SalesInvoiceController;
 use App\Http\Controllers\Api\V1\Sales\SalesReturnController;
 use App\Http\Controllers\Api\V1\Settings\BackupController;
@@ -417,6 +418,10 @@ Route::middleware(['jwt', 'throttle:api-user'])->group(function () {
         Route::post('sales-invoices/{id}/cancel', [SalesInvoiceController::class, 'cancel'])->whereNumber('id')->middleware(['perm:sales.edit', 'idempotent']);
         Route::get('sales-invoices/{id}/pdf', [SalesInvoiceController::class, 'pdf'])->whereNumber('id')->middleware('perm:sales.view');
         Route::post('sales-invoices/{id}/send', [SalesInvoiceController::class, 'send'])->whereNumber('id')->middleware(['perm:sales.edit', 'idempotent']);
+        // PEP-517: recurring sales invoices (each run writes a draft).
+        Route::post('sales-invoices/{id}/repeat', [RecurringInvoiceController::class, 'store'])->whereNumber('id')->middleware(['perm:sales.create', 'idempotent']);
+        Route::get('recurring-invoices', [RecurringInvoiceController::class, 'index'])->middleware('perm:sales.view');
+        Route::patch('recurring-invoices/{id}', [RecurringInvoiceController::class, 'update'])->whereNumber('id')->middleware('perm:sales.edit');
         Route::patch('sales-invoices/{id}/delivery', [SalesInvoiceController::class, 'delivery'])->whereNumber('id')->middleware('perm:sales.edit');
         Route::delete('sales-invoices/{id}', [SalesInvoiceController::class, 'destroy'])->whereNumber('id')->middleware('perm:sales.delete');
 

@@ -3116,3 +3116,40 @@ CREATE TABLE `payment_reminders` (
   CONSTRAINT `payment_reminders_sent_by_foreign` FOREIGN KEY (`sent_by`) REFERENCES `users` (`id`) ON DELETE SET NULL ON UPDATE RESTRICT,
   CONSTRAINT `payment_reminders_trigger_check` CHECK (`trigger` IN ('manual', 'auto'))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Payment reminders e-mailed to a customer about overdue invoices (PEP-516): by hand or by the daily job; at most one a week per customer.';
+
+-- 98. recurring_invoices (level 7)
+CREATE TABLE `recurring_invoices` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT COMMENT 'Primary key, auto-increment',
+  `company_id` bigint unsigned NOT NULL COMMENT 'Tenant owner. Every query is scoped by it.',
+  `source_invoice_id` bigint unsigned NULL COMMENT 'The invoice it was made from',
+  `party_id` bigint unsigned NOT NULL,
+  `frequency` varchar(30) NOT NULL COMMENT 'One of: weekly, monthly, quarterly, yearly',
+  `next_run_on` date NOT NULL,
+  `ends_type` varchar(30) NOT NULL COMMENT 'One of: never, after_count, on_date',
+  `ends_after_count` smallint unsigned NULL,
+  `ends_on` date NULL,
+  `occurrences_done` smallint unsigned NOT NULL DEFAULT 0,
+  `payload` json NOT NULL COMMENT 'Draft invoice body without dates (party, warehouse, branch, terms, notes, lines)',
+  `last_invoice_id` bigint unsigned NULL,
+  `is_active` tinyint(1) NOT NULL DEFAULT 1,
+  `lock_version` int unsigned NOT NULL DEFAULT 1 COMMENT 'Optimistic concurrency counter; incremented on every update (If-Match)',
+  `created_by` bigint unsigned NULL COMMENT 'User who created the row',
+  `updated_by` bigint unsigned NULL COMMENT 'User who last changed the row',
+  `created_at` datetime NULL COMMENT 'Set by Laravel',
+  `updated_at` datetime NULL COMMENT 'Set by Laravel',
+  PRIMARY KEY (`id`),
+  KEY `recurring_invoices_company_id_is_active_next_run_on_index` (`company_id`, `is_active`, `next_run_on`),
+  KEY `recurring_invoices_source_invoice_id_index` (`source_invoice_id`),
+  KEY `recurring_invoices_party_id_index` (`party_id`),
+  KEY `recurring_invoices_last_invoice_id_index` (`last_invoice_id`),
+  KEY `recurring_invoices_created_by_index` (`created_by`),
+  KEY `recurring_invoices_updated_by_index` (`updated_by`),
+  CONSTRAINT `recurring_invoices_company_id_foreign` FOREIGN KEY (`company_id`) REFERENCES `companies` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  CONSTRAINT `recurring_invoices_source_invoice_id_foreign` FOREIGN KEY (`source_invoice_id`) REFERENCES `sales_invoices` (`id`) ON DELETE SET NULL ON UPDATE RESTRICT,
+  CONSTRAINT `recurring_invoices_party_id_foreign` FOREIGN KEY (`party_id`) REFERENCES `parties` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  CONSTRAINT `recurring_invoices_last_invoice_id_foreign` FOREIGN KEY (`last_invoice_id`) REFERENCES `sales_invoices` (`id`) ON DELETE SET NULL ON UPDATE RESTRICT,
+  CONSTRAINT `recurring_invoices_created_by_foreign` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  CONSTRAINT `recurring_invoices_updated_by_foreign` FOREIGN KEY (`updated_by`) REFERENCES `users` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  CONSTRAINT `recurring_invoices_frequency_check` CHECK (`frequency` IN ('weekly', 'monthly', 'quarterly', 'yearly')),
+  CONSTRAINT `recurring_invoices_ends_type_check` CHECK (`ends_type` IN ('never', 'after_count', 'on_date'))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='A sales invoice that repeats (PEP-517: rent, service contracts, monthly supply); each run creates a draft invoice for review, never posts.';

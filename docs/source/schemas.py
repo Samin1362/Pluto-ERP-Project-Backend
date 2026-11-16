@@ -299,6 +299,8 @@ s("RecurrenceInput", "Repeat settings.", frequency="enum:weekly|monthly|quarterl
 s("IeEntry", "Line on a category ledger.", journal_line_id="id!", voucher_id="id!", voucher_number="str!", date="date!", description="str!", category="str!", account="str!", method="str?",
   amount="money!", has_receipt="bool!")
 s("RecurringTemplate", "Recurring entry.", id="id!", kind="str!", frequency="str!", next_run_on="date!", ends_type="str!", ends_after_count="int?", ends_on="date?", occurrences_done="int!", is_active="bool!", payload="obj!", description="str!", last_entry_id="id?", version="int!")
+s("RecurringInvoiceCreate", "Repeat an invoice (PEP-517). next_run_on must come after the invoice's date.", frequency="enum:weekly|monthly|quarterly|yearly!", next_run_on="date!", ends_type="enum:never|after_count|on_date!", ends_after_count="int?", ends_on="date?")
+s("RecurringInvoice", "A repeating sales invoice (PEP-517); every run creates a draft invoice.", id="id!", party="ref:PartyRef!", source_invoice_number="str?", frequency="enum:weekly|monthly|quarterly|yearly!", next_run_on="date!", ends_type="enum:never|after_count|on_date!", ends_after_count="int?", ends_on="date?", occurrences_done="int!", is_active="bool!", lines_count="int!", last_invoice_id="id?", last_invoice_number="str?", version="int!")
 s("RecurringTemplateInput", "Edit a recurring entry.", frequency="enum:weekly|monthly|quarterly|yearly", next_run_on="date", ends_type="enum:never|after_count|on_date", ends_after_count="int?", ends_on="date?", is_active="bool")
 
 # ---------------------------------------------------------------- accounting

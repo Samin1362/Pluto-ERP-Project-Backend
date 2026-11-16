@@ -19131,6 +19131,387 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/Error'
+  /api/v1/sales-invoices/{id}/repeat:
+    post:
+      operationId: postSalesInvoicesIdRepeat
+      summary: 'Repeat this invoice: a draft copy on every run date (PEP-517)'
+      tags:
+      - Sales
+      description: "**Permission:** `sales.create`  \n**Database:** lock: sales_invoices; insert: audit_logs, idempotency_keys; update: sales_invoices; read: recurring_invoices,\
+        \ sales_invoice_lines  \n**Rules:** —"
+      x-permission: sales.create
+      x-business-rules: []
+      x-requirements:
+      - FR-042
+      x-pages:
+      - E5
+      x-page-actions:
+      - 'E5: Repeat this invoice (NEW, PEP-517)'
+      x-tables:
+      - sales_invoices
+      - sales_invoice_lines
+      - recurring_invoices
+      - audit_logs
+      x-db-operations:
+        sales_invoices: LU
+        sales_invoice_lines: R
+        recurring_invoices: R
+        audit_logs: C
+        idempotency_keys: C
+      x-error-codes:
+      - company_maintenance
+      - company_required
+      - idempotency_in_progress
+      - idempotency_key_reused
+      - malformed_json
+      - not_a_member
+      - not_found
+      - permission_denied
+      - server_error
+      - support_read_only
+      - token_expired
+      - token_invalid
+      - unauthenticated
+      - validation_failed
+      x-contract-change: PEP-517 recurring sales invoices
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+          minimum: 1
+      - $ref: '#/components/parameters/CompanyHeader'
+      - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecurringInvoiceCreate'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                properties:
+                  data:
+                    $ref: '#/components/schemas/RecurringInvoice'
+          headers:
+            Location:
+              schema:
+                type: string
+              description: URL of the created resource
+        '400':
+          description: 'Malformed request: `company_required`, `malformed_json`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: 'Not authenticated: `token_expired`, `token_invalid`, `unauthenticated`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: 'Not found (also for other companies'' records): `not_found`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: 'Conflict (version mismatch, state not allowed, duplicate): `idempotency_in_progress`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: 'Validation or business-rule failure: `idempotency_key_reused`, `validation_failed`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: 'Company temporarily unavailable (restore in progress): `company_maintenance`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+              description: Seconds to wait
+        default:
+          description: Unexpected error (`server_error`)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /api/v1/recurring-invoices:
+    get:
+      operationId: getRecurringInvoices
+      summary: Repeating sales invoices
+      tags:
+      - Sales
+      description: "**Permission:** `sales.view`  \n**Database:** read: parties, recurring_invoices, sales_invoices  \n**Rules:** —"
+      x-permission: sales.view
+      x-business-rules: []
+      x-requirements:
+      - FR-042
+      x-pages:
+      - E2
+      x-page-actions:
+      - 'E2: Repeating invoices: pause, change or end (NEW, PEP-517)'
+      x-tables:
+      - recurring_invoices
+      - parties
+      - sales_invoices
+      x-db-operations:
+        recurring_invoices: R
+        parties: R
+        sales_invoices: R
+      x-error-codes:
+      - company_maintenance
+      - company_required
+      - not_a_member
+      - permission_denied
+      - server_error
+      - token_expired
+      - token_invalid
+      - unauthenticated
+      - validation_failed
+      x-contract-change: PEP-517 recurring sales invoices
+      parameters:
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+        description: Page number
+      - name: per_page
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 25
+        description: Rows per page (max 100)
+      - name: active
+        in: query
+        required: false
+        schema:
+          type: string
+        description: active
+      - name: party_id
+        in: query
+        required: false
+        schema:
+          type: string
+        description: party id
+      - $ref: '#/components/parameters/CompanyHeader'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                - meta
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/RecurringInvoice'
+                  meta:
+                    $ref: '#/components/schemas/PageMeta'
+        '400':
+          description: 'Malformed request: `company_required`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: 'Not authenticated: `token_expired`, `token_invalid`, `unauthenticated`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: 'Not permitted: `not_a_member`, `permission_denied`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: 'Validation or business-rule failure: `validation_failed`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: 'Company temporarily unavailable (restore in progress): `company_maintenance`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+              description: Seconds to wait
+        default:
+          description: Unexpected error (`server_error`)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /api/v1/recurring-invoices/{id}:
+    patch:
+      operationId: patchRecurringInvoicesId
+      summary: Pause, change or end a repeating invoice
+      tags:
+      - Sales
+      description: "**Permission:** `sales.edit`  \n**Database:** insert: audit_logs; update: recurring_invoices  \n**Rules:** —"
+      x-permission: sales.edit
+      x-business-rules: []
+      x-requirements:
+      - FR-042
+      x-pages:
+      - E2
+      x-page-actions:
+      - 'E2: Repeating invoices: pause, change or end (NEW, PEP-517)'
+      x-tables:
+      - recurring_invoices
+      - audit_logs
+      x-db-operations:
+        recurring_invoices: U
+        audit_logs: C
+      x-error-codes:
+      - company_maintenance
+      - company_required
+      - if_match_required
+      - malformed_json
+      - not_a_member
+      - not_found
+      - permission_denied
+      - server_error
+      - support_read_only
+      - token_expired
+      - token_invalid
+      - unauthenticated
+      - validation_failed
+      - version_conflict
+      x-contract-change: PEP-517 recurring sales invoices
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+          minimum: 1
+      - $ref: '#/components/parameters/CompanyHeader'
+      - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecurringTemplateInput'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                properties:
+                  data:
+                    $ref: '#/components/schemas/RecurringInvoice'
+          headers:
+            ETag:
+              schema:
+                type: string
+              description: W/"<version>" for If-Match
+        '400':
+          description: 'Malformed request: `company_required`, `malformed_json`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: 'Not authenticated: `token_expired`, `token_invalid`, `unauthenticated`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: 'Not permitted: `not_a_member`, `permission_denied`, `support_read_only`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: 'Not found (also for other companies'' records): `not_found`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: 'Conflict (version mismatch, state not allowed, duplicate): `version_conflict`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: 'Validation or business-rule failure: `validation_failed`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '428':
+          description: 'Precondition required (If-Match missing): `if_match_required`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: 'Company temporarily unavailable (restore in progress): `company_maintenance`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+              description: Seconds to wait
+        default:
+          description: Unexpected error (`server_error`)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
   /api/v1/sales-invoices/{id}/send:
     post:
       operationId: postSalesInvoicesIdSend
@@ -49521,6 +49902,107 @@ components:
       - is_active
       - payload
       - description
+      - version
+    RecurringInvoiceCreate:
+      type: object
+      description: Repeat an invoice (PEP-517). next_run_on must come after the invoice's date.
+      properties:
+        frequency:
+          type: string
+          enum:
+          - weekly
+          - monthly
+          - quarterly
+          - yearly
+        next_run_on:
+          type: string
+          format: date
+        ends_type:
+          type: string
+          enum:
+          - never
+          - after_count
+          - on_date
+        ends_after_count:
+          type:
+          - integer
+          - 'null'
+        ends_on:
+          type:
+          - string
+          - 'null'
+          format: date
+      required:
+      - frequency
+      - next_run_on
+      - ends_type
+      additionalProperties: false
+    RecurringInvoice:
+      type: object
+      description: A repeating sales invoice (PEP-517); every run creates a draft invoice.
+      properties:
+        id:
+          type: integer
+          format: int64
+          minimum: 1
+        party:
+          $ref: '#/components/schemas/PartyRef'
+        source_invoice_number:
+          type:
+          - string
+          - 'null'
+        frequency:
+          type: string
+          enum:
+          - weekly
+          - monthly
+          - quarterly
+          - yearly
+        next_run_on:
+          type: string
+          format: date
+        ends_type:
+          type: string
+          enum:
+          - never
+          - after_count
+          - on_date
+        ends_after_count:
+          type:
+          - integer
+          - 'null'
+        ends_on:
+          type:
+          - string
+          - 'null'
+          format: date
+        occurrences_done:
+          type: integer
+        is_active:
+          type: boolean
+        lines_count:
+          type: integer
+        last_invoice_id:
+          type:
+          - integer
+          - 'null'
+          format: int64
+          minimum: 1
+        last_invoice_number:
+          type:
+          - string
+          - 'null'
+        version:
+          type: integer
+      required:
+      - id
+      - party
+      - frequency
+      - next_run_on
+      - ends_type
+      - occurrences_done
+      - is_active
+      - lines_count
       - version
     RecurringTemplateInput:
       type: object

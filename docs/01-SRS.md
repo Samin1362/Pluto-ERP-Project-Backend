@@ -126,7 +126,7 @@ Approval limits (defaults): Finance manager pays up to ৳ 5,00,000 without appr
 | FR-037 | Inventory | Users view low-stock, stock valuation and inventory summary reports, and create purchase orders from low stock. | D12, D13, D14 | 4 |
 | FR-040 | Sales | Users view the sales overview and the invoice list with status tabs, search, date and customer filters. | E1, E2 | 2 |
 | FR-041 | Sales | Users create, edit, preview, save as draft and post sales invoices with server-calculated totals. | E3, E4, E6, Sal-DlgPost, Sal-DlgCancel, Sal-DlgDelete, L5, L6 | 5 |
-| FR-042 | Sales | Users view invoice details: lines, payments, ledger entries, activity, delivery and attachments. | E5 | 4 |
+| FR-042 | Sales | Users view invoice details: lines, payments, ledger entries, activity, delivery and attachments. | E5 | 7 |
 | FR-043 | Sales | Users record customer receipts and allocate them to open invoices. | E7, E14 | 7 |
 | FR-044 | Sales | Users create sales returns and credit notes and choose how the credit is used. | E8, E9, E15 | 14 |
 | FR-045 | Sales | Users create quotations, send them and convert accepted ones to invoices. | E10, E13 | 9 |

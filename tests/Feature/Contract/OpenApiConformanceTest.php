@@ -108,6 +108,9 @@ class OpenApiConformanceTest extends TestCase
 
         $party = $this->api('POST', '/api/v1/parties', $t, $c, ['party_type' => 'customer', 'name' => 'Rahman Stores', 'mobile' => '01711458230'])->json('data.id');
         $this->assertConforms($this->api('GET', "/api/v1/audit-logs?auditable_type=party&auditable_id={$party}", $t, $c), 'GET', '/audit-logs');
+        // PEP-517: repeating sales invoices (list; a bad filter answers 422).
+        $this->assertConforms($this->api('GET', '/api/v1/recurring-invoices', $t, $c), 'GET', '/recurring-invoices');
+        $this->assertConforms($this->api('GET', '/api/v1/recurring-invoices?active=maybe', $t, $c), 'GET', '/recurring-invoices');
         // PEP-516: payment reminders (log list; a customer without overdue invoices answers 422).
         $this->assertConforms($this->api('GET', "/api/v1/parties/{$party}/payment-reminders", $t, $c), 'GET', '/parties/{id}/payment-reminders');
         $this->assertConforms($this->api('POST', "/api/v1/parties/{$party}/payment-reminder", $t, $c, [], ['Idempotency-Key' => (string) Str::uuid()]), 'POST', '/parties/{id}/payment-reminder');

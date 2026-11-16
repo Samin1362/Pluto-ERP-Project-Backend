@@ -602,6 +602,13 @@ add(
              c("unit_cost", COST, null=True, note="Average cost at posting (stocked items)"), c("cost_amount", MONEY, null=True),
              c("returned_quantity", QTY, default="0")]),
       uniques=[["sales_invoice_id", "line_no"]], checks=["quantity > 0", "unit_price >= 0", "returned_quantity <= quantity"], tenant=False, audit_cols=False),
+    T("recurring_invoices", "Sales", "A sales invoice that repeats (PEP-517: rent, service contracts, monthly supply); each run creates a draft invoice for review, never posts.",
+      [fk("source_invoice_id", "sales_invoices", null=True, on_delete="SET NULL", note="The invoice it was made from"), fk("party_id", "parties"),
+       enum("frequency", ["weekly", "monthly", "quarterly", "yearly"]), c("next_run_on", DATE), enum("ends_type", ["never", "after_count", "on_date"]),
+       c("ends_after_count", "SMALLINT UNSIGNED", null=True), c("ends_on", DATE, null=True), c("occurrences_done", "SMALLINT UNSIGNED", default="0"),
+       c("payload", JSON, note="Draft invoice body without dates (party, warehouse, branch, terms, notes, lines)"),
+       fk("last_invoice_id", "sales_invoices", null=True, on_delete="SET NULL"), c("is_active", BOOL, default="1")],
+      indexes=[["company_id", "is_active", "next_run_on"]], version=True),
     T("sales_returns", "Sales", "Goods coming back from a customer against an invoice (E8).",
       doc_header("SR", "Customer of the original invoice", [fk("sales_invoice_id", "sales_invoices"), c("return_date", DATE), fk("warehouse_id", "warehouses"),
                                                           enum("stock_action", ["restock", "write_off"]), c("notes", TEXT, null=True)])

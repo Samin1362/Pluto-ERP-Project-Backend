@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Table `quotation_lines` (Sales): migration 58 of 97, dependency level 6.
+ * Table `quotation_lines` (Sales): migration 58 of 98, dependency level 6.
  * Items quoted.
  * Depends on: products, quotations, tax_rules, units.
  *
