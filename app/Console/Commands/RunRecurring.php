@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Domain\Attachments\AttachmentService;
 use App\Domain\Banking\IncomeExpenseService;
+use App\Domain\Sales\RecurringInvoiceService;
 use App\Models\Company;
 use App\Support\CurrentCompany;
 use Carbon\CarbonImmutable;
@@ -18,9 +19,9 @@ class RunRecurring extends Command
 {
     protected $signature = 'pluto:recurring:run {--company= : Only this company id} {--date= : Run as of this date (YYYY-MM-DD), default today in Dhaka}';
 
-    protected $description = 'Create the drafts of recurring income and expenses that are due';
+    protected $description = 'Create the drafts of recurring income, expenses and sales invoices that are due';
 
-    public function handle(IncomeExpenseService $service, CurrentCompany $current): int
+    public function handle(IncomeExpenseService $service, RecurringInvoiceService $invoices, CurrentCompany $current): int
     {
         $today = $this->option('date') ? CarbonImmutable::parse($this->option('date'), 'Asia/Dhaka') : CarbonImmutable::now('Asia/Dhaka')->startOfDay();
         $companies = Company::query()->when($this->option('company'), fn ($q, $id) => $q->whereKey($id))->orderBy('id')->get();
@@ -31,6 +32,15 @@ class RunRecurring extends Command
             $this->line("#{$company->id} {$company->legal_name}: {$made} draft".($made === 1 ? '' : 's'));
             foreach ($skipped as $id => $why) {
                 $this->warn("  recurring entry #{$id} skipped: {$why}");
+            }
+            // PEP-517: repeating sales invoices (draft invoices, never posted).
+            $skippedInvoices = [];
+            $drafts = $invoices->run($today, $skippedInvoices);
+            if ($drafts > 0 || $skippedInvoices) {
+                $this->line("  {$drafts} draft invoice".($drafts === 1 ? '' : 's'));
+            }
+            foreach ($skippedInvoices as $id => $why) {
+                $this->warn("  recurring invoice #{$id} skipped: {$why}");
             }
         }
         $current->clear();

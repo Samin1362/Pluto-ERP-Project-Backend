@@ -382,6 +382,12 @@ E("POST", "/sales-invoices/{id}/cancel", "Cancel a posted invoice (reversal + st
   ["sales_invoices", "journal_entries", "journal_lines", "stock_movements", "stock_balances", "bill_allocations", "audit_logs"], ["Sal-DlgCancel", "E5"],
   rules=["BR-024", "BR-003", "BR-004"], req="CancelRequest", idem=True, resp="SalesInvoice", tx=TXP, tag=T, fr=["FR-046"], codes=[200, 409, 422])
 E("GET", "/sales-invoices/{id}/pdf", "Invoice PDF per invoice design (also challan with ?variant=challan)", "sales.view", ["sales_invoices", "sales_invoice_lines", "company_settings", "money_accounts"], ["E4", "E5"], params=["variant"], resp="Binary", tag=T, fr=["FR-042"])
+E("POST", "/sales-invoices/{id}/repeat", "Repeat this invoice: a draft copy on every run date (PEP-517)", "sales.create", ["sales_invoices", "sales_invoice_lines", "recurring_invoices", "audit_logs"],
+  ["E5"], req="RecurringInvoiceCreate", resp="RecurringInvoice", idem=True, tag=T, fr=["FR-042"], codes=[201, 422], added="PEP-517 recurring sales invoices")
+E("GET", "/recurring-invoices", "Repeating sales invoices", "sales.view", ["recurring_invoices", "parties", "sales_invoices"], ["E2"], params=["page", "per_page", "active", "party_id"],
+  resp="Page<RecurringInvoice>", tag=T, fr=["FR-042"], added="PEP-517 recurring sales invoices")
+E("PATCH", "/recurring-invoices/{id}", "Pause, change or end a repeating invoice", "sales.edit", ["recurring_invoices", "audit_logs"], ["E2"], req="RecurringTemplateInput",
+  resp="RecurringInvoice", ifmatch=True, tag=T, fr=["FR-042"], codes=[200, 409, 422], added="PEP-517 recurring sales invoices")
 E("POST", "/sales-invoices/{id}/send", "E-mail the invoice PDF to the customer (queued)", "sales.edit", ["sales_invoices", "audit_logs"], ["E5"], req="EmailRequest", idem=True, tag=T, fr=["FR-042"], codes=[202])
 E("POST", "/customer-receipts", "Record a customer payment with allocations (creates RV)", "sales.create",
   ['journal_entries', 'journal_lines', 'payment_details', 'bill_allocations', 'sales_invoices', 'money_accounts', 'number_sequences', 'audit_logs'],

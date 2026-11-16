@@ -2257,6 +2257,33 @@ export interface RecurrenceInput {
   ends_on?: string | null
 }
 
+/** A repeating sales invoice (PEP-517); every run creates a draft invoice. */
+export interface RecurringInvoice {
+  id: number
+  party: PartyRef
+  source_invoice_number?: string | null
+  frequency: 'weekly' | 'monthly' | 'quarterly' | 'yearly'
+  next_run_on: string
+  ends_type: 'never' | 'after_count' | 'on_date'
+  ends_after_count?: number | null
+  ends_on?: string | null
+  occurrences_done: number
+  is_active: boolean
+  lines_count: number
+  last_invoice_id?: number | null
+  last_invoice_number?: string | null
+  version: number
+}
+
+/** Repeat an invoice (PEP-517). next_run_on must come after the invoice's date. */
+export interface RecurringInvoiceCreate {
+  frequency: 'weekly' | 'monthly' | 'quarterly' | 'yearly'
+  next_run_on: string
+  ends_type: 'never' | 'after_count' | 'on_date'
+  ends_after_count?: number | null
+  ends_on?: string | null
+}
+
 /** Recurring entry. */
 export interface RecurringTemplate {
   id: number

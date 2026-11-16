@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Table `plans` (Platform): migration 93 of 97, dependency level 1.
+ * Table `plans` (Platform): migration 93 of 98, dependency level 1.
  * Pluto plans the software owner sells (PEP-498): a user limit, a branch limit (NULL = unlimited) and the modules included. Platform-wide, not a company's data; companies.plan_id points here.
  * Depends on: users.
  *

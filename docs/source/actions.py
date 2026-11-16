@@ -66,7 +66,7 @@ A = {
     "D14": ["nav:D11", "nav:D10", "nav:D13", "nav:D12"],
     # ------------------------------------------------------------------ sales
     "E1": ["nav:E10", "nav:E3", "nav:E2", "nav:E2"],
-    "E2": ["nav:E3", "export:GET /sales-invoices", "nav:E5", "GET /sales-invoices/{id}/pdf → ui:print", "dlg:L6 → POST /sales-invoices/bulk-post"],
+    "E2": ["nav:E3", "export:GET /sales-invoices", "nav:E5", "GET /sales-invoices/{id}/pdf → ui:print", "dlg:L6 → POST /sales-invoices/bulk-post", "GET /recurring-invoices → PATCH /recurring-invoices/{id}"],
     "E3": ["GET /products", "ui:parse pasted rows → GET /products", "ui:add a line → POST /sales-invoices/calculate", "ui:remove the line → POST /sales-invoices/calculate",
            DISCARD, "POST /sales-invoices", "POST /sales-invoices → nav:E4", "POST /sales-invoices → GET /sales-invoices/{id}/pdf → ui:print",
            "POST /sales-invoices → dlg:Sal-DlgPost"],
@@ -74,7 +74,7 @@ A = {
     "E5": ["nav:E7", "GET /sales-invoices/{id}/pdf → ui:print", "nav:E3 (prefilled from this invoice; prices recalculated by POST /sales-invoices/calculate)", "nav:E9",
            "GET /sales-invoices/{id}/pdf", "dlg:Sal-DlgCancel", "POST /attachments",
            "GET /parties/{id}/open-documents → POST /allocations", "dlg:L6 → DELETE /allocations/{id}",
-           "PATCH /sales-invoices/{id}/delivery", "POST /sales-invoices/{id}/send"],
+           "PATCH /sales-invoices/{id}/delivery", "POST /sales-invoices/{id}/send", "POST /sales-invoices/{id}/repeat"],
     "E6": ["dlg:Sal-DlgDelete", "PUT /sales-invoices/{id}", "PUT /sales-invoices/{id} → nav:E4", "PUT /sales-invoices/{id} → dlg:Sal-DlgPost"],
     "E7": ["ui:re-allocate oldest due first on the client (the server re-validates, BR-020)", DISCARD, "GET /customer-receipts/{id}/pdf",
            "dlg:L6 → POST /customer-receipts"],

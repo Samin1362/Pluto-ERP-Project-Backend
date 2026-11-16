@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Table `announcement_dismissals` (Platform): migration 96 of 97, dependency level 2.
+ * Table `announcement_dismissals` (Platform): migration 96 of 98, dependency level 2.
  * Who closed which announcement (PEP-513), so it does not come back for them.
  * Depends on: announcements, users.
  *

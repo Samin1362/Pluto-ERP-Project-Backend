@@ -18896,6 +18896,232 @@
    "check": {
     "payment_reminders_trigger_check": "`trigger` IN ('manual', 'auto')"
    }
+  },
+  "recurring_invoices": {
+   "seq": 98,
+   "level": 7,
+   "migration": "2026_10_18_009800_create_recurring_invoices_table.php",
+   "module": "Sales",
+   "columns": [
+    {
+     "name": "id",
+     "type": "bigint unsigned",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": true
+    },
+    {
+     "name": "company_id",
+     "type": "bigint unsigned",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "source_invoice_id",
+     "type": "bigint unsigned",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "party_id",
+     "type": "bigint unsigned",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "frequency",
+     "type": "varchar(30)",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "next_run_on",
+     "type": "date",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "ends_type",
+     "type": "varchar(30)",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "ends_after_count",
+     "type": "smallint unsigned",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "ends_on",
+     "type": "date",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "occurrences_done",
+     "type": "smallint unsigned",
+     "nullable": false,
+     "default": "0",
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "payload",
+     "type": "json",
+     "nullable": false,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "last_invoice_id",
+     "type": "bigint unsigned",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "is_active",
+     "type": "tinyint(1)",
+     "nullable": false,
+     "default": "1",
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "lock_version",
+     "type": "int unsigned",
+     "nullable": false,
+     "default": "1",
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "created_by",
+     "type": "bigint unsigned",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "updated_by",
+     "type": "bigint unsigned",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "created_at",
+     "type": "datetime",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    },
+    {
+     "name": "updated_at",
+     "type": "datetime",
+     "nullable": true,
+     "default": null,
+     "generated": null,
+     "auto_increment": false
+    }
+   ],
+   "primary": [
+    "id"
+   ],
+   "unique": {},
+   "index": {
+    "recurring_invoices_company_id_is_active_next_run_on_index": [
+     "company_id",
+     "is_active",
+     "next_run_on"
+    ],
+    "recurring_invoices_source_invoice_id_index": [
+     "source_invoice_id"
+    ],
+    "recurring_invoices_party_id_index": [
+     "party_id"
+    ],
+    "recurring_invoices_last_invoice_id_index": [
+     "last_invoice_id"
+    ],
+    "recurring_invoices_created_by_index": [
+     "created_by"
+    ],
+    "recurring_invoices_updated_by_index": [
+     "updated_by"
+    ]
+   },
+   "foreign": {
+    "recurring_invoices_company_id_foreign": {
+     "column": "company_id",
+     "references_table": "companies",
+     "references_column": "id",
+     "on_delete": "RESTRICT",
+     "on_update": "RESTRICT"
+    },
+    "recurring_invoices_source_invoice_id_foreign": {
+     "column": "source_invoice_id",
+     "references_table": "sales_invoices",
+     "references_column": "id",
+     "on_delete": "SET NULL",
+     "on_update": "RESTRICT"
+    },
+    "recurring_invoices_party_id_foreign": {
+     "column": "party_id",
+     "references_table": "parties",
+     "references_column": "id",
+     "on_delete": "RESTRICT",
+     "on_update": "RESTRICT"
+    },
+    "recurring_invoices_last_invoice_id_foreign": {
+     "column": "last_invoice_id",
+     "references_table": "sales_invoices",
+     "references_column": "id",
+     "on_delete": "SET NULL",
+     "on_update": "RESTRICT"
+    },
+    "recurring_invoices_created_by_foreign": {
+     "column": "created_by",
+     "references_table": "users",
+     "references_column": "id",
+     "on_delete": "RESTRICT",
+     "on_update": "RESTRICT"
+    },
+    "recurring_invoices_updated_by_foreign": {
+     "column": "updated_by",
+     "references_table": "users",
+     "references_column": "id",
+     "on_delete": "RESTRICT",
+     "on_update": "RESTRICT"
+    }
+   },
+   "check": {
+    "recurring_invoices_frequency_check": "`frequency` IN ('weekly', 'monthly', 'quarterly', 'yearly')",
+    "recurring_invoices_ends_type_check": "`ends_type` IN ('never', 'after_count', 'on_date')"
+   }
   }
  }
 }
