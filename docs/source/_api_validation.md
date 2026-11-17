@@ -1,4 +1,4 @@
-Last run: 24 rules, **24 passed, 0 failed**; 6 negative tests, 6 detected. Official schema: OpenAPI 3.1 `schema-base` (OAI/OpenAPI-Specification, v3.1-dev).
+Last run: 24 rules, **23 passed, 1 failed**; 6 negative tests, 6 detected. Official schema: OpenAPI 3.1 `schema-base` (OAI/OpenAPI-Specification, v3.1-dev).
 
 | Rule | Check | Items | Result |
 |---|---|---|---|
@@ -13,11 +13,11 @@ Last run: 24 rules, **24 passed, 0 failed**; 6 negative tests, 6 detected. Offic
 | A09 | Collections use the paginated envelope {data[], meta} | 63 | ✅ pass |
 | A10 | Every error code exists in the catalogue, has its HTTP status documented on the operation, and every catalogue code is reachable | 92 | ✅ pass |
 | A11 | Request-only schemas reject unknown properties (additionalProperties: false) | 116 | ✅ pass |
-| A12 | Money, quantity, cost and rate fields are decimal strings (never JSON numbers) | 254 | ✅ pass |
+| A12 | Money, quantity, cost and rate fields are decimal strings (never JSON numbers) | 255 | ✅ pass |
 | A13 | PUT/PATCH on a versioned table requires If-Match, and If-Match is only required where a version exists | 45 | ✅ pass |
 | A14 | Request fields are stored: each maps to a column (or is declared virtual) with a compatible length, enum values and nullability | 406 | ✅ pass |
 | A15 | Response enum fields have exactly the values the database allows | 29 | ✅ pass |
-| A16 | Every action of every page maps to API calls, a dialog, navigation or explicit client behaviour, and every target exists | 568 | ✅ pass |
+| A16 | Every action of every page maps to API calls, a dialog, navigation or explicit client behaviour, and every target exists | 569 | ❌ P3: 3 actions but 2 targets |
 | A17 | Every data-changing endpoint is triggered by at least one page action (only token refresh is system-driven) | 216 | ✅ pass |
 | A18 | Every page has at least one endpoint (shared components use their host page's) | 168 | ✅ pass |
 | A19 | For every action, at least one role can both open the page and call the endpoint | 363 | ✅ pass |

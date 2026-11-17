@@ -42894,7 +42894,7 @@ paths:
                 $ref: '#/components/schemas/Error'
     post:
       operationId: postPayrollRuns
-      summary: Start a month's salary sheet (draft) with everyone employed that month
+      summary: Start a month's salary sheet (draft) with everyone employed that month, or a festival bonus sheet (kind bonus, PEP-524)
       tags:
       - Payroll
       description: "**Permission:** `payroll.create`  \n**Database:** insert: audit_logs, idempotency_keys, payroll_runs; read: employees, payroll_lines  \n**Rules:**\
@@ -42903,6 +42903,7 @@ paths:
       x-business-rules: []
       x-requirements:
       - FR-101
+      - FR-104
       x-pages:
       - P3
       x-page-actions:
@@ -42935,7 +42936,7 @@ paths:
       - token_invalid
       - unauthenticated
       - validation_failed
-      x-contract-change: PEP-521 salary sheet
+      x-contract-change: PEP-521 salary sheet; PEP-524 bonus sheet
       parameters:
       - $ref: '#/components/parameters/CompanyHeader'
       - $ref: '#/components/parameters/IdempotencyKey'
@@ -43338,7 +43339,7 @@ paths:
   /api/v1/payroll-runs/{id}/approve:
     post:
       operationId: postPayrollRunsIdApprove
-      summary: 'Approve and post: Dr salaries_expense / Cr salaries_payable'
+      summary: 'Approve and post: Dr salaries_expense (festival_bonus_expense on a bonus sheet) / Cr salaries_payable'
       tags:
       - Payroll
       description: "**Permission:** `payroll.approve`  \n**Database:** lock: number_sequences, payroll_runs; insert: audit_logs, idempotency_keys, journal_entries,\
@@ -52672,7 +52673,9 @@ components:
       - version
     PayrollRunCreate:
       type: object
-      description: Start a month (PEP-521). month = YYYY-MM; pay_date defaults to the month end.
+      description: 'Start a month (PEP-521). month = YYYY-MM; pay_date defaults to the month end. kind bonus (PEP-524): a festival bonus sheet for employees active
+        on the pay date with at least min_service_months of service (default 12); each gets bonus_percent of basic (default 100) or bonus_amount if given; notes names
+        the festival.'
       properties:
         month:
           type: string
@@ -52682,12 +52685,43 @@ components:
           - string
           - 'null'
           format: date
+        kind:
+          type:
+          - string
+          - 'null'
+          enum:
+          - salary
+          - bonus
+        bonus_percent:
+          type:
+          - string
+          - 'null'
+          pattern: ^\d{1,3}(\.\d{1,4})?$
+          example: '5.0000'
+          description: Decimal as string (pct)
+        bonus_amount:
+          type:
+          - string
+          - 'null'
+          pattern: ^-?\d{1,16}(\.\d{1,2})?$
+          example: '118450.00'
+          description: Decimal as string (money)
+        min_service_months:
+          type:
+          - integer
+          - 'null'
+        notes:
+          type:
+          - string
+          - 'null'
+          maxLength: 500
       required:
       - month
       additionalProperties: false
     PayrollLineChange:
       type: object
-      description: 'Change one line of a draft sheet (PEP-521). advance_recovery (PEP-523): at most what the employee still owes on advances.'
+      description: 'Change one line of a draft sheet (PEP-521). advance_recovery (PEP-523): at most what the employee still owes on advances. On a bonus sheet (PEP-524)
+        other_earnings is the bonus; overtime and advance_recovery are refused.'
       properties:
         id:
           type: integer

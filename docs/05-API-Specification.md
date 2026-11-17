@@ -2,7 +2,7 @@
 
 > Status: **Release candidate 1.0.0-rc.1 for approval** (18 Oct 2026), Laravel + Eloquent. **No endpoint is to be implemented until this contract is approved.** ⚑ Auth details (DEC-02) and the items in §12.7 are still open.
 >
-> **Generated file.** The endpoint reference (§9), schemas (§10), page action map (§11) and contract review (§12) come from `docs/source/api.py`, `schemas.py`, `actions.py`, `errors.py` and `contract_review.py`. The machine-readable contract is [`openapi.yaml`](openapi.yaml) (OpenAPI 3.1), validated against the official OpenAPI 3.1 schema (§8). Size: 375 endpoints, 255 schemas, 92 error codes, 168 pages with 568 mapped actions.
+> **Generated file.** The endpoint reference (§9), schemas (§10), page action map (§11) and contract review (§12) come from `docs/source/api.py`, `schemas.py`, `actions.py`, `errors.py` and `contract_review.py`. The machine-readable contract is [`openapi.yaml`](openapi.yaml) (OpenAPI 3.1), validated against the official OpenAPI 3.1 schema (§8). Size: 375 endpoints, 255 schemas, 92 error codes, 168 pages with 569 mapped actions.
 
 ## 1. Conventions
 
@@ -632,11 +632,11 @@ The journal debits the supplier ৳ 46,88,640 (an advance until the import bill 
 | 364 | `POST` | [`/api/v1/staff-advances`](#poststaffadvances) | Give an advance: Dr staff_advances / Cr the money account | `payroll.approve` | 201 |
 | 365 | `POST` | [`/api/v1/staff-advances/{id}/reverse`](#poststaffadvancesidreverse) | Reverse an advance nothing was recovered from (mirror entry) | `payroll.approve` | 200 |
 | 366 | `GET` | [`/api/v1/payroll-runs`](#getpayrollruns) | Salary sheets, newest month first | `payroll.view` | 200 |
-| 367 | `POST` | [`/api/v1/payroll-runs`](#postpayrollruns) | Start a month's salary sheet (draft) with everyone employed that month | `payroll.create` | 201 |
+| 367 | `POST` | [`/api/v1/payroll-runs`](#postpayrollruns) | Start a month's salary sheet (draft) with everyone employed that month, or a festival bonus sheet (kind bonus, PEP-524) | `payroll.create` | 201 |
 | 368 | `GET` | [`/api/v1/payroll-runs/{id}`](#getpayrollrunsid) | A salary sheet with its lines | `payroll.view` | 200 |
 | 369 | `PUT` | [`/api/v1/payroll-runs/{id}`](#putpayrollrunsid) | Change a draft sheet: pay date, notes, each line's overtime, other earnings, deductions | `payroll.create` | 200 |
 | 370 | `DELETE` | [`/api/v1/payroll-runs/{id}`](#deletepayrollrunsid) | Delete a draft sheet | `payroll.create` | 204 |
-| 371 | `POST` | [`/api/v1/payroll-runs/{id}/approve`](#postpayrollrunsidapprove) | Approve and post: Dr salaries_expense / Cr salaries_payable | `payroll.approve` | 200 |
+| 371 | `POST` | [`/api/v1/payroll-runs/{id}/approve`](#postpayrollrunsidapprove) | Approve and post: Dr salaries_expense (festival_bonus_expense on a bonus sheet) / Cr salaries_payable | `payroll.approve` | 200 |
 | 372 | `POST` | [`/api/v1/payroll-runs/{id}/payments`](#postpayrollrunsidpayments) | Pay salaries of an approved sheet (all unpaid, or chosen lines and amounts): Dr salaries_payable / Cr the money account | `payroll.approve` | 201 |
 | 373 | `GET` | [`/api/v1/payroll-runs/{id}/payments`](#getpayrollrunsidpayments) | Payments made against a salary sheet | `payroll.view` | 200 |
 | 374 | `POST` | [`/api/v1/payroll-payments/{id}/reverse`](#postpayrollpaymentsidreverse) | Reverse a salary payment (mirror entry; the employees are unpaid again) | `payroll.approve` | 200 |
@@ -647,7 +647,7 @@ The journal debits the supplier ৳ 46,88,640 (an advance until the import bill 
 `python3 docs/source/validate_api.py` checks the generated `openapi.yaml` and the definitions behind it. The results below come from the last run and are written by the script; it exits non-zero on any failure.
 
 <!-- VALIDATION:start -->
-Last run: 24 rules, **24 passed, 0 failed**; 6 negative tests, 6 detected. Official schema: OpenAPI 3.1 `schema-base` (OAI/OpenAPI-Specification, v3.1-dev).
+Last run: 24 rules, **23 passed, 1 failed**; 6 negative tests, 6 detected. Official schema: OpenAPI 3.1 `schema-base` (OAI/OpenAPI-Specification, v3.1-dev).
 
 | Rule | Check | Items | Result |
 |---|---|---|---|
@@ -662,11 +662,11 @@ Last run: 24 rules, **24 passed, 0 failed**; 6 negative tests, 6 detected. Offic
 | A09 | Collections use the paginated envelope {data[], meta} | 63 | ✅ pass |
 | A10 | Every error code exists in the catalogue, has its HTTP status documented on the operation, and every catalogue code is reachable | 92 | ✅ pass |
 | A11 | Request-only schemas reject unknown properties (additionalProperties: false) | 116 | ✅ pass |
-| A12 | Money, quantity, cost and rate fields are decimal strings (never JSON numbers) | 254 | ✅ pass |
+| A12 | Money, quantity, cost and rate fields are decimal strings (never JSON numbers) | 255 | ✅ pass |
 | A13 | PUT/PATCH on a versioned table requires If-Match, and If-Match is only required where a version exists | 45 | ✅ pass |
 | A14 | Request fields are stored: each maps to a column (or is declared virtual) with a compatible length, enum values and nullability | 406 | ✅ pass |
 | A15 | Response enum fields have exactly the values the database allows | 29 | ✅ pass |
-| A16 | Every action of every page maps to API calls, a dialog, navigation or explicit client behaviour, and every target exists | 568 | ✅ pass |
+| A16 | Every action of every page maps to API calls, a dialog, navigation or explicit client behaviour, and every target exists | 569 | ❌ P3: 3 actions but 2 targets |
 | A17 | Every data-changing endpoint is triggered by at least one page action (only token refresh is system-driven) | 216 | ✅ pass |
 | A18 | Every page has at least one endpoint (shared components use their host page's) | 168 | ✅ pass |
 | A19 | For every action, at least one role can both open the page and call the endpoint | 363 | ✅ pass |
@@ -8805,7 +8805,7 @@ Salary sheets, newest month first. _Contract change: PEP-521 salary sheet._
 <a id="postpayrollruns"></a>
 #### `POST /api/v1/payroll-runs`
 
-Start a month's salary sheet (draft) with everyone employed that month. _Contract change: PEP-521 salary sheet._
+Start a month's salary sheet (draft) with everyone employed that month, or a festival bonus sheet (kind bonus, PEP-524). _Contract change: PEP-521 salary sheet; PEP-524 bonus sheet._
 
 | | |
 |---|---|
@@ -8813,14 +8813,14 @@ Start a month's salary sheet (draft) with everyone employed that month. _Contrac
 | **Permission** | `payroll.create` — roles: Owner, Finance manager, Accountant |
 | **Path / query params** | — / — |
 | **Request body** | [`PayrollRunCreate`](#schema-payrollruncreate) |
-| **Validation** | `month`* string ≤ 7; `pay_date` YYYY-MM-DD (nullable)<br>Unknown fields are rejected (422). |
+| **Validation** | `month`* string ≤ 7; `pay_date` YYYY-MM-DD (nullable); `kind` one of salary/bonus (nullable); `bonus_percent` decimal string 0–100, 4 dp (nullable); `bonus_amount` decimal string, 2 dp (nullable); `min_service_months` integer (nullable); `notes` string ≤ 500 (nullable)<br>Unknown fields are rejected (422). |
 | **Success** | 201 `data`: [`PayrollRun`](#schema-payrollrun) |
 | **Status codes** | 201, 400, 401, 403, 409, 422, 503 |
 | **Error codes** | **`company_maintenance`, `module_not_in_plan`, `no_employees`, `payroll_run_exists`, `support_read_only`**; standard: `company_required`, `idempotency_in_progress`, `idempotency_key_reused`, `malformed_json`, `not_a_member`, `permission_denied`, `server_error`, `token_expired`, `token_invalid`, `unauthenticated`, `validation_failed` |
 | **Headers** | `Idempotency-Key`, `Location` on 201 |
 | **Database** | insert: audit_logs, idempotency_keys, payroll_runs; read: employees, payroll_lines |
 | **Business rules** | — |
-| **Requirements** | FR-101 |
+| **Requirements** | FR-101, FR-104 |
 | **Pages and actions** | P3<br>P3 · New salary sheet |
 | **Transaction / concurrency** | Single transaction. |
 
@@ -8893,7 +8893,7 @@ Delete a draft sheet. _Contract change: PEP-521 salary sheet._
 <a id="postpayrollrunsidapprove"></a>
 #### `POST /api/v1/payroll-runs/{id}/approve`
 
-Approve and post: Dr salaries_expense / Cr salaries_payable. _Contract change: PEP-521 salary sheet._
+Approve and post: Dr salaries_expense (festival_bonus_expense on a bonus sheet) / Cr salaries_payable. _Contract change: PEP-521 salary sheet._
 
 | | |
 |---|---|
@@ -12193,17 +12193,22 @@ A salary payment (PEP-522).
 <a id="schema-payrollruncreate"></a>
 #### `PayrollRunCreate`
 
-Start a month (PEP-521). month = YYYY-MM; pay_date defaults to the month end. Unknown properties are rejected.
+Start a month (PEP-521). month = YYYY-MM; pay_date defaults to the month end. kind bonus (PEP-524): a festival bonus sheet for employees active on the pay date with at least min_service_months of service (default 12); each gets bonus_percent of basic (default 100) or bonus_amount if given; notes names the festival. Unknown properties are rejected.
 
 | Property | Type | Required |
 |---|---|---|
 | `month` | `str:7` | yes |
 | `pay_date` | `date \| null` | no |
+| `kind` | `enum:salary\|bonus \| null` | no |
+| `bonus_percent` | `pct \| null` | no |
+| `bonus_amount` | `money \| null` | no |
+| `min_service_months` | `int \| null` | no |
+| `notes` | `str:500 \| null` | no |
 
 <a id="schema-payrolllinechange"></a>
 #### `PayrollLineChange`
 
-Change one line of a draft sheet (PEP-521). advance_recovery (PEP-523): at most what the employee still owes on advances. Unknown properties are rejected.
+Change one line of a draft sheet (PEP-521). advance_recovery (PEP-523): at most what the employee still owes on advances. On a bonus sheet (PEP-524) other_earnings is the bonus; overtime and advance_recovery are refused. Unknown properties are rejected.
 
 | Property | Type | Required |
 |---|---|---|
@@ -14991,7 +14996,7 @@ View permission `payroll.view`. **Loads:** [`GET /payroll-runs`](#getpayrollruns
 | # | Action | Calls | Permission | Body → data | Success | Business errors to handle |
 |---|---|---|---|---|---|---|
 | 1 | New salary sheet | [`POST /payroll-runs`](#postpayrollruns) → nav:P4 | `payroll.create` | [`PayrollRunCreate`](#schema-payrollruncreate) → [`PayrollRun`](#schema-payrollrun) | 201 | `module_not_in_plan`, `no_employees`, `payroll_run_exists`, `support_read_only` |
-| 2 | Open sheet | nav:P4 | — | — | — | — |
+| 2 | New bonus sheet | nav:P4 | — | — | — | — |
 
 <a id="actions-p4"></a>
 #### P4 · Salary sheet
@@ -15056,7 +15061,7 @@ View permission `payroll.view`. **Loads:** [`GET /money-accounts`](#getmoneyacco
 | Endpoints | 280 | 375 |
 | Schemas | 191 | 255 |
 | Pages | 155 | 168 |
-| Page actions mapped to API or client behaviour | 0 of 448 | 568 of 568 |
+| Page actions mapped to API or client behaviour | 0 of 448 | 569 of 569 |
 
 ### 12.2 Missing endpoints, now added (94)
 
@@ -15147,7 +15152,7 @@ View permission `payroll.view`. **Loads:** [`GET /money-accounts`](#getmoneyacco
 | [`POST /staff-advances`](#poststaffadvances) | PEP-523 staff advances |  |
 | [`POST /staff-advances/{id}/reverse`](#poststaffadvancesidreverse) | PEP-523 staff advances |  |
 | [`GET /payroll-runs`](#getpayrollruns) | PEP-521 salary sheet |  |
-| [`POST /payroll-runs`](#postpayrollruns) | PEP-521 salary sheet |  |
+| [`POST /payroll-runs`](#postpayrollruns) | PEP-521 salary sheet; PEP-524 bonus sheet |  |
 | [`GET /payroll-runs/{id}`](#getpayrollrunsid) | PEP-521 salary sheet |  |
 | [`PUT /payroll-runs/{id}`](#putpayrollrunsid) | PEP-521 salary sheet |  |
 | [`DELETE /payroll-runs/{id}`](#deletepayrollrunsid) | PEP-521 salary sheet |  |
@@ -15225,6 +15230,7 @@ View permission `payroll.view`. **Loads:** [`GET /money-accounts`](#getmoneyacco
 | Platform console (PEP-483) | New /platform/companies endpoints (list, create with an Owner invitation, suspend, reactivate) for platform admins: e-mails in PLUTO_PLATFORM_ADMINS with 2-step sign-in, never a company role, so selling Pluto to many companies needs no shared membership. Me adds platform_admin (shows the console link; PEP-484). Schemas PlatformCompany, PlatformCompanyCreate; errors platform_admin_only, platform_two_factor_required. Owner request 12-13 Nov 2026. Additive. |
 | Read-only support access (PEP-485) | POST/DELETE /platform/companies/{id}/support-access: a platform admin opens a company read-only for 15-240 minutes with a reason (table support_access_grants); its owners get a notification and the audit log keeps the start and end; any change answers 403 support_read_only; Me adds support_access while the current company is such a view. Additive. |
 | Usage overview (PEP-512) | PlatformCompany adds usage: last sign-in of the company's own people, active people in 30 days, this month's sales invoices, purchase bills and vouchers, and quiet (no activity for 7+ days). Read-only, worked out from existing tables. Owner request 15 Nov 2026. Additive. |
+| Festival bonus (PEP-524) | PayrollRunCreate adds kind, bonus_percent, bonus_amount, min_service_months, notes; bonus sheets are payroll_runs kind bonus (lines: basic for reference, other_earnings = bonus), one per month, approve posts Dr festival_bonus_expense (new ledger 6002 Festival bonus) / Cr salaries_payable, paid through /payroll-runs/{id}/payments. Owner 16 Nov 2026 (epic PEP-519). Additive. |
 | Staff advances (PEP-523) | staff_advances + staff_advance_recoveries; mapping staff_advances (new ledger 1406 Staff advances). GET/POST /staff-advances, POST /staff-advances/{id}/reverse (only before anything was recovered, 409 advance_recovered). New salary sheets fill advance_recovery from open advances (instalment, capped by balance and pay); PayrollLineChange adds advance_recovery; approving credits staff_advances; cancelling undoes recoveries. Employee adds advance_balance. Owner 16 Nov 2026. Additive. |
 | Pay salaries (PEP-522) | payroll_payments + payroll_payment_lines. POST /payroll-runs/{id}/payments (payroll.approve; all unpaid lines in full, or chosen lines and amounts; BR-031 funds), GET /payroll-runs/{id}/payments, POST /payroll-payments/{id}/reverse. PayrollRun adds total_paid and payment_status. Owner 16 Nov 2026. Additive. |
 | Salary sheet (PEP-521) | payroll_runs + payroll_lines; account mappings salaries_expense (6001) and salaries_payable (2201). GET/POST /payroll-runs, GET/PUT/DELETE /payroll-runs/{id} (draft; PUT and DELETE need payroll.create), POST /payroll-runs/{id}/approve and /cancel (payroll.approve). Part months prorated by days; posts entry_type journal with source payroll_runs. Owner 16 Nov 2026. Additive. |

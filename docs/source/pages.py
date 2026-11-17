@@ -623,8 +623,8 @@ page("P2", "Employee form", "Payroll", "Form", "payroll.create", "Name, designat
      "Form with a salary card showing the server's gross.", fields=["Name | text | req | ", "Joining date | date | req | ", "Basic salary | money | req | >= 0", "Pay method | select | opt | cash/bank/mobile"],
      actions=["Cancel", "Save", "Mark as left"], deps=["P1"], fr=["FR-100"])
 page("P3", "Salary sheets", "Payroll", "List", "payroll.view", "One sheet per month: month, employees, gross, net, status (PEP-521).",
-     "List; New sheet asks for the month.", actions=["New salary sheet", "Open sheet"],
-     table={"cols": ["Month", "Employees", "Gross", "Deductions", "Net", "Status"], "filters": ["Status"], "search": False}, fr=["FR-101"])
+     "List; New sheet asks for the month; New bonus sheet asks for the festival, month, pay date, % of basic or fixed amount and minimum service (PEP-524).", actions=["New salary sheet", "New bonus sheet", "Open sheet"],
+     table={"cols": ["Month", "Employees", "Gross", "Deductions", "Net", "Status"], "filters": ["Status"], "search": False}, fr=["FR-101", "FR-104"])
 page("P4", "Salary sheet", "Payroll", "Detail", "payroll.view", "Lines per employee (days paid, structure, overtime, other earnings, deductions, gross, net) with totals from the server.",
      "Editable grid while draft (advance recovery too, PEP-523); Approve posts; Cancel reverses.", actions=["Save changes", "Delete draft", "Approve and post", "Cancel sheet", "Pay salaries", "Reverse a payment"], deps=["P3"], fr=["FR-101", "FR-102"])
 page("P5", "Staff advances", "Payroll", "List", "payroll.view", "Advances given to employees: who, when, amount, instalment, recovered, still owed, status (PEP-523).",

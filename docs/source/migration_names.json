@@ -97,5 +97,11 @@
  "announcement_dismissals": "2026_10_18_009600_create_announcement_dismissals_table.php",
  "payment_reminders": "2026_10_18_009700_create_payment_reminders_table.php",
  "recurring_invoices": "2026_10_18_009800_create_recurring_invoices_table.php",
- "employees": "2026_10_18_009900_create_employees_table.php"
+ "employees": "2026_10_18_009900_create_employees_table.php",
+ "payroll_runs": "2026_10_18_010000_create_payroll_runs_table.php",
+ "staff_advances": "2026_10_18_010100_create_staff_advances_table.php",
+ "payroll_lines": "2026_10_18_010200_create_payroll_lines_table.php",
+ "payroll_payments": "2026_10_18_010300_create_payroll_payments_table.php",
+ "payroll_payment_lines": "2026_10_18_010400_create_payroll_payment_lines_table.php",
+ "staff_advance_recoveries": "2026_10_18_010500_create_staff_advance_recoveries_table.php"
 }

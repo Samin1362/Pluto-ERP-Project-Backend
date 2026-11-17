@@ -41,6 +41,7 @@ final class AccountMappingService
         'interest_expense' => ['ledger', ['expense'], 'Interest on PAD/LTR loans'],
         'salaries_expense' => ['ledger', ['expense'], 'Salary sheets: earnings less deductions (payroll)'],
         'salaries_payable' => ['ledger', ['liability'], 'Net salaries approved, not yet paid (payroll)'],
+        'festival_bonus_expense' => ['ledger', ['expense'], 'Festival bonus sheets (payroll)'],
         'staff_advances' => ['ledger', ['asset'], 'Salary advances given to employees, not yet recovered (payroll)'],
         'fx_gain_loss' => ['ledger', ['expense', 'income'], 'Exchange differences'],
         'bank_charges' => ['ledger', ['expense'], 'Bank fees not capitalised'],
