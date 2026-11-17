@@ -215,6 +215,7 @@ FR = {
  "FR-101": ("Payroll", "Users prepare a monthly salary sheet (earnings, deductions, net per employee, part months prorated), approve it to post the salary expense, and cancel an approved sheet by reversal (PEP-521)."),
  "FR-102": ("Payroll", "Users pay an approved salary sheet, everyone or chosen employees and amounts, from a cash, bank or mobile-wallet account, and reverse a payment (PEP-522)."),
  "FR-103": ("Payroll", "Users give an employee a salary advance from a money account, recover it in instalments through salary sheets, see what each employee still owes, and reverse an advance not yet recovered (PEP-523)."),
+ "FR-104": ("Payroll", "Users prepare a festival bonus sheet as a percentage of basic salary or a fixed amount for employees with enough service, approve it to post the festival bonus expense, and pay it like salaries (PEP-524)."),
  "FR-100": ("Payroll", "Users keep employees with their salary structure (basic, house rent, medical, conveyance), pay method and status (PEP-520)."),
 }
 

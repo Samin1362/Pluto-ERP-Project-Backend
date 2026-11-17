@@ -709,14 +709,14 @@ E("POST", "/staff-advances/{id}/reverse", "Reverse an advance nothing was recove
   tx=TXP, tag=T, fr=["FR-103"], codes=[200, 409], errors=["already_reversed", "advance_recovered"], added="PEP-523 staff advances")
 E("GET", "/payroll-runs", "Salary sheets, newest month first", "payroll.view", ["payroll_runs"], ["P3"], params=["page", "per_page", "status", "kind"], resp="Page<PayrollRun>",
   tag=T, fr=["FR-101"], added="PEP-521 salary sheet")
-E("POST", "/payroll-runs", "Start a month's salary sheet (draft) with everyone employed that month", "payroll.create", ["payroll_runs", "payroll_lines", "employees", "audit_logs"], ["P3"],
-  req="PayrollRunCreate", resp="PayrollRun", idem=True, tag=T, fr=["FR-101"], codes=[201, 409, 422], errors=["payroll_run_exists", "no_employees"], added="PEP-521 salary sheet")
+E("POST", "/payroll-runs", "Start a month's salary sheet (draft) with everyone employed that month, or a festival bonus sheet (kind bonus, PEP-524)", "payroll.create", ["payroll_runs", "payroll_lines", "employees", "audit_logs"], ["P3"],
+  req="PayrollRunCreate", resp="PayrollRun", idem=True, tag=T, fr=["FR-101", "FR-104"], codes=[201, 409, 422], errors=["payroll_run_exists", "no_employees"], added="PEP-521 salary sheet; PEP-524 bonus sheet")
 E("GET", "/payroll-runs/{id}", "A salary sheet with its lines", "payroll.view", ["payroll_runs", "payroll_lines"], ["P4"], resp="PayrollRun", tag=T, fr=["FR-101"], added="PEP-521 salary sheet")
 E("PUT", "/payroll-runs/{id}", "Change a draft sheet: pay date, notes, each line's overtime, other earnings, deductions", "payroll.create", ["payroll_runs", "payroll_lines", "audit_logs"], ["P4"],
   req="PayrollRunUpdate", resp="PayrollRun", ifmatch=True, tag=T, fr=["FR-101"], codes=[200, 409, 422], errors=["payroll_run_not_draft"], added="PEP-521 salary sheet")
 E("DELETE", "/payroll-runs/{id}", "Delete a draft sheet", "payroll.create", ["payroll_runs", "payroll_lines", "audit_logs"], ["P4"], codes=[204, 409], tag=T, fr=["FR-101"],
   errors=["payroll_run_not_draft"], added="PEP-521 salary sheet")
-E("POST", "/payroll-runs/{id}/approve", "Approve and post: Dr salaries_expense / Cr salaries_payable", "payroll.approve", ["payroll_runs", "payroll_lines", "journal_entries", "journal_lines", "account_mappings", "number_sequences", "audit_logs"],
+E("POST", "/payroll-runs/{id}/approve", "Approve and post: Dr salaries_expense (festival_bonus_expense on a bonus sheet) / Cr salaries_payable", "payroll.approve", ["payroll_runs", "payroll_lines", "journal_entries", "journal_lines", "account_mappings", "number_sequences", "audit_logs"],
   ["P4"], rules=["BR-001", "BR-004"], resp="PayrollRun", idem=True, tx=TXP, tag=T, fr=["FR-101"], codes=[200, 409, 422], errors=["payroll_run_not_draft", "mapping_missing"], added="PEP-521 salary sheet")
 E("POST", "/payroll-runs/{id}/payments", "Pay salaries of an approved sheet (all unpaid, or chosen lines and amounts): Dr salaries_payable / Cr the money account", "payroll.approve",
   ["payroll_runs", "payroll_lines", "payroll_payments", "payroll_payment_lines", "money_accounts", "journal_entries", "journal_lines", "number_sequences", "audit_logs"], ["P4"],

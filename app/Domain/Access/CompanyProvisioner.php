@@ -55,7 +55,7 @@ final class CompanyProvisioner
         '4304' => ['Commission received', '42', 'general'], '4305' => ['Discount received', '42', 'general'],
         '5001' => ['Cost of goods sold', '5', 'system'], '5002' => ['Stock shortage, damage and gains', '5', 'system'],
         '5101' => ['Purchases, non-stock items', '5', 'general'], '5109' => ['Purchase returns, non-stock items', '5', 'general'],
-        '6001' => ['Salaries and wages', '61', 'general'], '6101' => ['Rent', '61', 'general'], '6105' => ['Transport and delivery', '61', 'general'],
+        '6001' => ['Salaries and wages', '61', 'general'], '6002' => ['Festival bonus', '61', 'general'], '6101' => ['Rent', '61', 'general'], '6105' => ['Transport and delivery', '61', 'general'],
         '6110' => ['Electricity and utilities', '61', 'general'], '6199' => ['Other expenses', '61', 'general'],
         '6201' => ['Marketing and promotion', '61', 'general'], '6198' => ['Cash short and over', '61', 'system'],
         '6501' => ['Depreciation', '62', 'general'], '6601' => ['Interest on loans', '62', 'general'],
@@ -66,7 +66,7 @@ final class CompanyProvisioner
     private const MAPPINGS = [
         'cash_bank_group' => ['group', '1100'], 'sundry_debtors_group' => ['group', '1201'], 'inventory_group' => ['group', '1301'],
         'sundry_creditors_group' => ['group', '2101'], 'lc_margin' => ['ledger', '1403'], 'goods_in_transit' => ['ledger', '1404'],
-        'stock_in_transit' => ['ledger', '1405'], 'lc_acceptance' => ['ledger', '2302'], 'lc_loan' => ['ledger', '2303'], 'interest_payable' => ['ledger', '2304'], 'interest_expense' => ['ledger', '6601'], 'salaries_expense' => ['ledger', '6001'], 'salaries_payable' => ['ledger', '2201'], 'staff_advances' => ['ledger', '1406'], 'suspense' => ['ledger', '9999'],
+        'stock_in_transit' => ['ledger', '1405'], 'lc_acceptance' => ['ledger', '2302'], 'lc_loan' => ['ledger', '2303'], 'interest_payable' => ['ledger', '2304'], 'interest_expense' => ['ledger', '6601'], 'salaries_expense' => ['ledger', '6001'], 'salaries_payable' => ['ledger', '2201'], 'staff_advances' => ['ledger', '1406'], 'festival_bonus_expense' => ['ledger', '6002'], 'suspense' => ['ledger', '9999'],
         'retained_earnings' => ['ledger', '3201'], 'opening_balance_adjustment' => ['ledger', '3301'], 'sales_default' => ['ledger', '4101'],
         'sales_returns' => ['ledger', '4109'], 'discount_allowed' => ['ledger', '4110'], 'discount_received' => ['ledger', '4305'],
         'cogs' => ['ledger', '5001'], 'stock_adjustment' => ['ledger', '5002'], 'purchases_non_stock' => ['ledger', '5101'],

@@ -1943,7 +1943,7 @@ export interface PayrollLine {
   note?: string | null
 }
 
-/** Change one line of a draft sheet (PEP-521). advance_recovery (PEP-523): at most what the employee still owes on advances. */
+/** Change one line of a draft sheet (PEP-521). advance_recovery (PEP-523): at most what the employee still owes on advances. On a bonus sheet (PEP-524) other_earnings is the bonus; overtime and advance_recovery are refused. */
 export interface PayrollLineChange {
   id: number
   overtime?: Decimal | null
@@ -2016,10 +2016,15 @@ export interface PayrollRun {
   version: number
 }
 
-/** Start a month (PEP-521). month = YYYY-MM; pay_date defaults to the month end. */
+/** Start a month (PEP-521). month = YYYY-MM; pay_date defaults to the month end. kind bonus (PEP-524): a festival bonus sheet for employees active on the pay date with at least min_service_months of service (default 12); each gets bonus_percent of basic (default 100) or bonus_amount if given; notes names the festival. */
 export interface PayrollRunCreate {
   month: string
   pay_date?: string | null
+  kind?: 'salary' | 'bonus' | null
+  bonus_percent?: Decimal | null
+  bonus_amount?: Decimal | null
+  min_service_months?: number | null
+  notes?: string | null
 }
 
 /** Change a draft sheet (PEP-521); lines left out keep their values. */

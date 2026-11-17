@@ -33,7 +33,11 @@ class PayrollRunController extends Controller
 
     public function store(PayrollRunCreateRequest $request): JsonResponse
     {
-        return $this->one($this->service->create($request->validated('month'), $request->validated('pay_date')), 201);
+        $in = $request->validated();
+
+        return ($in['kind'] ?? 'salary') === 'bonus'
+            ? $this->one($this->service->createBonus($in), 201)
+            : $this->one($this->service->create($in['month'], $in['pay_date'] ?? null, $in['notes'] ?? null), 201);
     }
 
     public function show(int $id): JsonResponse

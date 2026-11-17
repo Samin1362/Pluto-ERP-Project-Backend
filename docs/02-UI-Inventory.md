@@ -3740,15 +3740,15 @@ Each entry follows the 13 points of the brief: (1) purpose · (2) components and
 #### P3 · Salary sheets
 
 1. **Purpose:** One sheet per month: month, employees, gross, net, status (PEP-521).
-2. **Components and layout:** List; New sheet asks for the month.
+2. **Components and layout:** List; New sheet asks for the month; New bonus sheet asks for the festival, month, pay date, % of basic or fixed amount and minimum service (PEP-524).
 3–4. **Inputs:** none (read-only page; filters listed below)
-5. **Actions → API** ([full map](05-API-Specification.md#actions-p3)): New salary sheet → POST /payroll-runs → nav:P4<br>Open sheet → nav:P4
+5. **Actions → API** ([full map](05-API-Specification.md#actions-p3)): New salary sheet → POST /payroll-runs → nav:P4<br>New bonus sheet → nav:P4
 6. **Table:** columns Month, Employees, Gross, Deductions, Net, Status; filters Status; server-side pagination and sorting.
 7. **Validation and rules:** Standard server validation (422).
 8. **Roles allowed:** `payroll.view` → Owner, Finance manager, Accountant. Actions additionally check their own permission (see endpoints).
 9. **APIs:** [`GET /payroll-runs`](05-API-Specification.md#getpayrollruns), [`POST /payroll-runs`](05-API-Specification.md#postpayrollruns)
 10. **Entities:** `audit_logs`, `employees`, `payroll_lines`, `payroll_runs`
-11. **Workflows:** — · FR: FR-101
+11. **Workflows:** — · FR: FR-101, FR-104
 12. **States:** Loading: skeleton rows matching columns (L10). Empty: first-use empty state with primary action, or 'No matches' with Clear filters (L9). Error: inline banner with Retry; offline banner (L11). Success: toast after bulk actions (L12). 403 page if view permission missing (L14).
 13. **Depends on:** —
 

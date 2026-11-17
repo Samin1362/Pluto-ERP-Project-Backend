@@ -60,6 +60,7 @@
 | `salaries_expense` | Expense | Salary sheets: earnings less deductions (PEP-521 payroll) | 6001 |
 | `salaries_payable` | Liability | Net salaries approved, not yet paid (PEP-521 payroll) | 2201 |
 | `staff_advances` | Asset | Salary advances given to employees, not yet recovered (PEP-523 payroll) | 1406 |
+| `festival_bonus_expense` | Expense | Festival bonus sheets (PEP-524 payroll) | 6002 |
 | `fx_gain_loss` | Expense (or Income) | Exchange differences | 6603 |
 | `bank_charges` | Expense | Bank fees not capitalised | 6702 |
 | `rounding` | Expense | Invoice/bill rounding | 6799 |
@@ -352,6 +353,7 @@ Difference = foreign outstanding × (closing − book rate), rounded per item; a
 | Salary payment reversed | Money account | `salaries_payable` | BR-003 |
 | Staff advance given (P5, PEP-523) | `staff_advances` | Money account | BR-031 funds |
 | Advance recovered on a salary sheet | (part of the sheet's entry) | `staff_advances` | oldest advance first; undone when the sheet is cancelled |
+| Festival bonus sheet approved (P4, PEP-524) | `festival_bonus_expense` (bonus − deductions) | `salaries_payable` (net) | BR-001, BR-004; payroll_runs kind bonus; paid and cancelled like a salary sheet |
 
 Expense budgets (I7) are informational. Warnings at `warn_at_percent` of the monthly budget never block.
 

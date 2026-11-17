@@ -24,6 +24,10 @@ use Illuminate\Support\Facades\DB;
  * sheet is a draft, overtime, other earnings and deductions are typed per line; the server works out gross and net.
  * Approving posts one entry on the pay date: Dr salaries_expense (gross − deductions) / Cr salaries_payable (net).
  * Cancelling posts the mirror entry, before any salary is paid.
+ *
+ * Festival bonus sheets (PEP-524) are runs of kind bonus: everyone active on the pay date with enough service gets a
+ * percentage of their monthly basic (or a fixed amount) as other_earnings; basic_salary is kept for reference only.
+ * Approving posts Dr festival_bonus_expense / Cr salaries_payable; they are paid and cancelled like salary sheets.
  */
 class PayrollRunService
 {
@@ -33,12 +37,12 @@ class PayrollRunService
 
     public function __construct(private readonly AccountMapper $mapper, private readonly PostingService $posting, private readonly AuditLogger $audit) {}
 
-    public function create(string $month, ?string $payDate): PayrollRun
+    public function create(string $month, ?string $payDate, ?string $notes = null): PayrollRun
     {
         $start = CarbonImmutable::parse("{$month}-01")->startOfDay();
         $end = $start->endOfMonth()->startOfDay();
 
-        return DB::transaction(function () use ($start, $end, $payDate) {
+        return DB::transaction(function () use ($start, $end, $payDate, $notes) {
             if (PayrollRun::where('kind', 'salary')->whereDate('period_month', $start->toDateString())->where('status', '!=', 'cancelled')->lockForUpdate()->exists()) {
                 throw new ApiProblem('payroll_run_exists', 'There is already a salary sheet for '.$start->format('F Y').'; open it, or cancel it first.');
             }
@@ -48,7 +52,7 @@ class PayrollRunService
             if ($employees->isEmpty()) {
                 throw new ApiProblem('no_employees', 'Nobody was employed in '.$start->format('F Y').'. Add employees first.');
             }
-            $run = PayrollRun::create(['kind' => 'salary', 'period_month' => $start->toDateString(), 'pay_date' => $payDate ?? $end->toDateString(), 'status' => 'draft']);
+            $run = PayrollRun::create(['kind' => 'salary', 'period_month' => $start->toDateString(), 'pay_date' => $payDate ?? $end->toDateString(), 'status' => 'draft', 'notes' => $notes]);
             $daysInMonth = (int) $start->daysInMonth;
             foreach ($employees as $e) {
                 $from = $e->joining_date->gt($start) ? CarbonImmutable::parse($e->joining_date) : $start;
@@ -75,6 +79,44 @@ class PayrollRunService
         });
     }
 
+    /** A festival bonus sheet (PEP-524): month, pay_date?, bonus_percent? (of basic, default 100), bonus_amount?, min_service_months? (default 12), notes?. */
+    public function createBonus(array $in): PayrollRun
+    {
+        $start = CarbonImmutable::parse("{$in['month']}-01")->startOfDay();
+        $payDate = CarbonImmutable::parse($in['pay_date'] ?? $start->endOfMonth()->toDateString())->startOfDay();
+        $minMonths = (int) ($in['min_service_months'] ?? 12);
+        $fixed = isset($in['bonus_amount']) ? Money::of((string) $in['bonus_amount']) : null;
+        $percent = BigDecimal::of((string) ($in['bonus_percent'] ?? '100'));
+
+        return DB::transaction(function () use ($start, $payDate, $minMonths, $fixed, $percent, $in) {
+            if (PayrollRun::where('kind', 'bonus')->whereDate('period_month', $start->toDateString())->where('status', '!=', 'cancelled')->lockForUpdate()->exists()) {
+                throw new ApiProblem('payroll_run_exists', 'There is already a festival bonus sheet for '.$start->format('F Y').'; open it, or cancel it first.');
+            }
+            $employees = Employee::where('status', 'active')->whereDate('joining_date', '<=', $payDate->subMonthsNoOverflow($minMonths)->toDateString())
+                ->orderBy('code')->get();
+            if ($employees->isEmpty()) {
+                throw new ApiProblem('no_employees', "Nobody active on {$payDate->format('j M Y')} has served {$minMonths} months or more.");
+            }
+            $run = PayrollRun::create(['kind' => 'bonus', 'period_month' => $start->toDateString(), 'pay_date' => $payDate->toDateString(), 'status' => 'draft',
+                'notes' => $in['notes'] ?? null]);
+            $days = (int) $start->daysInMonth;
+            foreach ($employees as $e) {
+                $bonus = $fixed ?? Money::of(BigDecimal::of((string) $e->basic_salary)->multipliedBy($percent)->dividedBy(100, 2, RoundingMode::HALF_UP));
+                $line = new PayrollLine(['payroll_run_id' => $run->id, 'employee_id' => $e->id, 'employee_code' => $e->code, 'employee_name' => $e->name,
+                    'designation' => $e->designation, 'days_in_month' => $days, 'days_paid' => $days, 'basic_salary' => (string) Money::of((string) $e->basic_salary),
+                    'house_rent' => '0', 'medical' => '0', 'conveyance' => '0', 'overtime' => '0', 'other_earnings' => (string) $bonus, 'deductions' => '0',
+                    'advance_recovery' => '0', 'paid_amount' => '0']);
+                $this->work($line, true);
+                $line->save();
+            }
+            $this->totals($run);
+            $this->audit->record('created', $run, null, ['kind' => 'bonus', 'month' => $start->format('Y-m'), 'employees' => $run->employees_count,
+                'rule' => $fixed ? "fixed {$fixed}" : "{$percent}% of basic", 'min_service_months' => $minMonths, 'total_net' => (string) $run->total_net], type: 'payroll_runs');
+
+            return $run->refresh();
+        });
+    }
+
     public function update(PayrollRun $run, array $in, int $expectedVersion): PayrollRun
     {
         return DB::transaction(function () use ($run, $in, $expectedVersion) {
@@ -89,6 +131,13 @@ class PayrollRunService
             $lines = $run->lines()->get()->keyBy('id');
             foreach ($in['lines'] ?? [] as $i => $change) {
                 $line = $lines[(int) $change['id']] ?? throw new ApiProblem('validation_failed', errors: ["lines.{$i}.id" => ['This line is not on this sheet']]);
+                if ($run->kind === 'bonus') {
+                    foreach (['overtime', 'advance_recovery'] as $k) {
+                        if (array_key_exists($k, $change) && Money::of($change[$k] ?? '0')->isPositive()) {
+                            throw new ApiProblem('validation_failed', errors: ["lines.{$i}.{$k}" => ['Not on a festival bonus sheet']]);
+                        }
+                    }
+                }
                 foreach (self::EDITABLE as $k) {
                     if (array_key_exists($k, $change)) {
                         $line->{$k} = $k === 'note' ? $change[$k] : (string) Money::of($change[$k] ?? '0');
@@ -97,8 +146,9 @@ class PayrollRunService
                 if (array_key_exists('advance_recovery', $change) && Money::of($line->advance_recovery)->isGreaterThan(StaffAdvanceService::balance((int) $line->employee_id))) {
                     throw new ApiProblem('validation_failed', errors: ["lines.{$i}.advance_recovery" => ["{$line->employee_name} owes ".StaffAdvanceService::balance((int) $line->employee_id).' on advances']]);
                 }
-                if ($this->work($line)->isNegative()) {
-                    throw new ApiProblem('validation_failed', errors: ["lines.{$i}.deductions" => ["Deductions and advance recovery are more than {$line->employee_name}'s pay this month"]]);
+                if ($this->work($line, $run->kind === 'bonus')->isNegative()) {
+                    throw new ApiProblem('validation_failed', errors: ["lines.{$i}.deductions" => [$run->kind === 'bonus'
+                        ? "Deductions are more than {$line->employee_name}'s bonus" : "Deductions and advance recovery are more than {$line->employee_name}'s pay this month"]]);
                 }
                 $line->save();
             }
@@ -138,7 +188,7 @@ class PayrollRunService
             $label = self::label($run);
             $entry = null;
             if ($expense->isPositive()) {
-                $b = (new JournalBuilder)->debit($this->mapper->ledgerFor('salaries_expense'), $expense, ['line_narration' => $label]);
+                $b = (new JournalBuilder)->debit($this->mapper->ledgerFor($run->kind === 'bonus' ? 'festival_bonus_expense' : 'salaries_expense'), $expense, ['line_narration' => $label]);
                 if ($net->isPositive()) {
                     $b->credit($this->mapper->ledgerFor('salaries_payable'), $net, ['line_narration' => $label]);
                 }
@@ -225,11 +275,11 @@ class PayrollRunService
         return Money::of(BigDecimal::of($monthly)->multipliedBy($days)->dividedBy($daysInMonth, 2, RoundingMode::HALF_UP));
     }
 
-    /** gross = structure + overtime + other earnings; net = gross − deductions − advance recovery. Returns the net. */
-    private function work(PayrollLine $l): Money
+    /** gross = structure + overtime + other earnings (a bonus line: the bonus only); net = gross − deductions − advance recovery. Returns the net. */
+    private function work(PayrollLine $l, bool $bonus = false): Money
     {
         $gross = Money::zero();
-        foreach ([...self::STRUCTURE, 'overtime', 'other_earnings'] as $k) {
+        foreach ($bonus ? ['other_earnings'] : [...self::STRUCTURE, 'overtime', 'other_earnings'] as $k) {
             $gross = $gross->plus(Money::of((string) ($l->{$k} ?? '0')));
         }
         $net = $gross->minus(Money::of((string) ($l->deductions ?? '0')))->minus(Money::of((string) ($l->advance_recovery ?? '0')));
